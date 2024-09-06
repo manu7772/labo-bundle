@@ -1,0 +1,36 @@
+{% extends "@AequationLabo/base_labo.html.twig" %}
+
+{% block title %}Labo page principale{% endblock %}
+
+{% block title_h1 -%}
+    {{ ux_icon('symfony', {height: '48px', width: '48px', class: 'text-success'}) }} LABO page principale
+{%- endblock %}
+
+{% block right_content %}
+<h2>{{ ux_icon('symfony', {height: '36px', width: '36px', class: 'text-success'}) }} Symfony <small>v.{{ app.symfony.VERSION }}</small></h2>
+
+<twig:LaboDashboard :title="'Manage entities'" />
+
+<h4>Symfony info</h4>
+<article>
+    {{ printr(app.symfony) }}
+</article>
+
+<h4>PHP {{ app.php.version }} info</h4>
+<article>
+    {{ printr(app.php) }}
+</article>
+
+<h4>Twig additional globals</h4>
+<article>
+    {{ printr(globals()) }}
+</article>
+
+{% if app.service.dev %}
+<h4>Twig added globals <small>[dev only]</small></h4>
+<article>
+    {{ dump() }}
+</article>
+{% endif %}
+
+{% endblock %}

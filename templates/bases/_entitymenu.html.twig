@@ -1,0 +1,12 @@
+{% set contrasted = false %}
+{% for label, way in menu %}
+    {% if way is not iterable %}
+        {% set way = {route: way, params: {}, access: 'ROLE_EDITOR'} %}
+    {% endif %}
+    {% if route_exists(way.route) and (way.access is not defined or is_granted(way.access)) %}
+        {% set label = label|trans %}
+        {% set isCurrent = app.request.get('_route') == way.route and way.params|default([])|json_encode == app.request.get('_route_params')|json_encode %}
+        <a href="{{ path(way.route, way.params|default([])) }}"{{ turbo_enable(false) }} role="button" class="{{ not isCurrent and not contrasted ? 'contrast' : 'secondary' }} mb-1" {{ isCurrent ? ' aria-current="page ' ~ label|trans({}, label)|lower ~ '"' }}>{{ label|trans({}, label) }}</a>
+        {% set contrasted = true %}
+    {% endif %}
+{% endfor %}

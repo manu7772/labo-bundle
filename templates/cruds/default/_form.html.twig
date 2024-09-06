@@ -1,0 +1,7 @@
+<div class="mt-4">
+    {{ form_start(form) }}
+        {{ form_widget(form) }}
+        {% set entshort = entity.shortname(true)|default(meta_info.shortname_lower) %}
+        <button role="button"><twig:ux:icon name="{{ button_icon|default('form.icon.save'|trans({}, entshort)) }}" width="28px" />&nbsp;{{ button_label|default('form.action.save'|trans({}, entshort)|ucfirst) }}</button>
+    {{ form_end(form) }}
+</div>

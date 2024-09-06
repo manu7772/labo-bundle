@@ -1,0 +1,20 @@
+{% extends "@AequationLabo/base_labo_entities.html.twig" %}
+{% set entshort = entity.shortname(true)|default(meta_info.shortname_lower) %}
+
+{% block title %}Labo {{ 'view.edit'|trans({}, entshort)|ucfirst }}{% endblock %}
+
+{% block title_h1 -%}{{ icon(entity.shortname, {height: '52px', width: '52px', class: 'text-success'}) }} LABO {{ 'view.edit'|trans({}, entshort)|ucfirst }}{%- endblock %}
+
+{% block right_content %}
+    <h3>{{ 'view._edit'|trans({'%name%': entity.name}, entshort)|ucfirst }}</h3>
+
+    {% set ent_action = entityAction(entity, 'index') %}
+    {% if ent_action %}
+    <a role="button" href="{{ path(ent_action._route, ent_action._route_params) }}"><twig:ux:icon name="{{ 'form.icon.index'|trans({}, entshort) }}" width="18px" />&nbsp;{{ 'action.back_to_index'|trans({}, entshort)|ucfirst }}</a>
+    {% endif %}
+
+    {{ include(entityTemplate(entity, '_delete_form')) }}
+    
+    {{ include(entityTemplate(entity, '_form'), {button_label: 'form.action.update'|trans({}, entshort)|ucfirst, button_icon: 'form.icon.edit'|trans({}, entshort)}) }}
+
+{% endblock %}

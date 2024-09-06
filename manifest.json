@@ -1,0 +1,16 @@
+{
+    "aliases": ["aelabo", "aequation-labo"],
+    "bundles": {
+        "Aequation\\LaboBundle\\AequationLaboBundle": ["all"]
+    },
+    "gitignore": [
+        "/tmp/",
+        "/public/bundles/",
+        "/public/media/",
+        "/public/uploads/",
+        "/prod_server_info/"
+    ],
+    "composer-scripts": {
+        "cache:clear": "symfony-cmd"
+    }
+}

@@ -1,0 +1,18 @@
+{% extends "@AequationLabo/base_labo.html.twig" %}
+
+{% block title %}Labo PHP {{ app.php.version }} Info{% endblock %}
+
+{% block title_h1 -%}
+    {{ ux_icon('tabler:brand-php', {height: '48px', width: '48px', class: 'text-php'}) }} LABO PHP {{ app.php.version }} Info
+{%- endblock %}
+
+{% block right_content %}
+<ul>
+    <li><a href="{{ path('aequation_php_info') }}">PHP info</a></li>
+    <li><a href="{{ path('aequation_php_extensions') }}">PHP extensions</a></li>
+</ul>
+<h4>PHP {{ app.php.version }} info</h4>
+<article>
+    {{ printr(app.php) }}
+</article>
+{% endblock %}

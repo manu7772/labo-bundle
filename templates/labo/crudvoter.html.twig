@@ -1,0 +1,11 @@
+{% extends "@AequationLabo/base_labo.html.twig" %}
+
+{% block title %}Labo {{ metadata.shortname|trans({}, metadata.shortname) }} CRUDS{% endblock %}
+
+{% block title_h1 -%}{{ icon(metadata.name, {height: '48px', width: '48px', class: 'text-success'}) }} LABO {{ metadata.shortname|trans({}, metadata.shortname) }} CRUDS{%- endblock %}
+
+{% block right_content %}
+    {% include "@AequationLabo/bases/_entitymenu.html.twig" with {menu: app.service.entitymenu} %}
+    <div>{{ metadata.name }}</div>
+    <div>{{ metadata.shortname|trans({}, metadata.shortname) }} <small class="text-muted">[{{ metadata.shortname }}]</small></div>
+{% endblock %}

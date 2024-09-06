@@ -1,0 +1,10 @@
+<div{{ attributes }}>
+    {{ dump(this) }}
+    <h3>{{ 'name.name'|trans({}, this.shortname)|ucfirst }} {{ this.entity.name|default('création...') }}</h3>
+    <!-- component html -->
+    {{ form_start(form) }}
+        {{ form_widget(form) }}
+        <button role="button">{{ button_label|default('form.action.save'|trans({}, this.shortname)|ucfirst) }}</button>
+    {{ form_end(form) }}
+    {# {{ form(form, {'method': 'POST'}) }} #}
+</div>

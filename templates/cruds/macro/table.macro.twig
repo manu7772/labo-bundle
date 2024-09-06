@@ -1,0 +1,14 @@
+{% macro cellprint(entity, field, context = "index") %}
+    {% set info = cellPrint(entity, field, context) %}
+    {% set self = _self %}
+    {% if info.type == 'string' %}
+        {{ string(info.value) }}
+    {% else %}
+        {{ string(info.value) }}
+    {% endif %}
+{% endmacro %}
+
+{% macro string(value) %}
+    {{ value }}
+{% endmacro %}
+

@@ -1,0 +1,27 @@
+{% block menu %}
+<nav>
+	<ul>
+		<li>
+			<strong><i class="fab fa-symfony"></i> Website</strong>
+		</li>
+	</ul>
+	<ul>
+		{% set currentDone = false %}
+		{% set contrasted = false %}
+		{% for label, way in menu %}
+			{% if way is not iterable %}
+				{% set way = {route: way, params: {}} %}
+			{% endif %}
+			{% set url = url_if_exists(way.route, way.params|default([])) %}
+			{% if url %}
+				{% set label = label|trans %}
+				{% set route_params = app.request.get('_route_params') %}
+				{% set isCurrent = app.request.get('_route') == way.route and way.params|default([])|json_encode == app.request.get('_route_params')|json_encode %}
+				{% set currentDone = isCurrent ? true : currentDone %}
+				<li><a href="{{ url }}" class="{{ not (isCurrent and contrasted) ? 'contrast' }}" {{ isCurrent ? ' aria-current="page ' ~ label|lower ~ '"' }}>{{ label }}</a></li>
+				{% set contrasted = true %}
+			{% endif %}
+		{% endfor %}
+	</ul>
+</nav>
+{% endblock %}

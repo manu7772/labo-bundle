@@ -1,0 +1,39 @@
+{% extends "@AequationLabo/base_web.html.twig" %}
+
+{% block title %}{{ title|default('Login')|trans }}{% endblock %}
+
+{% block body %}
+	{% if error %}
+	<div class="alert alert-danger">{{ error.messageKey|trans(error.messageData, 'security') }}</div>
+	{% endif %}
+
+	{% set app_logout = app.user ? url_if_exists('app_logout') : null %}
+	{% if app.user %}
+	<div class="mb-3 alert alert-info">
+		Vous êtes déjà connecté en tant que {{ app.user.userIdentifier|default('inconnu') }},
+		<a href="{{ app_logout }}" class="text-blue-600 hover:text-blue-900">{{ app_logout }}</a>
+	</div>
+	{% else %}
+	<form method="post" class="tailwind-form">
+		<div
+			class="form-group">
+			<input type="email" value="{{ last_username }}" name="email" id="inputEmail" class="form-widget" autocomplete="email" placeholder="{{ 'Email'|trans }}" required autofocus>
+		</div>
+		<div
+			class="form-group">
+			<input type="password" name="password" id="inputPassword" class="form-widget" autocomplete="current-password" placeholder="{{ 'password'|trans }}" required>
+		</div>
+		<input type="hidden" name="_csrf_token" value="{{ csrf_token('authenticate') }}">
+		<div class="form-group">
+			<button class="btn btn-info w-full" type="submit">{{ title|default('Login')|trans }}</button>
+		</div>
+	</form>
+	{% set url_login_email = url_if_exists('app_login_email', {usermail: '__email__'}) %}
+	{% if url_login_email %}
+	<h3 class="mt-4 mb-4">
+		<i>Ou envoyez moi un</i>
+		<button id="email-token-connect" data-request-url="{{ url_login_email }}" data-check-url="{{ url('app_check_user_exists', {value: '__email__'}) }}" class="btn btn-secondary mt-0 ml-2">{{ 'Mail de connexion'|trans }}</button>
+	</h3>
+	{% endif %}
+	{% endif %}
+{% endblock %}

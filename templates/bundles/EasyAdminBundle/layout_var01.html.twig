@@ -1,0 +1,18 @@
+{% extends '@!EasyAdmin/layout.html.twig' %}
+
+{% block head_favicon %}
+    <link rel="shortcut icon" href="{{ asset('assets/images/favicon_admin.svg') }}">
+{% endblock %}
+
+{% block content_footer -%}
+    Made with <img src="{{ asset('assets/images/icon_AEW.svg') }}" style="height: 10px;"> by Aequation Webdedign with EasyAdmin Bundle
+{%- endblock %}
+
+{% block content_footer_wrapper %}
+    {% set content_footer = block('content_footer') is defined ? block('content_footer') : '' %}
+    {% if content_footer is not empty %}
+        <section class="content-footer text-right">
+            {{ content_footer|raw }}
+        </section>
+    {% endif %}
+{% endblock %}

@@ -1,0 +1,13 @@
+{% extends "@AequationLabo/base_labo.html.twig" %}
+
+{% block title %}Labo PHP {{ app.php.version }} info{% endblock %}
+
+{% block title_h1 -%}
+    {{ ux_icon('tabler:brand-php', {height: '48px', width: '48px', class: 'text-php'}) }} LABO PHP {{ app.php.version }} info
+{%- endblock %}
+
+{% block right_content %}
+<div style="overflow-wrap: anywhere;">
+    {{ php_info }}
+</div>
+{% endblock %}

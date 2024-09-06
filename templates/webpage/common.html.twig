@@ -1,0 +1,10 @@
+{# description : Page standard #}
+{% extends "@AequationLabo/base_web.html.twig" %}
+
+{% block title %}{{ webpage.name|default('website') }}{% endblock %}
+
+{% block body %}
+    <h1>Page standard</h1>
+    <hr class="my-2">
+    <div>{{ webpage.content|raw }}</div>
+{% endblock %}

@@ -1,0 +1,23 @@
+{% extends "@AequationLabo/base_web.html.twig" %}
+
+{% block title %}
+	{{ title|default('Site bientôt en ligne !')|trans }}
+{% endblock %}
+
+{% block body %}
+    <div class="container mx-auto flex items-center">
+	{% block page_content %}
+		<div class="my-64 rounded-lg border-2 border-rose-500">
+			{% block outer_title_h1 %}
+				<h1 class="text-center text-5xl font-bold">
+					{% block title_h1 %}
+						{{ title|default('Le site est programmé pour bientôt !') }}
+					{% endblock %}
+				</h1>
+			{% endblock %}
+			<p class="text-center">{{ text|default('Le site est programmé pour bientôt !')|raw }}</p>
+			<h2 class="text-center font-bold">{{ datetime|format_datetime('full', 'short') }}</h2>
+		</div>
+	{% endblock %}
+    </div>
+{% endblock %}

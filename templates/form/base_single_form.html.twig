@@ -1,0 +1,16 @@
+{% extends "@AequationLabo/base_web.html.twig" %}
+
+{% block body %}
+	<div class="my-9">
+		<div class="border border-mdark-400 bg-mdark-100 dark:bg-mdark-500 my-6 theme-border-shadow-xl {{ wsize|default('max-w-xl') }} mx-auto">
+			<div class="p-2 text-center bg-mdark-500 dark:bg-mdark-800 rounded-tr-md rounded-tl-md">
+				<h1 class="h1 text-2xl text-center text-white uppercase antialiased">
+					{%- block titleH1 -%}Formulaire{%- endblock -%}
+				</h1>
+			</div>
+			<div class="m-6">
+				{% block form %}{% endblock %}
+			</div>
+		</div>
+	</div>
+{% endblock %}

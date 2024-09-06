@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="fr" class="{{ app.session and app.session.get('darkmode', app.user.darkmode|default(false)) ? 'dark' : '' }}">
+	<head>
+		<meta charset="{{ app.service.getStringEncoder() }}">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<title>
+			{% block title %}Website{% endblock %}
+		</title>
+		{% block favicon %}
+		<link rel="icon" href="{% block favicon_url %}{{ asset(app.service.param('favicon.main', 'favicon.svg')) }}{% endblock %}">
+		{% endblock %}
+        {% block stylesheets %}
+        {% endblock %}
+		{% block javascripts %}
+			{% block importmap %}{{ importmap('app') }}{% endblock %}
+		{% endblock %}
+		{{ app.service.getTurboMetas() }}
+	</head>
+	{# {% set test = app.session.set('darkmode', true) %} #}
+	{% block body_outer %}
+	{# <body id="app"{{ app.service.getDataTurboBodyAttrs() }} data-app="{{ app.service.appParams(true, 'public_app') }}" class="nav-fixed" {{ stimulus_controller('globalapp') }}> #}
+	<body id="app"{{ app.service.getDataTurboBodyAttrs() }} class="nav-fixed" {{ stimulus_controller('globalapp') }}>
+		{% block body_inner %}
+		{% block navbar %}
+			{% if menu is defined %}
+			{% include "@AequationLabo/webpage/bases/_navbar.html.twig" with {menu: menu} %}
+			{% endif %}
+		{% endblock %}
+		{% block body %}
+			{# main content here #}
+		{% endblock %}
+		{% endblock %}
+		{% block after_container %}
+			{# commands, modals, etc. content here #}
+            {% include '@AequationLabo/partials/_flashes.html.twig' %}
+		{% endblock %}
+	</body>
+	{% endblock %}
+</html>

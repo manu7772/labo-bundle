@@ -1,0 +1,159 @@
+{% extends "@AequationLabo/base_labo.html.twig" %}
+
+{% block title %}Labo Css &amp; styles{% endblock %}
+
+{% block title_h1 -%}{{ ux_icon('symfony', {height: '48px', width: '48px', class: 'text-success'}) }} LABO Css &amp; styles <small>({{ cssDeclaration.classes|length }} classes)</small>{%- endblock %}
+
+{% block right_content %}
+
+{% set action_options =  {
+    refresh: {
+        title: 'Compile Tailwind',
+        tooltip: '<div>Compiler et intégrer toutes les classes dans le fichier de déclaration à Tailwind</div>',
+        attributes: {
+            'data-target': "modal_classes_compile",
+            'data-content': "Compiler et intégrer toutes les classes dans le fichier de déclaration à Tailwind.",
+            'data-cancel': "Annuler",
+            'data-confirm': "Compiler",
+            'data-xhr': {success: 'Compilation effectuée', error: 'Une erreur est survenue', method: 'POST', href: url('aequation_cache_home_success', {message: 'La compilation est terminée'})}|json_encode,
+        },
+        controller: 'modal',
+    },
+    show_tw_css: {
+        title: 'Voir fichiers Tailwind',
+        tooltip: '<div>Consulter le contenu des fichiers Tailwind</div>',
+    },
+    reset: {
+        title: 'Réinitialiser les classes',
+        tooltip: '<div>Supprimer toutes les classes ajoutées</div>',
+        attributes: {
+            'data-target': "modal_classes_reset",
+            'data-content': "Toutes les classes ajoutées manuellement seront supprimées définitivement.",
+            'data-cancel': "Annuler",
+            'data-confirm': "Réinitialiser",
+        },
+        controller: 'modal',
+    },
+} %}
+{# {{ stimulus_controller('modal') }} #}
+{% set need_tw_compile = app.session.get('need_tw_compile', 0) > 0 %}
+
+<div role="group" data-turbo-temporary="false">
+{% for act, item in action_options %}
+    {% set color = act == 'refresh' and need_tw_compile ? 'pico-background-red-500' : act == action ? 'contrast' : 'secondary' %}
+    <a
+        {{ turbo_enable(item.turbo_enable|default(false)) }}
+        {{ item.controller|default(false) ? stimulus_controller(item.controller) }}
+        {{ item.attributes|default(null)|toHtmlAttributes }}
+        href="{{ path('aequation_labo_css', {action: act}) }}"
+        role="button"
+        {% if act == action %} aria-current="true"{% endif %}
+        class="{{ color }}"
+        {% if item.tooltip|default(false) %} data-tooltip="{{ item.tooltip|striptags }}" data-placement="bottom"{% endif %}
+    >
+        {{ item.title|raw }}
+    </a>
+    {# use data-target="modal-example" {{ stimulus_controller('modal') }} #}
+{% endfor %}
+</div>
+
+{# {% include "@AequationLabo/bases/_flashes_pico.html.twig" %} #}
+
+{% if need_tw_compile %}
+<article data-turbo-temporary="false" class="pico-background-green-600"><h5 class="mb-0"{% if action_options.refresh.tooltip|default(false) %} data-tooltip="{{ action_options.refresh.tooltip|striptags }}" data-placement="bottom"{% endif %}>ATTENTION : pensez à cliquer sur "{{ action_options.refresh.title }}" pour compiler le nouveau fichier Tailwind !</h5></article>
+{% endif %}
+
+<article>
+    {% if cssForm is defined %}
+        {{ form_start(cssForm, {'attr': {'data-turbo': 'false'}}) }}
+        <fieldset role="group">
+            {% for child in cssForm %}
+            {{ form_widget(child) }}
+            {% endfor %}
+            <input type="submit" value="Enregistrer">
+        </fieldset>
+        <small id="cssclasses-helper" class="mb-0"><strong>ATTENTION :</strong> les classes ne sont pas détectables automatiquement, veuillez entrer des classes existantes, sinon malgré qu'elles soient enregistrées, elles ne seront pas prises en compte. Référez-vous à la <a href="https://tailwindcss.com/docs/installation" target="_blank" data-tooltip="Cliquez pour accéder à la page de documentation officielle de TailwindCss" data-placement="bottom">documentation Tailwind</a> !</small>
+        {{ form_end(cssForm) }}
+    {% else %}
+        <form{{ turbo_enable(false) }} action="{{ path('aequation_labo_css', {action: 'addcss'}) }}" method="POST">
+            <fieldset role="group">
+                <input name="cssclasses" placeholder="Entrez ici les classes css que vous souhaitez ajouter..." required />
+                <input type="submit" value="Enregistrer">
+            </fieldset>
+            <small id="cssclasses-helper" class="mb-0"><strong>ATTENTION :</strong> les classes ne sont pas détectables automatiquement, veuillez entrer des classes existantes, sinon malgré qu'elles soient enregistrées, elles ne seront pas prises en compte. Référez-vous à la <a href="https://tailwindcss.com/docs/installation" target="_blank" data-tooltip="Cliquez pour accéder à la page de documentation officielle de TailwindCss" data-placement="bottom">documentation Tailwind</a> !</small>
+        </form>
+    {% endif %}
+</article>
+
+{% if tailwind_params|default({}) is not empty %}
+<article>
+    <table>
+        <tbody>
+            {% for label,data in tailwind_params %}
+            <tr>
+                <td>{{ label }}</td>
+                <td>{{ printr(data) }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</article>
+{% endif %}
+
+{% if action == 'show_tw_css' %}
+<h4 class="text-center">Contenu des fichiers Tailwind ({{ action_info.css_contents|length }})</h4>
+    {% if action_info[action] %}
+    <article>
+        {% for file,content in action_info.css_contents %}
+            <h6>{{ loop.index }} <span class="pico-color-green-400">{{ file }}</span></h6>
+            <textarea readonly style="height: 400px;">{{ content }}</textarea>
+        {% endfor %}
+    </article>
+    {% else %}
+    <article class="pico-background-red-500">Aucun fichier n'a été trouvé, désolé !</article>
+    {% endif %}
+{% endif %}
+
+<h4 class="text-center">Liste des styles enregistrés</h4>
+<table>
+    <thead>
+        <tr>
+            <th scope="col">Groupe</th>
+            <th scope="col" class="text-center">Type</th>
+            <th scope="col">Classes CSS</th>
+        </tr>
+    </thead>
+    <tbody>
+        {# generic #}
+        {% for group,classes in cssDeclaration.classesGrouped %}
+        <tr>
+            <td>{{ group }}</td>
+            <td class="text-center">
+                <ul class="mb-0 list-inside pl-0 list-unstyled">
+                    {% for class in classes -%}
+                    {% set ctype = cssDeclaration.classType(class, true) %}
+                    {% if ctype == 0 %}
+                    <li class="mb-0"><mark class="bg-info">{{ 'constante' }}</mark></li>
+                    {% elseif ctype == 1 %}
+                    <li class="mb-0"><mark class="bg-secondary">{{ 'automatique' }}</mark></li>
+                    {% elseif ctype == 2 %}
+                    <li class="mb-0"><mark class="bg-success">{{ 'ajoutée' }}</mark></li>
+                    {% else %}
+                    <li class="mb-0"><mark class="bg-muted">{{ 'inconnue' }}</mark></li>
+                    {% endif %}
+                    {% endfor %}
+                </ul>
+            </td>
+            <td>
+                <ul class="mb-0 list-inside pl-0">
+                    {% for class in classes -%}
+                    <li class="mb-0">{{ class }}{% if cssDeclaration.isRemovable(class) %} <a{{ turbo_enable(false) }} href="{{ path('aequation_labo_css', {action: 'removecss', data: class}) }}">Supprimer</a>{%- endif %}</li>
+                    {% endfor %}
+                </ul>
+            </td>
+        </tr>
+        {% endfor %}
+
+    </tbody>
+</table>
+{% endblock %}

@@ -1,0 +1,7 @@
+<div {{ react_component('Nav', {
+    stickyAt: 200,
+    title: this.webpage.prefered|default(false) ? null : this.webpage.title|default(null),
+    img1: asset('images/logo/toit_40pcent_fond_2560px.svg'),
+    img2: asset('images/logo/toit_40pcent_ligne_2560px.svg'),
+    routes: this.items,
+}) }}></div>

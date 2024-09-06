@@ -1,0 +1,36 @@
+Size: Taille
+Filename: Nom fichier
+Image: Image
+Photo: Photo
+File: Fichier
+Plus d'informations: Plus d'infos
+firstname: Nom
+lastname: Prénom
+expiresAt: Date d'expiration
+Expires At: Date d'expiration
+isVerified: Compte vérifié
+cancel: annuler
+Last Action At: Dern.modif.
+# Exception
+exception_title: Une erreur est survenue
+exception_unknown: Erreur inconnue
+error_: Erreur inconnue
+error_unknown: Erreur inconnue
+error_403: Accès non autorisé
+error_404: Page introuvable
+error_500: Erreur serveur
+
+higherRole: Accès
+ROLE_USER: Utilisateur
+ROLE_EDITOR: Éditeur
+ROLE_COLLABORATOR: Collaborateur
+ROLE_ADMIN: Administrateur
+ROLE_SUPER_ADMIN: SuperAdmin
+
+# Validations
+email_not_empty: L'email doit être indiqué et valide
+user_already_exists: Cet utilisateur existe déjà
+user_not_found: Cet utilisateur n'existe pas
+
+
+

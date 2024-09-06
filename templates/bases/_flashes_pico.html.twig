@@ -1,0 +1,20 @@
+{% set app_flashes = app.flashes %}
+{% if app_flashes %}
+{% set color = {
+    info: 'pico-background-blue-600',
+    success: 'pico-background-green-600',
+    warning: 'pico-background-orange-600',
+    error: 'pico-background-red-600',
+} %}
+<div{{ turbo_off() }}>
+    {% for type,flashes in app_flashes -%}
+    <article class="{{ color[type]|default(color|first) }}">
+        <ul class="mb-0 list-inside pl-0">
+            {% for message in flashes -%}
+            <li class="mb-0">{{ message|raw }}</li>
+            {% endfor %}
+        </ul>
+    </article>
+    {% endfor %}
+</div>
+{% endif %}

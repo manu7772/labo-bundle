@@ -1,0 +1,14 @@
+<div{{ attributes }}>
+    <!-- component html -->
+    {# {% form_theme form '@AequationLabo/form/labo_app_layout.html.twig' %} #}
+    <h5>Paramètres du fichier JPS</h5>
+    {{ form(form) }}
+    <hr>
+    <h5>Génération du fichier JPS</h5>
+    {% set code = this.code %}
+    {% if code %}
+    <textarea name="code" id="code" class="code-area">{{ code }}</textarea>
+    {% else %}
+    <article class="bg-error text-white">Les données sont invalides, corrigez pour générer le code.</article>
+    {% endif %}
+</div>

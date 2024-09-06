@@ -1,0 +1,13 @@
+{% set app_flashes = app.flashes %}
+{% if app_flashes %}
+    <div>
+        <h3>Messages</h3>
+        <div>
+            <ul>
+            {% for type,flash in app_flashes -%}
+                <li>{{ type }} : {{ dump(flash) }}</li>
+            {%- endfor %}
+            </ul>
+        </div>
+    </div>
+{% endif %}

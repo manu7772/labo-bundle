@@ -1,0 +1,15 @@
+{% extends "@AequationLabo/base_labo.html.twig" %}
+
+{% block title %}Labo PHP {{ app.php.version }} Extensions list{% endblock %}
+
+{% block title_h1 -%}
+    {{ ux_icon('tabler:brand-php', {height: '48px', width: '48px', class: 'text-php'}) }} LABO PHP {{ app.php.version }} Extensions list
+{%- endblock %}
+
+{% block right_content %}
+<ul>
+    {% for extension in php_extensions -%}
+    <li><a href="{{ path('aequation_php_extension', {extension: extension.name}) }}">{{ extension.name }} <small>v.{{ extension.version }}</small></a></li>
+    {%- endfor %}
+</ul>
+{% endblock %}

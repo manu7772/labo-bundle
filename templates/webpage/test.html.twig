@@ -1,0 +1,20 @@
+{# description : Page test #}
+{# status : DISABLED #}
+{% extends "@AequationLabo/base_labo.html.twig" %}
+
+{% block title %}{{ webpage.name|default('???') }}{% endblock %}
+
+{% block body %}
+    <h1>Bonjour {{ app.user|default('le monde') }} !</h1>
+    {# {{ dump(webpage|default('NOT FOUND!!!')) }} #}
+    <div class="mx-auto md:max-w-md lg:max-w-3xl h-96 max-h-96 overflow-hidden">
+        <div class="video-container">
+            <video autoplay muted {# controls #} loop>
+                {# <source src="{{ asset('videos/zen/aerial_-_18390 (720p).mp4') }}" type="video/mp4" media="(orientation: landscape)"> #}
+                <source src="{{ asset('videos/zen/184069 (720p).mp4') }}" type="video/mp4" media="(orientation: landscape)">
+            </video>
+        </div>
+    </div>
+    <hr class="my-2">
+    <div>{{ webpage.content|raw }}</div>
+{% endblock %}

@@ -1,0 +1,102 @@
+{% extends "@AequationLabo/base_labo.html.twig" %}
+
+{% block title %}Labo Caches{% endblock %}
+
+{% block title_h1 -%}{{ icon('tabler:disc', {size: '48px', class: 'pico-color-amber-300'}) }} LABO Caches <small>Current cache dir: {{ app.service.param('kernel.cache_dir') }}</small>{%- endblock %}
+
+{% block right_content %}
+
+<article>
+    <h5>Custom App Caches
+        <span>
+            <a{{ turbo_enable(false) }} href="{{ path('aequation_cache_clear') }}" data-target="modal-clear-caches" data-title="Vider toutes les caches" data-content="Toutes les custom caches seront vidées, le site sera plus lent juste le temps de générer à nouveau toutes les caches." data-cancel="Annuler" data-confirm="Vider les caches" {{ stimulus_controller('modal') }} data-tooltip='Vider toutes les caches'>{{ icon('tabler:trash-filled', '24px') }}</a>
+            {% if app.service.dev -%}
+            <a{{ turbo_enable(false) }} href="{{ path('aequation_cache_toggle_dev_shortcut', {name: '#all-on'}) }}" class="text-muted" data-tooltip="Tout désactiver">{{ icon('tabler:disc-off', '24px') }}</a>
+            <a{{ turbo_enable(false) }} href="{{ path('aequation_cache_toggle_dev_shortcut', {name: '#all-off'}) }}" class="text-success" data-tooltip="Tout activer">{{ icon('tabler:disc', '24px') }}</a>
+            {% endif %}
+        </span>
+    </h5>
+    <ul>
+        {% for key,commentaire in cacheService.keys %}
+        <li>
+            <div>
+                {%- set isDevSc = cacheService.isDevShortcut(key) -%}
+                {% if not isDevSc %}
+                    <a{{ turbo_enable(false) }} href="{{ path('aequation_cache_clear', {name: key}) }}" data-tooltip='Vider le cache "{{ key }}"'>{{ icon('tabler:trash-filled', '24px') }}</a>
+                    {% else %}
+                    <span class="text-muted">{{ icon('tabler:trash-filled', '24px') }}</span>
+                    {% endif %}
+                {%- if app.service.dev -%}
+                    <a{{ turbo_enable(false) }} href="{{ path('aequation_cache_toggle_dev_shortcut', {name: key}) }}" class="{{ isDevSc ? 'text-muted' : 'text-success' }}" data-tooltip='{{ isDevSc ? 'Activer' : 'Désactiver' }} le cache "{{ key }}"'>{{ icon(isDevSc ? 'tabler:disc-off' : 'tabler:disc', '24px') }}</a>
+                {%- endif %} {{ key }} : <strong>{{ commentaire|raw }}</strong>
+            </div>
+        </li>
+        {% endfor %}
+    </ul>
+    {% if app.service.dev %}
+        {# {% do cacheService.resetDevShortcuts %} #}
+        {# {{ dump(cacheService.defaultsDevShortcuts) }} #}
+        {# {{ dump(cacheService.sessionDevShortcuts) }} #}
+    {% endif %}
+</article>
+
+<article{{ turbo_off() }}>
+    <h5>
+        Hard clear cache (try 3 methods)
+        <br>
+        <small>Attention, cela fera possiblement planter la réponse du serveur, même si l'opération a réussi, il sera peut-être nécessaire de recharger la page.</small>
+    </h5>
+    <div>
+        <a
+            href="{{ path('aequation_cache_delete_get', {method: "exec"}) }}"
+            {{ turbo_enable(false) }}
+            data-target="modal_cache_clear_exec"
+            data-content="Les caches seront vidées en utilisant la méthode EXEC de PHP."
+            data-cancel="Annuler"
+            data-confirm="Vider les caches"
+            {{ stimulus_controller('modal') }}
+        >
+            {{ icon('tabler:refresh', '24px') }} [exec] PHP Exec "clear:cache"
+        </a>
+    </div>
+    <div>
+        {% set xhr = {success: 'Opération effectuée', error: 'Opération effectuée', method: 'POST', href: url('aequation_cache_home_success', {message: 'La cache a été supprimée'})} %}
+        <a
+            href="{{ path('aequation_cache_delete_post', {method: "console"}) }}"
+            {{ turbo_enable(false) }}
+            data-target="modal_cache_clear_console"
+            data-content="Les caches seront vidées en utilisant la CONSOLE de Symfony."
+            data-cancel="Annuler"
+            data-confirm="Vider les caches"
+            data-xhr="{{ xhr|json_encode }}"
+            {{ stimulus_controller('modal') }}
+        >
+            {{ icon('tabler:refresh', '24px') }} [console] Commande console "clear:cache"
+        </a>
+    </div>
+    <div>
+        {% set xhr = {success: 'Opération effectuée', error: 'Opération effectuée', method: 'POST', href: url('aequation_cache_home_success', {message: 'La cache a été supprimée'})} %}
+        {# {% set xhr = {success: 'Opération effectuée', error: 'Opération effectuée', method: 'POST'} %} #}
+        <a
+            href="{{ path('aequation_cache_delete_post', {method: "rmdir"}) }}"
+            {{ turbo_enable(false) }}
+            data-target="modal_cache_clear_rmdir"
+            data-content="Force brute : la cache est vidée en supprimant tous les fichiers."
+            data-cancel="Annuler"
+            data-confirm="Supprimer les fichiers"
+            data-xhr="{{ xhr|json_encode }}"
+            {{ stimulus_controller('modal') }}
+        >
+            {{ icon('tabler:trash-filled', '24px') }} [filesystem] Supprimer tous les fichiers de cache <i>({{ app.service.param('kernel.cache_dir') }})</i>
+        </a>
+    </div>
+</article>
+
+<article>
+    <h5>All caches dir: {{ finder.pathname }} <small>[ Current: {{ app.service.param('kernel.cache_dir') }} ]</small></h5>
+    <div>
+        {{ printFiles(finder, 2, true) }}
+    </div>
+</article>
+
+{% endblock %}

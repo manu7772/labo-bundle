@@ -1,0 +1,90 @@
+{% extends "@AequationLabo/base_labo_entities.html.twig" %}
+{% set entshort = entity.shortname(true)|default(meta_info.shortname_lower) %}
+
+{% block title %}Labo {{ 'view.show'|trans({}, entshort)|ucfirst }}{% endblock %}
+
+{% block title_h1 -%}{{ icon(entity.shortname, {height: '52px', width: '52px', class: 'text-success'}) }} LABO {{ 'view.show'|trans({}, entshort)|ucfirst }}{%- endblock %}
+
+{% block right_content %}
+    <h3>{{ 'view._show'|trans({'%name%': entity.name}, entshort)|ucfirst }}</h3>
+
+    {% set ent_action = entityAction(entity, 'index') %}
+    {% if ent_action %}
+    <a role="button" href="{{ path(ent_action._route, ent_action._route_params) }}"><twig:ux:icon name="{{ 'form.icon.index'|trans({}, entshort) }}" width="18px" />&nbsp;{{ 'action.back_to_index'|trans({}, entshort)|ucfirst }}</a>
+    {% endif %}
+    {% set ent_action = entityAction(entity, 'edit') %}
+    {% if ent_action %}
+    <a role="button" href="{{ path(ent_action._route, ent_action._route_params) }}"><twig:ux:icon name="{{ 'form.icon.edit'|trans({}, entshort) }}" width="18px" />&nbsp;{{ 'action.edit'|trans({}, entshort)|ucfirst }}</a>
+    {% endif %}
+    {{ include(entityTemplate(entity, '_delete_form')) }}
+    <div class="overflow-auto">
+        <table class="table mt-3">
+            <tbody>
+                <tr>
+                    <th class="text-right text-muted">{{ 'field.id'|trans({}, entshort)|ucfirst }}</th>
+                    <td>{{ entity.id }}</td>
+                </tr>
+                <tr>
+                    <th class="text-right text-muted">{{ 'field.euid'|trans({}, entshort)|ucfirst }}</th>
+                    <td>{{ entity.euid }}</td>
+                </tr>
+                <tr>
+                    <th class="text-right text-muted">{{ 'field.classname'|trans({}, entshort)|ucfirst }}</th>
+                    <td>{{ entity.classname }}</td>
+                </tr>
+                <tr>
+                    <th class="text-right text-muted">{{ 'field.shortname'|trans({}, entshort)|ucfirst }}</th>
+                    <td>{{ entity.shortname }}</td>
+                </tr>
+                <tr>
+                    <th class="text-right text-muted">{{ 'field.name'|trans({}, entshort)|ucfirst }}</th>
+                    <td>{{ entity.name }}</td>
+                </tr>
+                <tr>
+                    <th class="text-right text-muted">{{ 'field.title'|trans({}, entshort)|ucfirst }}</th>
+                    <td>{{ entity.title|raw }}</td>
+                </tr>
+                <tr>
+                    <th class="text-right text-muted">{{ 'field.linktitle'|trans({}, entshort)|ucfirst }}</th>
+                    <td>{{ entity.linktitle|raw }}</td>
+                </tr>
+                <tr>
+                    <th class="text-right text-muted">{{ 'field.slug'|trans({}, entshort)|ucfirst }}</th>
+                    <td>{{ entity.slug }}</td>
+                </tr>
+                <tr>
+                    <th class="text-right text-muted">{{ 'field.createdAt'|trans({}, entshort)|ucfirst }}</th>
+                    <td>{{ entity.createdAt ? entity.createdAt|date('Y-m-d H:i:s') : '' }}</td>
+                </tr>
+                <tr>
+                    <th class="text-right text-muted">{{ 'field.updatedAt'|trans({}, entshort)|ucfirst }}</th>
+                    <td>{{ entity.updatedAt ? entity.updatedAt|date('Y-m-d H:i:s') : '' }}</td>
+                </tr>
+                <tr>
+                    <th class="text-right text-muted">{{ 'field.timezone'|trans({}, entshort)|ucfirst }}</th>
+                    <td>{{ entity.timezone }}</td>
+                </tr>
+                <tr>
+                    <th class="text-right text-muted">{{ 'field.enabled'|trans({}, entshort)|ucfirst }}</th>
+                    <td>{{ validIcon(entity.enabled, '18px') }}</td>
+                </tr>
+                <tr>
+                    <th class="text-right text-muted">{{ 'field.softdeleted'|trans({}, entshort)|ucfirst }}</th>
+                    <td>{{ validIcon(entity.softdeleted, '18px') }}</td>
+                </tr>
+                <tr>
+                    <th class="text-right text-muted">{{ 'field.twigfile'|trans({}, entshort)|ucfirst }}</th>
+                    <td>{{ entity.twigfile }}</td>
+                </tr>
+                <tr>
+                    <th class="text-right text-muted">{{ 'field.content'|trans({}, entshort)|ucfirst }}</th>
+                    <td>{{ entity.content|raw }}</td>
+                </tr>
+                <tr>
+                    <th class="text-right text-muted">{{ 'field.prefered'|trans({}, entshort)|ucfirst }}</th>
+                    <td>{{ validIcon(entity.prefered, '18px') }}</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+{% endblock %}

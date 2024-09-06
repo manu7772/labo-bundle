@@ -1,0 +1,8 @@
+{% set ent_action = entityAction(entity, 'delete') %}
+{% if ent_action %}
+    {% set entshort = entity.shortname(true)|default(meta_info.shortname_lower) %}
+    <form method="post" style="display: inline;" action="{{ path(ent_action._route, ent_action._route_params) }}" onsubmit="return confirm('{{ 'confirm._delete'|trans({'%name%': entity.name|default(entshort)}, entshort)|ucfirst }}');">
+        <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ entity.id) }}">
+        <button role="button" class="btn-muted"><twig:ux:icon name="{{ 'form.icon.delete'|trans({}, entshort) }}" width="18px" />&nbsp;{{ 'action.delete'|trans({}, entshort)|ucfirst }}</button>
+    </form>
+{% endif %}

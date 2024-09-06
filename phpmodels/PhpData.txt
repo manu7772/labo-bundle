@@ -1,0 +1,57 @@
+<?php
+namespace App\phpdata;
+
+use Aequation\LaboBundle\Model\Interface\PhpDataInterface;
+
+use DateTimeImmutable;
+use DateTimeInterface;
+
+class PhpData implements PhpDataInterface
+{
+
+    public const VERSION = "#####VERSION#####";
+    public const JSON_DATA = "#####JSON_DATA#####";
+
+    private array $data;
+    private DateTimeInterface $version;
+
+    public function __construct()
+    {
+        $this->data = json_decode(static::JSON_DATA, true);
+        $this->version = new DateTimeImmutable(static::VERSION);
+    }
+
+    public function needUpdate(): bool
+    {
+        return json_encode($this->data) !== static::JSON_DATA;
+    }
+
+    public function get(
+        string $name = null,
+        mixed $default = null,
+    ): mixed
+    {
+        return empty($name)
+            ? $this->data
+            : $this->data[$name] ?? $default;
+    }
+
+    public function set(
+        string $name,
+        mixed $data
+    ): static
+    {
+        $this->data[$name] = $data;
+        return $this;
+    }
+
+    public function getVersion(
+        bool $toDatetime = false
+    ): DateTimeInterface
+    {
+        return $toDatetime
+            ? $this->version
+            : $this->version->getTimestamp();
+    }
+
+}

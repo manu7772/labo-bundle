@@ -1,0 +1,24 @@
+{% extends '@AequationLabo/form/base_single_form.html.twig' %}
+{% set wsize = 'max-w-md' %}
+
+{% block title %}{{ 'Login'|trans }}{% endblock %}
+
+{% block titleH1 %}
+	{{ 'Login'|trans }}
+{% endblock %}
+
+{% block form %}
+	{% if error is not null %}
+	<div class="alert alert-danger">{{ error.messageKey|trans(error.messageData, 'security') }}</div>
+	{% endif %}
+
+	{% if app.user %}
+	<div class="mb-3 alert alert-info">
+		Vous êtes déjà connecté en tant que
+		{{ app.user.userIdentifier }},
+		<a href="{{ path('app_logout') }}" class="text-blue-600 hover:text-blue-900">Quitter</a>
+	</div>
+	{% else %}
+	{{ component('LoginForm', {initialFormData: loginContainer}) }}
+	{% endif %}
+{% endblock %}

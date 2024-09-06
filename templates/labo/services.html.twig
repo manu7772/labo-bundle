@@ -1,0 +1,24 @@
+{% extends "@AequationLabo/base_labo.html.twig" %}
+
+{% block title %}Labo Services{% endblock %}
+
+{% block title_h1 -%}{{ ux_icon('symfony', {height: '48px', width: '48px', class: 'text-success'}) }} LABO Services{%- endblock %}
+
+{% block right_content %}
+{% set services = app.service.appServices %}
+<article>
+    <h3 class="mb-0">{{ services|length }} {{ services|length > 1 ? 'services publics' : 'service public' }}</h3>
+</article>
+{% for service in services %}
+<article>
+    <div class="grid">
+        <div>
+            <h4 class="mb-0 pico-color-blue-600">{{ service.classname }}</h4>
+            <div>ID: <strong>{{ service.service ? service.classname : validIcon(false, '24px') }}</strong></div>
+            <div>Service: <span class="{{ service.service ? 'pico-color-green-300' : 'text-muted' }}">{{ service.service ? service.service|classname : 'non' }}</span></div>
+            <div>Public: <span class="{{ app.service.has(service.classname) ? 'pico-color-green-300' : 'pico-color-red-400' }}">{{ validIcon(app.service.has(service.classname), '24px') }}</span></div>
+        </div>
+    </div>
+</article>
+{% endfor %}
+{% endblock %}

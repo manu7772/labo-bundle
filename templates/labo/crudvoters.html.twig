@@ -1,0 +1,9 @@
+{% extends "@AequationLabo/base_labo.html.twig" %}
+
+{% block title %}Labo Entities CRUDS{% endblock %}
+
+{% block title_h1 -%}{{ ux_icon('symfony', {height: '48px', width: '48px', class: 'text-success'}) }} LABO Entities CRUDS{%- endblock %}
+
+{% block right_content %}
+    {% include "@AequationLabo/bases/_entitymenu.html.twig" with {menu: app.service.entitymenu} %}
+{% endblock %}

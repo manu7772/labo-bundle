@@ -1,0 +1,23 @@
+{% extends "@AequationLabo/base_light.html.twig" %}
+
+{% block title %}{{ title|default('SITE DE TEST')|trans }}{% endblock %}
+
+{% block body %}
+    <br>
+    {% block outer_title_h1 %}
+    <h1>{% block title_h1 %}{{ title|default('Ceci est un site de test') }}{% endblock %}</h1>
+    {% endblock %}
+    {% block page_content %}
+    <p>Vous devez entrer un mot de passe pour accéder au contenu</p>
+    <div class="container display-flex my-md mx-sm">
+        <form action="{{ path('app_home') }}" method="POST" class="form shadow-md my-md mx-sm align-center">
+            <div class="input-wrapper border-radius-sm">
+                <input type="password" name="demo_password" id="demo_password" placeholder="Entrez le mot de passe ici..." class="input text-color-gray placeholder-color-light-gray focus-outline-blue" />
+            </div>
+            <div class="input-wrapper border-radius-sm">
+                <input type="submit" value="Entrer" class="button bg-color-orange text-color-white focus-light-orange hover-light-orange">
+            </div>
+        </form>
+    </div>
+    {% endblock %}
+{% endblock %}

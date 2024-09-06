@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="fr" class="{{ app.session and app.session.get('darkmode', app.user.darkmode|default(false)) ? 'dark' : '' }}">
+	<head>
+		<meta charset="{{ app.service.getStringEncoder() }}">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<title>{% block title %}Aequation Labo BUNDLE{% endblock %}</title>
+		<link rel="icon" href="{% block favicon %}{{ asset(app.service.param('favicon.admin', 'favicon.svg')) }}{% endblock %}">
+        <link rel="stylesheet" href="{{ asset('styles/pico.css') }}">
+        <link rel="stylesheet" href="{{ asset('styles/pico.colors.css') }}">
+        <link rel="stylesheet" href="{{ asset('styles/labo-simple.css') }}">
+		{% block javascripts %}
+		{# {% block importmap %}{{ importmap('labo') }}{% endblock %} #}
+		{% endblock %}
+	</head>
+	<body>
+		<main class="container-fluid">
+			{% block body %}
+				{% block outer_title_h1 %}
+				<h1>{% block title_h1 %}Documentation{% endblock %}</h1>
+				{% endblock %}
+				{% block page_content %}
+				<div class="columns-container">
+					<div class="left-col">
+						{% block sub_menu %}
+						{% if submenu is defined %}
+						{% include "@AequationLabo/bases/_submenu.html.twig" with {submenu: submenu} %}
+						{% endif %}
+						{% endblock %}
+					</div>
+					<div class="right-col">
+						{% block right_content %}
+						{% endblock %}
+					</div>
+				</div>
+				{% endblock %}
+			{% endblock %}
+		</main>
+		<footer>
+			{% block footer %}
+			{% endblock %}
+		</footer>
+		{% block after_container %}
+			{# commands, modals, etc. content here #}
+            {% include '@AequationLabo/partials/_flashes.html.twig' %}
+		{% endblock %}
+	</body>
+</html>

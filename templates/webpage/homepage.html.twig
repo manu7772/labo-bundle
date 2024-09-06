@@ -1,0 +1,30 @@
+{# description : Page d'accueil #}
+{% extends "@AequationLabo/base_web.html.twig" %}
+
+{% block title %}{{ webpage.name|default('website') }}{% endblock %}
+
+{% block body %}
+    {% if webpage|default(false) %}
+    <h1>{{ webpage.title }}</h1>
+    {% else %}
+    <h1>Bonjour {{ app.user|default('cher programmeur') }} !</h1>
+    {% endif %}
+    <div class="my-8 border-4 border-mdark-500 p-4 rounded-md">
+        <p>
+            <span class="text-lg font-semibold">Si vous voyez cette page, c'est que :</span>
+            <ul class="my-4">
+                <li>- le site n'est pas encore installé, alors rendez-vous sur <a href="{{ path('aequation_labo_home') }}" class="font-black underline text-secondary-600">le Labo</a> pour procéder à l'installation,</li>
+                <li>- le site est installé, mais vous devez maintenant surcharger cette page d'accueil...</li>
+                <li>- voici également le lien vers la page <a href="{{ path('admin_home') }}" class="font-black underline text-secondary-600">administration</a> de vos data.</li>
+                {% if app.user %}
+                <li>- enfin, pour vous <strong>déconnecter</strong>, c'est <a href="{{ path('app_logout') }}" class="font-black underline text-secondary-600">ici</a>.</li>
+                {% else %}
+                <li>- enfin, pour vous <strong>connecter</strong>, c'est <a href="{{ path('app_login') }}" class="font-black underline text-secondary-600">ici</a>.</li>
+                {% endif %}
+            </ul>
+            <span class="text-lg font-semibold">Bonne programmation !</span>
+        </p>
+    </div>
+    <hr class="my-2">
+    <div class="my-6">{{ webpage|default(false) ? webpage.content|raw : 'Contenu de la page, ici.' }}</div>
+{% endblock %}

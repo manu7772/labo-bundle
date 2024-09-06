@@ -1,0 +1,5 @@
+{% if field.value %}
+    <a href="{{ field.value }}" target="_blank">Ouvrir <i class="fa fa-{{ constant('Aequation\\LaboBundle\\Entity\\Pdf::ICON') }} fa-fw"></i></a>
+{% else %}
+    <i class="fa fa-{{ constant('Aequation\\LaboBundle\\Entity\\Pdf::ICON') }} fa-fw"></i>
+{% endif %}

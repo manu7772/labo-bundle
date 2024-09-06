@@ -1,0 +1,19 @@
+{% extends "@AequationLabo/base_labo.html.twig" %}
+
+{% block title %}Documentation{% endblock %}
+
+{% block title_h1 -%}
+    {{ ux_icon('tabler:book', {height: '48px', width: '48px', class: 'text-tertiary'}) }} Documentation
+{%- endblock %}
+
+{% block right_content %}
+<h2>Symfony informations</h2>
+<p>Environment : <strong>{{ app.environment }}</strong></p>
+<p>Version : <strong>{{ app.symfony.VERSION }}</strong></p>
+<p>Maintenance : <strong>{{ app.symfony.END_OF_MAINTENANCE|format_date('long') }}</strong></p>
+<p>Fin de vie : <strong>{{ app.symfony.END_OF_LIFE|format_date('long') }}</strong></p>
+{# <p>Route : <strong>{{ app.current_route }}</strong></p> #}
+{# <p>Route parameters : <strong>{{ app.current_route_parameters|json_encode }}</strong></p> #}
+<p>Locale : <strong>{{ app.locale }}</strong></p>
+<p>Locales : <strong>{{ app.enabled_locales|json_encode }}</strong></p>
+{% endblock %}

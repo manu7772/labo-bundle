@@ -1,0 +1,18 @@
+{% extends "@AequationLabo/base_web.html.twig" %}
+
+{% block title %}Déconnexion / Fin de session
+{% endblock %}
+
+{% block body %}
+	<div class="max-w-2xl mt-9 mx-auto">
+
+		<div class="alert alert-warning text-center">
+			<p class="text-xl font-extrabold">Vous avez été déconnecté de votre compte utilisateur</p>
+			<p class="italic mt-3">Votre compte a expiré, vous ne pouvez plus accéder à votre compte.<br>Pour rétablir votre compte, veuillez nous contacter.</p>
+			<p class="my-6">
+				<a href="{{ url('app_home') }}" class="btn btn-warning">{{ 'homepage'|trans }}</a>
+			</p>
+		</div>		
+
+	</div>
+{% endblock %}

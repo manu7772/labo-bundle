@@ -1,0 +1,27 @@
+{% extends "@AequationLabo/base_labo.html.twig" %}
+
+{% block title %}Labo Test modale{% endblock %}
+
+{% block title_h1 -%}{{ ux_icon('symfony', {height: '48px', width: '48px', class: 'text-success'}) }} LABO Test modale{%- endblock %}
+
+{% block right_content %}
+<!-- Modal -->
+<button class="contrast" data-href="{{ path('aequation_labo_home') }}" data-target="modal-example" data-title="Confirmez svp..." data-content="Souhaitez-vous retourner à la page d'accueil LABO ?" {{ stimulus_controller('modal') }}>Ouvrir la modale</button>
+<!-- ./ Modal -->
+
+{# <!-- Modal example -->
+<dialog id="modal-example">
+	<article>
+		<header>
+			<button aria-label="Close" rel="prev" data-target="modal-example" data-action="closeModal"></button>
+			<h3>Confirmez, svp...</h3>
+		</header>
+		<p>Souhaitez-vous retourner à la page d'accueil LABO ?</p>
+		<footer>
+			<button role="button" class="secondary" data-target="modal-example" data-action="closeModal">Annuler</button>
+			<button autofocus data-target="modal-example" data-action="{{ path('aequation_labo_home') }}">Confirmer</button>
+		</footer>
+	</article>
+</dialog>
+<!-- ./ Modal example --> #}
+{% endblock %}

@@ -1,0 +1,16 @@
+{% extends "@AequationLabo/base_labo_entities.html.twig" %}
+{% set entshort = entity.shortname(true)|default(meta_info.shortname_lower) %}
+
+{% block title %}Labo {{ 'view.new'|trans({}, entity.shortname(true))|ucfirst }}{% endblock %}
+
+{% block title_h1 -%}{{ icon(meta_info.shortname, {height: '52px', width: '52px', class: 'text-success'}) }} LABO {{ 'view.new'|trans({}, entshort)|ucfirst }}{%- endblock %}
+
+{% block right_content %}
+    {% set ent_action = entityAction(entity, 'index') %}
+    {% if ent_action %}
+    <a role="button" href="{{ path(ent_action._route, ent_action._route_params) }}"><twig:ux:icon name="{{ 'form.icon.index'|trans({}, entshort) }}" width="18px" />&nbsp;{{ 'action.back_to_index'|trans({}, entshort)|ucfirst }}</a>
+    {% endif %}
+    {# {{ component('LaboForm', {entity: entity, context: 'new'}) }} #}
+    <twig:LaboForm :entity="entity" context="'new'" />
+    {# {{ include(entityTemplate(entity, '_form')) }} #}
+{% endblock %}

@@ -1,0 +1,68 @@
+{% set entshort = entity.shortname(true)|default(meta_info.shortname_lower) %}
+{% set ent_action = entityAction(meta_info.classname, 'new') %}
+
+{% if ent_action %}
+<a role="button" href="{{ path(ent_action._route, ent_action._route_params) }}"><twig:ux:icon name="{{ 'form.icon.new'|trans({}, entshort) }}" width="18px" />&nbsp;{{ 'action.new'|trans({}, entshort)|ucfirst }}</a>
+{% endif %}
+
+<div class="overflow-auto">
+    <table class="striped mt-4">
+        <thead>
+            <tr>
+                {% for header in headers %}
+                <th>
+                    <div>{{ ('field.' ~ header)|trans({}, entshort)|ucfirst }}</div>
+                    <cite class="subcell text-muted">
+                        {{ header }}
+                    </cite>
+                </th>
+                {% endfor %}
+            </tr>
+        </thead>
+        <tbody>
+        {% for entity in list %}
+            <tr>
+                {% for header in headers %}
+                {% set info = cellPrint(entity, header, 'index') %}
+                <td class="cell">
+                    <div>{{ info.value }}</div>
+                    <ul class="subcell text-muted">
+                        <li>Type : {{ info.type }}</li>
+                        {% if info.type == 'string' %}
+                        <li>Taille : {{ info.value|length }} char.</li>                            
+                        {% endif %}
+                    </ul>
+                </td>
+                {% endfor %}
+                {# <td>
+                    {% if entity.prefered|default(false) %}
+                    <kbd data-tooltip="{{ 'is_prefered'|trans({}, entshort)|ucfirst }}" data-placement="right">{{ entity.id }}</kbd>
+                    {% else %}
+                    {{ entity.id }}
+                    {% endif %}
+                </td>
+                <td class="text-center">
+                    {% set ent_action = entityAction(entity, 'show') %}
+                    {% if ent_action %}
+                    <a style="display: block;" href="{{ path(ent_action._route, ent_action._route_params) }}"><twig:ux:icon name="tabler:eye" width="18px" />&nbsp;{{ 'action.show'|trans({}, entity.shortname(true))|ucfirst }}</a>
+                    {% endif %}
+                    {% set ent_action = entityAction(entity, 'edit') %}
+                    {% if ent_action %}
+                    <a style="display: block;" href="{{ path(ent_action._route, ent_action._route_params) }}"><twig:ux:icon name="tabler:pencil" width="18px" />&nbsp;{{ 'action.edit'|trans({}, entity.shortname(true))|ucfirst }}</a>
+                    {% endif %}
+                </td>
+                <td>{{ entity.name }}</td>
+                <td class="text-center">{{ entity.createdAt|date('d-m-Y H:i') }}<br>{{ entity.updatedAt ? entity.updatedAt|date('d-m-Y H:i') : '' }}</td>
+                <td class="text-center">{{ entity.timezone }}</td>
+                <td class="text-center">{{ validIcon(entity.enabled, '18px') }}</td>
+                <td class="text-center">{{ validIcon(entity.softdeleted, '18px') }}</td>
+                <td>{{ entity.twigfile }}</td> #}
+            </tr>
+        {% else %}
+            <tr>
+                <td colspan="100%">{{ 'not_found'|trans({}, entshort)|ucfirst }}</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>

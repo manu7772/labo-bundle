@@ -1,0 +1,11 @@
+{% extends "@AequationLabo/documentation/home.html.twig" %}
+
+{% block title %}Documentation : {{ rubrique|capitalize }}{% endblock %}
+
+{% block title_h1 -%}
+    {{ ux_icon('tabler:book', {height: '48px', width: '48px', class: 'text-tertiary'}) }} Documentation : {{ rubrique|capitalize }}
+{%- endblock %}
+
+{% block right_content %}
+<a href="https://symfony.com/doc/{{ app.symfony.SHORT_VERSION|default('current') }}/routing.html" target="_blank">Symfony {{ app.symfony.SHORT_VERSION|default('') }} {{ rubrique|capitalize }}</a>
+{% endblock %}

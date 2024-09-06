@@ -1,0 +1,10 @@
+{% extends "@AequationLabo/base_labo_entities.html.twig" %}
+{% set entshort = entity.shortname(true)|default(meta_info.shortname_lower) %}
+
+{% block title %}Labo {{ 'view.index'|trans({}, entshort)|ucfirst }}{% endblock %}
+
+{% block title_h1 -%}{{ icon(meta_info.shortname, {height: '52px', width: '52px', class: 'text-success'}) }} LABO {{ 'view.index'|trans({}, entshort)|ucfirst }}{%- endblock %}
+
+{% block right_content %}
+    <twig:LaboIndex :meta_info="meta_info"/>
+{% endblock %}

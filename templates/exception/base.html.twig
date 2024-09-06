@@ -1,0 +1,59 @@
+{% extends "@AequationLabo/base_web.html.twig" %}
+
+{% block title %}
+	{{ 'exception_title'|trans }} / Erreur {{ exception.statusCode|default('unknown'|trans) }}
+{% endblock %}
+
+{% block body %}
+	<div class="max-w-2xl my-24 mx-auto">
+
+		{% block add_before_alert -%}{%- endblock %}
+		<div class="alert alert-danger text-center">
+			<p class="italic text-middle-gray">
+				{% block exception_title -%}
+				{{- 'exception_title'|trans -}}
+				{%- endblock %}
+			</p>
+			<p class="mt-3">
+				{% block exception_message -%}
+				<p class="text-2xl font-extrabold">{{- ('error_' ~ exception.statusCode|default('unknown'))|trans -}}</p>
+				{%- endblock %}
+			</p>
+			<p class="my-6">
+				{% block redirect -%}
+				{% set previous_url = event.request.headers.get('referer')|default('') %}
+				{% if previous_url|length %}
+				<a href="{{ previous_url }}" class="btn btn-info px-9 theme-border-shadow-md theme-border-reverse">{{ 'previous'|trans }}</a>
+				{% else %}
+				<a href="{{ url('app_home') }}" class="btn btn-info px-9 theme-border-shadow-md theme-border-reverse">{{ 'homepage'|trans }}</a>
+				{% endif %}
+				{%- endblock %}
+			</p>
+			{% block add_inside_alert -%}{%- endblock %}
+		</div>
+		{% block add_after_alert -%}
+		{% if app.environment == 'dev' or is_granted('ROLE_SUPER_ADMIN') -%}
+		<hr class="my-3">
+		<div class="mt-3">
+			<div class="theme-border-line mb-2">
+				<p class="text-middle-gray">DEV message</p>
+				<p>{{ exception.rawMessage|default(exception.message) }}</p>
+			</div>
+			<p><span class="text-middle-gray">Firewall:</span> {{ app.service.firewallName }}</p>
+			<p><span class="text-middle-gray">Exception:</span> {{ exception_classname }}</p>
+			<p><span class="text-middle-gray">Status Code:</span> {{ exception.statusCode|default('unknown'|trans) }}</p>
+			<p><span class="text-middle-gray">File:</span> {{ exception.sourcePath|default(exception.file) }}</p>
+			<p><span class="text-middle-gray">Line:</span> {{ exception.line }}</p>
+			<p><span class="text-middle-gray">Code:</span> {{ exception.code }}</p>
+			<p><span class="text-middle-gray">This page:</span> {% block twigpage -%}{{ twigpage_name }}{%- endblock %}</p>
+			<div class="my-3">
+				<a href="?debug=1" class="btn btn-warning">Show debug</a>
+			</div>
+			{# {{ dump() }} #}
+			{# {{ dump(app.service.appParams) }} #}
+		</div>
+		{%- endif %}
+		{%- endblock %}
+
+	</div>
+{% endblock %}

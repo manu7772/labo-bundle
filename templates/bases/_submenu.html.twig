@@ -1,0 +1,21 @@
+<aside>
+    <nav>
+        <ul>
+        {# {% set currentDone = false %} #}
+        {% set contrasted = false %}
+        {% for label, way in submenu %}
+            {% if way is not iterable %}
+                {% set way = {route: way, params: {}, access: 'ROLE_EDITOR'} %}
+            {% endif %}
+            {% if route_exists(way.route) and (way.access is not defined or is_granted(way.access)) %}
+                {% set label = label|trans %}
+                {# {% set route_params = app.request.get('_route_params') %} #}
+                {% set isCurrent = app.request.get('_route') == way.route and way.params|default([])|json_encode == app.request.get('_route_params')|json_encode %}
+                {# {% if isCurrent %}{% set currentDone = true %}{% endif %} #}
+                <li><a href="{{ path(way.route, way.params|default([])) }}"{{ turbo_enable(false) }} {# role="button" #} style="width: 100%;" class="{{ not isCurrent and not contrasted ? 'contrast' : 'secondary' }}" {{ isCurrent ? ' aria-current="page ' ~ label|lower ~ '"' }}>{{ label }}</a></li>
+                {% set contrasted = true %}
+            {% endif %}
+        {% endfor %}
+        </ul>
+    </nav>
+</aside>

@@ -1,0 +1,12 @@
+{% if app.flashes|length %}
+    <div data-turbo-temporary="false">
+        <h3>Messages</h3>
+        <div>
+            <ul>
+            {% for flash in app.flashes -%}
+                <li>{{ dump(flash) }}</li>
+            {%- endfor %}
+            </ul>
+        </div>
+    </div>
+{% endif %}

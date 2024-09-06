@@ -1,0 +1,47 @@
+{% extends "@AequationLabo/base_labo.html.twig" %}
+
+{% block title %}Labo PHP {{ app.php.version }} / {{ extension.name }} v.{{ extension.version }}{% endblock %}
+
+{% block title_h1 -%}
+    {{ ux_icon('tabler:brand-php', {height: '48px', width: '48px', class: 'text-php'}) }} LABO PHP {{ app.php.version }} / {{ extension.name }} v.{{ extension.version }}
+{%- endblock %}
+
+{% block right_content %}
+<div style="margin-bottom: 16px;">
+    <a href="{{ path('aequation_php_extensions') }}">Retour à la liste</a>
+</div>
+{# INFO #}
+<article>
+    <header><h4 class="text-php mb-0">{{ extension.name }} <i class="fa fa-caret-right text-muted"></i> info</h4></header>
+    <div class="mb-0">
+        {{ extension.info }}
+    </div>
+</article>
+{# CONSTANTS #}
+<article>
+    <header><h4 class="text-php mb-0">{{ extension.name }} <i class="fa fa-caret-right text-muted"></i> constantes</h4></header>
+    <ul class="mb-0">
+        {% for name,constant in extension.constants -%}
+        <li class="mb-0">{{ name }} <i class="fa fa-arrow-right text-muted"></i> {{ constant }}</li>
+        {%- endfor %}
+    </ul>
+</article>
+{# FUNCTIONS #}
+<article>
+    <header><h4 class="text-php mb-0">{{ extension.name }} <i class="fa fa-caret-right text-muted"></i> fonctions</h4></header>
+    <ul class="mb-0">
+        {% for function in extension.functions -%}
+        <li class="mb-0">{{ function.name }}</li>
+        {%- endfor %}
+    </ul>
+</article>
+{# CLASSES #}
+<article>
+    <header><h4 class="text-php mb-0">{{ extension.name }} <i class="fa fa-caret-right text-muted"></i> classes</h4></header>
+    <ul class="mb-0">
+        {% for class in extension.classes -%}
+        <li class="mb-0">{{ class.name }}</li>
+        {%- endfor %}
+    </ul>
+</article>
+{% endblock %}

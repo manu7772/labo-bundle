@@ -1,0 +1,20 @@
+{% extends "@AequationLabo/base_web.html.twig" %}
+
+{% block title %}Email de connexion{% endblock %}
+
+{% block body %}
+    <div class="flex justify-center mt-16">
+        <div>
+            {% if opresult is defined and opresult.isFail() %}
+                <h3 class="text-2xl text-center dark:text-danger-400 text-danger-800">L'envoi du mail semble avoir échoué,<br>veuillez tenter l'opération à nouveau.<br>En cas de nouvel échec, veuillez nous contacter par un autre moyen s.v.p.</h3>
+            {% elseif user == app.user %}
+                <h3 class="text-2xl text-center dark:text-white text-mwhite-900">Vous êtes déjà connecté !<br>Pas besoin de mail de connexion.<br>Bonne navigation !</h3>
+            {% else %}
+                <h3 class="text-2xl text-center dark:text-white text-mwhite-900">Un email a été envoyé à votre adresse<br>{{ user.email }}</h3>
+                <p class="text-center dark:text-mwhite-400 text-mwhite-900">
+                    <i><strong>Attention</strong>, ce lien expire après le {{ loginLinkDetails.expiresAt|format_datetime('long', 'short', locale='fr_FR') }}</i>
+                </p>
+            {% endif %}
+        </div>
+    </div>
+{% endblock %}
