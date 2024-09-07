@@ -8,7 +8,7 @@ use Aequation\LaboBundle\Model\Interface\AppAttributeMethodInterface;
 use Aequation\LaboBundle\Model\Interface\AppAttributePropertyInterface;
 use Aequation\LaboBundle\Service\Base\BaseService;
 
-// use function Symfony\Component\String\u;
+use function Symfony\Component\String\u;
 
 use Exception;
 use ReflectionClass;
@@ -154,6 +154,40 @@ class Classes extends BaseService
         // dd(__LINE__, gettype($value), $value, $data);
         return $value;
     }
+
+
+    /*************************************************************************************
+     * METHODS
+     *************************************************************************************/
+
+    public static function toGetter(
+        string $property
+    ): string
+    {
+        return u('get_'.$property)->camel();
+    }
+
+    public static function toSetter(
+        string $property
+    ): string
+    {
+        return u('set_'.$property)->camel();
+    }
+
+    public static function toIser(
+        string $property
+    ): string
+    {
+        return u('is_'.$property)->camel();
+    }
+
+    public static function toHaser(
+        string $property
+    ): string
+    {
+        return u('has_'.$property)->camel();
+    }
+
 
     /*************************************************************************************
      * CLASSES

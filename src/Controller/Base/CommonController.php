@@ -13,13 +13,13 @@ use Symfony\Component\HttpFoundation\Response;
 class CommonController extends AbstractController
 {
 
-    public function __construct(
-        private AppService $appService,
-    ) {
-        if($this->appService->isDev()) {
-            dd($this->appService->getAppContext(), json_decode(json_encode($this->appService->getAppContext()), true));
-        }
-    }
+    // public function __construct(
+    //     private AppService $appService,
+    // ) {
+    //     if($this->appService->isDev()) {
+    //         dd($this->appService->getAppContext(), json_decode(json_encode($this->appService->getAppContext()), true));
+    //     }
+    // }
 
 
     // /**

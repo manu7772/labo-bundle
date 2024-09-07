@@ -41,6 +41,7 @@ use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
 use Symfony\Contracts\Cache\ItemInterface;
 use Symfony\Component\Routing\RequestContext;
 use Symfony\Bundle\SecurityBundle\Security\FirewallConfig;
+use Symfony\Component\Security\Http\Event\LoginSuccessEvent;
 use Doctrine\Common\Collections\Collection;
 use Twig\Environment;
 use Twig\Loader\LoaderInterface;
@@ -51,11 +52,6 @@ use DateTimeImmutable;
 use DateTimeZone;
 use Exception;
 use ArrayObject;
-use Symfony\Component\HttpKernel\Event\KernelEvent;
-use Symfony\Component\HttpKernel\Event\RequestEvent;
-use Symfony\Component\Security\Http\Event\LoginSuccessEvent;
-
-use function Symfony\Component\String\u;
 
 #[AsAlias(AppServiceInterface::class, public: true)]
 #[Autoconfigure(autowire: true, lazy: false)]
@@ -64,7 +60,7 @@ class AppService extends BaseService implements AppServiceInterface
 
     public readonly ContainerInterface $container;
     protected ?FirewallConfig $firewallConfig;
-    protected AppContextInterface $appContext;
+    private AppContextInterface $appContext;
     protected ?Request $request;
     protected ?Session $session;
     protected Identity $identity;
@@ -83,7 +79,7 @@ class AppService extends BaseService implements AppServiceInterface
         public readonly NormalizerInterface $normalizer,
     ) {
         $this->container = $this->kernel->getContainer();
-        $this->project_dir = $this->kernel->getProjectDir();
+        // $this->project_dir = $this->kernel->getProjectDir();
         $this->initializeAppContext();
     }
 
@@ -199,32 +195,48 @@ class AppService extends BaseService implements AppServiceInterface
      * @param ?SessionInterface $session = null
      * @return boolean
      */
-    public function initializeAppContext(
+    public final function initializeAppContext(
         ?SessionInterface $session = null
     ): bool
     {
+        if($session instanceof SessionInterface && !($this->session instanceof SessionInterface)) {
+            $this->session = $session;
+        }
         if(!$this->hasAppContext(false)) {
             // Try find session
             $session ??= $this->getSession();
-            $this->appContext = $session instanceof SessionInterface
-                ? new AppContext($this, $session->get(AppService::CONTEXT_SESSNAME, null))
-                : new AppContextTemp($this, []);
+            if($session instanceof SessionInterface) {
+                $this->setAppContext(new AppContext($this, $session->get(AppService::CONTEXT_SESSNAME, null)));
+            } else if(!isset($this->appContext)) {
+                $this->setAppContext(new AppContextTemp($this, []));
+            }
         }
         return $this->appContext->isValid();
     }
 
-    public function getAppContext(): ?AppContextInterface
+    private function setAppContext(
+        AppContextInterface $appContext
+    ): static
+    {
+        if($this->hasAppContext(false)) {
+            throw new Exception(vsprintf('Warning! %s line %d: final AppContext is already defined!', [__METHOD__, __LINE__]));
+        }
+        $this->appContext = $appContext;
+        return $this;
+    }
+
+    public final function getAppContext(): ?AppContextInterface
     {
         $this->initializeAppContext();
         return $this->appContext;
     }
 
-    public function hasAppContext(
+    public final function hasAppContext(
         bool $try_initialize = true
     ): bool
     {
         if($try_initialize) $this->initializeAppContext();
-        return isset($this->appContext) && !($this->appContext instanceof AppContextTemp);
+        return isset($this->appContext) && $this->appContext->isFinalContext();
     }
 
     public function __isset($name)
@@ -268,21 +280,21 @@ class AppService extends BaseService implements AppServiceInterface
         bool $endSeparator = false,
     ): string
     {
-        return $this->getDir(null, $endSeparator);
+        $this->project_dir ??= $this->getDir(null, false);
+        return $this->project_dir.($endSeparator ? DIRECTORY_SEPARATOR : '');
     }
 
     public function getDir(
         ?string $path = null,
         bool $endSeparator = false,
-    ): string|false
+    ): string
     {
-        // $this->project_dir ??= $this->kernel->getProjectDir();
-        $dir = preg_replace('/\\'.DIRECTORY_SEPARATOR.'+/', DIRECTORY_SEPARATOR, $this->project_dir.DIRECTORY_SEPARATOR.$path.DIRECTORY_SEPARATOR);
+        $dir = preg_replace('/\\'.DIRECTORY_SEPARATOR.'+/', DIRECTORY_SEPARATOR, $this->getProjectDir(true).$path.DIRECTORY_SEPARATOR);
         if(!$endSeparator) {
             $dir = preg_replace('/\\'.DIRECTORY_SEPARATOR.'*$/', '', $dir);
         }
         return $dir;
-        return file_exists($dir) ? $dir : false;
+        // return file_exists($dir) ? $dir : false;
     }
 
 
@@ -496,7 +508,7 @@ class AppService extends BaseService implements AppServiceInterface
 
     public function getSession(): ?SessionInterface
     {
-        return static::getRequestSession($this->getCurrentRequest());
+        return $this->session ??= static::getRequestSession($this->getCurrentRequest());
     }
 
     public static function getRequestSession(
@@ -839,7 +851,7 @@ class AppService extends BaseService implements AppServiceInterface
         ?string $filter = null
     ): array|string
     {
-        if(!$this->hasAppContext()) throw new Exception(vsprintf('Error in %s line %d: context is not loaded!', [__METHOD__, __LINE__]));
+        if(!$this->hasAppContext(true)) throw new Exception(vsprintf('Error in %s line %d: context is not loaded!', [__METHOD__, __LINE__]));
         $params = $this->getFilteredParams($filter);
         $params = array_merge($params, $this->appContext->jsonSerialize());
         return $asJson

@@ -48,10 +48,11 @@
                     {% endif %}
                 </td>
             </tr>
-            <tr><td>Parents [Doctrine] ({{ meta_info.parentClasses|length }})</td><td>
-            {% if meta_info.parentClasses|length %}
+            {% set parentClasses = meta_info.parentClasses %}
+            <tr><td>Parents [Doctrine] ({{ parentClasses|length }})</td><td>
+            {% if parentClasses|length %}
                 <ul class="mb-0 list-inside pl-0">
-                    {% for parent in meta_info.parentClasses %}
+                    {% for parent in parentClasses %}
                     <li class="mb-0{{ parent.instantiable ? ' pico-color-azure-300' : ' pico-color-azure-500' }}"><a href="#{{ parent.name|slug('_', true) }}" class="{{ parent.instantiable ? 'pico-color-azure-300' : 'pico-color-azure-500' }}">{{ parent.name }}</a>{{ parent.instantiable ? '<small class="text-muted"> [Instantiable]</small>' }}</li>
                     {% endfor %}
                 </ul>

@@ -11,19 +11,19 @@ use Symfony\Component\Routing\RequestContext;
 interface AppContextInterface extends JsonSerializable
 {
 
-    public const EXERCISE_DEFAULT                                      = 'default';
-    public const EXERCISE_FIXTURES                                     = 'fixtures';
-    public const EXERCISE_BASICS                                       = 'basics';
-    public const EXERCISE_FORM_CHOICE                                  = 'form_choice';
+    // public const EXERCISE_DEFAULT                                      = 'default';
+    // public const EXERCISE_FIXTURES                                     = 'fixtures';
+    // public const EXERCISE_BASICS                                       = 'basics';
+    // public const EXERCISE_FORM_CHOICE                                  = 'form_choice';
 
-    public const REQUEST_CONTEXT_HISTORY_LIMIT                         = 24;
+    public const REQUEST_CONTEXT_HISTORY_LIMIT                         = 8;
 
     public const MARK_DEPRECATION                                      = 'deprecation';
     public const MARK_WARNING                                          = 'warning';
     public const MARK_ERROR                                            = 'error';
 
     public const DEFAULT_DATER                                         = 'NOW';
-    public const IS_TEMP                                               = false;
+    // public const IS_TEMP                                               = false;
 
 
     public function update(): bool;
@@ -32,6 +32,10 @@ interface AppContextInterface extends JsonSerializable
     public function set(string $name, mixed $value): static;
     public function reset(string $name): static;
     public function resetAll(): static;
+
+    // Temp/Final context
+    public function isTempContext(): bool;
+    public function isFinalContext(): bool;
 
     // Darkmode
     public function getDarkmodeClass(): string;

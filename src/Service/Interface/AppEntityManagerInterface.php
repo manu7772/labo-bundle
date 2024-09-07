@@ -34,7 +34,8 @@ interface AppEntityManagerInterface extends ServiceInterface
     public function getEntityManager(): EntityManagerInterface;
     public function getRepository(string $classname = null): CommonReposInterface;
 
-    public function getEntityNamespaces(): array;
+    // public function getEntityNamespaces(): array;
+    public static function isAppEntity(string|object $classname): bool;
     public function getEntityNames(bool $asShortnames = false, bool $allnamespaces = false, bool $onlyInstantiables = false): array;
     public function getEntityShortname(string $classname): string;
     public function getClassnameByShortname(string $shortname): string|false;

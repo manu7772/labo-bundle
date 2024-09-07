@@ -58,8 +58,6 @@ class AppEntityManager extends BaseService implements AppEntityManagerInterface
 
     public const ENTITY = null;
     // public const APP_NAMESPACES_SEARCH = '/^(App|Aequation\\\\LaboBundle)\\\\Entity/';
-    public const CACHE_ENTITY_NAMESPACES_NAME = 'app_entity_namespaces';
-    public const CACHE_ENTITY_NAMESPACES_LIFE = null;
     public const CACHE_ENTITY_REPORTS_NAME = 'app_entity_reports';
     public const CACHE_ENTITY_REPORTS_LIFE = null;
     // Validation groups
@@ -77,8 +75,6 @@ class AppEntityManager extends BaseService implements AppEntityManagerInterface
         'sendmail'  => ['default'],     // is sendable
     ];
 
-    protected ?array $entity_namespaces = null;
-    // protected ?array $entity_metadatareports = null;
     protected readonly HydratedReferences $hydrateds;
 
     public function __construct(
@@ -103,38 +99,6 @@ class AppEntityManager extends BaseService implements AppEntityManagerInterface
     public function getEntityManager(): EntityManagerInterface
     {
         return $this->em;
-    }
-
-    public function getRepository(
-        string $classname = null,
-        string $field = null // if field, find repository where is declared this $field
-    ): CommonReposInterface
-    {
-        $origin_classname = $classname;
-        $classname ??= static::ENTITY;
-        if(empty($classname) && $this->isDev()) $this->needOverrideException();
-        // Check if not MAPPEDSUPERCLASS / not instantiable
-        $cmd = $this->getClassMetadata($classname);
-        $classname = $cmd->name;
-        if($field) {
-            // Find classname where field is declared
-            if(array_key_exists($field, $cmd->fieldMappings)) {
-                $test_classname = $cmd->fieldMappings[$field]->declared ?? $classname;
-            } else if(array_key_exists($field, $cmd->associationMappings)) {
-                $test_classname = $cmd->associationMappings[$field]->declared ?? $classname;
-            } else {
-                // Not found, tant pis...
-            }
-            if(isset($test_classname)) {
-                $test_cmd = $this->getClassMetadata($test_classname);
-                if(!$test_cmd->isMappedSuperclass) $classname = $test_classname;
-            }
-        }
-        /** @var CommonReposInterface */
-        $repo = $this->em->getRepository($classname);
-        // if(!empty($field)) dump($classname, $field, get_class($repo));
-        if(!($repo instanceof CommonReposInterface)) dd($this->__toString(), $origin_classname, $classname, $cmd, $cmd->name, $repo);
-        return $repo;
     }
 
 
@@ -162,52 +126,16 @@ class AppEntityManager extends BaseService implements AppEntityManagerInterface
         return $this->appService->getEnvironment();
     }
 
-    public function getEntityNamespaces(): array
-    {
-        return $this->em->getConfiguration()->getEntityNamespaces();
-    }
+    // public function getEntityNamespaces(): array
+    // {
+    //     return $this->em->getConfiguration()->getEntityNamespaces();
+    // }
 
-    private function getComputedEntityNames(): array
+    public static function isAppEntity(
+        string|object $classname
+    ): bool
     {
-        $namespaces = [
-            // APP ONLY
-            'classnames' => [],
-            'shortnames' => [],
-            'classnames_instantiables' => [],
-            'shortnames_instantiables' => [],
-            // ALL
-            'classnames_all' => [],
-            'shortnames_all' => [],
-            'classnames_all_instantiables' => [],
-            'shortnames_all_instantiables' => [],
-        ];
-        foreach ($this->em->getMetadataFactory()->getAllMetadata() as $meta) {
-            /** @var ReflectionClass */
-            $RC = $meta->reflClass;
-            $cmdr = $this->getEntityMetadataReport($meta->name);
-            // ALL
-            $namespaces['classnames_all'][$meta->name] = $meta->name;
-            $namespaces['shortnames_all'][$meta->name] = $RC->getShortName();
-            if($cmdr->isInstantiable()) {
-                $namespaces['classnames_all_instantiables'][$meta->name] = $meta->name;
-                $namespaces['shortnames_all_instantiables'][$meta->name] = $RC->getShortName();
-            }
-            // APP entities
-            if($cmdr->isAppEntity()) {
-            // if(preg_match(static::APP_NAMESPACES_SEARCH, $meta->namespace)) {
-                $namespaces['classnames'][$meta->name] = $meta->name;
-                $namespaces['shortnames'][$meta->name] = $RC->getShortName();
-                if($cmdr->isInstantiable()) {
-                    $namespaces['classnames_instantiables'][$meta->name] = $meta->name;
-                    $namespaces['shortnames_instantiables'][$meta->name] = $RC->getShortName();
-                }    
-            }
-        }
-        foreach ($namespaces as $key => $data) {
-            ksort($data);
-            $namespaces[$key] = $data; // --> check if realy necessary?
-        }
-        return $namespaces;
+        return is_a($classname, AppEntityInterface::class, true);
     }
 
     public function getEntityNames(
@@ -216,37 +144,60 @@ class AppEntityManager extends BaseService implements AppEntityManagerInterface
         bool $onlyInstantiables = false,
     ): array
     {
-        // if(!$this->isProd()) {
-        //     $this->appService->getCache()->delete(static::CACHE_ENTITY_NAMESPACES_NAME);
-        // }
-        $this->entity_namespaces ??= $this->appService->getCache()->get(
-            key: static::CACHE_ENTITY_NAMESPACES_NAME,
-            callback: function(ItemInterface $item) {
-                if(!empty(static::CACHE_ENTITY_NAMESPACES_LIFE)) {
-                    $item->expiresAfter(static::CACHE_ENTITY_NAMESPACES_LIFE);
+        $names = [];
+        // or $this->em->getConfiguration()->getEntityNamespaces() as $classname
+        foreach ($this->em->getMetadataFactory()->getAllMetadata() as $cmd) {
+            /** @var ClassMetadata $cmd */
+            if(!$onlyInstantiables || $cmd->reflClass->isInstantiable()) {
+                if($allnamespaces || static::isAppEntity($cmd->name)) {
+                    $names[$cmd->name] = $asShortnames
+                        ? $cmd->reflClass->getShortname()
+                        : $cmd->name;
                 }
-                return $this->getComputedEntityNames();
-            },
-            commentaire: 'All entities namespaces',
-        );
-        $asShortnames = $asShortnames ? 'shortnames' : 'classnames';
-        $allnamespaces = $allnamespaces ? '_all' : '';
-        $onlyInstantiables = $onlyInstantiables ? '_instantiables' : '';
-        return $this->entity_namespaces[$asShortnames.$allnamespaces.$onlyInstantiables];
+            }
+        }
+        return $names;
+
+        // foreach ($this->em->getMetadataFactory()->getAllMetadata() as $cmd) {
+        // foreach ($this->em->getConfiguration()->getEntityNamespaces() as $classname) {
+        // $reports = $this->getEntityMetadataReportsFiltered(
+        //     function($report) use ($onlyInstantiables, $allnamespaces) {
+        //         /** @var ClassmetadataReport $report */
+        //         if(!$allnamespaces && !$report->isAppEntity()) return false;
+        //         if($onlyInstantiables && !$report->isInstantiable()) return false;
+        //         return true;
+        //     }
+        // );
+        // $list = [];
+        // foreach ($reports as $report) {
+        //     /** @var ClassmetadataReport $report */
+        //     $list[$report->classname] = $asShortnames ? $report->getShortname() : $report->classname;
+        // }
+        // return $list;
     }
 
-    public function getEntityShortname(string $classname): string
+    public function getEntityShortname(
+        string|AppEntityInterface $objectOrClass = null
+    ): string
     {
-        $names = $this->getEntityNames(true);
-        return $names[$classname];
+        $classname ??= static::ENTITY;
+        $classname = $objectOrClass instanceof AppEntityInterface ? $objectOrClass->getClassname() : $objectOrClass;
+        return $classname
+            ? $this->em->getClassMetadata($classname)->reflClass->getShortname()
+            : null;
     }
 
     public function getClassnameByShortname(
         string $shortname
     ): string|false
     {
-        $names = $this->getEntityNames(true);
-        return array_search($shortname, $names);
+        foreach ($this->em->getMetadataFactory()->getAllMetadata() as $cmd) {
+            /** @var ClassMetadata $cmd */
+            if($shortname === $cmd->reflClass->getShortname()) return $cmd->name;
+        }
+        return false;
+        // $names = $this->getEntityNames(true);
+        // return array_search($shortname, $names);
     }
 
     public function entityExists(
@@ -257,7 +208,6 @@ class AppEntityManager extends BaseService implements AppEntityManagerInterface
     {
         if(is_object($classname)) $classname = get_class($classname);
         $list = $this->getEntityNames(true, $allnamespaces, $onlyInstantiables);
-        // dump($classname, $allnamespaces, $onlyInstantiables, $list, in_array($classname, $list) || array_key_exists($classname, $list));
         return in_array($classname, $list) || array_key_exists($classname, $list);
     }
 
@@ -274,7 +224,7 @@ class AppEntityManager extends BaseService implements AppEntityManagerInterface
                 ? static::getEntityNameAsHtml($name, $icon)
                 : $name
                 ;
-        }, $this->getEntityNames(asShortnames: false, allnamespaces: $allnamespaces, onlyInstantiables: $onlyInstantiables)));
+        }, $this->getEntityNames(false, $allnamespaces, $onlyInstantiables)));
     }
 
     public static function getEntityNameAsHtml(
@@ -327,6 +277,17 @@ class AppEntityManager extends BaseService implements AppEntityManagerInterface
 
     public function getEntityMetadataReports(): array
     {
+        // $meta_infos = [];
+        // // foreach ($this->em->getMetadataFactory()->getAllMetadata() as $cmd) {
+        // foreach ($this->getEntityNames(false, false) as $classname) {
+        //     $meta_infos[$classname] = new ClassmetadataReport($this, $classname);
+        //     // if($this->isDev() && !$meta_infos[$classname]->isValid()) {
+        //     //     throw new Exception(vsprintf('Error %s line %d: %s of entity %s is invalid!', [__METHOD__, __LINE__, Classes::getShortname(ClassmetadataReport::class), $classname]));
+        //     // }
+        // }
+        // var_dump($meta_infos); die(__METHOD__.' / line '.__LINE__);
+        // return $meta_infos;
+
         return $this->appService->getCache()->get(
             key: static::CACHE_ENTITY_REPORTS_NAME,
             callback: function(ItemInterface $item) {
@@ -350,7 +311,7 @@ class AppEntityManager extends BaseService implements AppEntityManagerInterface
         Closure $filter
     ): array
     {
-        return $filter($this->getEntityMetadataReports(), $this);
+        return $filter($this->getEntityMetadataReports());
     }
 
 
@@ -377,15 +338,6 @@ class AppEntityManager extends BaseService implements AppEntityManagerInterface
             : $uniqueFields['hierar'];
     }
 
-    public function getEntitiesCount(
-        array $criteria = [],
-    ): int
-    {
-        /** @var ServiceEntityRepositoryInterface */
-        $repository = $this->getRepository();
-        return $repository->count(criteria: $criteria);
-    }
-
 
     /****************************************************************************************************/
     /** NORMALIZER / SERIALIZER                                                                         */
@@ -397,6 +349,94 @@ class AppEntityManager extends BaseService implements AppEntityManagerInterface
     // {
     //     return $this->appService->getNormalized($data);
     // }
+
+
+    /****************************************************************************************************/
+    /** REPOSITORY / FIND                                                                               */
+    /****************************************************************************************************/
+
+    public function getRepository(
+        string $classname = null,
+        string $field = null // if field, find repository where is declared this $field
+    ): CommonReposInterface
+    {
+        $origin_classname = $classname;
+        $classname ??= static::ENTITY;
+        if(empty($classname) && $this->isDev()) $this->needOverrideException();
+        // Check if not MAPPEDSUPERCLASS / not instantiable
+        $cmd = $this->getClassMetadata($classname);
+        $classname = $cmd->name;
+        if($field) {
+            // Find classname where field is declared
+            if(array_key_exists($field, $cmd->fieldMappings)) {
+                $test_classname = $cmd->fieldMappings[$field]->declared ?? $classname;
+            } else if(array_key_exists($field, $cmd->associationMappings)) {
+                $test_classname = $cmd->associationMappings[$field]->declared ?? $classname;
+            } else {
+                // Not found, tant pis...
+            }
+            if(isset($test_classname)) {
+                $test_cmd = $this->getClassMetadata($test_classname);
+                if(!$test_cmd->isMappedSuperclass) $classname = $test_classname;
+            }
+        }
+        /** @var CommonReposInterface */
+        $repo = $this->em->getRepository($classname);
+        // if(!empty($field)) dump($classname, $field, get_class($repo));
+        if(!($repo instanceof CommonReposInterface)) dd($this->__toString(), $origin_classname, $classname, $cmd, $cmd->name, $repo);
+        return $repo;
+    }
+
+    /**
+     * Get entity by EUID
+     * @param string $euid
+     * @return AppEntityInterface|null
+     */
+    public function findEntityByEuid(string $euid): ?AppEntityInterface
+    {
+        $class = Encoders::getClassOfEuid($euid);
+        /** @var ServiceEntityRepositoryInterface */
+        $repo = $this->getRepository($class);
+        return $repo->findOneByEuid($euid);
+    }
+
+    public function getEntitiesCount(
+        array $criteria = [],
+    ): int
+    {
+        /** @var ServiceEntityRepositoryInterface */
+        $repository = $this->getRepository();
+        return $repository->count(criteria: $criteria);
+    }
+
+    public function findByUname(
+        string $uname,
+        bool $exceptionIfNotFound = true
+    ): ?AppEntityInterface
+    {
+        $entity = $this->hydrateds->get($uname);
+        if(empty($entity)) {
+            // Try in database...
+            $classes = $this->getEntityNames(false, false, true);
+            foreach ($classes as $class) {
+                if(is_a($class, UnamedInterface::class, true)) {
+                    /** @var string $class */
+                    /** @var ServiceEntityRepositoryInterface */
+                    $repo = $this->getRepository($class);
+                    $entity = $repo->findEntityByEuidOrUname($uname);
+                    if(!empty($entity)) return $entity;
+                }
+            }
+        }
+        if($exceptionIfNotFound && !($entity instanceof AppEntityInterface)) {
+            $refs = PHP_EOL;
+            foreach ($this->hydrateds->getAllReferences() as $key) {
+                $refs .= '- '.$key.PHP_EOL;
+            }
+            throw new Exception(vsprintf('Error %s line %d: could not find entity with uname "%s"'.PHP_EOL.'-> Searched in database and in: %s)!', [__METHOD__, __LINE__, $uname, $refs]));
+        }
+        return $entity instanceof AppEntityInterface ? $entity : null;
+    }
 
 
     /****************************************************************************************************/
@@ -735,36 +775,13 @@ class AppEntityManager extends BaseService implements AppEntityManagerInterface
         bool|Opresult $opresultException = true
     ): bool
     {
-        // if(!$this->isManaged($entity) && $entity instanceof EcollectionInterface) {
-        //     foreach ($entity->getParents() as $parent) {
-        //         if(!$this->isManaged($parent)) dump($parent);
-        //     }
-        //     foreach ($entity->getItems() as $item) {
-        //         if(!$this->isManaged($item)) dump($item);
-        //     }
-        //     dump('Tested Ecollection relations for '.$entity);
-        // }
-        $this->persist($entity, $opresultException);
-        if($this->isDev() && !$this->isManaged($entity)) {
-            dd('HOOOO !!!!');
+        if(!$this->isManaged($entity)) {
+            $this->persist($entity, $opresultException);
         }
         if($opresultException instanceof Opresult && !$opresultException->isSuccess()) {
             return false;
         }
-        // dd($entity->getParents()->toArray(), $entity->getItems()->toArray());
         $this->em->flush();
-        // try {
-        //     if($opresultException instanceof Opresult) {
-        //         $opresultException->addSuccess(vsprintf('L\'entité %s %s a été %s dans la base de données', [$entity->getClassname(), $entity->__toString(), $entity->_appManaged->isNew() ? 'enregistrée' : 'mise à jour']));
-        //     }
-        // } catch (Throwable $th) {
-        //     if($opresultException instanceof Opresult) {
-        //         $opresultException->addDanger(vsprintf('L\'enregistrement de %s %s a échoué%s', [$entity->getClassname(), $entity->__toString(), PHP_EOL.$th->getMessage()]));
-        //     } else if($opresultException) {
-        //         throw new Exception(vsprintf("Erreur %s ligne %d: L'enregistrement a échoué ! Veuiller recommencer l'opération, s.v.p.%s", [__METHOD__, __LINE__, PHP_EOL.$th->getMessage()]));
-        //     }
-        //     return false;
-        // }
         return true;
     }
 
@@ -789,19 +806,6 @@ class AppEntityManager extends BaseService implements AppEntityManagerInterface
             return false;
         }
         return true;
-    }
-
-    /**
-     * Get entity by EUID
-     * @param string $euid
-     * @return AppEntityInterface|null
-     */
-    public function findEntityByEuid(string $euid): ?AppEntityInterface
-    {
-        $class = Encoders::getClassOfEuid($euid);
-        /** @var ServiceEntityRepositoryInterface */
-        $repo = $this->getRepository($class);
-        return $repo->findOneByEuid($euid);
     }
 
 
@@ -1092,35 +1096,6 @@ class AppEntityManager extends BaseService implements AppEntityManagerInterface
         return $result;
     }
 
-    public function findByUname(
-        string $uname,
-        bool $exceptionIfNotFound = true
-    ): ?AppEntityInterface
-    {
-        $entity = $this->hydrateds->get($uname);
-        if(empty($entity)) {
-            // Try in database...
-            $classes = $this->getEntityNames(false, false, true);
-            foreach ($classes as $class) {
-                if(is_a($class, UnamedInterface::class, true)) {
-                    /** @var string $class */
-                    /** @var ServiceEntityRepositoryInterface */
-                    $repo = $this->getRepository($class);
-                    $entity = $repo->findEntityByEuidOrUname($uname);
-                    if(!empty($entity)) return $entity;
-                }
-            }
-        }
-        if($exceptionIfNotFound && !($entity instanceof AppEntityInterface)) {
-            $refs = PHP_EOL;
-            foreach ($this->hydrateds->getAllReferences() as $key) {
-                $refs .= '- '.$key.PHP_EOL;
-            }
-            throw new Exception(vsprintf('Error %s line %d: could not find entity with uname "%s"'.PHP_EOL.'-> Searched in database and in: %s)!', [__METHOD__, __LINE__, $uname, $refs]));
-        }
-        return $entity instanceof AppEntityInterface ? $entity : null;
-    }
-    
 
     /****************************************************************************************************/
     /** ENTITY VALIDATION                                                                               */

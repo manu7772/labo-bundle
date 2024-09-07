@@ -19,6 +19,7 @@ use DateTimeZone;
 use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\HttpKernel\Event\RequestEvent;
 use Symfony\Component\HttpKernel\KernelInterface;
+use Symfony\Component\Routing\RequestContext;
 use Symfony\Component\Security\Http\Event\LoginSuccessEvent;
 use Twig\Environment;
 use Twig\Loader\LoaderInterface;
@@ -74,6 +75,9 @@ interface AppServiceInterface extends ServiceInterface
     public function getCurrentRequest(): ?Request;
     public function getSession(): ?SessionInterface;
     public function getRequestAttribute(string $name, mixed $default = null): mixed;
+    public function getRequestContext(): ?RequestContext;
+    public function setSessionData(string $name, mixed $data): static;
+    public function getSessionData(string $name, mixed $default): mixed;
     // Firewall
     // public function getFirewalls(): array;
     // public function getMainFirewalls(): array;

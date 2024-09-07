@@ -143,7 +143,10 @@ class ClassmetadataReport implements JsonSerializable, Serializable
 
     public function __get($name)
     {
-        return $this->classMetadata->$name;
+        $getter = Classes::toGetter($name);
+        return method_exists($this, $getter)
+            ? $this->$getter()
+            : $this->classMetadata->$name;
     }
 
     public function __call($name, $arguments)
@@ -178,7 +181,7 @@ class ClassmetadataReport implements JsonSerializable, Serializable
     {
         $name = [];
         foreach (array_reverse($this->getParentClasses()) as $parent) {
-            $name[] = Classes::getShortname($parent);
+            $name[] = Classes::getShortname($parent->name);
         }
         $name[] = ($asHtml ? '<strong>' : '').$this->getShortname().($asHtml ? '</strong>' : '');
         return $asHtml
@@ -250,7 +253,8 @@ class ClassmetadataReport implements JsonSerializable, Serializable
 
     public function isAppEntity(): bool
     {
-        return is_a($this->classMetadata->name, AppEntityInterface::class, true);
+        return $this->manager::isAppEntity($this->classMetadata->name);
+        // return is_a($this->classMetadata->name, AppEntityInterface::class, true);
     }
 
     public function isInstantiable(): bool

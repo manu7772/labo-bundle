@@ -1,7 +1,8 @@
 <?php
 namespace Aequation\LaboBundle\Service;
 
-use Aequation\LaboBundle\Component\AppContext;
+// use Aequation\LaboBundle\Component\AppContext;
+use Aequation\LaboBundle\Component\Interface\AppContextInterface;
 use Aequation\LaboBundle\Service\Interface\AppServiceInterface;
 use Aequation\LaboBundle\Service\Interface\LaboAppVariableInterface;
 use Aequation\LaboBundle\Service\Interface\LaboBundleServiceInterface;
@@ -19,7 +20,7 @@ class LaboAppVariable extends AppVariable implements LaboAppVariableInterface
     public readonly array $symfony;
     public readonly array $php;
     public readonly AppServiceInterface $service;
-    public readonly AppContext $appContext;
+    // public readonly AppContextInterface $appContext;
 
     public function __construct(
         AppServiceInterface $service,
@@ -44,8 +45,8 @@ class LaboAppVariable extends AppVariable implements LaboAppVariableInterface
         $this->service = $service->getAppContext()->isPublic()
             ? $service
             : $service->get(LaboBundleServiceInterface::class);
-        /** @var AppContext */
-        $this->appContext = $this->service->getAppContext();
+        /** @var AppContextInterface */
+        // $this->appContext = $this->service->getAppContext();
         /** @var App/Kernel $kernel */
         $eom = explode('/', $kernel::END_OF_MAINTENANCE);
         $END_OF_MAINTENANCE = new DateTime($eom[1].'-'.$eom[0].'-01');
