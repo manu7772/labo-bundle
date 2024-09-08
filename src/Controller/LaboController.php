@@ -212,7 +212,7 @@ class LaboController extends CommonController
     ): Response
     {
         $submenu = ['Documentation' => ['route' => 'aequation_labo_documentation', 'params' => ['rubrique' => 'home']]];
-        $files = Files::listFiles(dirname(__DIR__).'/../templates/documentation/rubriques/');
+        $files = $this->container->get('Tool:Files')->listFiles(dirname(__DIR__).'/../templates/documentation/rubriques/');
         $sub = '';
         foreach ($files as $file) {
             // $name = Strings::getBefore($file->getBasename('.'.$file->getExtension()), '.');

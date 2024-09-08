@@ -28,6 +28,7 @@ interface AppContextInterface extends JsonSerializable
 
     public function update(): bool;
     public function jsonSerialize(): mixed;
+    public function getDumped(): string;
     public function get(string $name): mixed;
     public function set(string $name, mixed $value): static;
     public function reset(string $name): static;
@@ -36,6 +37,7 @@ interface AppContextInterface extends JsonSerializable
     // Temp/Final context
     public function isTempContext(): bool;
     public function isFinalContext(): bool;
+    public function isCliXmlHttpRequest(): bool;
 
     // Darkmode
     public function getDarkmodeClass(): string;
@@ -73,8 +75,9 @@ interface AppContextInterface extends JsonSerializable
     public function getPublic(): bool;
     public function isPublic(): bool;
     public function isPrivate(): bool;
-    public function getFirewall(): ?FirewallConfig;
-    public function getFirewallName(): ?string;
+    public function getFirewall(): string;
+    public function getFirewallConfig(): ?FirewallConfig;
+    public function getFirewallName(): string;
     public function getFirewalls(): array;
     public function getMainFirewalls(): array;
     public function getFirewallChoices(bool $onlyMains = true): array;

@@ -14,6 +14,9 @@ interface AppEntityInterface extends Stringable, Serializable
     public function defineUname(string $uname): static;
     public function __toString(): string;
     public function __construct_entity(): void;
+    // Model
+    public function _isModel(): bool;
+    public function _setModel(): static;
     // Clone
     public function _isClone(): bool;
     public function _setClone(bool $_isClone): static;

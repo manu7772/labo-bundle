@@ -8,22 +8,36 @@ use Symfony\Component\Filesystem\Path;
 use Symfony\Component\HttpFoundation\File\File;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\Yaml\Yaml;
+use Symfony\Component\Finder\SplFileInfo as FinderSplFileInfo;
+use Symfony\Component\DependencyInjection\Attribute\AsAlias;
+use Symfony\Component\DependencyInjection\Attribute\Autoconfigure;
+
 use SplFileInfo;
 use Closure;
 use Exception;
-use phpDocumentor\Reflection\PseudoTypes\False_;
-use Symfony\Component\Finder\SplFileInfo as FinderSplFileInfo;
+use Symfony\Component\HttpKernel\KernelInterface;
 
+#[AsAlias('Tool:Files', public: true)]
+#[Autoconfigure(autowire: true, lazy: false)]
 class Files extends BaseService
 {
 
-    const PROJECT_DIR = __DIR__.'/../../../../../../';
+    // const PROJECT_DIR = __DIR__.'/../../../../../../';
     const TEMP_DIR = 'tmp';
     const SERVER_GROUP = 'www-data';
     const SERVER_DIR_CHMOD = 0775;
     const SERVER_FIL_CHMOD = 0764;
     const UMASK = 0002;
     const APPLY_GRANTS_ENABLED = false;
+
+    public readonly string $project_dir;
+
+    public function __construct(
+        public readonly KernelInterface $kernel
+    )
+    {
+        $this->project_dir = $this->kernel->getProjectDir();
+    }
 
         /** ***********************************************************************************
      * SYSTEM FILES
@@ -36,7 +50,7 @@ class Files extends BaseService
      * @param File|string $file
      * @return boolean
      */
-    public static function applyGrants(
+    public function applyGrants(
         File|string $file,
         bool $checkfile = true
     ): bool
@@ -80,14 +94,14 @@ class Files extends BaseService
      * @param integer $depth
      * @return array
      */
-    public static function listFiles(
+    public function listFiles(
         string $path = null,
         array|Closure $filter = null,
         int $depth = 1,
     ): array
     {
         $finder = Finder::create()->ignoreUnreadableDirs()->files();
-        $path = static::getProjectDir($path, false);
+        $path = $this->getProjectDir($path, false);
         if(!is_dir($path)) return [];
         $files = [];
         for ($i = 0; $i < $depth; $i++) {
@@ -102,7 +116,7 @@ class Files extends BaseService
         return $files;
     }
 
-    public static function listDirs(
+    public function listDirs(
         string $path = null,
         array|Closure $filter = null,
         int $depth = 1,
@@ -110,7 +124,7 @@ class Files extends BaseService
     ): array
     {
         $finder = Finder::create()->ignoreUnreadableDirs()->directories();
-        $path = static::getProjectDir($path, false);
+        $path = $this->getProjectDir($path, false);
         if(!is_dir($path)) return [];
         if(is_bool($filter_depth)) $filter_depth = $filter_depth ? $depth : 0;
         if($filter_depth < 0) $filter_depth = 0;
@@ -129,7 +143,7 @@ class Files extends BaseService
         return $dirs;
     }
 
-    public static function list(
+    public function list(
         string $path = null,
         array|Closure $filter = null,
         int $depth = 1,
@@ -137,7 +151,7 @@ class Files extends BaseService
     ): array
     {
         $finder = Finder::create()->ignoreUnreadableDirs();
-        $path = static::getProjectDir($path, false);
+        $path = $this->getProjectDir($path, false);
         if(!is_dir($path)) return [];
         if(is_bool($filter_depth)) $filter_depth = $filter_depth ? $depth : 0;
         if($filter_depth < 0) $filter_depth = 0;
@@ -156,31 +170,31 @@ class Files extends BaseService
         return $dirs;
     }
 
-    // public static function nestedDirs(
+    // public function nestedDirs(
     //     string $path = null,
     //     array|Closure $filter = null,
     //     int $depth = 1,
     // ): array
     // {
-    //     $list = static::listDirs($path, $filter, 0);
+    //     $list = $this->listDirs($path, $filter, 0);
     //     if($depth > 0) {
 
     //     }
     //     return $list;
     // }
 
-    public static function getParentDir(
+    public function getParentDir(
         string $path = null
     ): ?SplFileInfo
     {
-        $path = static::getProjectDir($path, false);
+        $path = $this->getProjectDir($path, false);
         if(!is_dir($path)) return null;
         $path = new SplFileInfo($path);
         $parent = $path->getPath();
         return new SplFileInfo($parent);
     }
 
-    public static function removePrefixSeparator(
+    public function removePrefixSeparator(
         string &$path = null
     ): string
     {
@@ -195,36 +209,38 @@ class Files extends BaseService
      * @param boolean $create
      * @return string|false
      */
-    public static function getProjectDir(
+    public function getProjectDir(
         string $path = null,
         bool $create = true
     ): string|false
     {
-        $projectDir = realpath(static::PROJECT_DIR);
-        $fullpath = is_string($path) && strlen($path) > 0 ?
-            $projectDir.DIRECTORY_SEPARATOR.static::truncateProjectDirName($path):
-            $projectDir;
+        if(!empty($path) && file_exists($path)) return $path;
+        $projectDir = realpath($this->project_dir);
+        $fullpath = strlen((string)$path) > 0
+            ? $projectDir.DIRECTORY_SEPARATOR.$this->truncateProjectDirName($path)
+            : $projectDir;
+        // dump(vsprintf('%s : Project dir : %s with path "%s" : full path : "%s" (exists: %s)', [__METHOD__, $projectDir, $path, $fullpath, @is_dir($fullpath) ? 'true' : 'false']));
         if($create && !@is_dir($fullpath)) {
             // Check path and create if not found
-            if(!static::createPath($fullpath)) {
+            if(!$this->createPath($fullpath)) {
                 throw new Exception('La création du chemin '.json_encode($fullpath).' a échoué !');
             }
         }
         return $fullpath;
     }
 
-    public static function truncateProjectDirName(
+    public function truncateProjectDirName(
         string $path = null
     ): string
     {
-        $projectDir = static::getProjectDir();
+        $projectDir = $this->getProjectDir();
         if(substr($path, 0, strlen($projectDir)) === $projectDir) {
             $path = Path::makeRelative($path, $projectDir);
         }
         return $path;
     }
 
-    public static function removeFile(
+    public function removeFile(
         string $filepath
     ): bool
     {
@@ -238,25 +254,25 @@ class Files extends BaseService
      * @param string $path
      * @return boolean
      */
-    public static function removeDir(
+    public function removeDir(
         string $path
     ): bool
     {
-        $dir = static::getProjectDir($path, false);
-        return static::cleanDir($dir, false) && @rmdir($dir);
+        $dir = $this->getProjectDir($path, false);
+        return $this->cleanDir($dir, false) && @rmdir($dir);
     }
 
-    public static function cleanDir(
+    public function cleanDir(
         string $path,
         bool $keepSubDirs = false
     ): bool
     {
-        $dir = static::getProjectDir($path, false);
+        $dir = $this->getProjectDir($path, false);
         if (!@file_exists($dir)) {
             return true;
         }
         if (!@is_dir($dir)) {
-            return static::removeFile($dir);
+            return $this->removeFile($dir);
         }
         // $beforeScanDir = json_encode(@scandir($dir));
         foreach (@scandir($dir) as $item) {
@@ -264,21 +280,21 @@ class Files extends BaseService
             if ($item == '.' || $item == '..') {
                 continue;
             }
-            if (!static::cleanDir($subFile, $keepSubDirs)) return false;
+            if (!$this->cleanDir($subFile, $keepSubDirs)) return false;
             if (!$keepSubDirs && !@rmdir($subFile)) {
                 return false;
             }
         }
-        $subFiles = static::listFiles(path: $dir, depth: 12);
+        $subFiles = $this->listFiles(path: $dir, depth: 12);
         // echo(PHP_EOL.'--> TEST DIRS '.$dir.': '.$beforeScanDir.PHP_EOL.'--> Now subfiles: '.json_encode($subFiles).' > '.(empty($subFiles) ? 'OK!!!' : 'FAILED!!!').PHP_EOL.PHP_EOL);
         return empty($subFiles);
     }
 
-    public static function createPath(
+    public function createPath(
         string $path = null
     ): string|false
     {
-        $fullpath = static::getProjectDir($path, false);
+        $fullpath = $this->getProjectDir($path, false);
         // dump($fullpath);
         if(!$fullpath) return false;
         if(!@is_dir($fullpath)) {
@@ -287,7 +303,7 @@ class Files extends BaseService
             $filesystem->mkdir($fullpath);
         }
         if(@is_dir($fullpath)) {
-            static::applyGrants($fullpath, true);
+            $this->applyGrants($fullpath, true);
         }
         return @is_dir($fullpath) ? $fullpath : false;
     }
@@ -298,80 +314,18 @@ class Files extends BaseService
      * @param string $filename
      * @return string|false
      */
-    public static function getFileContent(
+    public function getFileContent(
         string $path,
         string $filename = null
     ): string|false
     {
-        $projectDir = static::getProjectDir($path, false);
+        $projectDir = $this->getProjectDir($path, false);
         if(!$projectDir) return false;
         $file = new SplFileInfo($projectDir.(empty($filename) ? '' : DIRECTORY_SEPARATOR.$filename));
         $filepath = $file->getRealPath();
         return $filepath
             ? file_get_contents($filepath)
             : false;
-    }
-
-    public static function getInFilesPhpInfo(
-        string|array $paths,
-        bool $onlyExists = false,
-    ): array
-    {
-        $files = [];
-        foreach ((array)$paths as $path) {
-            $files[$path] = static::listFiles($path, ['*.php'], 6);
-        }
-        $phps = [];
-        foreach ($files as $list) {
-            foreach ($list as $file) {
-                /** @var FinderSplFileInfo $file */
-                if($file->isReadable() && $file->getRealPath() && strtolower($file->getExtension()) === 'php') {
-                    $content = static::getFileContent($file->getRealPath());
-                    preg_match('/^namespace\s+(.+?);$/sm', $content, $namespace);
-                    if(count($namespace) === 2) {
-                        $exists = false;
-                        preg_match('/(class|interface|trait)\s+(\w+)(.*)?\{/sm', $content, $class);
-                        if(count($class) > 2) {
-                            switch (strtolower($class[1])) {
-                                case 'class':
-                                    // class
-                                    $classtype = 'class';
-                                    $classname = $namespace[1].'\\'.($class[2]);
-                                    $shortname = Classes::getShortname($classname);
-                                    $exists = class_exists($classname);
-                                    break;
-                                case 'interface':
-                                    // interface
-                                    $classtype = 'interface';
-                                    $classname = $namespace[1].'\\'.($class[2]);
-                                    $shortname = Classes::getShortname($classname);
-                                    $exists = interface_exists($classname);
-                                    break;
-                                case 'trait':
-                                    // trait
-                                    $classtype = 'trait';
-                                    $classname = $namespace[1].'\\'.($class[2]);
-                                    $shortname = Classes::getShortname($classname);
-                                    $exists = trait_exists($classname);
-                                    break;
-                            }
-                            if(isset($classname) && (!$onlyExists || $exists)) {
-                                $phps[$classname] = [
-                                    'file' => $file->getRealPath(),
-                                    'classname' => $classname,
-                                    'shortname' => $shortname,
-                                    'exists' => $exists,
-                                    'type' => $classtype,
-                                ];
-                            }
-                            unset($classname);
-                        }
-                    }
-                }
-            }
-        }
-        ksort($phps);
-        return $phps;
     }
 
     /**
@@ -381,13 +335,13 @@ class Files extends BaseService
      * @param mixed $content
      * @return bool
      */
-    public static function putFileContent(
+    public function putFileContent(
         string $path,
         string $filename,
         mixed $content
     ): bool
     {
-        $projectDir = static::getProjectDir($path, true);
+        $projectDir = $this->getProjectDir($path, true);
         if($projectDir) {
             $dir = new SplFileInfo($projectDir);
             $filepath = $dir->getRealPath();
@@ -402,14 +356,14 @@ class Files extends BaseService
 
     /** TMP directory */
 
-    public static function getTempDir(): string
+    public function getTempDir(): string
     {
-        return static::createPath(static::TEMP_DIR);
+        return $this->createPath(static::TEMP_DIR);
     }
 
-    public static function removeTempDir(): bool
+    public function removeTempDir(): bool
     {
-        return static::removeDir(static::TEMP_DIR);
+        return $this->removeDir(static::TEMP_DIR);
     }
 
     /**
@@ -417,29 +371,29 @@ class Files extends BaseService
      * @param File|string $file
      * @return UploadedFile|false
      */
-    public static function getCopiedTmpFile(
+    public function getCopiedTmpFile(
         File|string $file
     ): UploadedFile|false
     {
         if($file instanceof UploadedFile) return $file;
         if(is_string($file)) {
-            $pdir = static::getProjectDir($file, false);
+            $pdir = $this->getProjectDir($file, false);
             if(!$pdir) return false;
             $file = new File($pdir, true);
         }
         $filesystem = new Filesystem();
         $source = $file->getRealPath();
-        $dest = $filesystem->tempnam(dir: static::getTempDir(), prefix: pathinfo($file->getFilename(), PATHINFO_FILENAME).'_', suffix: '.'.pathinfo($file->getFilename(), PATHINFO_EXTENSION));
-        // $dest = static::getTempDir().DIRECTORY_SEPARATOR.$file->getFilename();
+        $dest = $filesystem->tempnam(dir: $this->getTempDir(), prefix: pathinfo($file->getFilename(), PATHINFO_FILENAME).'_', suffix: '.'.pathinfo($file->getFilename(), PATHINFO_EXTENSION));
+        // $dest = $this->getTempDir().DIRECTORY_SEPARATOR.$file->getFilename();
         if(copy($source, $dest)) {
-            static::applyGrants($dest, true);
+            $this->applyGrants($dest, true);
             $uf = new UploadedFile(path: $dest, originalName: $file->getFilename(), test: true);
             if($uf->isValid()) return $uf;
         }
         return false;
     }
 
-    // public static function getUploadedFile(
+    // public function getUploadedFile(
     //     File|string $file,
     //     bool $normalizeName = false,
     // ): UploadedFile|false
@@ -455,14 +409,14 @@ class Files extends BaseService
 
     /** Fixtures cleanup */
 
-    public static function cleanDirsBeforeFixtures(
+    public function cleanDirsBeforeFixtures(
         array &$dirs
     ): bool
     {
         // Add tmp dir
         $dirs = array_unique(array_merge($dirs, [static::TEMP_DIR]));
         foreach ($dirs as $dir) {
-            if(!static::cleanDir($dir, true)) return false;
+            if(!$this->cleanDir($dir, true)) return false;
         }
         return true;
     }
@@ -474,7 +428,7 @@ class Files extends BaseService
      * @param string|SplFileInfo $file
      * @return array|null
      */
-    public static function readYamlFile(
+    public function readYamlFile(
         string|SplFileInfo $file
     ): array|null
     {
@@ -489,17 +443,17 @@ class Files extends BaseService
      * @param string|null $extension
      * @return UploadedFile
      */
-    public static function getUploadedFileFromUrl(
+    public function getUploadedFileFromUrl(
         string $url,
         string $prefix,
         string $extension = null
     ): UploadedFile
     {
         $filesystem = new Filesystem();
-        $tmpdir = static::getTempDir();
+        $tmpdir = $this->getTempDir();
         $fullpath = $filesystem->tempnam($tmpdir, $prefix, $extension);
         $filesystem->dumpFile($fullpath, file_get_contents($url));
-        static::applyGrants($fullpath, true);
+        $this->applyGrants($fullpath, true);
         $file = new File($fullpath, true);
         return new UploadedFile(path: $file->getRealPath(), originalName: $file->getFilename(), test: true);
     }

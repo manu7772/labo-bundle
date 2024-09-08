@@ -16,6 +16,7 @@ interface AppEntityManagerInterface extends ServiceInterface
 
     public function getAppService(): AppServiceInterface;
     public function getNew(string $classname = null, callable $postCreate = null, string $uname = null): AppEntityInterface|false;
+    public function getModel(string $classname = null, callable $postCreate = null, string|array|null $event = null): AppEntityInterface|false;
     public function initEntity(AppEntityInterface $entity, ?callable $postCreate = null, string|array|null $event = null): AppEntityInterface;
     public function setManagerToEntity(AppEntityInterface $entity, string|array|null $event = null): AppEntityInterface;
     // public function getClone(AppEntityInterface $entity): AppEntityInterface;

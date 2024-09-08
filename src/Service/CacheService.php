@@ -7,7 +7,6 @@ use Aequation\LaboBundle\Service\Interface\AppServiceInterface;
 // use Aequation\LaboBundle\Service\Interface\AppServiceInterface;
 use Aequation\LaboBundle\Service\Interface\CacheServiceInterface;
 use Aequation\LaboBundle\Service\Tools\Files;
-
 use App\phpdata\PhpData;
 
 use Symfony\Component\DependencyInjection\Attribute\AsAlias;
@@ -27,7 +26,7 @@ use Exception;
 use SplFileInfo;
 
 #[AsAlias(CacheServiceInterface::class, public: true)]
-#[Autoconfigure(autowire: true, lazy: false)]
+// #[Autoconfigure(autowire: true, lazy: false)]
 class CacheService extends BaseService implements CacheServiceInterface
 {
 
@@ -38,6 +37,7 @@ class CacheService extends BaseService implements CacheServiceInterface
     public const DEV_SHORTCUT_NAME = 'cache.dev.shortcuts';
     public const DEFAULT_DEV_SHORTCUT = true;
 
+    public readonly Files $tool_files;
     public readonly PhpDataInterface $phpData;
     public readonly ?SessionInterface $session;
     protected array $sessionDevShortcuts = [];
@@ -49,6 +49,7 @@ class CacheService extends BaseService implements CacheServiceInterface
         #[Autowire(param: 'kernel.cache_dir')]
         public string $cacheDir,
     ) {
+        $this->tool_files = $this->appService->get('Tool:Files');
         if (!file_exists($this->getPhpDataFilePath())) {
             if (!$this->savePhpData()) {
                 die('Le fichier de cache ' . $this->getPhpDataFilePath() . ' n\'a pu être enregistré, veuillez juste relancer la dernière requête S.V.P.');
@@ -224,15 +225,15 @@ class CacheService extends BaseService implements CacheServiceInterface
 
     public function getCacheDir(): ?SplFileInfo
     {
-        return Files::getParentDir($this->cacheDir);
+        return $this->tool_files->getParentDir($this->cacheDir);
     }
 
     public function getCacheDirs(
         int $depth = 0
     ): array {
         $parent = $this->getCacheDir();
-        return Files::listDirs(path: $parent, depth: $depth);
-        // return Files::nestedDirs(path: $parent, depth: $depth);
+        return $this->tool_files->listDirs(path: $parent, depth: $depth);
+        // return $this->tool_files->nestedDirs(path: $parent, depth: $depth);
     }
 
 
@@ -265,7 +266,7 @@ class CacheService extends BaseService implements CacheServiceInterface
 
     public function getPhpDataPath(): string|false
     {
-        $path = Files::createPath(static::PHP_DATA_PATH);
+        $path = $this->tool_files->createPath(static::PHP_DATA_PATH);
         return $path;
     }
 
@@ -284,7 +285,7 @@ class CacheService extends BaseService implements CacheServiceInterface
         if(!$twig->getLoader()->exists($template)) {
             throw new Exception(vsprintf('Error %s line %d: template %s not found!', [__METHOD__, __LINE__, $template]));
         }
-        return Files::putFileContent(
+        return $this->tool_files->putFileContent(
             path: $this->getPhpDataPath(),
             filename: static::PHP_DATA_CLASSNAME . '.php',
             content: $twig->render($template, [
@@ -297,7 +298,7 @@ class CacheService extends BaseService implements CacheServiceInterface
 
     // protected function savePhpData_old(): bool
     // {
-    //     // $content = Files::getFileContent('lib/aequation/labo-bundle/phpmodels', static::PHP_DATA_CLASSNAME.'.txt');
+    //     // $content = $this->tool_files->getFileContent('lib/aequation/labo-bundle/phpmodels', static::PHP_DATA_CLASSNAME.'.txt');
     //     $content = false;
     //     if (!$content) {
     //         $content = <<<EOF
@@ -363,7 +364,7 @@ class CacheService extends BaseService implements CacheServiceInterface
     //     if (!$content) throw new Exception(vsprintf('Error %s line %d: file %s not found!', [__METHOD__, __LINE__, 'lib/aequation/labo-bundle/phpmodels/' . static::PHP_DATA_CLASSNAME . '.txt']));
     //     // $version = new DateTimeImmutable('NOW');
     //     $data = json_encode($this->getPhpData());
-    //     return Files::putFileContent(
+    //     return $this->tool_files->putFileContent(
     //         path: $this->getPhpDataPath(),
     //         filename: static::PHP_DATA_CLASSNAME . '.php',
     //         content: preg_replace(['/(#####VERSION#####)/', '/("#####JSON_DATA#####")/'], [$this->appService->getCurrentDatetime()->format(DATE_ATOM), json_encode($data)], $content)

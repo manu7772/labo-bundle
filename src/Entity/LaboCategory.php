@@ -15,9 +15,6 @@ use Aequation\LaboBundle\Service\Interface\AppEntityManagerInterface;
 use Aequation\LaboBundle\Service\Interface\LaboCategoryServiceInterface;
 use Aequation\LaboBundle\Service\Tools\Classes;
 
-use App\Service\AppEntityManager;
-use App\Service\CategoryService;
-
 use Doctrine\ORM\Mapping as ORM;
 use Doctrine\ORM\Mapping\HasLifecycleCallbacks;
 use Doctrine\ORM\Mapping\MappedSuperclass;
@@ -85,7 +82,7 @@ abstract class LaboCategory extends MappSuperClassEntity implements LaboCategory
 
     public function getShorttype(): string
     {
-        return Classes::getShortname($this->type, true);
+        return Classes::getShortname($this->type);
     }
 
     public function getTypeAsHtml(
@@ -93,12 +90,12 @@ abstract class LaboCategory extends MappSuperClassEntity implements LaboCategory
         bool $classname = false
     ): string
     {
-        return AppEntityManager::getEntityNameAsHtml($this->type, $icon, $classname);
+        return $this->_service::getEntityNameAsHtml($this->type, $icon, $classname);
     }
 
     public function getLongTypeAsHtml(): string
     {
-        return AppEntityManager::getEntityNameAsHtml($this->type, true, true);
+        return $this->_service::getEntityNameAsHtml($this->type, true, true);
     }
 
     public function setType(string $type): static

@@ -1,13 +1,14 @@
 <?php
 namespace Aequation\LaboBundle\Service;
 
+use Aequation\LaboBundle\AequationLaboBundle;
 use Aequation\LaboBundle\Component\Jelastic;
 use Aequation\LaboBundle\Form\Type\JelasticType;
 use Aequation\LaboBundle\Service\Interface\AppEntityManagerInterface;
-use Aequation\LaboBundle\Service\Interface\AppServiceInterface;
 use Aequation\LaboBundle\Service\Interface\FormServiceInterface;
 use Aequation\LaboBundle\Service\Interface\LaboBundleServiceInterface;
 use Aequation\LaboBundle\Service\Tools\Files;
+
 use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\DependencyInjection\Attribute\AsAlias;
 use Symfony\Component\DependencyInjection\Attribute\Autoconfigure;
@@ -17,7 +18,11 @@ use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpKernel\KernelInterface;
 use Symfony\Component\Security\Core\Authorization\AccessDecisionManagerInterface;
 use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
+use Symfony\Contracts\Cache\ItemInterface;
 use Twig\Environment;
+
+use Exception;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 #[AsAlias(LaboBundleServiceInterface::class, public: true)]
 #[Autoconfigure(autowire: true, lazy: true)]
@@ -25,6 +30,9 @@ class LaboBundleService extends AppService implements LaboBundleServiceInterface
 {
 
     public const JELASTIC_FILE = 'jelastic/symfony-jelastic.jps.twig';
+
+    public readonly Files $tool_files;
+    protected array $appServices;
 
     public function __construct(
         RequestStack $requestStack,
@@ -37,7 +45,69 @@ class LaboBundleService extends AppService implements LaboBundleServiceInterface
         protected FormServiceInterface $formService,
     ) {
         parent::__construct($requestStack, $kernel, $parameterBag, $security, $accessDecisionManager, $twig, $normalizer);
+        $this->tool_files = $this->get('Tool:Files');
+        $this->stopPublic();
     }
+
+    protected function stopPublic(): void
+    {
+        if($this->isDev() && $this->isPublic() && !$this->appContext->isCliXmlHttpRequest()) {
+            throw new Exception(vsprintf('WARNING: %s line %d: this service should not be loaded in public firewall (firewall is %s)!%s', [__METHOD__, __LINE__, $this->getFirewall(), PHP_EOL.$this->appContext->getDumped()]));
+            // dd('This method '.__METHOD__.' should not be used while in PUBLIC firewall');
+        }
+    }
+
+
+    /************************************************************************************************************/
+    /** CONTAINER / SERVICES                                                                                    */
+    /************************************************************************************************************/
+
+    /**
+     * Get all APP services
+     * @return array
+     */
+    public function getAppServices(): array
+    {
+        return array_filter(
+            $this->getServices(),
+            fn ($service) => preg_match('/^(App\\\\|Aequation\\\\)/', (string)$service['classname'])
+        );
+    }
+
+    /**
+     * Get all services
+     * @return array
+     */
+    public function getServices(): array
+    {
+        $this->stopPublic();
+        return $this->getCache()->get(
+            key: static::APP_CACHENAME_SERVICES_LIST,
+            callback: function(ItemInterface $item) {
+                if(!empty(static::APP_CACHENAME_SERVICES_LIFE)) {
+                    $item->expiresAfter(static::APP_CACHENAME_SERVICES_LIFE);
+                }
+                /** @var Container $container */
+                $container = $this->getContainer();
+                $ids = $container->getServiceIds();
+                $appServices = [];
+                foreach ($ids as $id) {
+                    $service = $container->get($id, ContainerInterface::NULL_ON_INVALID_REFERENCE);
+                    $appServices[] = [
+                        'id' => $id,
+                        'classname' => $service ? get_class($service) : null,
+                    ];
+                }
+                return $appServices;
+            },
+            commentaire: 'All symfony services',
+        );
+    }
+
+
+    /************************************************************************************************************/
+    /** JELASTIC GENERATION                                                                                     */
+    /************************************************************************************************************/
 
     public function getJelasticForm(
         Jelastic $data = null,
@@ -79,12 +149,17 @@ class LaboBundleService extends AppService implements LaboBundleServiceInterface
 
     public function getJelasticModel(): string|false
     {
-        $model = Files::getFileContent('templates/'.static::JELASTIC_FILE);
+        $model = $this->tool_files->getFileContent('templates'.DIRECTORY_SEPARATOR.static::JELASTIC_FILE);
         if(!$model) {
-            $model = Files::getFileContent('lib/aequation/labo-bundle/templates/'.static::JELASTIC_FILE);
+            $model = $this->tool_files->getFileContent(AequationLaboBundle::getProjectPath(true).'templates'.DIRECTORY_SEPARATOR.static::JELASTIC_FILE);
         }
         return $model;
     }
+
+
+    /************************************************************************************************************/
+    /** LABO MENUS                                                                                              */
+    /************************************************************************************************************/
 
     public function getMenu(): array
     {
@@ -172,5 +247,6 @@ class LaboBundleService extends AppService implements LaboBundleServiceInterface
         }
         return $menu;
     }
+
 
 }

@@ -24,6 +24,7 @@ use Aequation\LaboBundle\Service\Tools\Strings;
 use Symfony\Bundle\FrameworkBundle\Routing\Router;
 use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Symfony\Component\DependencyInjection\Container;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Component\DependencyInjection\Attribute\AsAlias;
 use Symfony\Component\DependencyInjection\Attribute\Autoconfigure;
@@ -60,14 +61,13 @@ class AppService extends BaseService implements AppServiceInterface
 
     public readonly ContainerInterface $container;
     protected ?FirewallConfig $firewallConfig;
-    private AppContextInterface $appContext;
+    protected AppContextInterface $appContext;
     protected ?Request $request;
     protected ?Session $session;
     protected Identity $identity;
     protected string $project_dir;
     protected ?string $_route;
     protected mixed $_route_params;
-    protected array $appServices;
 
     public function __construct(
         public readonly RequestStack $requestStack,
@@ -88,6 +88,11 @@ class AppService extends BaseService implements AppServiceInterface
     /** CONTAINER / SERVICES                                                                                    */
     /************************************************************************************************************/
 
+    public function getContainer(): ContainerInterface
+    {
+        return $this->container ??= $this->kernel->getContainer();
+    }
+
     /**
      * Has service (only if public)
      * @param string $id
@@ -97,8 +102,8 @@ class AppService extends BaseService implements AppServiceInterface
         string $id
     ): bool
     {
-        return $this->container->has($id);
-        // return $this->container?->has($id) ?: false;
+        return $this->getContainer()->has($id);
+        // return $this->getContainer()?->has($id) ?: false;
     }
 
     /**
@@ -109,65 +114,32 @@ class AppService extends BaseService implements AppServiceInterface
      */
     public function get(
         string $id,
-        int $invalidBehavior = ContainerInterface::EXCEPTION_ON_INVALID_REFERENCE
+        int $invalidBehavior = ContainerInterface::NULL_ON_INVALID_REFERENCE
     ): ?object
     {
-        if(!isset($this->container)) return null;
-        return $this->container->get($id, $invalidBehavior);
+        return $this->getContainer()->get($id, $invalidBehavior);
     }
 
-    /**
-     * Get all APP services
-     * @param callable|null $filter
-     * @return array
-     */
-    public function getAppServices(
-        callable $filter = null,
-    ): array
+    public static function getClassServiceName(
+        string|AppEntityInterface $objectOrClass
+    ): ?string
     {
-        return $this->getAppClasses(true, $filter);
+        $attrs = Classes::getClassAttributes($objectOrClass, ClassCustomService::class, true);
+        if(count($attrs)) {
+            $attr = reset($attrs);
+            return $attr->service;
+        }
+        return null;
     }
 
-    /**
-     * Get all APP classes
-     * @param boolean $withObjectOnly
-     * @param callable|null $filter
-     * @return array
-     */
-    public function getAppClasses(
-        bool $withObjectOnly = false,
-        callable $filter = null,
-    ): array
+    public function getClassService(
+        string|AppEntityInterface $objectOrClass
+    ): ?ServiceInterface
     {
-        if($this->isDev() && $this->isPublic()) {
-            dd('This method '.__METHOD__.' should not be used in PUBLIC firewall');
-        }
-        if(!isset($this->appServices)) {
-            $this->appServices = $this->getCache()->get(
-                key: static::APP_CACHENAME_SERVICES_LIST,
-                callback: function(ItemInterface $item) {
-                    if(!empty(static::APP_CACHENAME_SERVICES_LIFE)) {
-                        $item->expiresAfter(static::APP_CACHENAME_SERVICES_LIFE);
-                    }
-                    return Files::getInFilesPhpInfo(static::SOURCES_PHP, true);
-                },
-                commentaire: 'All PHP classes/interfaces/traits',
-            );
-            // complete informations...
-            foreach ($this->appServices as $key => $service) {
-                try {
-                    $this->appServices[$key]['service'] = $this->get($service['classname']);
-                } catch (\Throwable $th) {
-                    $this->appServices[$key]['service'] = false;
-                }
-            }
-        }
-        $appServices = $withObjectOnly
-            ? array_filter($this->appServices, fn($service) => is_object($service['service']))
-            : $this->appServices;
-        return is_callable($filter)
-            ? $filter($appServices)
-            : $appServices;
+        $serviceName = $this->getClassServiceName($objectOrClass);
+        return $this->has($serviceName)
+            ? $this->get($serviceName)
+            : null;
     }
 
 
@@ -350,12 +322,12 @@ class AppService extends BaseService implements AppServiceInterface
 
     public function getMainSAdmin(): ?LaboUserInterface
     {
-        return $this->get(LaboUserService::class)->getMainSAdmin();
+        return $this->get(LaboUserServiceInterface::class)->getMainSAdmin();
     }
 
     public function getMainAdmin(): ?LaboUserInterface
     {
-        return $this->get(LaboUserService::class)->getMainAdmin();
+        return $this->get(LaboUserServiceInterface::class)->getMainAdmin();
     }
 
     /**
@@ -419,38 +391,11 @@ class AppService extends BaseService implements AppServiceInterface
     //  */
     // public function isVoterGranted(mixed $attribute, mixed $subject = null): bool
     // {
-    //     if (!$this->container->has('security.authorization_checker')) {
+    //     if (!$this->getContainer()->has('security.authorization_checker')) {
     //         throw new \LogicException('The SecurityBundle is not registered in your application. Try running "composer require symfony/security-bundle".');
     //     }
-    //     return $this->container->get('security.authorization_checker')?->isGranted($attribute, $subject) ?? false;
+    //     return $this->getContainer()->get('security.authorization_checker')?->isGranted($attribute, $subject) ?? false;
     // }
-
-
-    /************************************************************************************************************/
-    /** SERVICES                                                                                                */
-    /************************************************************************************************************/
-
-    public static function getClassServiceName(
-        string|AppEntityInterface $objectOrClass
-    ): ?string
-    {
-        $attrs = Classes::getClassAttributes($objectOrClass, ClassCustomService::class, true);
-        if(count($attrs)) {
-            $attr = reset($attrs);
-            return $attr->service;
-        }
-        return null;
-    }
-
-    public function getClassService(
-        string|AppEntityInterface $objectOrClass
-    ): ?ServiceInterface
-    {
-        $serviceName = $this->getClassServiceName($objectOrClass);
-        return $this->has($serviceName)
-            ? $this->get($serviceName)
-            : null;
-    }
 
 
     /************************************************************************************************************/
@@ -673,6 +618,15 @@ class AppService extends BaseService implements AppServiceInterface
         // }
         if($isTurbo && $prepareRequest) $request->setRequestFormat(TurboBundle::STREAM_FORMAT);
         return $isTurbo;
+    }
+
+    public function isXmlHttpRequest(
+        ?Request $request = null,
+    ): bool
+    {
+        $request ??= $this->getCurrentRequest();
+        if(empty($request)) return false;
+        return $request->headers->get('x-requested-with', null) === 'XMLHttpRequest';
     }
 
 

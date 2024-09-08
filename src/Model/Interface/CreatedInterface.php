@@ -2,6 +2,7 @@
 namespace Aequation\LaboBundle\Model\Interface;
 
 use DateTimeImmutable;
+use DateTimeZone;
 
 interface CreatedInterface extends AppEntityInterface
 {
@@ -13,6 +14,7 @@ interface CreatedInterface extends AppEntityInterface
     public function getCreatedAt(): ?DateTimeImmutable;
     public function updateCreatedAt(): static;
     public function setCreatedAt(): static;
+    public function getDateTimezone(): ?DateTimeZone;
     public function getTimezone(): ?string;
     public function setTimezone(string $timezone): static;
 }

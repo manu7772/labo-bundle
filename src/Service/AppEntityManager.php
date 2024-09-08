@@ -91,9 +91,12 @@ class AppEntityManager extends BaseService implements AppEntityManagerInterface
         return $this->appService;
     }
 
-    protected function needOverrideException(): void
+    protected function needOverrideException(
+        string $method,
+        int $line,
+    ): void
     {
-        throw new Exception(vsprintf("%s class %s is invalid! This method %s() needs to be overriden in sub classes.", [static::class, json_encode(static::ENTITY), __METHOD__]));
+        throw new Exception(vsprintf("%s class %s is invalid! This method %s() [line %d] needs to be overriden in sub classes.", [static::class, json_encode(static::ENTITY), $method ?? __METHOD__, $line ?? __LINE__]));
     }
 
     public function getEntityManager(): EntityManagerInterface
@@ -272,7 +275,7 @@ class AppEntityManager extends BaseService implements AppEntityManagerInterface
     ): ClassmetadataReport
     {
         $meta_infos = $this->getEntityMetadataReports();
-        return $meta_infos[$classname];
+        return $meta_infos[$classname ?? static::ENTITY];
     }
 
     public function getEntityMetadataReports(): array
@@ -362,7 +365,7 @@ class AppEntityManager extends BaseService implements AppEntityManagerInterface
     {
         $origin_classname = $classname;
         $classname ??= static::ENTITY;
-        if(empty($classname) && $this->isDev()) $this->needOverrideException();
+        if(empty($classname) && $this->isDev()) $this->needOverrideException(__METHOD__, __LINE__);
         // Check if not MAPPEDSUPERCLASS / not instantiable
         $cmd = $this->getClassMetadata($classname);
         $classname = $cmd->name;
@@ -559,7 +562,7 @@ class AppEntityManager extends BaseService implements AppEntityManagerInterface
      * @param ?callable $postCreate
      * @return AppEntityInterface|false
      */
-    public final function getNew(
+    public function getNew(
         string $classname = null,
         callable $postCreate = null,
         string $uname = null
@@ -580,6 +583,25 @@ class AppEntityManager extends BaseService implements AppEntityManagerInterface
             $new->updateUname($uname);
         }
         return $this->initEntity($new, $postCreate);
+    }
+
+    public function getModel(
+        string $classname = null,
+        callable $postCreate = null,
+        string|array|null $event = null
+    ): AppEntityInterface|false
+    {
+        $model = $this->getNew($classname, $postCreate);
+        if($model) {
+            $model->_setModel(); // IMPORTANT!!!
+            if(!empty($event)) {
+                $this->dispatchEvent($model, $event);
+            }
+            if(is_callable($postCreate)) {
+                $postCreate(entity: $model);
+            }    
+        }
+        return $model;
     }
 
     public function initEntity(
@@ -739,14 +761,36 @@ class AppEntityManager extends BaseService implements AppEntityManagerInterface
         return $this;
     }
 
-    public function persist(
+    public function checkPersistable(
+        AppEntityInterface $entity
+    ): bool
+    {
+        $check = !$entity->_isClone()
+            && !$entity->_isModel()
+            ;
+        if(!$check && $this->isDev()) {
+            $lines = [
+                vsprintf('Erreur %s line %d: %s "%s" has errors and can not be persisted.', [__METHOD__, __LINE__, $entity->getClassname(), $entity]),
+            ];
+            if($entity->_isClone()) {
+                $lines[] = vsprintf('Erreur %s line %d: %s "%s" should not be clone.', [__METHOD__, __LINE__, $entity->getClassname(), $entity]);
+            }
+            if($entity->_isModel()) {
+                $lines[] = vsprintf('Erreur %s line %d: %s "%s" should not be model.', [__METHOD__, __LINE__, $entity->getClassname(), $entity]);
+            }
+            if(count($lines) > 0) {
+                throw new Exception(implode(PHP_EOL, $lines));
+            }
+        }
+        return $check;
+    }
+
+    protected function persist(
         AppEntityInterface $entity,
         bool|Opresult $opresultException = true
     ): bool
     {
-        if($this->isDev() && $entity->_isClone()) {
-            throw new Exception(vsprintf('Erreur %s line %d: %s "%s" should not be clone.', [__METHOD__, __LINE__, $entity->getClassname(), $entity]));
-        }
+        $this->checkPersistable($entity);
         $isNew = $entity->_appManaged->isNew();
         try {
             if($isNew) {
@@ -775,9 +819,9 @@ class AppEntityManager extends BaseService implements AppEntityManagerInterface
         bool|Opresult $opresultException = true
     ): bool
     {
-        if(!$this->isManaged($entity)) {
-            $this->persist($entity, $opresultException);
-        }
+        // if(!$this->isManaged($entity)) {
+            $this->persist($entity, $opresultException); // important!!! --> needed for updates too, to apply AppEvent::beforePreUpdate
+        // }
         if($opresultException instanceof Opresult && !$opresultException->isSuccess()) {
             return false;
         }
@@ -1001,17 +1045,18 @@ class AppEntityManager extends BaseService implements AppEntityManagerInterface
         ?SymfonyStyle $io = null,
     ): Opresult
     {
+        $tool_files = $this->appService->get('Tool:Files');
         $classes = empty($classes) ? [] : (array)$classes;
         $entities = $this->getEntityNames(false, false, true);
         if(empty($classes)) $classes = $entities;
         $classes = array_intersect($classes, $entities);
         $result = new Opresult();
         $path ??= $this->appService->getParameter('basics_dir').'/data';
-        $ymlFiles = Files::listFiles(path: $path, filter: ['*.yaml','*.yml']);
+        $ymlFiles = $tool_files->listFiles(path: $path, filter: ['*.yaml','*.yml']);
         $alldata = [];
         $total = 0;
         foreach ($ymlFiles as $file) {
-            $data = Files::readYamlFile($file->getRealpath());
+            $data = $tool_files->readYamlFile($file->getRealpath());
             if(isset($data['data']) && in_array($data['data']['entity'] ?? null, $entities) && count($data['data']['items'] ?? []) > 0) {
                 if(empty($classes) || in_array($data['data']['entity'], $classes)) {
                     $id = intval($data['data']['order']);

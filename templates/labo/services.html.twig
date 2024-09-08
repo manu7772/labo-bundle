@@ -13,10 +13,10 @@
 <article>
     <div class="grid">
         <div>
-            <h4 class="mb-0 pico-color-blue-600">{{ service.classname }}</h4>
-            <div>ID: <strong>{{ service.service ? service.classname : validIcon(false, '24px') }}</strong></div>
-            <div>Service: <span class="{{ service.service ? 'pico-color-green-300' : 'text-muted' }}">{{ service.service ? service.service|classname : 'non' }}</span></div>
-            <div>Public: <span class="{{ app.service.has(service.classname) ? 'pico-color-green-300' : 'pico-color-red-400' }}">{{ validIcon(app.service.has(service.classname), '24px') }}</span></div>
+            <h4 class="mb-0 pico-color-blue-600">Service ID {{ service.id }}</h4>
+            {# <div>ID: <strong>{{ service.id }}</strong></div> #}
+            <div>Class: <span class="{{ service.classname ? 'pico-color-green-300' : 'text-muted' }}">{{ service.classname|default('---') }}</span></div>
+            <div>Public: <span class="{{ service.classname ? 'pico-color-green-300' : 'pico-color-red-400' }}">{{ validIcon(service.classname, '24px') }}</span></div>
         </div>
     </div>
 </article>

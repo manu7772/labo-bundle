@@ -56,10 +56,20 @@ class AppContextTemp implements AppContextInterface
     protected bool                  $_darkmode                      = true;
     protected ?RequestContext       $_request_context               = null;
     protected array                 $_request_context_history       = [];
-    // protected bool                   $_requestFrom_xmlHttp           = false;
+    protected array                 $_headers                       = [];
     protected bool                  $_requestFrom_turbo_frame       = false;
     protected bool                  $_requestFrom_turbo_stream      = false;
+    protected bool                  $_requestFrom_xml_http          = false; // x-requested-with = "XMLHttpRequest" ?
 
+    public function isCliXmlHttpRequest(): bool
+    {
+        return
+            $this->_requestFrom_xml_http
+            || $this->_requestFrom_turbo_frame
+            || $this->_requestFrom_turbo_stream
+            || $this->_requestFrom_cli
+            ;
+    }
 
     public function __construct(
         protected AppServiceInterface $appService,
@@ -99,7 +109,7 @@ class AppContextTemp implements AppContextInterface
         $this->_environment                 = $this->kernel->getEnvironment();
         $this->_firewall                    = $fwc?->getName() ?: null;
         $this->_user                        = $this->security->getUser();
-        $this->_timezone                    = $this->_user ? new DateTimeZone($this->_user->getTimezone()) : new DateTimeZone($this->appService->getParam('timezone'));
+        $this->_timezone                    = $this->_user ? $this->_user->getDateTimezone() : new DateTimeZone($this->appService->getParam('timezone'));
         $this->_dater                       = static::DEFAULT_DATER;
         $this->_datenow                     = new DateTimeImmutable($this->_dater, $this->_timezone);
         $this->_language                    = null;
@@ -108,8 +118,10 @@ class AppContextTemp implements AppContextInterface
         $this->_public                      = !empty($this->_firewall) && in_array(strtolower($this->_firewall), $this->appService::PUBLIC_FIREWALLS);
         $this->_darkmode                    = $this->getComputedDarkmode();
         $this->_request_context             = $this->router instanceof RouterInterface ? $this->router->getContext() : null;
+        $this->_headers                     = $this->request->headers->all();
         $this->_requestFrom_turbo_frame     = $this->appService->isTurboFrameRequest();
         $this->_requestFrom_turbo_stream    = $this->appService->isTurboStreamRequest();
+        $this->_requestFrom_xml_http        = $this->appService->isXmlHttpRequest();
         // $valid = $this->setInitData($this->initData);
         $valid = $this->isValid(true);
         if(!$this->isTempContext()) {
@@ -262,6 +274,29 @@ class AppContextTemp implements AppContextInterface
         return $this->data;
     }
 
+    /**
+     * Get a string representation of this AppContext
+     * @return string
+     */
+    public function getDumped(): string
+    {
+        $dump = '';
+        foreach ($this->jsonSerialize() as $key => $value) {
+            if(is_array($value)) {
+                $subdump = '';
+                foreach ($value as $subkey => $subval) {
+                    if(!is_string($subval)) $subval = json_encode($subval);
+                    $subdump .= PHP_EOL.'   - '.$subkey.' = '.$subval;
+                }
+                $value = $subdump;
+            }
+            if(!is_string($value)) {
+                $value = json_encode($value);
+            }
+            $dump .= PHP_EOL.$key.' = '.$value;
+        }
+        return $dump;
+    }
 
     public function get(string $name): mixed
     {
@@ -606,7 +641,7 @@ class AppContextTemp implements AppContextInterface
         return !$this->_public;
     }
 
-    public function getFirewall(): ?FirewallConfig
+    public function getFirewall(): string
     {
         return $this->_firewall;
     }
@@ -622,7 +657,7 @@ class AppContextTemp implements AppContextInterface
         return $this->request ? $this->security->getFirewallConfig($this->request) : null;
     }
 
-    public function getFirewallName(): ?string
+    public function getFirewallName(): string
     {
         return $this->_firewall;
     //     $firewallConfig ??= empty($this->request) ? null : $this->security->getFirewallConfig($this->request);

@@ -19,6 +19,7 @@ use Aequation\LaboBundle\Service\Interface\AppRoleHierarchyInterface;
 use Aequation\LaboBundle\Service\Tools\Encoders;
 use Aequation\LaboBundle\Service\LaboUserService;
 use Aequation\LaboBundle\Model\Attribute as EA;
+use Aequation\LaboBundle\Model\Interface\CreatedInterface;
 use Aequation\LaboBundle\Model\Interface\EnabledInterface;
 use Aequation\LaboBundle\Model\Interface\LaboCategoryInterface;
 use Aequation\LaboBundle\Service\Interface\LaboUserServiceInterface;
@@ -45,7 +46,7 @@ use Doctrine\DBAL\Types\Types;
 #[ORM\InheritanceType('JOINED')]
 #[UniqueEntity(['email','classname'], message: 'Cet email {{ value }} est déjà utilisé !')]
 #[ORM\HasLifecycleCallbacks]
-abstract class LaboUser extends MappSuperClassEntity implements LaboUserInterface, EquatableInterface, ImageOwnerInterface, UnamedInterface, EnabledInterface
+abstract class LaboUser extends MappSuperClassEntity implements LaboUserInterface, EquatableInterface, ImageOwnerInterface, UnamedInterface, EnabledInterface, CreatedInterface
 {
 
     use Enabled, Created, Unamed;

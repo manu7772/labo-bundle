@@ -81,7 +81,7 @@ class Pdf extends Item implements PdfInterface, SlugInterface
         File $file
     ): static
     {
-        $this->file = Files::getCopiedTmpFile($file);
+        $this->file = $this->_service->getAppService()->get('Tool:Files')->getCopiedTmpFile($file);
         if($this->file instanceof UploadedFile) {
             if(!empty($this->getId())) $this->updateUpdatedAt();
             if(empty($this->filename)) $this->setFilename($this->file->getClientOriginalName());

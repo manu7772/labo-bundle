@@ -41,6 +41,7 @@ trait AppEntity
     protected readonly string $shortname;
 
     protected bool $_isClone = false;
+    protected readonly bool $_isModel;
 
     #[Serializer\Ignore]
     public readonly AppEntityInfoInterface $_appManaged;
@@ -77,6 +78,17 @@ trait AppEntity
     ): static
     {
         $this->_isClone = $_isClone;
+        return $this;
+    }
+
+    public function _isModel(): bool
+    {
+        return isset($this->_isModel) ? $this->_isModel : false;
+    }
+
+    public function _setModel(): static
+    {
+        $this->_isModel = true;
         return $this;
     }
 

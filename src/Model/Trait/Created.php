@@ -5,6 +5,7 @@ use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 
 use DateTimeImmutable;
+use DateTimeZone;
 use Doctrine\Persistence\Event\LifecycleEventArgs;
 
 Trait Created
@@ -92,6 +93,11 @@ Trait Created
             $this->createdAt = $createdAt ?? new DateTimeImmutable();
         }
         return $this;
+    }
+
+    public function getDateTimezone(): ?DateTimeZone
+    {
+        return new DateTimeZone($this->timezone);
     }
 
     public function getTimezone(): ?string

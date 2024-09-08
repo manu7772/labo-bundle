@@ -30,16 +30,11 @@ interface AppServiceInterface extends ServiceInterface
     public const CONTEXT_SESSNAME = 'app_context';
     public const PUBLIC_FIREWALLS = ['main'];
     public const EXCLUDED_FIREWALLS = ['dev','tmp','image_resolver','uploads','secured_area'];
-    public const APP_CACHENAME_SERVICES_LIST = 'app_services_list';
-    public const APP_CACHENAME_SERVICES_LIFE = null;
-    public const SOURCES_PHP = ['src','lib'];
 
     public function has(string $id): bool;
     public function get(string $id, int $invalidBehavior = ContainerInterface::EXCEPTION_ON_INVALID_REFERENCE): ?object;
     public static function getClassServiceName(string|AppEntityInterface $objectOrClass): ?string;
     public function getClassService(string|AppEntityInterface $objectOrClass): ?ServiceInterface;
-    public function getAppServices(callable $filter = null): array;
-    public function getAppClasses(bool $withObjectOnly = false, callable $filter = null): array;
     // Twig
     public function getTwig(): Environment;
     public function getTwigLoader(): LoaderInterface;
@@ -90,6 +85,7 @@ interface AppServiceInterface extends ServiceInterface
     public function getTurboMetas(bool $asMarkup = true): string|Markup;
     public function isTurboFrameRequest(?Request $request = null): bool;
     public function isTurboStreamRequest(?Request $request = null, bool $prepareRequest = true): bool;
+    public function isXmlHttpRequest(?Request $request = null): bool;
     // Entities
     // public function isPersisted(AppEntityInterface|string $entity): bool;
     // public function isNotPersisted(AppEntityInterface|string $entity): bool;

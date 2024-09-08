@@ -1,30 +1,32 @@
 <?php
 namespace Aequation\LaboBundle\Service;
 
+use Aequation\LaboBundle\AequationLaboBundle;
 use Aequation\LaboBundle\Component\CssManager;
 use Aequation\LaboBundle\EventListener\Attribute\AppEvent;
 use Aequation\LaboBundle\Form\Type\CssType;
 use Aequation\LaboBundle\Model\Attribute\CssClasses;
 use Aequation\LaboBundle\Service\Base\BaseService;
 use Aequation\LaboBundle\Service\Interface\AppEntityManagerInterface;
-use Aequation\LaboBundle\Service\Interface\AppServiceInterface;
-use Aequation\LaboBundle\Service\Interface\CacheServiceInterface;
 use Aequation\LaboBundle\Service\Interface\CssDeclarationInterface;
 use Aequation\LaboBundle\Service\Interface\FormServiceInterface;
+use Aequation\LaboBundle\Service\Interface\LaboBundleServiceInterface;
 use Aequation\LaboBundle\Service\Tools\Classes;
 use Aequation\LaboBundle\Service\Tools\Files;
 use Aequation\LaboBundle\Service\Tools\Iterables;
 use Aequation\LaboBundle\Service\Tools\Strings;
-use App\Entity\Slide;
-use DateTime;
-use DateTimeZone;
+use Exception;
+use Symfony\Component\DependencyInjection\Attribute\AsAlias;
+use Symfony\Component\DependencyInjection\Attribute\Autoconfigure;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\Form\FormInterface;
 use Symfony\Component\Process\Process;
 use Symfony\Contracts\Cache\ItemInterface;
 use Symfonycasts\TailwindBundle\TailwindBuilder;
 
-// #[AsAlias(CssDeclarationInterface::class, public: true)]
+#[AsAlias(CssDeclarationInterface::class, public: true)]
+#[Autoconfigure(autowire: true, lazy: true)]
 class CssDeclaration extends BaseService implements CssDeclarationInterface
 {
 
@@ -34,11 +36,12 @@ class CssDeclaration extends BaseService implements CssDeclarationInterface
     public const FILE_PATH = 'templates';
     public const FILE_NAME = 'tailwind_css_declarations.html.twig';
 
-    public const BASE_PATH = 'lib/aequation/labo-bundle/templates';
-    public const BASE_NAME = 'tailwind_css_declarations.html.twig';
+    public const BUNDLE_FILE_PATH = 'templates';
+    public const BUNDLE_FILE_NAME = 'tailwind_css_declarations.html.twig';
 
     public const CLASS_TYPES = ['ORIGIN', 'COMPUTED', 'ADDED','UNKNOWN'];
 
+    public readonly Files $tool_files;
     protected string $filepath;
     protected string $filename;
     protected string|false $filecontent;
@@ -48,11 +51,12 @@ class CssDeclaration extends BaseService implements CssDeclarationInterface
     protected array $cssAttributes;
 
     public function __construct(
-        protected AppServiceInterface $appService,
+        protected LaboBundleServiceInterface $laboAppService,
         #[Autowire(service: 'tailwind.builder')]
         protected TailwindBuilder $tailwindBuilder,
     )
     {
+        $this->tool_files = $this->laboAppService->get('Tool:Files');
         $this->setFilepath(static::FILE_PATH);
         $this->setFilename(static::FILE_NAME);
     }
@@ -62,7 +66,7 @@ class CssDeclaration extends BaseService implements CssDeclarationInterface
         bool $create = true
     ): static
     {
-        $this->filepath = Files::getProjectDir($filepath, $create);
+        $this->filepath = $this->tool_files->getProjectDir($filepath, $create);
         return $this;
     }
 
@@ -154,8 +158,8 @@ class CssDeclaration extends BaseService implements CssDeclarationInterface
     private function getBaseClasses(): array
     {
         if(!isset($this->base_classes)) {
-            $base = Files::getFileContent(static::BASE_PATH, static::BASE_NAME);
             $this->base_classes = [];
+            $base = $this->tool_files->getFileContent(AequationLaboBundle::getProjectPath(true).static::BUNDLE_FILE_PATH, static::BUNDLE_FILE_NAME);
             if($base) {
                 $this->base_classes = $this->parseClasses($base);
             }
@@ -165,32 +169,41 @@ class CssDeclaration extends BaseService implements CssDeclarationInterface
 
     private function getCssAttributes(): array
     {
-        // if(!$this->appService->isProd()) {
-        //     $this->appService->getCache()->delete(static::CACHE_CSS_ATTRIBUTES_NAME);
-        // }
-        $this->cssAttributes ??= $this->appService->getCache()->get(
-            key: static::CACHE_CSS_ATTRIBUTES_NAME,
-            callback: function(ItemInterface $item) {
-                if(!empty(static::CACHE_CSS_ATTRIBUTES_LIFE)) {
-                    $item->expiresAfter(static::CACHE_CSS_ATTRIBUTES_LIFE);
-                }
-                /** @var AppEntityManagerInterface $app_em */
-                $app_em = $this->appService->get(AppEntityManagerInterface::class);
-                $classes = [];
-                foreach ($this->appService->getAppClasses(false) as $service) {
-                    if($app_em->entityExists(classname: $service['classname'], allnamespaces: false, onlyInstantiables: true)) {
-                        $classes[] = $entity = $app_em->getNew($service['classname']);
-                        $app_em->initEntity(entity: $entity, event: AppEvent::PRE_SET_DATA);
-                    } else {
-                        $classes[] = empty($service['service']) ? $service['classname'] : $service['service'];
+        if(!isset($this->cssAttributes)) {
+            $this->cssAttributes = $this->laboAppService->getCache()->get(
+                key: static::CACHE_CSS_ATTRIBUTES_NAME,
+                callback: function(ItemInterface $item) {
+                    if(!empty(static::CACHE_CSS_ATTRIBUTES_LIFE)) {
+                        $item->expiresAfter(static::CACHE_CSS_ATTRIBUTES_LIFE);
                     }
-                }
-                // dump($classes);
-                return Classes::getAttributes(CssClasses::class, $classes);
-            },
-            commentaire: "CssClasses attributes on all classes",
-        );
-        // dump($this->cssAttributes);
+                    /** @var AppEntityManagerInterface $app_em */
+                    $app_em = $this->laboAppService->get(AppEntityManagerInterface::class);
+                    $classes = [];
+                    $index = 0;
+                    // All App services (public)
+                    $services = [];
+                    foreach ($app_em->getEntityNames(false, false, true) as $class) {
+                        $classes[$index] = $app_em->getModel($class, null, AppEvent::PRE_SET_DATA);
+                        if(!$classes[$index] && $app_em->isDev()) throw new Exception(vsprintf('Error %s line %d: failed to create new %s entity!', [__METHOD__, __LINE__, $class]));
+                        $index++;
+                    }
+                    foreach ($this->laboAppService->getAppServices() as $service) {
+                        // if(!empty($service['classname'])) {
+                            try {
+                                $classes[$index] = $this->laboAppService->get($service['id'], ContainerInterface::NULL_ON_INVALID_REFERENCE);
+                                if(!$classes[$index] && $app_em->isDev()) throw new Exception(vsprintf('Error %s line %d: failed to call service of ID %s (class: %s)!', [__METHOD__, __LINE__, $service['id'], $service['classname']]));
+                                $index++;
+                            } catch (\Throwable $th) {
+                                //throw $th;
+                                if($app_em->isDev()) throw new Exception(vsprintf('Error %s line %d: failed to call service of ID %s (class: %s)!%s', [__METHOD__, __LINE__, $service['id'], $service['classname'], PHP_EOL.$th->getMessage()]));
+                            }
+                        // }
+                    }
+                    return Classes::getAttributes(CssClasses::class, $classes);
+                },
+                commentaire: "CssClasses attributes on all classes",
+            );
+        }
         return $this->cssAttributes;
     }
 
@@ -203,7 +216,6 @@ class CssDeclaration extends BaseService implements CssDeclarationInterface
                     $this->computed_classes[$class] = $class;
                 }
             }
-            // dump($this->computed_classes);
         }
         return $this->computed_classes;
     }
@@ -212,7 +224,7 @@ class CssDeclaration extends BaseService implements CssDeclarationInterface
         bool $refresh = false
     ): string|false
     {
-        if(!isset($this->filecontent) || $refresh) $this->filecontent = Files::getFileContent($this->filepath, $this->filename);
+        if(!isset($this->filecontent) || $refresh) $this->filecontent = $this->tool_files->getFileContent($this->filepath, $this->filename);
         return $this->filecontent;
     }
 
@@ -236,7 +248,7 @@ class CssDeclaration extends BaseService implements CssDeclarationInterface
             $content .= $ln.'<span class="'.$class.'"></span>';
         }
         $content .= $this->getFileEnd();
-        return Files::putFileContent($this->filepath, $this->filename, $content);
+        return $this->tool_files->putFileContent($this->filepath, $this->filename, $content);
     }
 
     public function saveClasses(): bool
@@ -250,7 +262,7 @@ class CssDeclaration extends BaseService implements CssDeclarationInterface
             $content .= $ln.'<span class="'.$class.'"></span>';
         }
         $content .= $this->getFileEnd();
-        return Files::putFileContent($this->filepath, $this->filename, $content);
+        return $this->tool_files->putFileContent($this->filepath, $this->filename, $content);
     }
 
     public function resetAll(): bool
@@ -273,7 +285,7 @@ class CssDeclaration extends BaseService implements CssDeclarationInterface
     public function getCssForm(?CssManager $cssManager = null): FormInterface
     {
         /** @var FormServiceInterface */
-        $formService = $this->appService->get(FormServiceInterface::class);
+        $formService = $this->laboAppService->get(FormServiceInterface::class);
         return $formService->getForm(CssType::class, $cssManager);
     }
 
@@ -295,8 +307,8 @@ class CssDeclaration extends BaseService implements CssDeclarationInterface
 
     private function getFileHead(): string
     {
-        // return '{# '.PHP_EOL.PHP_EOL.'DECLARATIONS DE CLASSES POUR LA GÉNÉRATION TAILWIND DES STYLES CSS'.PHP_EOL.'NON VISIBLES CAR GÉNÉRÉS DYNAMIQUEMENT'.PHP_EOL.'UPDATED: '.$this->appService->getCurrentDatetime()->format(DATE_ATOM).PHP_EOL.PHP_EOL.'CE FICHIER NE DOIT PAS ÊTRE UTILISÉ'.PHP_EOL.'-----------------------------------------------------'.PHP_EOL;
-        $date = $this->appService->getCurrentDatetime()->format(DATE_ATOM);
+        // return '{# '.PHP_EOL.PHP_EOL.'DECLARATIONS DE CLASSES POUR LA GÉNÉRATION TAILWIND DES STYLES CSS'.PHP_EOL.'NON VISIBLES CAR GÉNÉRÉS DYNAMIQUEMENT'.PHP_EOL.'UPDATED: '.$this->laboAppService->getCurrentDatetime()->format(DATE_ATOM).PHP_EOL.PHP_EOL.'CE FICHIER NE DOIT PAS ÊTRE UTILISÉ'.PHP_EOL.'-----------------------------------------------------'.PHP_EOL;
+        $date = $this->laboAppService->getCurrentDatetime()->format(DATE_ATOM);
         return <<<EOL
             {# 
 

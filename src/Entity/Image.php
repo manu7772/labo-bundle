@@ -93,26 +93,13 @@ abstract class Image extends Item implements ImageInterface
     public function setFile(File $file): static
     {
         $this->file = HttpRequest::isCli()
-        ? Files::getCopiedTmpFile($file)
+        ? $this->_service->getAppService()->get('Tool:Files')->getCopiedTmpFile($file)
         : $file;
         if(!empty($this->getId())) $this->updateUpdatedAt();
         if(empty($this->filename)) $this->setFilename($this->file->getFilename());
         $this->updateName();
-        // $this->completeFileInformations();
         return $this;
     }
-
-    // public function completeFileInformations(): static
-    // {
-    //     if($this->file instanceof File) {
-    //         if(empty($this->filename)) $this->setFilename($this->file->getFilename());
-    //         $this->setOriginalname($this->file->getFilename());
-    //         $this->setSize($this->file->getSize());
-    //         $this->setMime($this->file->getMimeType());
-    //         $this->setDimensions(getimagesize($this->file->getRealPath()));
-    //     }
-    //     return $this;
-    // }
 
     #[Serializer\Ignore]
     public function getFile(): File|null
@@ -149,33 +136,10 @@ abstract class Image extends Item implements ImageInterface
     #[ORM\PreUpdate]
     public function onPersistOrUpdate(): static
     {
-        // if(!$this->removeLinkedto()) {
-            $this->updateName();
-        // }
+        $this->updateName();
         return $this;
     }
 
-    // abstract public function setLinkedto(?ImageOwnerInterface $linkedto): static;
-    // abstract public function getLinkedto(): ?ImageOwnerInterface;
-
-    // /**
-    //  * On delete
-    //  * @return boolean // true if is deleted
-    //  */
-    // public function removeLinkedto(): bool
-    // {
-    //     if($this->deleteImage) {
-    //         $this->file = null;
-    //         /** @var AppEntityInterface */
-    //         $linkedto = $this->getLinkedto();
-    //         $this->setLinkedto(null);
-    //         if($linkedto instanceof ImageOwnerInterface) {
-    //             $linkedto->removeOwnedImage($this);
-    //             if($linkedto instanceof CreatedInterface) $linkedto->updateUpdatedAt();
-    //         }
-    //     }
-    //     return empty($this->getLinkedto());
-    // }
 
     public function updateName(): static
     {
@@ -279,7 +243,6 @@ abstract class Image extends Item implements ImageInterface
         if($event instanceof FormEvent) {
             /** @var Form */
             $form = $event->getForm();
-            // dd($form, get_class($service), $group, $data);
             if(!$form->isRoot() && !$form->isRequired()) {
                 $event->getForm()->add(child: 'deleteImage', type: CheckboxType::class, options: [
                     'label' => 'Supprimer la photo',
