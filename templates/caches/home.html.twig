@@ -9,10 +9,14 @@
 <article>
     <h5>Custom App Caches
         <span>
-            <a{{ turbo_enable(false) }} href="{{ path('aequation_cache_clear') }}" data-target="modal-clear-caches" data-title="Vider toutes les caches" data-content="Toutes les custom caches seront vidées, le site sera plus lent juste le temps de générer à nouveau toutes les caches." data-cancel="Annuler" data-confirm="Vider les caches" {{ stimulus_controller('modal') }} data-tooltip='Vider toutes les caches'>{{ icon('tabler:trash-filled', '24px') }}</a>
+            <a{{ turbo_enable(false) }} href="{{ path('aequation_cache_clear') }}" data-target="modal-clear-caches" data-title="Vider toutes les caches" data-content="Toutes les custom caches seront vidées, le site sera plus lent juste le temps de générer à nouveau toutes les caches." data-cancel="Annuler" data-confirm="Vider les caches" {{ stimulus_controller('modal') }} data-tooltip='Vider toutes les caches' data-placement="bottom">{{ icon('tabler:trash-filled', '24px') }}</a>
             {% if app.service.dev -%}
-            <a{{ turbo_enable(false) }} href="{{ path('aequation_cache_toggle_dev_shortcut', {name: '#all-on'}) }}" class="text-muted" data-tooltip="Tout désactiver">{{ icon('tabler:disc-off', '24px') }}</a>
-            <a{{ turbo_enable(false) }} href="{{ path('aequation_cache_toggle_dev_shortcut', {name: '#all-off'}) }}" class="text-success" data-tooltip="Tout activer">{{ icon('tabler:disc', '24px') }}</a>
+                {% if not cacheService.isAllDevShortcut() %}
+                <a{{ turbo_enable(false) }} href="{{ path('aequation_cache_toggle_dev_shortcut', {name: '#all-on'}) }}" class="text-muted" data-tooltip="Tout désactiver" data-placement="bottom">{{ icon('tabler:disc-off', '24px') }}</a>                    
+                {% endif %}
+                {% if not cacheService.isAllNotDevShortcut() %}
+                <a{{ turbo_enable(false) }} href="{{ path('aequation_cache_toggle_dev_shortcut', {name: '#all-off'}) }}" class="text-success" data-tooltip="Tout activer" data-placement="bottom">{{ icon('tabler:disc', '24px') }}</a>
+                {% endif %}
             {% endif %}
         </span>
     </h5>
@@ -21,14 +25,15 @@
         <li>
             <div>
                 {%- set isDevSc = cacheService.isDevShortcut(key) -%}
-                {% if not isDevSc %}
-                    <a{{ turbo_enable(false) }} href="{{ path('aequation_cache_clear', {name: key}) }}" data-tooltip='Vider le cache "{{ key }}"'>{{ icon('tabler:trash-filled', '24px') }}</a>
+                <a{{ turbo_enable(false) }} href="{{ path('aequation_cache_clear', {name: key}) }}" data-tooltip='Vider le cache' data-placement="bottom">{{ icon('tabler:trash-filled', '24px') }}</a>
+                {# {% if not isDevSc %}
+                    <a{{ turbo_enable(false) }} href="{{ path('aequation_cache_clear', {name: key}) }}" data-tooltip='Vider le cache' data-placement="bottom">{{ icon('tabler:trash-filled', '24px') }}</a>
                     {% else %}
                     <span class="text-muted">{{ icon('tabler:trash-filled', '24px') }}</span>
-                    {% endif %}
+                {% endif %} #}
                 {%- if app.service.dev -%}
-                    <a{{ turbo_enable(false) }} href="{{ path('aequation_cache_toggle_dev_shortcut', {name: key}) }}" class="{{ isDevSc ? 'text-muted' : 'text-success' }}" data-tooltip='{{ isDevSc ? 'Activer' : 'Désactiver' }} le cache "{{ key }}"'>{{ icon(isDevSc ? 'tabler:disc-off' : 'tabler:disc', '24px') }}</a>
-                {%- endif %} {{ key }} : <strong>{{ commentaire|raw }}</strong>
+                    <a{{ turbo_enable(false) }} href="{{ path('aequation_cache_toggle_dev_shortcut', {name: key}) }}" class="{{ isDevSc ? 'text-muted' : 'text-success' }}" data-tooltip='{{ isDevSc ? 'Activer' : 'Désactiver' }} le cache' data-placement="bottom">{{ icon(isDevSc ? 'tabler:disc-off' : 'tabler:disc', '24px') }}</a>
+                {%- endif %} <span data-tooltip='{{ commentaire|raw }}' data-placement="bottom">{{ key }}</span>
             </div>
         </li>
         {% endfor %}

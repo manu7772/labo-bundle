@@ -7,6 +7,7 @@ use Aequation\LaboBundle\Service\Interface\AppServiceInterface;
 // use Aequation\LaboBundle\Service\Interface\AppServiceInterface;
 use Aequation\LaboBundle\Service\Interface\CacheServiceInterface;
 use Aequation\LaboBundle\Service\Tools\Files;
+
 use App\phpdata\PhpData;
 
 use Symfony\Component\DependencyInjection\Attribute\AsAlias;
@@ -19,7 +20,6 @@ use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\Console\Input\ArgvInput;
 use Symfony\Component\HttpKernel\KernelInterface;
 use Symfony\Contracts\Cache\CacheInterface;
-use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 
 use Exception;
@@ -35,7 +35,7 @@ class CacheService extends BaseService implements CacheServiceInterface
     public const DATA_CACHE_NAME = 'data.cache';
     // Dev shortcut
     public const DEV_SHORTCUT_NAME = 'cache.dev.shortcuts';
-    public const DEFAULT_DEV_SHORTCUT = true;
+    public const DEFAULT_DEV_SHORTCUT = false;
 
     public readonly Files $tool_files;
     public readonly PhpDataInterface $phpData;
@@ -52,7 +52,7 @@ class CacheService extends BaseService implements CacheServiceInterface
         $this->tool_files = $this->appService->get('Tool:Files');
         if (!file_exists($this->getPhpDataFilePath())) {
             if (!$this->savePhpData()) {
-                die('Le fichier de cache ' . $this->getPhpDataFilePath() . ' n\'a pu être enregistré, veuillez juste relancer la dernière requête S.V.P.');
+                die('Le fichier de cache '.$this->getPhpDataFilePath().' n\'a pu être enregistré, veuillez juste relancer la dernière requête S.V.P.');
             }
             die('Une réinitialisation a été nécessaire, tout est rentré dans l\'ordre, veuillez juste relancer la dernière requête S.V.P.');
         }
@@ -63,6 +63,30 @@ class CacheService extends BaseService implements CacheServiceInterface
         } else {
             $this->sessionDevShortcuts = $this->getDefaultsDevShortcuts();
         }
+        // Filter with existing keys
+        $this->syncKeysToSessionDevShortcuts();
+    }
+
+    protected function syncKeysToSessionDevShortcuts(): static
+    {
+        $keys = $this->getKeys(false);
+        $test = json_encode($this->sessionDevShortcuts);
+        $this->sessionDevShortcuts = array_filter(
+            $this->sessionDevShortcuts,
+            function ($key) use ($keys) {
+                return in_array($key, $keys);
+            },
+            ARRAY_FILTER_USE_KEY
+        );
+        foreach ($keys as $key) {
+            if(!isset($this->sessionDevShortcuts[$key])) {
+                $this->sessionDevShortcuts[$key] = static::DEFAULT_DEV_SHORTCUT;
+            }
+        }
+        if(json_encode($this->sessionDevShortcuts) !== $test) {
+            $this->setSessionDevShortcuts();
+        }
+        return $this;
     }
 
     public function getSessionDevShortcuts(): ?array
@@ -70,6 +94,15 @@ class CacheService extends BaseService implements CacheServiceInterface
         return $this->session
             ? $this->session->get(static::DEV_SHORTCUT_NAME, null)
             : null;
+    }
+
+    public function setSessionDevShortcuts(): bool
+    {
+        if($this->session) {
+            $this->session->set(static::DEV_SHORTCUT_NAME, $this->sessionDevShortcuts);
+            return true;
+        }
+        return false;
     }
 
     public function getDefaultsDevShortcuts(): array
@@ -89,6 +122,11 @@ class CacheService extends BaseService implements CacheServiceInterface
         return $this;
     }
 
+    public function getDevShortcuts(): array
+    {
+        return $this->sessionDevShortcuts;
+    }
+
     public function isDevShortcut(string $key): bool
     {
         return $this->sessionDevShortcuts[$key] ?? static::DEFAULT_DEV_SHORTCUT;
@@ -99,9 +137,9 @@ class CacheService extends BaseService implements CacheServiceInterface
         bool $enabled
     ): static
     {
-        $this->sessionDevShortcuts[$key] = $enabled;
-        if($this->session) {
-            $this->session->set(static::DEV_SHORTCUT_NAME, $this->sessionDevShortcuts);
+        if($this->sessionDevShortcuts[$key] !== $enabled) {
+            $this->sessionDevShortcuts[$key] = $enabled;
+            $this->setSessionDevShortcuts();
         }
         return $this;
     }
@@ -120,6 +158,22 @@ class CacheService extends BaseService implements CacheServiceInterface
         return $this->setDevShortcut($key, $toggled);
     }
 
+    public function isAllDevShortcut(): bool
+    {
+        foreach ($this->getKeys(false) as $key) {
+            if(!$this->isDevShortcut($key)) return false;
+        }
+        return true;
+    }
+
+    public function isAllNotDevShortcut(): bool
+    {
+        foreach ($this->getKeys(false) as $key) {
+            if($this->isDevShortcut($key)) return false;
+        }
+        return true;
+    }
+
     public function get(
         string $key,
         callable $callback,
@@ -129,7 +183,6 @@ class CacheService extends BaseService implements CacheServiceInterface
     ): mixed {
         $this->addKey($key, $commentaire);
         if(!$this->appService->isProd() && $this->isDevShortcut($key)) {
-            // dump('Delete cache '.$key.'...');
             $this->delete($key);
         }
         return $this->cache->get(key: $key, callback: $callback, beta: $beta, metadata: $metadata);
@@ -138,7 +191,10 @@ class CacheService extends BaseService implements CacheServiceInterface
     public function delete(
         string $key
     ): bool {
-        return $this->cache->delete($key);
+        if($result = $this->cache->delete($key)) {
+            // $this->removeKey($key);
+        }
+        return $result;
     }
 
     public function deleteAll(): bool
@@ -170,7 +226,8 @@ class CacheService extends BaseService implements CacheServiceInterface
     protected function addKey(
         string $key,
         string $commentaire = null
-    ): static {
+    ): static
+    {
         $data = $this->getPhpData(static::DATA_CACHE_NAME);
         $data[$key] = empty($commentaire) ? $key : $commentaire;
         $this->setPhpData(static::DATA_CACHE_NAME, $data);
@@ -180,7 +237,8 @@ class CacheService extends BaseService implements CacheServiceInterface
 
     protected function removeKey(
         string|array $key
-    ): static {
+    ): static
+    {
         $key = (array)$key;
         $data = $this->getPhpData(static::DATA_CACHE_NAME);
         $data = array_filter($data, function ($k) use ($key) {
@@ -197,7 +255,8 @@ class CacheService extends BaseService implements CacheServiceInterface
 
     public function cacheClear(
         string $method = 'exec',
-    ): static {
+    ): static
+    {
         switch ($method) {
             case 'exec':
                 $application = new Application($this->kernel);
@@ -230,10 +289,10 @@ class CacheService extends BaseService implements CacheServiceInterface
 
     public function getCacheDirs(
         int $depth = 0
-    ): array {
+    ): array
+    {
         $parent = $this->getCacheDir();
         return $this->tool_files->listDirs(path: $parent, depth: $depth);
-        // return $this->tool_files->nestedDirs(path: $parent, depth: $depth);
     }
 
 
@@ -241,40 +300,43 @@ class CacheService extends BaseService implements CacheServiceInterface
      * PHP DATA
      */
 
-    public function getPhpData(
+    protected function getPhpData(
         string $name = null,
         mixed $default = [],
-    ): mixed {
+    ): mixed
+    {
         return isset($this->phpData)
             ? $this->phpData->get($name, $default)
             : [];
     }
 
-    public function setPhpData(
+    protected function setPhpData(
         string $name,
         mixed $data
-    ): static {
+    ): static
+    {
         $this->phpData->set($name, $data);
         if ($this->phpData->needUpdate()) $this->savePhpData();
         return $this;
     }
 
-    public function updatePhpData(): static {
+    protected function updatePhpData(): static
+    {
         $this->savePhpData();
         return $this;
     }
 
-    public function getPhpDataPath(): string|false
+    protected function getPhpDataPath(): string|false
     {
         $path = $this->tool_files->createPath(static::PHP_DATA_PATH);
         return $path;
     }
 
-    public function getPhpDataFilePath(): string|false
+    protected function getPhpDataFilePath(): string|false
     {
         $path = $this->getPhpDataPath();
         return $path
-            ? $path . DIRECTORY_SEPARATOR . static::PHP_DATA_CLASSNAME . '.php'
+            ? $path.DIRECTORY_SEPARATOR.static::PHP_DATA_CLASSNAME.'.php'
             : false;
     }
 
@@ -287,88 +349,13 @@ class CacheService extends BaseService implements CacheServiceInterface
         }
         return $this->tool_files->putFileContent(
             path: $this->getPhpDataPath(),
-            filename: static::PHP_DATA_CLASSNAME . '.php',
+            filename: static::PHP_DATA_CLASSNAME.'.php',
             content: $twig->render($template, [
                 'version' => $this->appService->getCurrentDatetime()->format(DATE_ATOM),
                 'data' => $this->getPhpData(),
-                // 'debug' => $this->appService->isDev(),
             ]),
         );
     }
 
-    // protected function savePhpData_old(): bool
-    // {
-    //     // $content = $this->tool_files->getFileContent('lib/aequation/labo-bundle/phpmodels', static::PHP_DATA_CLASSNAME.'.txt');
-    //     $content = false;
-    //     if (!$content) {
-    //         $content = <<<EOF
-    //         <?php
-    //         namespace App\phpdata;
-
-    //         use Aequation\LaboBundle\Model\Interface\PhpDataInterface;
-
-    //         use DateTimeImmutable;
-    //         use DateTimeInterface;
-
-    //         class PhpData implements PhpDataInterface
-    //         {
-
-    //             public const VERSION = "#####VERSION#####";
-    //             public const JSON_DATA = "#####JSON_DATA#####";
-
-    //             private array \$data;
-    //             private DateTimeInterface \$version;
-
-    //             public function __construct()
-    //             {
-    //                 \$this->data = json_decode(static::JSON_DATA, true);
-    //                 \$this->version = new DateTimeImmutable(static::VERSION);
-    //             }
-
-    //             public function needUpdate(): bool
-    //             {
-    //                 return json_encode(\$this->data) !== static::JSON_DATA;
-    //             }
-
-    //             public function get(
-    //                 string \$name = null,
-    //                 mixed \$default = null,
-    //             ): mixed
-    //             {
-    //                 return empty(\$name)
-    //                     ? \$this->data
-    //                     : \$this->data[\$name] ?? \$default;
-    //             }
-
-    //             public function set(
-    //                 string \$name,
-    //                 mixed \$data
-    //             ): static
-    //             {
-    //                 \$this->data[\$name] = \$data;
-    //                 return \$this;
-    //             }
-
-    //             public function getVersion(
-    //                 bool \$toDatetime = false
-    //             ): DateTimeInterface
-    //             {
-    //                 return \$toDatetime
-    //                     ? \$this->version
-    //                     : \$this->version->getTimestamp();
-    //             }
-
-    //         }
-    //         EOF;
-    //     }
-    //     if (!$content) throw new Exception(vsprintf('Error %s line %d: file %s not found!', [__METHOD__, __LINE__, 'lib/aequation/labo-bundle/phpmodels/' . static::PHP_DATA_CLASSNAME . '.txt']));
-    //     // $version = new DateTimeImmutable('NOW');
-    //     $data = json_encode($this->getPhpData());
-    //     return $this->tool_files->putFileContent(
-    //         path: $this->getPhpDataPath(),
-    //         filename: static::PHP_DATA_CLASSNAME . '.php',
-    //         content: preg_replace(['/(#####VERSION#####)/', '/("#####JSON_DATA#####")/'], [$this->appService->getCurrentDatetime()->format(DATE_ATOM), json_encode($data)], $content)
-    //     );
-    // }
 
 }

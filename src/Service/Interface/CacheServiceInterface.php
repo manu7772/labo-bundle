@@ -21,9 +21,9 @@ interface CacheServiceInterface extends ServiceInterface
     public function getCacheDir(): ?SplFileInfo;
     public function getCacheDirs(int $depth = 0): array;
     // PhpData
-    public function getPhpData(string $name = null, mixed $default = null): mixed;
-    public function setPhpData(string $name, mixed $data): static;
-    public function updatePhpData(): static;
-    public function getPhpDataPath(): string|false;
+    // public function getPhpData(string $name = null, mixed $default = null): mixed;
+    // public function setPhpData(string $name, mixed $data): static;
+    // public function updatePhpData(): static;
+    // public function getPhpDataPath(): string|false;
 
 }

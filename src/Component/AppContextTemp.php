@@ -118,13 +118,13 @@ class AppContextTemp implements AppContextInterface
         $this->_public                      = !empty($this->_firewall) && in_array(strtolower($this->_firewall), $this->appService::PUBLIC_FIREWALLS);
         $this->_darkmode                    = $this->getComputedDarkmode();
         $this->_request_context             = $this->router instanceof RouterInterface ? $this->router->getContext() : null;
-        $this->_headers                     = $this->request->headers->all();
+        $this->_headers                     = $this->request ? $this->request->headers->all() : [];
         $this->_requestFrom_turbo_frame     = $this->appService->isTurboFrameRequest();
         $this->_requestFrom_turbo_stream    = $this->appService->isTurboStreamRequest();
         $this->_requestFrom_xml_http        = $this->appService->isXmlHttpRequest();
         // $valid = $this->setInitData($this->initData);
         $valid = $this->isValid(true);
-        if(!$this->isTempContext()) {
+        if(!$this->isTempContext() && !$this->_requestFrom_cli) {
             $serialized = $this->jsonSerialize();
             $this->appService->setSessionData($this->appService::CONTEXT_SESSNAME, $serialized);
             // dump($serialized);
