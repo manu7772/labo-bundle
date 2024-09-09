@@ -2,7 +2,9 @@
 namespace Aequation\LaboBundle\Security\Voter;
 
 use Aequation\LaboBundle\Model\Final\FinalEntrepriseInterface;
+use Aequation\LaboBundle\Model\Final\FinalUserInterface;
 use Aequation\LaboBundle\Security\Voter\Base\BaseVoter;
+use Aequation\LaboBundle\Model\Interface\LaboUserInterface;
 use Aequation\LaboBundle\Service\Interface\EntrepriseServiceInterface;
 use Aequation\LaboBundle\Security\Voter\Interface\EntrepriseVoterInterface;
 use Aequation\LaboBundle\Service\Interface\AppServiceInterface;
@@ -31,9 +33,9 @@ class EntrepriseVoter extends BaseVoter
     {
         $vote = parent::voteOnAttribute($attribute, $subject, $token);
         if(!$vote) return false;
-        /** @var FinalEntrepriseInterface */
+        /** @var LaboUserInterface */
         $user = $token->getUser();
-        /** @var FinalEntrepriseInterface */
+        /** @var FinalUserInterface */
         $object = $this->getSubjectAsObject($subject, $this->manager);
         if($this->isVoterNeeded($user)) {
             switch ($this->getFirewallOfAction($attribute)) {
@@ -50,7 +52,7 @@ class EntrepriseVoter extends BaseVoter
                             break;
                         case static::ACTION_READ:
                         case static::MAIN_ACTION_READ:
-                            $vote = $user === $object || $object->hasMember($user);
+                            $vote = $user === $object || ($user instanceof FinalEntrepriseInterface && $user->hasMember($object));
                             break;
                         case static::ACTION_DUPLICATE:
                         case static::MAIN_ACTION_DUPLICATE:
@@ -100,7 +102,7 @@ class EntrepriseVoter extends BaseVoter
                             break;
                         case static::ACTION_DELETE:
                         case static::ADMIN_ACTION_DELETE:
-                            $vote = $this->isGranted($object) && $this->isGranted('ROLE_ADMIN');
+                            $vote = $user === $object || ($this->isGranted($object) && $this->isGranted('ROLE_ADMIN'));
                             break;
                     }
                     break;

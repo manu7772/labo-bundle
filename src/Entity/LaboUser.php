@@ -142,8 +142,9 @@ abstract class LaboUser extends MappSuperClassEntity implements LaboUserInterfac
 
     public function __toString(): string
     {
-        $string = (string)$this->firstname ?? (string)$this->email;
-        return empty($string) ? parent::__toString() : $string;
+        return $this->getCivilName().' ['.$this->email.']';
+        // $string = (string)$this->firstname ?? (string)$this->email;
+        // return empty($string) ? parent::__toString() : $string;
     }
 
     // public function getSerializableAttributes(): Iterable

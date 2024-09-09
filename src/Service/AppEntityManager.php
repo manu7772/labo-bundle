@@ -291,7 +291,7 @@ class AppEntityManager extends BaseService implements AppEntityManagerInterface
         // var_dump($meta_infos); die(__METHOD__.' / line '.__LINE__);
         // return $meta_infos;
 
-        return $this->appService->getCache()->get(
+        $reports = $this->appService->getCache()->get(
             key: static::CACHE_ENTITY_REPORTS_NAME,
             callback: function(ItemInterface $item) {
                 if(!empty(static::CACHE_ENTITY_REPORTS_LIFE)) {
@@ -308,6 +308,8 @@ class AppEntityManager extends BaseService implements AppEntityManagerInterface
             },
             commentaire: 'All entities reports (meta infos)',
         );
+        // dd($reports);
+        return $reports;
     }
 
     public function getEntityMetadataReportsFiltered(

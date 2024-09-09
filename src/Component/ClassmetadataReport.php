@@ -72,6 +72,7 @@ class ClassmetadataReport implements JsonSerializable, Serializable
     {
         $data = [
             'classname' => $this->classname,
+            'appEntityManager' => '@'.get_class($this->appEntityManager),
         ];
         // $rc = new ReflectionClass(static::class);
         // foreach ($rc->getProperties() as $prop) {
@@ -116,7 +117,6 @@ class ClassmetadataReport implements JsonSerializable, Serializable
         string $classname
     ): bool
     {
-
         if($this->appEntityManager->entityExists($classname)) {
             $this->classname = $classname;
             $this->classMetadata = $this->appEntityManager->getClassMetadata($this->classname);

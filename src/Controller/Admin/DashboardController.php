@@ -16,10 +16,12 @@ use Aequation\LaboBundle\Security\Voter\WebpageVoter;
 use Aequation\LaboBundle\Entity\Siteparams;
 use Aequation\LaboBundle\Model\Interface\LaboUserInterface;
 use Aequation\LaboBundle\Repository\LaboUserRepository;
+use Aequation\LaboBundle\Security\Voter\EntrepriseVoter;
 use Aequation\LaboBundle\Security\Voter\PdfVoter;
 use Aequation\LaboBundle\Security\Voter\WebsectionVoter;
 
 use App\Entity\Category;
+use App\Entity\Entreprise;
 use App\Entity\Menu;
 use App\Entity\Slide;
 use App\Entity\Slider;
@@ -144,6 +146,7 @@ class DashboardController extends AbstractDashboardController
         $color = 'text-info-emphasis';
         $users = [];
         if($this->isGranted(UserVoter::ADMIN_ACTION_LIST, User::class)) $users['User'] = MenuItem::linkToCrud(label: 'Utilisateurs', icon: 'fas fa-fw fa-'.User::getIcon(false).' '.$color, entityFqcn: User::class);
+        if($this->isGranted(EntrepriseVoter::ADMIN_ACTION_LIST, Entreprise::class)) $users['Entreprise'] = MenuItem::linkToCrud(label: 'entreprises', icon: 'fas fa-fw fa-'.Entreprise::getIcon(false).' '.$color, entityFqcn: Entreprise::class);
         if(count($users)) {
             yield MenuItem::section('Utilisateurs')->setCssClass($color);
             foreach ($users as $menuItem) yield $menuItem;

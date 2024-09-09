@@ -1,9 +1,11 @@
 <?php
 namespace Aequation\LaboBundle\Security\Voter;
 
+use Aequation\LaboBundle\Model\Final\FinalEntrepriseInterface;
 use Aequation\LaboBundle\Security\Voter\Base\BaseVoter;
 use Aequation\LaboBundle\Service\Interface\LaboUserServiceInterface;
 use Aequation\LaboBundle\Model\Final\FinalUserInterface;
+use Aequation\LaboBundle\Model\Interface\LaboUserInterface;
 use Aequation\LaboBundle\Security\Voter\Interface\UserVoterInterface;
 use Aequation\LaboBundle\Service\Interface\AppServiceInterface;
 
@@ -31,9 +33,9 @@ class UserVoter extends BaseVoter
     {
         $vote = parent::voteOnAttribute($attribute, $subject, $token);
         if(!$vote) return false;
-        /** @var FinalUserInterface */
+        /** @var LaboUserInterface */
         $user = $token->getUser();
-        /** @var FinalUserInterface */
+        /** @var FinalEntrepriseInterface */
         $object = $this->getSubjectAsObject($subject, $this->manager);
         if($this->isVoterNeeded($user)) {
             switch ($this->getFirewallOfAction($attribute)) {
@@ -50,7 +52,7 @@ class UserVoter extends BaseVoter
                             break;
                         case static::ACTION_READ:
                         case static::MAIN_ACTION_READ:
-                            $vote = $user === $object;
+                            $vote = $user === $object || ($user instanceof FinalUserInterface && $user->hasEntreprise($object));
                             break;
                         case static::ACTION_DUPLICATE:
                         case static::MAIN_ACTION_DUPLICATE:
@@ -80,7 +82,7 @@ class UserVoter extends BaseVoter
                             break;
                         case static::ACTION_CREATE:
                         case static::ADMIN_ACTION_CREATE:
-                            $vote = $this->isGranted('ROLE_EDITOR');
+                            $vote = $this->isGranted('ROLE_EDITOR') && !($user instanceof FinalEntrepriseInterface);
                             break;
                         case static::ACTION_READ:
                         case static::ADMIN_ACTION_READ:
@@ -92,7 +94,7 @@ class UserVoter extends BaseVoter
                             break;
                         case static::ACTION_UPDATE:
                         case static::ADMIN_ACTION_UPDATE:
-                            $vote = $this->isGranted($object) && $this->isGranted('ROLE_EDITOR');
+                            $vote = $this->isGranted($object) && $this->isGranted('ROLE_EDITOR') && !($user instanceof FinalEntrepriseInterface);
                             break;
                         case static::ACTION_SENDMAIL:
                         case static::ADMIN_ACTION_SENDMAIL:
@@ -100,7 +102,7 @@ class UserVoter extends BaseVoter
                             break;
                         case static::ACTION_DELETE:
                         case static::ADMIN_ACTION_DELETE:
-                            $vote = $this->isGranted($object) && $this->isGranted('ROLE_ADMIN');
+                            $vote = $user === $object || ($this->isGranted($object) && $this->isGranted('ROLE_ADMIN')) && !($user instanceof FinalEntrepriseInterface);
                             break;
                     }
                     break;
