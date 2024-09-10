@@ -90,13 +90,5 @@
             "symfony/flex": false,
             "symfony/runtime": false
         }
-    },
-    "scripts": {
-        "post-package-install": [
-            "Aequation\\LaboBundle\\Install\\OnInstallCmd::OnInstall"
-        ],
-        "post-package-update": [
-            "Aequation\\LaboBundle\\Install\\OnUpdateCmd::OnUpdate"
-        ]
     }
 }
