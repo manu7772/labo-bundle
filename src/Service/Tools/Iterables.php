@@ -74,7 +74,7 @@ class Iterables extends BaseService
         } else {
             $list = [];
             foreach ($array as $key => $value) {
-                $list[] = $key.' => '.$value;
+                $list[] = $key.' => '.(is_iterable($value) ? json_encode($value) : $value);
             }
             return implode(PHP_EOL, $list);
         }
