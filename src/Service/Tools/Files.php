@@ -22,7 +22,7 @@ use Symfony\Component\HttpKernel\KernelInterface;
 class Files extends BaseService
 {
 
-    // const PROJECT_DIR = __DIR__.'/../../../../../../';
+    const PROJECT_DIR = __DIR__.'/../../../../../../';
     const TEMP_DIR = 'tmp';
     const SERVER_GROUP = 'www-data';
     const SERVER_DIR_CHMOD = 0775;
@@ -33,10 +33,10 @@ class Files extends BaseService
     public readonly string $project_dir;
 
     public function __construct(
-        public readonly KernelInterface $kernel
+        public readonly ?KernelInterface $kernel = null
     )
     {
-        $this->project_dir = $this->kernel->getProjectDir();
+        $this->project_dir = $this->kernel ? $this->kernel->getProjectDir() : static::PROJECT_DIR;
     }
 
         /** ***********************************************************************************
@@ -458,6 +458,48 @@ class Files extends BaseService
         return new UploadedFile(path: $file->getRealPath(), originalName: $file->getFilename(), test: true);
     }
 
-
+    public function getClassesFromPhpFiles(
+        string $path,
+        string|int|array $levels = 0,
+        bool $sort_results = false,
+    ): array
+    {
+        $classes = [];
+        if(is_dir($path)) {
+            $finder = Finder::create()->ignoreUnreadableDirs()->files();
+            $finder->in($path);
+            $finder->name('/.php$/');
+            $finder->contains('/namespace\s+([\\w\\\\]+);/i'); // only files that contains a namespace
+            $finder->exclude(['node_modules']);
+            if(!empty($levels)) $finder->depth($levels);
+            foreach ($finder as $file) {
+                // echo('<div>File '.$file->getPathname().'</div>');
+                $content = file_get_contents($file->getPathname());
+                preg_match('/namespace\s+([\\w\\\\]+);/i', $content, $namespace);
+                if(!empty($namespace) && count($namespace) > 1) {
+                    // echo('<pre>'); var_dump($namespace); echo('</pre>');
+                    $namespace = $namespace[1];
+                    preg_match('/(class|interface|trait)\\s+(\\w+)[\\s\\r\\n]/i', $content, $class);
+                    if(!empty($class) && count($class) > 2) {
+                        // echo('<pre>'); var_dump($class); die('</pre>');Symfony\Component\Finder\Finder
+                        $type = $class[1];
+                        $classname = $namespace.'\\'.$class[2];
+                        if($sort_results) {
+                            $classes[$type][$classname] = [
+                                'type' => $type,
+                                'file' => $file->getPathname(),
+                                'classname' => $classname,
+                                'shortname' => $class[2],
+                                'namespace' => $namespace,
+                            ];
+                        } else {
+                            $classes[$classname] = $classname;
+                        }
+                    }
+                }
+            }
+        }
+        return $classes;
+    }
 
 }

@@ -26,13 +26,6 @@ class SiteparamsCrudController extends BaseCrudController
     public const ENTITY = Siteparams::class;
     public const VOTER = SiteparamsVoter::class;
 
-    public function __construct(
-        SiteparamsServiceInterface $manager,
-        protected LaboUserServiceInterface $userService,
-    ) {
-        parent::__construct($manager, $userService);
-    }
-
     public function configureFilters(Filters $filters): Filters
     {
         /** @var SiteparamsServiceInterface $manager */

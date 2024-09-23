@@ -1,0 +1,10 @@
+{% extends "@AequationLabo/base_labo.html.twig" %}
+
+{% block title %}Labo details of {{ classname }}{% endblock %}
+
+{% block title_h1 -%}{{ ux_icon('symfony', {height: '48px', width: '48px', class: 'text-success'}) }} LABO <small>details of {{ classname }}</small>{%- endblock %}
+
+{% block right_content %}
+    <h5>{{ classname }} <small><a href="{{ path('aequation_labo_class_list') }}">Retour à la liste</a></small></h5>
+    {{ dump(attributes) }}
+{% endblock %}

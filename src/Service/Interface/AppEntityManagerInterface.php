@@ -43,13 +43,14 @@ interface AppEntityManagerInterface extends ServiceInterface
     public function entityExists(string|object $classname, bool $allnamespaces = false, bool $onlyInstantiables = false): bool;
     public function getEntityNamesChoices(bool $asHtml = false, bool $icon = true, bool $allnamespaces = false, bool $onlyInstantiables = false): array;
     public function getEntityClassesOfInterface(string|array $interfaces, bool $allnamespaces = false): array;
-    public static function getEntityNameAsHtml(string|AppEntityInterface $classOrEntity, bool $icon = true): string;
+    public static function getEntityNameAsHtml(string|AppEntityInterface $classOrEntity, bool $icon = true, bool $classname = true): string;
 
     public function getScheduledForInsert(string|array|callable $filter = null): array;
     public function getScheduledForUpdate(string|array|callable $filter = null): array;
     public function getScheduledForDelete(string|array|callable $filter = null): array;
     public function isManaged(AppEntityInterface $entity): bool;
 
+    public static function getEntityServiceID(string|AppEntityInterface $objectOrClass): ?string;
     public function getEntityService(string|AppEntityInterface $objectOrClass): ?AppEntityManagerInterface;
     public function defineEntityOwner(OwnerInterface $entity, bool $replace = false): static;
     public function getClassMetadata(string|AppEntityInterface $objectOrClass = null): ?ClassMetadata;

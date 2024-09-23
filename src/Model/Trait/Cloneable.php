@@ -4,7 +4,7 @@ namespace Aequation\LaboBundle\Model\Trait;
 use ReflectionClass;
 
 /**
- * A trait that allows you to clone readonly properties in PHP 8.1
+ * A *trait* that allows you to clone readonly properties in PHP 8.1
  * @see https://github.com/spatie/php-cloneable
  * From
  * @see https://github.com/spatie

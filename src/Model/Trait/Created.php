@@ -8,7 +8,7 @@ use DateTimeImmutable;
 use DateTimeZone;
 use Doctrine\Persistence\Event\LifecycleEventArgs;
 
-Trait Created
+trait Created
 {
 
     #[ORM\Column(updatable: false, nullable: false)]

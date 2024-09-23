@@ -10,7 +10,7 @@ use ReflectionClass;
  * @Target({"CLASS"})
  * @author emmanuel:dujardin Aequation
  */
-#[Attribute(service: Attribute::TARGET_CLASS)]
+#[Attribute(Attribute::TARGET_CLASS)]
 Class ClassCustomService extends baseClassAttribute implements AppAttributeClassInterface
 {
 

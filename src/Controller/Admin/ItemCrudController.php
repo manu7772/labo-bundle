@@ -10,14 +10,9 @@ use EasyCorp\Bundle\EasyAdminBundle\Config\Crud;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[IsGranted('ROLE_COLLABORATOR')]
-class ItemCrudController extends AbstractCrudController
+class ItemCrudController extends BaseCrudController
 {
 
     public const ENTITY = Item::class;
-
-    public static function getEntityFqcn(): string
-    {
-        return static::ENTITY;
-    }
 
 }

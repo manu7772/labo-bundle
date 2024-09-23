@@ -13,7 +13,7 @@ use ReflectionMethod;
 use ReflectionProperty;
 use ReflectionClassConstant;
 
-#[Attribute(groups: Attribute::TARGET_CLASS_CONSTANT | Attribute::TARGET_METHOD | Attribute::TARGET_PROPERTY)]
+#[Attribute(Attribute::TARGET_CLASS_CONSTANT | Attribute::TARGET_METHOD | Attribute::TARGET_PROPERTY)]
 class CssClasses extends baseClassAttribute implements AppAttributeConstantInterface, AppAttributeMethodInterface, AppAttributePropertyInterface, CssClassInterface
 {
 

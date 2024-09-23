@@ -34,13 +34,6 @@ class PdfCrudController extends BaseCrudController
     public const ENTITY = Pdf::class;
     public const VOTER = PdfVoter::class;
 
-    public function __construct(
-        PdfServiceInterface $manager,
-        protected LaboUserServiceInterface $userService,
-    ) {
-        parent::__construct($manager, $userService);
-    }
-
     public function configureFilters(Filters $filters): Filters
     {
         return $filters

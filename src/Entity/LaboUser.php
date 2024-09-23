@@ -208,56 +208,41 @@ abstract class LaboUser extends MappSuperClassEntity implements LaboUserInterfac
     public function getReachableRoles(): array
     {
         $roles = $this->roleHierarchy->getReachableRoleNames($this->getRoles());
-        return $this->getSortedRoles($roles);
+        $this->roleHierarchy->sortRoles($roles);
+        return $roles;
     }
 
     #[ORM\PrePersist]
     #[ORM\PreUpdate]
     public function sortRoles(): void
     {
-        $this->roles = $this->getSortedRoles($this->roles);
-    }
-
-    private function getSortedRoles(array $roles): array
-    {
-        $sorteds = [];
-        try {
-            //code...
-            foreach ($this->roleHierarchy->getRolesFlatMap() as $role) {
-                if(in_array($role, $roles)) {
-                    $sorteds[] = $role;
-                }
-            }
-        } catch (\Throwable $th) {
-            throw new \Exception(vsprintf('Could not find manager for %s %d of name %s!', [$this->getShortname(), $this->getId() ?? 0, $this->__toString()]));
-        }
-        return $sorteds;
+        $this->roleHierarchy->sortRoles($this->roles, false); // false is IMPORTANT!!!
     }
 
     public function getHigherRole(): string
     {
-        $roles = $this->getSortedRoles($this->getRoles());
-        return end($roles);
+        $role = $this->roleHierarchy->getHigherRole($this->roles);
+        return $role
+            ? $role
+            : static::ROLE_USER;
     }
 
     public function getLowerRole(): string
     {
-        $roles = $this->getSortedRoles($this->getRoles());
-        return reset($roles);
+        $role = $this->roleHierarchy->getLowerRole($this->roles);
+        return $role
+            ? $role
+            : static::ROLE_USER;
     }
 
     public function getInferiorRoles(): array
     {
-        $higher = $this->getHigherRole();
-        $infs = array_filter($this->getReachableRoles(), function ($role) use ($higher):bool { return $role !== $higher; });
-        return $this->roleHierarchy->filterMainRoles($infs);
+        return $this->roleHierarchy->getInferiorRoles($this->getHigherRole());
     }
 
     public function getRolesChoices(UserInterface $user = null): array
     {
-        /** @var UserInterface $user */
-        $user ??= $this;
-        return $this->roleHierarchy->getRolesChoices($user);
+        return $this->roleHierarchy->getRolesChoices($user ?? $this);
     }
 
     /**
@@ -513,6 +498,7 @@ abstract class LaboUser extends MappSuperClassEntity implements LaboUserInterfac
     public function removeCategorys(): static
     {
         foreach ($this->categorys as $category) {
+            /** @var LaboCategoryInterface $category */
             $this->removeCategory($category);
         }
         return $this;

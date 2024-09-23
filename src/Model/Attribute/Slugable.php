@@ -7,10 +7,9 @@ use ReflectionProperty;
 
 /**
  * Methods before Validate entity
- * @Target({"CLASS"})
  * @author emmanuel:dujardin Aequation
  */
-#[Attribute(groups: Attribute::TARGET_CLASS)]
+#[Attribute(Attribute::TARGET_CLASS)]
 class Slugable extends baseClassAttribute implements AppAttributeClassInterface
 {
 

@@ -2,16 +2,16 @@
 namespace Aequation\LaboBundle\Model\Attribute;
 
 use Aequation\LaboBundle\Model\Interface\AppAttributePropertyInterface;
+
 use Attribute;
-use ReflectionClass;
 use ReflectionProperty;
 
 /**
- * Methods before Validate entity
+ * Attribute current User to property
  * @author emmanuel:dujardin Aequation
  */
 #[Attribute(Attribute::TARGET_PROPERTY)]
-class RelationOrder extends baseClassAttribute implements AppAttributePropertyInterface
+class CurrentUser extends baseClassAttribute implements AppAttributePropertyInterface
 {
 
     public readonly ReflectionProperty $property;

@@ -7,7 +7,7 @@
             {% if way is not iterable %}
                 {% set way = {route: way, params: {}, access: 'ROLE_EDITOR'} %}
             {% endif %}
-            {% if route_exists(way.route) and (way.access is not defined or is_granted(way.access)) %}
+            {% if route_exists(way.route) and (way.access is not defined or is_granted(way.access) or app.service.isDev()) %}
                 {% set label = label|trans %}
                 {# {% set route_params = app.request.get('_route_params') %} #}
                 {% set isCurrent = app.request.get('_route') == way.route and way.params|default([])|json_encode == app.request.get('_route_params')|json_encode %}

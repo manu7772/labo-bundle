@@ -44,15 +44,6 @@ class MenuCrudController extends BaseCrudController
     public const ENTITY = Menu::class;
     public const VOTER = MenuVoter::class;
 
-    public function __construct(
-        MenuServiceInterface $manager,
-        protected LaboUserServiceInterface $userService,
-        protected AdminUrlGenerator $adminUrlGenerator,
-        protected MenuRepository $menuRepository,
-    ) {
-        parent::__construct($manager, $userService);
-    }
-
     public function configureFilters(Filters $filters): Filters
     {
         return $filters

@@ -43,13 +43,6 @@ class SlideCrudController extends BaseCrudController
     public const ENTITY = Slide::class;
     public const VOTER = SlideVoter::class;
 
-    public function __construct(
-        SlideServiceInterface $manager,
-        protected LaboUserServiceInterface $userService,
-    ) {
-        parent::__construct($manager, $userService);
-    }
-
     public function configureFilters(Filters $filters): Filters
     {
         /** @var Slide */

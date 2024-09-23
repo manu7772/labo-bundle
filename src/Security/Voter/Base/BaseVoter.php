@@ -41,6 +41,11 @@ abstract class BaseVoter extends Voter implements VoterInterface, AppVoterInterf
         return $interface;
     }
 
+    /**
+     * Is valid $subject for this Voter
+     * @param mixed $subject
+     * @return boolean
+     */
     protected function isValidSubject(mixed $subject): bool
     {
         $interface = static::getInterface();
@@ -49,6 +54,10 @@ abstract class BaseVoter extends Voter implements VoterInterface, AppVoterInterf
             : is_a($subject, $interface, true);
     }
 
+    /**
+     * Get specific added actions for this Voter
+     * @return array
+     */
     public static function getAddedActions(): array
     {
         return array_filter(Classes::getConstants(static::class), fn($name) => preg_match('/^ADD_ACTION_/', $name), ARRAY_FILTER_USE_KEY);
@@ -133,7 +142,7 @@ abstract class BaseVoter extends Voter implements VoterInterface, AppVoterInterf
                             break;
                         case static::ACTION_DELETE:
                         case static::ADMIN_ACTION_DELETE:
-                            $vote = $this->isGranted('ROLE_EDITOR');
+                            $vote = $this->isGranted('ROLE_COLLABORATOR');
                             if(!$this->isGranted('ROLE_ADMIN')) {
                                 if($subject instanceof OwnerInterface && $subject->getOwner() !== $user) $vote = false;
                             }
@@ -186,8 +195,7 @@ abstract class BaseVoter extends Voter implements VoterInterface, AppVoterInterf
         if($subject instanceof EntityDto) $object = $subject->getFqcn();
         if(is_string($subject)) {
             if($manager->entityExists($subject, true, true)) {
-                // $object = $manager->getNew();
-                $object = new $subject();
+                $object = $manager->getModel($subject);
             } else {
                 throw new Exception(vsprintf('Error %s line %d: entity class "%s" does not exist or is not instantiable.', [__METHOD__, __LINE__, $subject]));
             }
@@ -195,11 +203,20 @@ abstract class BaseVoter extends Voter implements VoterInterface, AppVoterInterf
         return $object ?? $subject;
     }
 
+    /**
+     * Get default Firewall
+     * @return string
+     */
     public static function getDefaultFirewall(): string
     {
         return static::ADMIN_FW_ACTIONS;
     }
 
+    /**
+     * Get Actions list
+     * @param string|null $firewall
+     * @return array
+     */
     public static function getActions(
         string $firewall = null
     ): array
@@ -211,25 +228,42 @@ abstract class BaseVoter extends Voter implements VoterInterface, AppVoterInterf
         return $actions;
     }
 
+    /**
+     * Get all Firewall names
+     * @return array
+     */
     public static function getFirewalls(): array
     {
         return array_filter(Classes::getConstants(static::class), function ($name) { return  preg_match('/_FW_ACTIONS$/', $name); }, ARRAY_FILTER_USE_KEY);
     }
 
+    /**
+     * Get Firewall name of action
+     * @param string $action
+     * @return string
+     */
     protected function getFirewallOfAction(string $action): string
     {
         if(preg_match('/^action_/i', $action)) {
-            $firewall = $this->appService->getFirewallName(false);
+            // autodetermined action
+            $firewall = $this->appService->getAppContext()->getFirewallName(false);
         } else {
+            // action is in the $action name
             $test = explode('_action_', $action);
             $firewall = count($test) < 2
-                ? $this->appService->getFirewallName(false)
+                ? $this->appService->getAppContext()->getFirewallName(false)
                 : reset($test);
         }
         $firewalls = static::getFirewalls();
         return in_array($firewall, $firewalls) ? $firewall : static::getDefaultFirewall();
     }
 
+    /**
+     * Does this Voter support $subject
+     * @param string $attribute
+     * @param mixed $subject
+     * @return boolean
+     */
     protected function supports(
         string $attribute,
         mixed $subject

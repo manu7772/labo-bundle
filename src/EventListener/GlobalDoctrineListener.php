@@ -69,16 +69,13 @@ class GlobalDoctrineListener
     {
         /** @var AppEntityInterface */
         $entity = $event->getObject();
-        // $entity->_service->dispatchEvent($entity, AppEvent::onCreate);
-        // OwnerInterface
+        dd($entity);
+        // Specificity entity
         if($entity instanceof OwnerInterface) {
             $this->manager->defineEntityOwner($entity, false);
         }
-        // Specificity entity
-        switch (true) {
-            case $entity instanceof LaboUserInterface:
-                $entity->setRoleHierarchy($this->roleHierarchy);
-                break;
+        if($entity instanceof LaboUserInterface) {
+            $entity->setRoleHierarchy($this->roleHierarchy);
         }
     }
 
@@ -91,10 +88,8 @@ class GlobalDoctrineListener
         // /** @var AppEntityManagerInterface */
         $entity->_service->dispatchEvent($entity, AppEvent::onLoad, ['event' => $event]);
         // Specificity entity
-        switch (true) {
-            case $entity instanceof LaboUserInterface:
-                $entity->setRoleHierarchy($this->roleHierarchy);
-                break;
+        if($entity instanceof LaboUserInterface) {
+            $entity->setRoleHierarchy($this->roleHierarchy);
         }
     }
 

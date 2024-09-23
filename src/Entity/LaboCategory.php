@@ -18,6 +18,7 @@ use Aequation\LaboBundle\Service\Tools\Classes;
 use Doctrine\ORM\Mapping as ORM;
 use Doctrine\ORM\Mapping\HasLifecycleCallbacks;
 use Doctrine\ORM\Mapping\MappedSuperclass;
+use Exception;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Serializer\Attribute as Serializer;
 
@@ -90,6 +91,9 @@ abstract class LaboCategory extends MappSuperClassEntity implements LaboCategory
         bool $classname = false
     ): string
     {
+        // if(!in_array($this->type, [static::DEFAULT_TYPE && !$this->_service->entityExists($this->type, true, false)])) {
+        //     throw new Exception(vsprintf('Error %s line %d: entity %s does not exist!', [__METHOD__, __LINE__, $this->type]));
+        // }
         return $this->_service::getEntityNameAsHtml($this->type, $icon, $classname);
     }
 

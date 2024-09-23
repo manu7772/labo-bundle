@@ -9,97 +9,166 @@
 {% for meta_info in meta_infos %}
 <article>
     <div>
-        <a href="#{{ meta_info.name|slug('_', true) }}" title="{{ meta_info.name }}">
+        <a href="#{{ meta_info.name|slug('_', true) }}"{{ turbo_enable(false) }} title="{{ meta_info.name }}">
             {% set color = meta_info.isPhpRoot() ? 'indigo' : meta_info.isMappedSuperclass ? 'cyan' : 'green' %}
             {{ (meta_info.hasErrors ? '<span class="pico-color-red-400" title="Entity is INVALID">' ~ icon(meta_info.name) ~ '</span>' : '<span class="pico-color-' ~ color ~ '-300" title="Entity is valid">' ~ icon(meta_info.name) ~ '</span>')|raw }} {{ meta_info.breadcrumbName }}
             {{ meta_info.instantiable ? '<small class="text-muted"> [Instantiable]</small>' }}
             {{ meta_info.isMappedSuperclass ? '<small class="text-muted"><i> [MAPPED_SUPER_CLASS]</i></small>' }}
-            {# <a href="{{ path('aequation_labo_entity_show', {classname: meta_info.classname}) }}"><twig:ux:icon name="tabler:info-square-rounded" class="text-muted" width /></a> #}
-            <a href="{{ path('aequation_labo_entity_show', {classname: meta_info.classname}) }}">{{ icon('tabler:info-square-rounded', {class: 'text-muted', width: '24px'}) }}</a>
+            {# <a href="{{ path('aequation_labo_entity_show', {classname: meta_info.classname}) }}"{{ turbo_enable(false) }}><twig:ux:icon name="tabler:info-square-rounded" class="text-muted" width /></a> #}
+            <a href="{{ path('aequation_labo_entity_show', {classname: meta_info.classname}) }}"{{ turbo_enable(false) }}>{{ icon('tabler:info-square-rounded', {class: 'text-muted', width: '24px'}) }}</a>
         </a>
     </div>
 </article>
 {% endfor %}
 {% for meta_info in meta_infos %}
-<article id="{{ meta_info.name|slug('_', true) }}" class="pico-background-slate-800">
+<article id="{{ meta_info.name|slug('_', true) }}" class="pico-background-slate-800" {{ stimulus_controller('accordions') }}>
     <header class="pico-background-slate-700">
         <h4 class="mb-0">
             {% set color = meta_info.isPhpRoot() ? 'indigo' : meta_info.isMappedSuperclass ? 'cyan' : 'green' %}
             {{ (meta_info.hasErrors ? '<span class="pico-color-red-400" title="Entity is INVALID">' ~ icon(meta_info.name) ~ '</span>' : '<span class="pico-color-' ~ color ~ '-300" title="Entity is valid">' ~ icon(meta_info.name) ~ '</span>')|raw }} {{ meta_info.name }}
-            <a href="{{ path('aequation_labo_entity_show', {classname: meta_info.classname}) }}">{{ icon('tabler:info-square-rounded', {class: 'text-muted', width: '28px'}) }}</a>
+            <a href="{{ path('aequation_labo_entity_show', {classname: meta_info.classname}) }}"{{ turbo_enable(false) }}>{{ icon('tabler:info-square-rounded', {class: 'text-muted', width: '28px'}) }}</a>
+            &nbsp;<small class="toggle-accordions">Open/close all</small>
         </h4>
     </header>
     {% if meta_info is not null %}
     <table>
         <tbody>
-            <tr><td>Root entity</td><td>{{ meta_info.rootEntityName }}</td></tr>
-            <tr><td>Manager</td><td>{{ meta_info.manager|default('<span class="pico-color-red-400">unknown</span>')|raw }}</td></tr>
-            <tr><td>Instantiable</td><td>{{ (meta_info.instantiable ? '<span class="pico-color-green-300">' ~ validIcon(true, '24px') ~ '</span>' : '<span class="pico-color-red-400">' ~ validIcon(false, '24px') ~ '</span>')|raw }}</td></tr>
-            <tr><td>Validity</td>
+            <tr>
+                <td colspan="100%">{{ dump(meta_info.model) }}</td>
+            </tr>
+            <tr>
+                <td>Root entity</td>
+                <td>{{ meta_info.rootEntityName }}</td>
+            </tr>
+            <tr>
+                <td>Table name</td>
+                <td>"{{ meta_info.table.name }}"</td>
+            </tr>
+            <tr>
+                <td>Manager</td>
+                <td>{{ meta_info.manager|default('<span class="pico-color-red-400">unknown</span>')|raw }}</td>
+            </tr>
+            <tr>
+                <td>Instantiable</td>
+                <td>{{ (meta_info.instantiable ? '<span class="pico-color-green-300">' ~ validIcon(true, '24px') ~ '</span>' : '<span class="pico-color-red-400">' ~ validIcon(false, '24px') ~ '</span>')|raw }}</td>
+            </tr>
+            <tr>
+                <td>Validity</td>
                 <td>
-                    {% if meta_info.hasErrors %}
-                    <ul class="mb-0">
-                        {% for error in meta_info.errors %}
-                        <li class="mb-0 pico-color-red-400">{{ validIcon(false, '24px') }} {{ error }}</li>
-                        {% endfor %}
-                    </ul>
-                    {% else %}
-                    <span class="pico-color-green-300">{{ validIcon(true, '24px') }}</span>
-                    {% endif %}
+                {% if meta_info.hasErrors %}
+                <ul class="mb-0">
+                    {% for error in meta_info.errors %}
+                    <li class="mb-0 pico-color-red-400">{{ validIcon(false, '24px') }} {{ error }}</li>
+                    {% endfor %}
+                </ul>
+                {% else %}
+                <span class="pico-color-green-300">{{ validIcon(true, '24px') }}</span>
+                {% endif %}
                 </td>
             </tr>
             {% set parentClasses = meta_info.parentClasses %}
-            <tr><td>Parents [Doctrine] ({{ parentClasses|length }})</td><td>
-            {% if parentClasses|length %}
-                <ul class="mb-0 list-inside pl-0">
-                    {% for parent in parentClasses %}
-                    <li class="mb-0{{ parent.instantiable ? ' pico-color-azure-300' : ' pico-color-azure-500' }}"><a href="#{{ parent.name|slug('_', true) }}" class="{{ parent.instantiable ? 'pico-color-azure-300' : 'pico-color-azure-500' }}">{{ parent.name }}</a>{{ parent.instantiable ? '<small class="text-muted"> [Instantiable]</small>' }}</li>
-                    {% endfor %}
-                </ul>
-            {% endif %}
-            </td></tr>
-            {% set entity_parents = meta_info.phpParents %}
-            <tr><td>Parents [PHP] ({{ entity_parents|length }})</td><td>
-            {% if entity_parents|length %}
-                <ul class="mb-0 list-inside pl-0">
-                    {% for parent in entity_parents %}
-                    <li class="mb-0{{ parent.instantiable ? ' pico-color-azure-300' : ' pico-color-azure-500' }}"><a href="#{{ parent.name|slug('_', true) }}" class="{{ parent.instantiable ? 'pico-color-azure-300' : 'pico-color-azure-500' }}">{{ parent.name }}</a>{{ parent.instantiable ? '<small class="text-muted"> [Instantiable]</small>' }}</li>
-                    {% endfor %}
-                </ul>
-            {% endif %}
-            </td></tr>
-            {% set entity_children = meta_info.phpChilds %}
-            <tr><td>Children [PHP] ({{ entity_children|length }})</td><td>
-            {% if entity_children|length %}
-                <ul class="mb-0 list-inside pl-0">
-                    {% for child in entity_children %}
-                    <li class="mb-0{{ child.instantiable ? ' pico-color-azure-300' : ' pico-color-azure-500' }}"><a href="#{{ child.name|slug('_', true) }}" class="{{ child.instantiable ? 'pico-color-azure-300' : 'pico-color-azure-500' }}">{{ child.name }}</a>{{ child.instantiable ? '<small class="text-muted"> [Instantiable]</small>' }}</li>
-                    {% endfor %}
-                </ul>
-            {% endif %}
-            </td></tr>
-            <tr><td>Unique Entity fields</td><td>
-            {% set uniquefields = meta_info.getUniqueFields(false) %}
-            {% if uniquefields|length %}
-                <ul class="mb-0 list-unstyled list-inside pl-0">
-                    {% for unique in uniquefields %}
-                    <li class="mb-0">{{ loop.index }} {{ icon('tabler:arrow-right', {size: 18}) }} {{ printr(unique)}}</li>
-                    {% endfor %}
-                </ul>
-            {% endif %}
-            </td></tr>
-            {% set repo_parents = meta_info.customRepositoryClassName is not null ? parent_classes(meta_info.customRepositoryClassName) : [] %}
-            <tr><td>Repository</td><td><span class="pico-color-{{ meta_info.customRepositoryClassName ? 'green-300' : 'red-400' }}">{{ (meta_info.customRepositoryClassName|default('AUCUN')) }}</span>
-                {% if repo_parents|length %}
-                <ul class="mb-0">
-                    {% for parent in repo_parents %}
-                    {% if parent.name matches '/^(?!Doctrine)/i' %}
-                    <li class="mb-0">{{ parent.name }}</li>
-                    {% endif %}
-                    {% endfor %}
-                </ul>
+            <tr>
+                <td>Parents [Doctrine] ({{ parentClasses|length }})</td>
+                <td>
+                {% if parentClasses|length %}
+                    <ul class="mb-0 list-inside pl-0">
+                        {% for parent in parentClasses %}
+                        <li class="mb-0{{ parent.instantiable ? ' pico-color-azure-300' : ' pico-color-azure-500' }}"><a href="#{{ parent.name|slug('_', true) }}"{{ turbo_enable(false) }} class="{{ parent.instantiable ? 'pico-color-azure-300' : 'pico-color-azure-500' }}">{{ parent.name }}</a>{{ parent.instantiable ? '<small class="text-muted"> [Instantiable]</small>' }}</li>
+                        {% endfor %}
+                    </ul>
                 {% endif %}
-            </td></tr>
+                </td>
+            </tr>
+            {% set entity_parents = meta_info.phpParents %}
+            <tr>
+                <td>Parents [PHP] ({{ entity_parents|length }})</td>
+                <td>
+                {% if entity_parents|length %}
+                    <ul class="mb-0 list-inside pl-0">
+                        {% for parent in entity_parents %}
+                        <li class="mb-0{{ parent.instantiable ? ' pico-color-azure-300' : ' pico-color-azure-500' }}"><a href="#{{ parent.name|slug('_', true) }}"{{ turbo_enable(false) }} class="{{ parent.instantiable ? 'pico-color-azure-300' : 'pico-color-azure-500' }}">{{ parent.name }}</a>{{ parent.instantiable ? '<small class="text-muted"> [Instantiable]</small>' }}</li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+                </td>
+            </tr>
+            {% set entity_children = meta_info.phpChilds %}
+            <tr>
+                <td>Children [PHP] ({{ entity_children|length }})</td>
+                <td>
+                {% if entity_children|length %}
+                    <ul class="mb-0 list-inside pl-0">
+                        {% for child in entity_children %}
+                        <li class="mb-0{{ child.instantiable ? ' pico-color-azure-300' : ' pico-color-azure-500' }}"><a href="#{{ child.name|slug('_', true) }}"{{ turbo_enable(false) }} class="{{ child.instantiable ? 'pico-color-azure-300' : 'pico-color-azure-500' }}">{{ child.name }}</a>{{ child.instantiable ? '<small class="text-muted"> [Instantiable]</small>' }}</li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+                </td>
+            </tr>
+            {% set interfaces = meta_info.interfaces %}
+            <tr>
+                <td>Interfaces ({{ interfaces|length }})</td>
+                <td>
+                {% if interfaces|length %}
+                    <ul class="mb-0 list-inside pl-0">
+                        {% for interface in interfaces %}
+                        <li class="mb-0" title="{{ interface.name }}">{{ interface.name|shortname }}</li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+                </td>
+            </tr>
+            {% set constants = meta_info.constants %}
+            <tr>
+                <td>Constants ({{ constants|length }})</td>
+                <td style="font-size: .6rem; line-height: .6rem;">
+                {{ printr(constants, 3, true) }}
+                </td>
+            </tr>
+            {% set all_traits = meta_info.allTraits %}
+            <tr>
+                <td>Traits ({{ meta_info.allTraits(true)|length }})</td>
+                <td>
+                {% if all_traits|length %}
+                    <ul class="mb-0 list-inside pl-0">
+                        {% for parent,traits in all_traits %}
+                        {% for trait in traits %}
+                        <li class="mb-0{{ meta_info.name != parent ? ' pico-color-slate-400' }}" title="{{ trait.name }}">{{ trait.name|shortname }} <small><i>{{ parent }}</i></small></li>
+                        {% endfor %}
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+                </td>
+            </tr>
+            <tr>
+                <td>Unique Entity fields</td>
+                <td>
+                {% set uniquefields = meta_info.getUniqueFields(false) %}
+                {% if uniquefields|length %}
+                    <ul class="mb-0 list-unstyled list-inside pl-0">
+                        {% for unique in uniquefields %}
+                        <li class="mb-0">{{ loop.index }} {{ icon('tabler:arrow-right', {size: 18}) }} {{ unique|join(' + ')}}{% if  unique|length > 1 %} <i><small class="pico-color-slate-500">({{ unique|length }} champs combinés)</small></i>{% endif %}</li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+                </td>
+            </tr>
+            {% set repo_parents = meta_info.customRepositoryClassName is not null ? parent_classes(meta_info.customRepositoryClassName) : [] %}
+            <tr>
+                <td>Repository</td>
+                <td>
+                    <span class="{{ meta_info.customRepositoryClassName ? '' : 'pico-color-red-400' }}">{{ (meta_info.customRepositoryClassName|default('AUCUN')) }}</span>
+                    {% if repo_parents|length %}
+                    <ul class="mb-0">
+                        {% for parent in repo_parents %}
+                        {% if parent.name matches '/^(?!Doctrine)/i' %}
+                        <li class="mb-0 pico-color-slate-400">{{ parent.name }}</li>
+                        {% endif %}
+                        {% endfor %}
+                    </ul>
+                    {% endif %}
+                </td>
+            </tr>
             <tr>
                 <td>LifecycleCallbacks</td>
                 <td>
@@ -137,40 +206,61 @@
                     {% endif %}
                 </td>
             </tr>
-            <tr><td>Fields</td><td>
-            {% if meta_info.fieldMappings|length %}
-                <ul class="mb-0 list-inside pl-0">
-                    {% for name,mapp in meta_info.fieldMappings %}
-                    <li class="mb-0">
-                        <strong{{ mapp.id|default(false) ? ' class="text-success" title="ID field"' }}>
-                            {% if mapp.id %}<span title="Identifiant">{{ icon('tabler:settings', {size: 18}) }}</span>{% endif %}
-                            {% if mapp.notUpdatable|default(false) %}<span class="pico-color-yellow-500" title="Non modifiable">{{ icon('tabler:lock-filled', {size: 18}) }}</span>{% endif %}
-                            {% if name in meta_info.getUniqueFields(true) %}<span class="pico-color-yellow-200" title="Unique field">{{ icon('tabler:star-filled', {size: 18}) }}</span>{% endif %}
-                            {{ name }}
-                        </strong> : {{ mapp.type }}{% if mapp.declared is not null %} <i><small class="pico-color-slate-500">Declared in <span class="pico-color-yellow-300">{{ shortname(mapp.declared) }}</span></small></i>{% endif %}</li>
-                    {% endfor %}
-                </ul>
-            {% endif %}
-            </td></tr>
-            <tr><td>Associations</td><td>
-            {% if meta_info.associationMappings|length %}
-                <ul class="mb-0 list-unstyled list-inside pl-0">
-                    {% for name,mapp in meta_info.associationMappings %}
-                    <li class="mb-0"><strong>{{ name }} {{ icon('tabler:arrow-right', {size: 18}) }} {{ mapp.mappedBy|default(false) ? ' <i><small class="pico-color-yellow-300">inverse</small></i>'|raw : ' <i><small class="pico-color-green-300">propriétaire</small></i>'|raw }}</strong>
-                        <ul class="mb-0">
-                            <li class="mb-0"><span class="pico-color-slate-500">Entity</span> {{ shortname(mapp) }}</li>
-                            <li class="mb-0"><span class="pico-color-slate-500">Target</span> {{ shortname(mapp.targetEntity) }}</li>
-                            {% if mapp.inversedBy|default(false) %}
-                            <li class="mb-0"><span class="pico-color-slate-500">Mapped by</span> {{ mapp.inversedBy }}</li>
-                            {% endif %}
-                            {% if mapp.mappedBy|default(false) %}
-                            <li class="mb-0"><span class="pico-color-slate-500">Inversed by</span> {{ mapp.mappedBy }}</li>
-                            {% endif %}
-                        </ul>
-                    {% endfor %}
-                </ul>
-            {% endif %}
-            </td></tr>
+            <tr>
+                <td>Fields</td>
+                <td>
+                    <div>
+                        <small class="toggle-accordions">Open/close all</small>
+                        {% if meta_info.fieldMappings|length %}
+                            {% for name,mapp in meta_info.fieldMappings %}
+                            <details class="p-0 mb-1">
+                                <summary class="mb-0">
+                                    <strong{{ mapp.id|default(false) ? ' class="text-success" title="ID field"' }}>
+                                    {% if mapp.id %}<span title="Identifiant">{{ icon('tabler:settings', {size: 18}) }}</span>{% endif %}
+                                    {% if mapp.notUpdatable|default(false) %}<span class="pico-color-yellow-500" title="Non modifiable">{{ icon('tabler:lock-filled', {size: 18}) }}</span>{% endif %}
+                                    {% if name in meta_info.getUniqueFields(true) %}<span class="pico-color-yellow-200" title="Unique field">{{ icon('tabler:star-filled', {size: 18}) }}</span>{% endif %}
+                                    {{ name }}
+                                    </strong> <small class="pico-color-slate-500"><i>{{ mapp.type }}</i></small>
+                                </summary>
+                                <cite style="display: block; line-height: .8rem;"><small><span class="pico-color-slate-500">— Column : </span>"{{ meta_info.columnNames[name] }}"</small></cite>
+                                <cite style="display: block; line-height: .8rem;"><small><span class="pico-color-slate-500">— Type : </span>{{ mapp.type }}</small></cite>
+                                {% if mapp.declared is not null %}
+                                <cite style="display: block; line-height: .8rem;"><small><span class="pico-color-slate-500">— Declared in </span><strong class="pico-color-yellow-300" title="{{ mapp.declared }}">{{ shortname(mapp.declared) }}</strong></small></cite>
+                                {% endif %}
+                            </details>
+                            {% endfor %}
+                        {% endif %}
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <td>Associations</td>
+                <td>
+                    <div>
+                        <small class="toggle-accordions">Open/close all</small>
+                        {% if meta_info.associationMappings|length %}
+                            {% for name,mapp in meta_info.associationMappings %}
+                            <details class="p-0 mb-1">
+                                <summary class="mb-0">
+                                    <strong>{{ name }} {{ icon('tabler:arrow-right', {size: 18}) }} {{ mapp.mappedBy|default(false) ? ' <i><small class="pico-color-yellow-300">inverse</small></i>'|raw : ' <i><small class="pico-color-green-300">propriétaire</small></i>'|raw }}</strong>
+                                </summary>
+                                <cite style="display: block; line-height: .8rem;"><small><span class="pico-color-slate-500">— Entity </span><span title="{{ classname(mapp) }}">{{ shortname(mapp) }}</span></small></cite>
+                                <cite style="display: block; line-height: .8rem;"><small><span class="pico-color-slate-500">— Target </span><span title="{{ mapp.targetEntity }}">{{ shortname(mapp.targetEntity) }}</span></small></cite>
+                                {% if mapp.inversedBy|default(false) %}
+                                <cite style="display: block; line-height: .8rem;"><small><span class="pico-color-slate-500">— Mapped by </span><span title="{{ mapp.inversedBy }}">{{ mapp.inversedBy }}</span></small></cite>
+                                {% endif %}
+                                {% if mapp.mappedBy|default(false) %}
+                                <cite style="display: block; line-height: .8rem;"><small><span class="pico-color-slate-500">— Inversed by </span><span title="{{ mapp.mappedBy }}">{{ mapp.mappedBy }}</span></small></cite>
+                                {% endif %}
+                                {% if mapp.declared is not null %}
+                                <cite style="display: block; line-height: .8rem;"><small><span class="pico-color-slate-500">— Declared in </span><span class="pico-color-yellow-300" title="{{ mapp.declared }}">{{ shortname(mapp.declared) }}</span></small></cite>
+                                {% endif %}
+                            </details>
+                            {% endfor %}
+                        {% endif %}
+                    </div>
+                </td>
+            </tr>
             {# <tr><td colspan="100%">{{ dump(meta_info) }}</tr></td> #}
         </tbody>
     </table>

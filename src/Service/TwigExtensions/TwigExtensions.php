@@ -11,7 +11,7 @@ use Aequation\LaboBundle\Service\Tools\Icons;
 use Aequation\LaboBundle\Service\Tools\Strings;
 use Aequation\LaboBundle\Service\Tools\Times;
 
-use App\Kernel;
+use Symfony\Component\HttpKernel\KernelInterface;
 use Symfony\Contracts\Translation\TranslatableInterface;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Contracts\Translation\TranslatorInterface;
@@ -39,7 +39,7 @@ class TwigExtensions extends AbstractExtension implements GlobalsInterface
     public readonly AppEntityManagerInterface $appEntityManager;
 
     public function __construct(
-        private Kernel $kernel,
+        private KernelInterface $kernel,
         private AppService $appService,
         private LaboAppVariableInterface $laboAppVariable,
         #[Autowire(service: '.ux_icons.icon_renderer')]
@@ -75,8 +75,9 @@ class TwigExtensions extends AbstractExtension implements GlobalsInterface
             new TwigFunction('turbo_off', [$this, 'turboOff']),
             new TwigFunction('turbo_enable', [$this, 'turboEnable']),
             // Print tools
-            new TwigFunction('shortname', [$this, 'getShortname']),
-            new TwigFunction('parent_classes', [$this, 'getParentClasses']),
+            new TwigFunction('classname', [Classes::class, 'getClassname']),
+            new TwigFunction('shortname', [Classes::class, 'getShortname']),
+            new TwigFunction('parent_classes', [Classes::class, 'getParentClasses']),
             new TwigFunction('printr', [Encoders::class, 'getPrintr']),
             new TwigFunction('printFiles', [Encoders::class, 'getPrintFiles']),
             // Globals added to twig
@@ -232,10 +233,10 @@ class TwigExtensions extends AbstractExtension implements GlobalsInterface
             : '';
     }
 
-    public function getParentClasses(object|string $objectOrClass, bool $reverse = false, bool $asReflclass = true): array
-    {
-        return Classes::getParentClasses($objectOrClass, $reverse, $asReflclass);
-    }
+    // public function getParentClasses(object|string $objectOrClass, bool $reverse = false, bool $asReflclass = true): array
+    // {
+    //     return Classes::getParentClasses($objectOrClass, $reverse, $asReflclass);
+    // }
 
 
     /*************************************************************************************

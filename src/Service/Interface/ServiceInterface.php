@@ -1,7 +1,9 @@
 <?php
 namespace Aequation\LaboBundle\Service\Interface;
 
-interface ServiceInterface
+use Reflector;
+
+interface ServiceInterface extends Reflector
 {
 
     public function __toString(): string;

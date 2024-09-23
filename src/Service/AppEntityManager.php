@@ -5,12 +5,8 @@ use Aequation\LaboBundle\Component\AppEntityInfo;
 use Aequation\LaboBundle\Component\ClassmetadataReport;
 use Aequation\LaboBundle\Component\HydratedReferences;
 use Aequation\LaboBundle\Component\Opresult;
-use Aequation\LaboBundle\Entity\Image;
-use Aequation\LaboBundle\Entity\LaboCategory;
 use Aequation\LaboBundle\EventListener\Attribute\AppEvent;
-use Aequation\LaboBundle\Model\Attribute\ClassCustomService;
 use Aequation\LaboBundle\Model\Interface\AppEntityInterface;
-use Aequation\LaboBundle\Model\Interface\EcollectionInterface;
 use Aequation\LaboBundle\Model\Interface\OwnerInterface;
 use Aequation\LaboBundle\Model\Interface\UnamedInterface;
 use Aequation\LaboBundle\Model\Interface\LaboUserInterface;
@@ -18,18 +14,11 @@ use Aequation\LaboBundle\Repository\Interface\CommonReposInterface;
 use Aequation\LaboBundle\Service\AppService;
 use Aequation\LaboBundle\Service\Base\BaseService;
 use Aequation\LaboBundle\Service\Interface\AppEntityManagerInterface;
-use Aequation\LaboBundle\Service\Interface\AppRoleHierarchyInterface;
 use Aequation\LaboBundle\Service\Interface\AppServiceInterface;
-use Aequation\LaboBundle\Service\Interface\CacheServiceInterface;
 use Aequation\LaboBundle\Service\Tools\Classes;
 use Aequation\LaboBundle\Service\Tools\Encoders;
-use Aequation\LaboBundle\Service\Tools\Files;
 use Aequation\LaboBundle\Service\Tools\HttpRequest;
-use Closure;
-use Doctrine\ORM\EntityManagerInterface;
-use Doctrine\ORM\EntityRepository;
-use Doctrine\ORM\Mapping\ClassMetadata;
-use Doctrine\Persistence\Event\LifecycleEventArgs;
+
 use Symfony\Component\Security\Core\Authorization\AccessDecisionManagerInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use Symfony\Component\DependencyInjection\Attribute\AsAlias;
@@ -38,17 +27,16 @@ use Symfony\Component\PropertyAccess\PropertyAccess;
 use Symfony\Component\Validator\ConstraintViolationList;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
-use Symfony\Contracts\Cache\CacheInterface;
 use Symfony\Contracts\Cache\ItemInterface;
+use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\ORM\Mapping\ClassMetadata;
+use Doctrine\Persistence\Event\LifecycleEventArgs;
 use Doctrine\ORM\UnitOfWork;
 
+use Closure;
 use DateTime;
 use DateTimeImmutable;
 use Exception;
-use phpDocumentor\Reflection\PseudoTypes\False_;
-use ReflectionClass;
-use Symfony\Component\Form\FormEvents;
-use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
 use Throwable;
 
 #[AsAlias(AppEntityManagerInterface::class, public: true)]
@@ -160,23 +148,6 @@ class AppEntityManager extends BaseService implements AppEntityManagerInterface
             }
         }
         return $names;
-
-        // foreach ($this->em->getMetadataFactory()->getAllMetadata() as $cmd) {
-        // foreach ($this->em->getConfiguration()->getEntityNamespaces() as $classname) {
-        // $reports = $this->getEntityMetadataReportsFiltered(
-        //     function($report) use ($onlyInstantiables, $allnamespaces) {
-        //         /** @var ClassmetadataReport $report */
-        //         if(!$allnamespaces && !$report->isAppEntity()) return false;
-        //         if($onlyInstantiables && !$report->isInstantiable()) return false;
-        //         return true;
-        //     }
-        // );
-        // $list = [];
-        // foreach ($reports as $report) {
-        //     /** @var ClassmetadataReport $report */
-        //     $list[$report->classname] = $asShortnames ? $report->getShortname() : $report->classname;
-        // }
-        // return $list;
     }
 
     public function getEntityShortname(
@@ -236,6 +207,7 @@ class AppEntityManager extends BaseService implements AppEntityManagerInterface
         bool $classname = true
     ): string
     {
+        if(is_string($classOrEntity) && !class_exists($classOrEntity)) throw new Exception(vsprintf('Error %s line %d: entity of class %s does not exist!', [__METHOD__, __LINE__, json_encode($classOrEntity)]));
         if($classOrEntity instanceof AppEntityInterface) $classOrEntity = $classOrEntity->getClassname();
         $icon = $icon ? '<i class="fa fa-'.$classOrEntity::FA_ICON.' fa-fw text-info"></i>&nbsp;&nbsp;' : '';
         return $icon.'<strong>'.Classes::getShortname($classOrEntity, true).'</strong>'.($classname ? '&nbsp;<small><i class="text-muted">'.$classOrEntity.'</i></small>' : '');
@@ -280,36 +252,39 @@ class AppEntityManager extends BaseService implements AppEntityManagerInterface
 
     public function getEntityMetadataReports(): array
     {
-        // $meta_infos = [];
-        // // foreach ($this->em->getMetadataFactory()->getAllMetadata() as $cmd) {
-        // foreach ($this->getEntityNames(false, false) as $classname) {
-        //     $meta_infos[$classname] = new ClassmetadataReport($this, $classname);
-        //     // if($this->isDev() && !$meta_infos[$classname]->isValid()) {
-        //     //     throw new Exception(vsprintf('Error %s line %d: %s of entity %s is invalid!', [__METHOD__, __LINE__, Classes::getShortname(ClassmetadataReport::class), $classname]));
-        //     // }
-        // }
-        // var_dump($meta_infos); die(__METHOD__.' / line '.__LINE__);
-        // return $meta_infos;
-
+        if($this->isDev()) return $this->computeEntityMetadataReports();
+        // 
         $reports = $this->appService->getCache()->get(
             key: static::CACHE_ENTITY_REPORTS_NAME,
             callback: function(ItemInterface $item) {
                 if(!empty(static::CACHE_ENTITY_REPORTS_LIFE)) {
                     $item->expiresAfter(static::CACHE_ENTITY_REPORTS_LIFE);
                 }
-                $meta_infos = [];
-                foreach ($this->getEntityNames(false, false) as $classname) {
-                    $meta_infos[$classname] = new ClassmetadataReport($this, $classname);
-                    if($this->isDev() && !$meta_infos[$classname]->isValid()) {
-                        throw new Exception(vsprintf('Error %s line %d: %s of entity %s is invalid!', [__METHOD__, __LINE__, Classes::getShortname(ClassmetadataReport::class), $classname]));
-                    }
-                }
-                return $meta_infos;
+                return $this->computeEntityMetadataReports();
             },
             commentaire: 'All entities reports (meta infos)',
         );
         // dd($reports);
         return $reports;
+    }
+
+    // public function dumpReports(): void
+    // {
+    //     foreach ($this->computeEntityMetadataReports() as $test) {
+    //         dump(json_encode($test));
+    //     }
+    // }
+
+    private function computeEntityMetadataReports(): array
+    {
+        $meta_infos = [];
+        foreach ($this->getEntityNames(false, false) as $classname) {
+            $meta_infos[$classname] = new ClassmetadataReport($this, $classname);
+            if($this->isDev() && !$meta_infos[$classname]->isValid()) {
+                throw new Exception(vsprintf('Error %s line %d: %s of entity %s is invalid!', [__METHOD__, __LINE__, Classes::getShortname(ClassmetadataReport::class), $classname]));
+            }
+        }
+        return $meta_infos;
     }
 
     public function getEntityMetadataReportsFiltered(
@@ -465,19 +440,30 @@ class AppEntityManager extends BaseService implements AppEntityManagerInterface
             : null;
     }
 
+    final public static function getEntityServiceID(string|AppEntityInterface $objectOrClass): ?string
+    {
+        if(is_object($objectOrClass)) $objectOrClass = $objectOrClass->getClassname();
+        $serviceName = AppService::getClassServiceName($objectOrClass);
+        if(empty($serviceName)) {
+            $attrs = Classes::getClassAttributes(static::class, AsAlias::class, true);
+            if(count($attrs)) {
+                /** @var AsAlias */
+                $attr = reset($attrs);
+                return $attr->id;
+            }
+        }
+        return $serviceName;
+    }
+
     public function getEntityService(
         string|AppEntityInterface $objectOrClass
     ): ?AppEntityManagerInterface
     {
-        if(is_object($objectOrClass)) $objectOrClass = $objectOrClass->getClassname();
-        $serviceName = AppService::getClassServiceName($objectOrClass);
-        // if(empty($serviceName)) {
-        //     dump($serviceName, $objectOrClass);
-        //     throw new Exception(vsprintf('Error %s line %d: could not find service for %s!', [__METHOD__, __LINE__, $objectOrClass]));
-        // }
-        return empty($serviceName) || $this instanceof $serviceName
-            ? $this
-            : $this->appService->getClassService($objectOrClass);
+        $id = $this->getEntityServiceID($objectOrClass);
+        $service = $id ? $this->appService->get($id) : null;
+        return $service instanceof AppEntityManagerInterface
+            ? $service
+            : null;
     }
 
     /**
@@ -489,9 +475,13 @@ class AppEntityManager extends BaseService implements AppEntityManagerInterface
     public function getEntityClassesOfInterface(
         string|array $interfaces,
         bool $allnamespaces = false,
+        bool $onlyInstantiables = false
     ): array
     {
-        return Classes::filterByInterface($interfaces, $this->getEntityNames(false, $allnamespaces));
+        return array_filter(
+            Classes::filterByInterface($interfaces, $this->getEntityNames(false, $allnamespaces)),
+            fn ($class) => $this->entityExists($class, $allnamespaces, $onlyInstantiables)
+        );
     }
 
     public function getScheduledForInsert(
@@ -687,7 +677,7 @@ class AppEntityManager extends BaseService implements AppEntityManagerInterface
         // $this->setManagerToEntity($entity);
         // In service
         $applyed = false;
-        foreach (Classes::getMethodsAttributes($entity->_service, $event, true) as $reflAttrs) {
+        foreach (Classes::getMethodAttributes($entity->_service, $event, true) as $reflAttrs) {
             foreach ($reflAttrs as $reflAttr) {
                 /** @var AppEvent $reflAttr */
                 $method = $reflAttr->method->name;
@@ -702,7 +692,7 @@ class AppEntityManager extends BaseService implements AppEntityManagerInterface
             }
         }
         // In entity
-        foreach (Classes::getMethodsAttributes($entity, $event, true) as $reflAttrs) {
+        foreach (Classes::getMethodAttributes($entity, $event, true) as $reflAttrs) {
             foreach ($reflAttrs as $reflAttr) {
                 /** @var AppEvent $reflAttr */
                 $method = $reflAttr->method->name;

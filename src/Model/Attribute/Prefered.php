@@ -7,11 +7,11 @@ use ReflectionClass;
 use ReflectionProperty;
 
 /**
- * Methods before Validate entity
+ * Prefered entity
  * @author emmanuel:dujardin Aequation
  */
 #[Attribute(Attribute::TARGET_PROPERTY)]
-class RelationOrder extends baseClassAttribute implements AppAttributePropertyInterface
+class Prefered extends baseClassAttribute implements AppAttributePropertyInterface
 {
 
     public readonly ReflectionProperty $property;

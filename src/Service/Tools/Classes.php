@@ -7,6 +7,7 @@ use Aequation\LaboBundle\Model\Interface\AppAttributeConstantInterface;
 use Aequation\LaboBundle\Model\Interface\AppAttributeMethodInterface;
 use Aequation\LaboBundle\Model\Interface\AppAttributePropertyInterface;
 use Aequation\LaboBundle\Service\Base\BaseService;
+use Attribute;
 
 use function Symfony\Component\String\u;
 
@@ -22,6 +23,12 @@ use ReflectionUnionType;
 
 class Classes extends BaseService
 {
+
+    public const ATTR_CLASS = 1;
+    public const ATTR_PROPERTY = 2;
+    public const ATTR_METHOD = 4;
+    public const ATTR_CONSTANT = 8;
+    public const REGEX_APP_CLASS = '/^(App\\\\|Aequation\\\\)/';
 
     /*************************************************************************************
      * TYPES FOR PROPERTY/METHOD
@@ -284,6 +291,60 @@ class Classes extends BaseService
     }
 
     /**
+     * Get filtered list of classes
+     * param $listOfClasses can be:
+     * - single => classname, object or regex
+     * - array of classnames or objects
+     * - empty (null or []) => uses all declared classes (get_declared_classes())
+     * @param array|object|string|null &$listOfClasses
+     * @return void
+     */
+    public static function filterDeclaredClasses(
+        array|object|string &$listOfClasses = null,
+        bool $sort = false
+    ): void
+    {
+        if(empty($listOfClasses)) $listOfClasses = get_declared_classes();
+        if(is_string($listOfClasses) && !class_exists($listOfClasses)) {
+            // filter with REGEX
+            $regex = $listOfClasses;
+            $listOfClasses = [];
+            foreach (get_declared_classes() as $class) {
+                if(preg_match($regex, $class)) $listOfClasses[] = $class;
+            }
+        }
+        if(!is_array($listOfClasses)) $listOfClasses = [$listOfClasses];
+        if($sort) sort($listOfClasses);
+    }
+
+    /**
+     * Get filtered list of classes
+     * param $interfaces can be:
+     * - single => classname or regex
+     * - array of interfaces classnames
+     * - empty (null or []) => uses all declared interfaces (get_declared_interfaces())
+     * @param array|object|string|null &$interfaces
+     * @return void
+     */
+    public static function filterDeclaredInterfaces(
+        array|object|string &$interfaces = null,
+        bool $sort = false
+    ): void
+    {
+        if(empty($interfaces)) $interfaces = get_declared_interfaces();
+        if(is_string($interfaces) && !interface_exists($interfaces)) {
+            // filter with REGEX
+            $regex = $interfaces;
+            $interfaces = [];
+            foreach (get_declared_interfaces() as $class) {
+                if(preg_match($regex, $class)) $interfaces[] = $class;
+            }
+        }
+        if(!is_array($interfaces)) $interfaces = [$interfaces];
+        if($sort) sort($interfaces);
+    }
+
+    /**
      * Get classes of interface
      * @param string|array $interfaces
      * @param array|null $listOfClasses
@@ -291,12 +352,11 @@ class Classes extends BaseService
      */
     public static function filterByInterface(
         string|array $interfaces,
-        ?array $listOfClasses = null,
+        array|object|string $listOfClasses = null
     ): array
     {
-        $interfaces = (array)$interfaces;
-        if(empty($interfaces)) return [];
-        if(empty($listOfClasses)) $listOfClasses = get_declared_classes();
+        static::filterDeclaredInterfaces($interfaces);
+        static::filterDeclaredClasses($listOfClasses);
         return array_filter($listOfClasses, function ($classname) use ($interfaces) {
             foreach ($interfaces as $interface) {
                 if(is_a($classname, $interface, true)) return true;
@@ -315,14 +375,14 @@ class Classes extends BaseService
     public static function getInheritedClasses(
         object|string $objectOrClass,
         bool $reverse = false,
-        ?array $listOfClasses = null,
+        array|object|string $listOfClasses = null,
         bool $onlyInstantiables = false,
     ): array
     {
         if(is_object($objectOrClass)) $objectOrClass = get_class($objectOrClass);
         if(!class_exists($objectOrClass)) return [];
         $children = [];
-        if(empty($listOfClasses)) $listOfClasses = get_declared_classes();
+        static::filterDeclaredClasses($listOfClasses);
         foreach($listOfClasses as $class) {
             $RC = new ReflectionClass($class);
             $do = $onlyInstantiables
@@ -352,43 +412,72 @@ class Classes extends BaseService
      * @return array
      */
     public static function getAttributes(
-        string $attributeClass,
+        ?string $attributeClass = null,
         array|object|string $listOfClasses = null,
+        bool $searchParents = true,
+        int $selectType = 0
     ): array
     {
         $attributes = [];
-        if(empty($listOfClasses)) $listOfClasses = get_declared_classes();
-        if(is_string($listOfClasses) && !class_exists($listOfClasses)) {
-            // filter with REGEX
-            $regex = $listOfClasses;
-            $listOfClasses = [];
-            foreach (get_declared_classes() as $class) {
-                if(preg_match($regex, $class)) $listOfClasses[] = $class;
-            }
-        }
-        if(!is_array($listOfClasses)) $listOfClasses = [$listOfClasses];
-
+        if($selectType <= 0) $selectType = static::ATTR_CLASS | static::ATTR_PROPERTY | static::ATTR_METHOD | static::ATTR_CONSTANT;
+        $partition = !in_array($selectType, [static::ATTR_CLASS, static::ATTR_PROPERTY, static::ATTR_METHOD, static::ATTR_CONSTANT]);
+        static::filterDeclaredClasses($listOfClasses);
         foreach ($listOfClasses as $objectOrClass) {
-            foreach (static::getClassAttributes($objectOrClass, $attributeClass, true) as $attrs) {
-                foreach ((array)$attrs as $attr) $attributes[] = $attr;
+            if($selectType & static::ATTR_CLASS === static::ATTR_CLASS) {
+                if($partition) {
+                    $attributes['class'] ??= [];
+                    foreach (static::getClassAttributes($objectOrClass, $attributeClass, $searchParents) as $attrs) {
+                        foreach ($attrs as $attr) $attributes['class'][] = $attr;
+                    }
+                } else {
+                    foreach (static::getClassAttributes($objectOrClass, $attributeClass, $searchParents) as $attrs) {
+                        foreach ($attrs as $attr) $attributes[] = $attr;
+                    }
+                }
             }
-            foreach (static::getPropertysAttributes($objectOrClass, $attributeClass, true) as $attrs) {
-                foreach ((array)$attrs as $attr) $attributes[] = $attr;
+            if($selectType & static::ATTR_PROPERTY === static::ATTR_PROPERTY) {
+                if($partition) {
+                    $attributes['property'] ??= [];
+                    foreach (static::getPropertyAttributes($objectOrClass, $attributeClass, $searchParents) as $attrs) {
+                        foreach ($attrs as $attr) $attributes['property'][] = $attr;
+                    }
+                } else {
+                    foreach (static::getPropertyAttributes($objectOrClass, $attributeClass, $searchParents) as $attrs) {
+                        foreach ($attrs as $attr) $attributes[] = $attr;
+                    }
+                }
             }
-            foreach (static::getMethodsAttributes($objectOrClass, $attributeClass, true) as $attrs) {
-                foreach ((array)$attrs as $attr) $attributes[] = $attr;
+            if($selectType & static::ATTR_METHOD === static::ATTR_METHOD) {
+                if($partition) {
+                    $attributes['method'] ??= [];
+                    foreach (static::getMethodAttributes($objectOrClass, $attributeClass, $searchParents) as $attrs) {
+                        foreach ($attrs as $attr) $attributes['method'][] = $attr;
+                    }
+                } else {
+                    foreach (static::getMethodAttributes($objectOrClass, $attributeClass, $searchParents) as $attrs) {
+                        foreach ($attrs as $attr) $attributes[] = $attr;
+                    }
+                }
             }
-            foreach (static::getConstantAttributes($objectOrClass, $attributeClass, true) as $attrs) {
-                foreach ((array)$attrs as $attr) $attributes[] = $attr;
+            if($selectType & static::ATTR_CONSTANT === static::ATTR_CONSTANT) {
+                if($partition) {
+                    $attributes['constant'] ??= [];
+                    foreach (static::getConstantAttributes($objectOrClass, $attributeClass, $searchParents) as $attrs) {
+                        foreach ($attrs as $attr) $attributes['constant'][] = $attr;
+                    }
+                } else {
+                    foreach (static::getConstantAttributes($objectOrClass, $attributeClass, $searchParents) as $attrs) {
+                        foreach ($attrs as $attr) $attributes[] = $attr;
+                    }
+                }
             }
         }
-        // dump($attributes);
         return $attributes;
     }
 
     public static function getClassAttributes(
         object|string $objectOrClass,
-        string $attributeClass,
+        ?string $attributeClass = null,
         bool $searchParents = true,
     ): array
     {
@@ -400,8 +489,10 @@ class Classes extends BaseService
         }
         $attributes = $reflClass->getAttributes($attributeClass, ReflectionAttribute::IS_INSTANCEOF);
         foreach ($attributes as $key => $attr) {
-            $attributes[$key] = $attr = $attr->newInstance();
-            if($attr instanceof AppAttributeClassInterface) $attr->setClass(is_object($objectOrClass) ? $objectOrClass : $reflClass);
+            if($attr->getTarget() & Attribute::TARGET_CLASS === Attribute::TARGET_CLASS) {
+                $attributes[$key] = $attr = $attr->newInstance();
+                if($attr instanceof AppAttributeClassInterface) $attr->setClass(is_object($objectOrClass) ? $objectOrClass : $reflClass);
+            }
         }
         if(empty($attributes) && $searchParents) {
             // Try find in parent class (recursively)
@@ -411,9 +502,9 @@ class Classes extends BaseService
         return $attributes;
     }
 
-    public static function getPropertysAttributes(
+    public static function getPropertyAttributes(
         object|string $objectOrClass,
-        string $attributeClass,
+        ?string $attributeClass = null,
         bool $searchParents = true,
     ): array
     {
@@ -427,19 +518,21 @@ class Classes extends BaseService
         $attributes = [];
         foreach ($propertys as $property) {
             foreach ($property->getAttributes($attributeClass, ReflectionAttribute::IS_INSTANCEOF) as $attr) {
-                $attr = $attr->newInstance();
-                if($attr instanceof AppAttributePropertyInterface) {
-                    $attr->setClass(is_object($objectOrClass) ? $objectOrClass : $reflClass);
-                    $attr->setProperty($property);
+                if($attr->getTarget() & Attribute::TARGET_PROPERTY === Attribute::TARGET_PROPERTY) {
+                    $attr = $attr->newInstance();
+                    if($attr instanceof AppAttributePropertyInterface) {
+                        $attr->setClass(is_object($objectOrClass) ? $objectOrClass : $reflClass);
+                        $attr->setProperty($property);
+                    }
+                    $attributes[$property->name] ??= [];
+                    $attributes[$property->name][] = $attr;
                 }
-                $attributes[$property->name] ??= [];
-                $attributes[$property->name][] = $attr;
             }
         }
         if($searchParents) {
             // Try find in parent class (recursively)
             if($parent = $reflClass->getParentClass()) {
-                foreach (static::getPropertysAttributes($parent, $attributeClass, true) as $attrname => $attr) {
+                foreach (static::getPropertyAttributes($parent, $attributeClass, true) as $attrname => $attr) {
                     $attributes[$attrname] ??= $attr;
                 }
             }
@@ -447,9 +540,9 @@ class Classes extends BaseService
         return $attributes;
     }
 
-    public static function getMethodsAttributes(
+    public static function getMethodAttributes(
         object|string $objectOrClass,
-        string $attributeClass,
+        ?string $attributeClass = null,
         bool $searchParents = true,
     ): array
     {
@@ -463,19 +556,21 @@ class Classes extends BaseService
         $attributes = [];
         foreach ($methods as $method) {
             foreach ($method->getAttributes($attributeClass, ReflectionAttribute::IS_INSTANCEOF) as $attr) {
-                $attr = $attr->newInstance();
-                if($attr instanceof AppAttributeMethodInterface) {
-                    $attr->setClass(is_object($objectOrClass) ? $objectOrClass : $reflClass);
-                    $attr->setMethod($method);
+                if($attr->getTarget() & Attribute::TARGET_METHOD === Attribute::TARGET_METHOD) {
+                    $attr = $attr->newInstance();
+                    if($attr instanceof AppAttributeMethodInterface) {
+                        $attr->setClass(is_object($objectOrClass) ? $objectOrClass : $reflClass);
+                        $attr->setMethod($method);
+                    }
+                    $attributes[$method->name] ??= [];
+                    $attributes[$method->name][] = $attr;
                 }
-                $attributes[$method->name] ??= [];
-                $attributes[$method->name][] = $attr;
             }
         }
         if($searchParents) {
             // Try find in parent class (recursively)
             if($parent = $reflClass->getParentClass()) {
-                foreach (static::getMethodsAttributes($parent, $attributeClass, true) as $attrname => $attr) {
+                foreach (static::getMethodAttributes($parent, $attributeClass, true) as $attrname => $attr) {
                     $attributes[$attrname] ??= $attr;
                 }
             }
@@ -485,7 +580,7 @@ class Classes extends BaseService
 
     public static function getConstantAttributes(
         object|string $objectOrClass,
-        string $attributeClass,
+        ?string $attributeClass = null,
         bool $searchParents = true,
     ): array
     {
@@ -500,15 +595,17 @@ class Classes extends BaseService
         foreach ($constants as $name => $value) {
             $reflClassConstant = new ReflectionClassConstant($objectOrClass, $name);
             foreach ($reflClassConstant->getAttributes($attributeClass, ReflectionAttribute::IS_INSTANCEOF) as $attr) {
-                $attr = $attr->newInstance();
-                if($attr instanceof AppAttributeConstantInterface) {
-                    // $attr->setConstant($constant);
-                    $attr->setClass(is_object($objectOrClass) ? $objectOrClass : $reflClass);
-                    $attr->setConstant($reflClassConstant);
-                    // $attr->setValue($value);
+                if($attr->getTarget() & Attribute::TARGET_CLASS_CONSTANT === Attribute::TARGET_CLASS_CONSTANT) {
+                    $attr = $attr->newInstance();
+                    if($attr instanceof AppAttributeConstantInterface) {
+                        // $attr->setConstant($constant);
+                        $attr->setClass(is_object($objectOrClass) ? $objectOrClass : $reflClass);
+                        $attr->setConstant($reflClassConstant);
+                        // $attr->setValue($value);
+                    }
+                    $attributes[$reflClassConstant->name] ??= [];
+                    $attributes[$reflClassConstant->name][] = $attr;
                 }
-                $attributes[$reflClassConstant->name] ??= [];
-                $attributes[$reflClassConstant->name][] = $attr;
             }
         }
         if($searchParents) {

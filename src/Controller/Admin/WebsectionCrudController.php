@@ -8,6 +8,7 @@ use Aequation\LaboBundle\Service\Interface\LaboUserServiceInterface;
 use Aequation\LaboBundle\Service\Interface\WebsectionServiceInterface;
 use Aequation\LaboBundle\Service\Tools\Strings;
 use Aequation\LaboBundle\Form\Type\PhotoType;
+use Aequation\LaboBundle\Model\Interface\LaboUserInterface;
 
 use App\Entity\Websection;
 use App\Repository\CategoryRepository;
@@ -40,15 +41,6 @@ class WebsectionCrudController extends BaseCrudController
     public const ENTITY = Websection::class;
     public const VOTER = WebsectionVoter::class;
 
-    public function __construct(
-        WebsectionServiceInterface $manager,
-        protected LaboUserServiceInterface $userService,
-        // protected AdminUrlGenerator $adminUrlGenerator,
-        // protected WebsectionRepository $websectionRepository,
-    ) {
-        parent::__construct($manager, $userService);
-    }
-
     public function configureFilters(Filters $filters): Filters
     {
         return $filters
@@ -60,7 +52,7 @@ class WebsectionCrudController extends BaseCrudController
     {
         $this->checkGrants($pageName);
         $info = $this->getContextInfo();
-        /** @var User $user */
+        /** @var LaboUserInterface $user */
         $user = $this->getUser();
         $timezone = $this->getParameter('timezone');
         $current_tz = $timezone !== $user->getTimezone() ? $user->getTimezone() : $timezone;

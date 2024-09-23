@@ -7,6 +7,7 @@ use Aequation\LaboBundle\EventSubscriber\LaboFormsSubscriber;
 use Aequation\LaboBundle\Model\Interface\AppEntityInterface;
 use Aequation\LaboBundle\Model\Interface\EnabledInterface;
 use Aequation\LaboBundle\Security\Voter\Interface\AppVoterInterface;
+use Aequation\LaboBundle\Service\AppService;
 use Aequation\LaboBundle\Service\Interface\AppEntityManagerInterface;
 use Aequation\LaboBundle\Service\Interface\LaboUserServiceInterface;
 use Aequation\LaboBundle\Service\Tools\Classes;
@@ -44,6 +45,7 @@ use Exception;
 use ReflectionClass;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Security\Core\Authorization\Voter\VoterInterface;
+use Symfony\Contracts\Translation\TranslatorInterface;
 
 abstract class BaseCrudController extends AbstractCrudController
 {
@@ -53,16 +55,41 @@ abstract class BaseCrudController extends AbstractCrudController
     public const DEFAULT_SORT = ['id' => 'ASC'];
     public const THROW_EXCEPTION_WHEN_FORBIDDEN = true;
 
-    protected AppEntityManagerInterface $manager;
-
     public function __construct(
-        AppEntityManagerInterface $manager,
+        protected AppEntityManagerInterface $manager,
         protected LaboUserServiceInterface $userService,
+        protected TranslatorInterface $translator,
     ) {
-        $this->manager = $manager;
+        $this->manager = $manager->getEntityService(static::ENTITY);
+        if($manager->isDev()) {
+            // [DEV] check entity class service
+            $service_class = AppService::getClassServiceName(static::ENTITY);
+            if(!is_a($this->manager, (string)$service_class)) throw new Exception(vsprintf('Error %s line %d: manager %s for entity %s is not instance of %s!', [__METHOD__, __LINE__, $this->manager::class, static::ENTITY, $service_class]));
+        }
         if($this->userService instanceof LaboUserServiceInterface) {
             $this->userService->addMeToSuperAdmin();
         }
+    }
+
+    protected function translate(
+        mixed $data,
+        array $parameters = [],
+        string $domain = null,
+        string $locale = null,
+    ): mixed
+    {
+        switch (true) {
+            case is_string($data):
+                return $this->translator->trans($data, $parameters, $domain, $locale);
+                break;
+            case is_array($data):
+                return array_map(function($value) use ($parameters, $domain, $locale) { return $this->translate($value, $parameters, $domain, $locale); }, $data);
+                break;
+            default:
+                return $data;
+                break;
+        }
+        // throw new Exception(vsprintf('Erreur %s ligne %d: la traduction ne peut s\'appliquer qu\'à un texte ou un tableau de textes.'))
     }
 
     /**
@@ -363,10 +390,10 @@ abstract class BaseCrudController extends AbstractCrudController
             $info['classname']  = $info['entityDto'] instanceof EntityDto ? $info['entityDto']->getFqcn() : null;
             $info['entity']     = $info['entityDto'] instanceof EntityDto ? $info['entityDto']->getInstance() : null;
             if(empty($info['entity'])) {
-                $info['entity'] = $this->createEntity(entityFqcn: $info['classname'], checkGrant: false);
-                // $info['entity'] = $this->manager instanceof AppEntityManagerInterface
-                //     ? $this->manager->getNew()
-                //     : new $info['classname'];
+                // $info['entity'] = $this->createEntity(entityFqcn: $info['classname'], checkGrant: false);
+                $info['entity'] = $this->manager instanceof AppEntityManagerInterface
+                    ? $this->manager->getModel()
+                    : new $info['classname'];
             }
             $RC = new ReflectionClass($info['classname']);
             $info['instantiable'] = $RC->isInstantiable();

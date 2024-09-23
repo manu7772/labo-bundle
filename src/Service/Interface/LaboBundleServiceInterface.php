@@ -22,4 +22,6 @@ interface LaboBundleServiceInterface extends AppServiceInterface
     public function getSubmenu(): array;
     public function getEntitymenu(): array;
 
+    public function getAppAttributesList(array|object|string $listOfClasses = null): array;
+
 }

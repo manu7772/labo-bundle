@@ -2,8 +2,9 @@
 namespace Aequation\LaboBundle\Controller\Admin;
 
 use Aequation\LaboBundle\Security\Voter\UserVoter;
-use Aequation\LaboBundle\Controller\Admin\Base\BaseCrudController;
 use Aequation\LaboBundle\Form\Type\PortraitType;
+use Aequation\LaboBundle\Model\Final\FinalUserInterface;
+use Aequation\LaboBundle\Model\Interface\LaboUserInterface;
 use Aequation\LaboBundle\Repository\LaboCategoryRepository;
 use Aequation\LaboBundle\Service\Interface\LaboUserServiceInterface;
 use App\Entity\Entreprise;
@@ -28,40 +29,12 @@ use Symfony\Component\Translation\TranslatableMessage;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
 #[IsGranted('ROLE_COLLABORATOR')]
-class UserCrudController extends BaseCrudController
+class UserCrudController extends LaboUserCrudController
 {
 
     public const ENTITY = User::class;
     public const VOTER = UserVoter::class;
     public const DEFAULT_SORT = ['lastLogin' => 'DESC', 'createdAt' => 'DESC'];
-
-    public function __construct(
-        LaboUserServiceInterface $manager,
-        protected TranslatorInterface $translator,
-    ) {
-        parent::__construct($manager, $manager);
-    }
-
-    protected function translate(
-        mixed $data,
-        array $parameters = [],
-        string $domain = null,
-        string $locale = null,
-    ): mixed
-    {
-        switch (true) {
-            case is_string($data):
-                return $this->translator->trans($data, $parameters, $domain, $locale);
-                break;
-            case is_array($data):
-                return array_map(function($value) use ($parameters, $domain, $locale) { return $this->translate($value, $parameters, $domain, $locale); }, $data);
-                break;
-            default:
-                return $data;
-                break;
-        }
-        // throw new Exception(vsprintf('Erreur %s ligne %d: la traduction ne peut s\'appliquer qu\'à un texte ou un tableau de textes.'))
-    }
 
     public function configureFields(string $pageName): iterable
     {
@@ -118,7 +91,10 @@ class UserCrudController extends BaseCrudController
                 yield FormField::addPanel(label: 'Sécurité', icon: 'lock');
                 yield EmailField::new('email')->setColumns($this->isGranted('ROLE_ADMIN') ? 4 : 6)->setHelp('Le mail doit être unique : l\'enregistrement sera rejeté si une autre personne utilise le mail sur le même site.');
                 yield TextField::new('plainPassword', 'Mot de passe')->setRequired(true)->setColumns($this->isGranted('ROLE_ADMIN') ? 4 : 6)->setHelp('Utilisez des lettres, des signes et des chiffres, et au moins 12 caractères.');
-                yield ChoiceField::new('roles')->setChoices(function(?User $user): array { return $user->getRolesChoices($this->getUser()); })->setColumns(4)->allowMultipleChoices(true)->setHelp('Les roles déterminent les niveaux d\'accès à l\'administration du site.')->setPermission('ROLE_ADMIN');
+                yield ChoiceField::new('roles')->setChoices(function(?LaboUserInterface $user): array {
+                    /** @var LaboUserInterface $user */
+                    return $user->getRolesChoices($this->getUser());
+                })->setColumns(4)->allowMultipleChoices(true)->setHelp('Les roles déterminent les niveaux d\'accès à l\'administration du site.')->setPermission('ROLE_ADMIN');
                 yield FormField::addPanel(label: 'Autres informations', icon: 'user')->setHelp('Informations supplémentaires');
                 yield TextField::new('firstname', 'Nom')->setColumns(6);
                 yield TextField::new('lastname', 'Prénom')->setColumns(6);

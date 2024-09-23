@@ -1,0 +1,26 @@
+{% extends "@AequationLabo/base_labo.html.twig" %}
+
+{% block title %}Labo Classes{% endblock %}
+
+{% block title_h1 -%}{{ ux_icon('symfony', {height: '48px', width: '48px', class: 'text-success'}) }} LABO Classes{%- endblock %}
+
+{% block right_content %}
+<table>
+    <thead>
+        <tr>
+            <th>Classname<span class="pico-color-slate-500"> / Shortname</span> <small>Results : {{ classes|length }}</small></th>
+            <th>details</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for class in classes %}
+        <tr>
+            <td>{{ class }}<br><span class="pico-color-slate-500">{{ class|shortname  }}</span></td>
+            <td>
+                <a href="{{ path('aequation_labo_class_show', {classname: class}) }}">{{ icon('tabler:eye', {size: 32}) }} détails</a>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

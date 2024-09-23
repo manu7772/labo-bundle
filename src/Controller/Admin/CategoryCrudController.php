@@ -3,6 +3,7 @@ namespace Aequation\LaboBundle\Controller\Admin;
 
 use Aequation\LaboBundle\Controller\Admin\Base\BaseCrudController;
 use Aequation\LaboBundle\Service\Interface\LaboCategoryServiceInterface;
+use Aequation\LaboBundle\Model\Interface\LaboUserInterface;
 
 use EasyCorp\Bundle\EasyAdminBundle\Config\Crud;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Filters;
@@ -40,8 +41,8 @@ abstract class CategoryCrudController extends BaseCrudController
         /** @var BaseCrudController $this */
         $this->checkGrants($pageName);
         $info = $this->getContextInfo();
-        /** @var User $user */
-        $user = $info['entity'];
+        /** @var LaboUserInterface $user */
+        $user = $this->getUser();
         $timezone = $this->getParameter('timezone');
         $current_tz = $timezone !== $user->getTimezone() ? $user->getTimezone() : $timezone;
         // $info = $this->getContextInfo();
@@ -74,7 +75,6 @@ abstract class CategoryCrudController extends BaseCrudController
                     ->setColumns(6);
                 break;
             case Crud::PAGE_EDIT:
-                // dump($this->getContext()->getEntity()->getInstance());
                 yield TextField::new('name', 'Nom')
                     ->setColumns(6)
                     ->setHelp('Nom de la catégorie'.($this->isGranted('ROLE_SUPER_ADMIN') ? '' : ' <i>(non modifiable)</i>'))

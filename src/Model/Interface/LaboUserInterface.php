@@ -12,6 +12,7 @@ interface LaboUserInterface extends UserInterface, PasswordAuthenticatedUserInte
 
     public function setRoleHierarchy(AppRoleHierarchyInterface $roleHierarchy): void;
     public function getHigherRole(): string;
+    public function getRolesChoices(UserInterface $user = null): array;
     public function isVerified(): ?bool;
     public function isDisabled(): bool;
     public function isExpired(): bool;

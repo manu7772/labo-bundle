@@ -7,6 +7,7 @@ use Aequation\LaboBundle\Form\Type\JelasticType;
 use Aequation\LaboBundle\Service\Interface\AppEntityManagerInterface;
 use Aequation\LaboBundle\Service\Interface\FormServiceInterface;
 use Aequation\LaboBundle\Service\Interface\LaboBundleServiceInterface;
+use Aequation\LaboBundle\Service\Tools\Classes;
 use Aequation\LaboBundle\Service\Tools\Files;
 
 use Symfony\Bundle\SecurityBundle\Security;
@@ -19,10 +20,11 @@ use Symfony\Component\HttpKernel\KernelInterface;
 use Symfony\Component\Security\Core\Authorization\AccessDecisionManagerInterface;
 use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
 use Symfony\Contracts\Cache\ItemInterface;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 use Twig\Environment;
 
+use Attribute;
 use Exception;
-use Symfony\Component\DependencyInjection\ContainerInterface;
 
 #[AsAlias(LaboBundleServiceInterface::class, public: true)]
 #[Autoconfigure(autowire: true, lazy: true)]
@@ -203,6 +205,10 @@ class LaboBundleService extends AppService implements LaboBundleServiceInterface
                 'route' => 'aequation_labo_entity_list',
                 'access' => 'ROLE_ADMIN',
             ],
+            'Classes' => [
+                'route' => 'aequation_labo_class_list',
+                'access' => 'ROLE_ADMIN',
+            ],
             'Siteparams' => [
                 'route' => 'aequation_labo_siteparams',
                 'access' => 'ROLE_ADMIN',
@@ -246,6 +252,29 @@ class LaboBundleService extends AppService implements LaboBundleServiceInterface
             }
         }
         return $menu;
+    }
+
+
+    /************************************************************************************************************/
+    /** CLASSES DESCRIPTION                                                                                     */
+    /************************************************************************************************************/
+
+    public function getDeclaredClasses(
+        array|object|string $listOfClasses = null
+    ): array
+    {
+        Classes::filterDeclaredClasses(listOfClasses: $listOfClasses, sort: true);
+        return $listOfClasses;
+    }
+
+    public function getAppAttributesList(
+        array|object|string $listOfClasses = null
+    ): array
+    {
+        if(empty($listOfClasses)) $listOfClasses = Classes::REGEX_APP_CLASS;
+        // Classes::filterDeclaredClasses($listOfClasses);
+        // dd($listOfClasses);
+        return Classes::getAttributes(listOfClasses: $listOfClasses);
     }
 
 

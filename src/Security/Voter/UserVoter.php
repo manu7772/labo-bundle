@@ -35,7 +35,7 @@ class UserVoter extends BaseVoter
         if(!$vote) return false;
         /** @var LaboUserInterface */
         $user = $token->getUser();
-        /** @var FinalEntrepriseInterface */
+        /** @var FinalUserInterface */
         $object = $this->getSubjectAsObject($subject, $this->manager);
         if($this->isVoterNeeded($user)) {
             switch ($this->getFirewallOfAction($attribute)) {
@@ -52,7 +52,7 @@ class UserVoter extends BaseVoter
                             break;
                         case static::ACTION_READ:
                         case static::MAIN_ACTION_READ:
-                            $vote = $user === $object || ($user instanceof FinalUserInterface && $user->hasEntreprise($object));
+                            $vote = $user === $object || ($user instanceof FinalEntrepriseInterface && $user->hasMember($object));
                             break;
                         case static::ACTION_DUPLICATE:
                         case static::MAIN_ACTION_DUPLICATE:
@@ -86,7 +86,7 @@ class UserVoter extends BaseVoter
                             break;
                         case static::ACTION_READ:
                         case static::ADMIN_ACTION_READ:
-                            $vote = $this->isGranted('ROLE_COLLABORATOR');
+                            $vote = $user === $object || $this->isGranted('ROLE_COLLABORATOR');
                             break;
                         case static::ACTION_DUPLICATE:
                         case static::ADMIN_ACTION_DUPLICATE:
@@ -94,11 +94,11 @@ class UserVoter extends BaseVoter
                             break;
                         case static::ACTION_UPDATE:
                         case static::ADMIN_ACTION_UPDATE:
-                            $vote = $this->isGranted($object) && $this->isGranted('ROLE_EDITOR') && !($user instanceof FinalEntrepriseInterface);
+                            $vote = $user === $object || ($this->isGranted($object) && $this->isGranted('ROLE_EDITOR')) && !($user instanceof FinalEntrepriseInterface);
                             break;
                         case static::ACTION_SENDMAIL:
                         case static::ADMIN_ACTION_SENDMAIL:
-                            $vote = $this->isGranted($object) || $this->isGranted('ROLE_COLLABORATOR');
+                            $vote = $user === $object || ($this->isGranted($object) && $this->isGranted('ROLE_COLLABORATOR'));
                             break;
                         case static::ACTION_DELETE:
                         case static::ADMIN_ACTION_DELETE:

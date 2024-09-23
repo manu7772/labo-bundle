@@ -1,6 +1,7 @@
 <?php
 namespace Aequation\LaboBundle\Component;
 
+use Aequation\LaboBundle\Component\Interface\ClassmetadataReportInterface;
 use Aequation\LaboBundle\Model\Attribute\ClassCustomService;
 use Aequation\LaboBundle\Model\Interface\AppEntityInterface;
 use Aequation\LaboBundle\Service\Interface\AppEntityManagerInterface;
@@ -12,17 +13,18 @@ use Doctrine\ORM\Mapping\HasLifecycleCallbacks;
 use Twig\Markup;
 
 use Exception;
-use JsonSerializable;
 use ReflectionClass;
-use Serializable;
 
-class ClassmetadataReport implements JsonSerializable, Serializable
+class ClassmetadataReport implements ClassmetadataReportInterface
 {
 
     public readonly string $classname;
     protected ?AppEntityInterface $entity = null;
+    public readonly ?AppEntityInterface $model;
     public readonly ClassMetadata $classMetadata;
-    public readonly ?AppEntityManagerInterface $manager;
+    public readonly AppEntityManagerInterface $manager;
+    public readonly string $managerID;
+    public readonly array $phpChilds;
     protected bool $computed = false;
     protected array $uniqueFields;
     protected array $errors;
@@ -40,10 +42,10 @@ class ClassmetadataReport implements JsonSerializable, Serializable
 
     /** SERIALIZABLE / JSON */
 
-    public function jsonSerialize(): mixed
-    {
-        return $this->toArray();
-    }
+    // public function jsonSerialize(): mixed
+    // {
+    //     return $this->toArray();
+    // }
 
     public function serialize(): ?string
     {
@@ -72,13 +74,9 @@ class ClassmetadataReport implements JsonSerializable, Serializable
     {
         $data = [
             'classname' => $this->classname,
-            'appEntityManager' => '@'.get_class($this->appEntityManager),
+            'managerID' => $this->managerID,
+            'phpChilds' => $this->phpChilds,
         ];
-        // $rc = new ReflectionClass(static::class);
-        // foreach ($rc->getProperties() as $prop) {
-        //     $name = $prop->name;
-        //     $data[$name] = $this->$name;
-        // }
         return $data;
     }
 
@@ -88,10 +86,11 @@ class ClassmetadataReport implements JsonSerializable, Serializable
     public function isValid(): bool
     {
         return isset($this->classname)
-            && isset($this->classMetadata)
+            && $this->appEntityManager->entityExists($this->classname, false, false)
             && isset($this->manager)
-            && $this->appEntityManager->entityExists($this->classname)
-            ;
+            && isset($this->managerID)
+            && is_a($this->manager, $this->managerID)
+            && isset($this->classMetadata);
     }
 
     public function setEntity(
@@ -99,7 +98,8 @@ class ClassmetadataReport implements JsonSerializable, Serializable
     ): static
     {
         if(!isset($this->classname)) {
-            throw new Exception(vsprintf('Error %s line %d: classname is not defined!', [__METHOD__, __LINE__]));
+            $this->setClassname($entity->getClassname());
+            // throw new Exception(vsprintf('Error %s line %d: classname is not defined!', [__METHOD__, __LINE__]));
         }
         if($entity->getClassname() !== $this->classname) {
             throw new Exception(vsprintf('Error %s line %d: this entity classname "%s" is invalid, it should be a "%s"!', [__METHOD__, __LINE__, $entity->getClassname(), $this->classname]));
@@ -113,14 +113,21 @@ class ClassmetadataReport implements JsonSerializable, Serializable
         return $this->entity;
     }
 
+    public function getModel(): ?AppEntityInterface
+    {
+        return $this->model;
+    }
+
     public function setClassname(
         string $classname
     ): bool
     {
-        if($this->appEntityManager->entityExists($classname)) {
+        if($this->appEntityManager->entityExists($classname, false, false)) {
             $this->classname = $classname;
             $this->classMetadata = $this->appEntityManager->getClassMetadata($this->classname);
             $this->manager = $this->appEntityManager->getEntityService($this->classMetadata->name) ?? $this->appEntityManager;
+            $this->managerID = $this->appEntityManager::getEntityServiceID($this->classname);
+            $this->model = $this->isInstantiable() ? $this->manager->getModel() : null;
         }
         return $this->isValid();
     }
@@ -130,6 +137,8 @@ class ClassmetadataReport implements JsonSerializable, Serializable
         if($this->isValid()) {
             return [
                 'classname' => $this->classname,
+                'managerID' => $this->managerID,
+                'phpChilds' => $this->phpChilds,
                 'parent_classes' => $this->getParentClasses(),
             ];
         }
@@ -138,7 +147,8 @@ class ClassmetadataReport implements JsonSerializable, Serializable
 
     public function __isset($name)
     {
-        return property_exists($this->classMetadata, $name);
+        return method_exists($this, Classes::toGetter($name))
+            || property_exists($this->classMetadata, $name);
     }
 
     public function __get($name)
@@ -159,9 +169,9 @@ class ClassmetadataReport implements JsonSerializable, Serializable
         return $this->manager;
     }
 
-    public function getManangerID(): ?string
+    public function getManagerID(): ?string
     {
-        return $this->manager;
+        return $this->managerID;
     }
 
     public function getShortname(): string
@@ -174,9 +184,49 @@ class ClassmetadataReport implements JsonSerializable, Serializable
         return strtolower($this->reflClass->getShortname());
     }
 
+    public function getInterfaces(): array
+    {
+        return $this->classMetadata->reflClass->getInterfaces();
+    }
+
+    public function getConstants(): array
+    {
+        return $this->classMetadata->reflClass->getConstants();
+    }
+
+    public function getTraits(): array
+    {
+        return $this->classMetadata->reflClass->getTraits();
+    }
+
+    public function getAllTraits(
+        bool $flatten = false
+    ): array
+    {
+        if($flatten) {
+            $traits = $this->getTraits();
+            foreach ($this->getPhpParents() as $parent) {
+                foreach ($parent->getTraits() as $trait) {
+                    $traits[$trait->name] = $trait;
+                }
+            }
+        } else {
+            $traits = [
+                $this->name => $this->getTraits(),
+            ];
+            foreach ($this->getPhpParents() as $parent) {
+                $traits[$parent->name] = [];
+                foreach ($parent->getTraits() as $trait) {
+                    $traits[$parent->name][$trait->name] = $trait;
+                }
+            }
+        }
+        return $traits;
+    }
+
     public function getBreadcrumbName(
         string $link = ' \\ ',
-        bool $asHtml = true,
+        bool $asHtml = true
     ): Markup
     {
         $name = [];
@@ -193,7 +243,7 @@ class ClassmetadataReport implements JsonSerializable, Serializable
         bool $onlyInstantiables = false
     ): array
     {
-        return Classes::getInheritedClasses($this->classMetadata->name, false, array_values($this->appEntityManager->getEntityNames(false)), $onlyInstantiables);
+        return $this->phpChilds ??= Classes::getInheritedClasses($this->classMetadata->name, false, array_values($this->appEntityManager->getEntityNames(false)), $onlyInstantiables);
     }
 
     public function getParentReport(): ?ClassmetadataReport
@@ -263,7 +313,7 @@ class ClassmetadataReport implements JsonSerializable, Serializable
     }
 
     public function getUniqueFields(
-        bool $flatlisted = false,
+        bool $flatlisted = false
     ): array
     {
         $this->uniqueFields ??= $this->manager::getUniqueFields($this->classMetadata->name, null);
@@ -295,25 +345,6 @@ class ClassmetadataReport implements JsonSerializable, Serializable
         });
     }
 
-    // public static function getHierarchizedReports(
-    //     array $reports,
-    //     ?array $hierarchs = null
-    // ): array
-    // {
-    //     // static::sortReports($reports);
-    //     $hierarchs ??= [];
-    //     foreach ($reports as $key => $report) {
-    //         if($report->isPhpRoot()) {
-    //             $hierarchs[$report->reflClass->name] = [
-    //                 'report' => $report,
-    //                 'children' => [],
-    //             ];
-    //             unset($reports[$key]);
-    //         }
-    //     }
-    //     return $hierarchs;
-    // }
-
     public function computeReport(): static
     {
         if(!$this->computed) {
@@ -329,7 +360,7 @@ class ClassmetadataReport implements JsonSerializable, Serializable
             foreach ($this->getPhpParents() as $class) {
                 foreach ($class->getMethods() as $refmethod) {
                     foreach ($refmethod->getAttributes() as $refattr) {
-                        if(preg_match('/^Doctrine\\\\ORM\\\\Mapping/', $refattr->getName())) {
+                        if(preg_match(static::REGEX_ORM_MAPPING, $refattr->getName())) {
                             $methodAttrs[$refmethod->getName()] = vsprintf('%s => %s', [$refmethod->getName(), $refattr->getName()]);
                         }
                     }
@@ -366,20 +397,20 @@ class ClassmetadataReport implements JsonSerializable, Serializable
         return Classes::getClassAttributes($this->classMetadata->reflClass, $attributeClass, $searchParents);
     }
 
-    public function getPropertysAttributes(
+    public function getPropertyAttributes(
         string $attributeClass,
         bool $searchParents = true,
     ): array
     {
-        return Classes::getPropertysAttributes($this->classMetadata->reflClass, $attributeClass, $searchParents);
+        return Classes::getPropertyAttributes($this->classMetadata->reflClass, $attributeClass, $searchParents);
     }
 
-    public function getMethodsAttributes(
+    public function getMethodAttributes(
         string $attributeClass,
         bool $searchParents = true,
     ): array
     {
-        return Classes::getMethodsAttributes($this->classMetadata->reflClass, $attributeClass, $searchParents);
+        return Classes::getMethodAttributes($this->classMetadata->reflClass, $attributeClass, $searchParents);
     }
 
     public function getConstantAttributes(

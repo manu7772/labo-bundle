@@ -28,7 +28,7 @@ use App\Entity\Slider;
 use App\Entity\Webpage;
 use App\Entity\Websection;
 use App\Entity\User;
-
+use EasyCorp\Bundle\EasyAdminBundle\Config\Crud;
 use Symfony\Component\Security\Core\User\UserInterface;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Dashboard;
 use EasyCorp\Bundle\EasyAdminBundle\Config\MenuItem;
@@ -55,6 +55,7 @@ class DashboardController extends AbstractDashboardController
     public function __construct(
         private TranslatorInterface $translator,
         private LaboUserRepository $userRepository,
+        private AdminUrlGenerator $adminUrlGenerator,
     )
     {
         // 
@@ -66,8 +67,8 @@ class DashboardController extends AbstractDashboardController
         // dump($this->isGranted(WebpageVoter::ADMIN_ACTION_LIST, Webpage::class));
         // Admin granted page
         if(!static::ADMIN_HOMEPAGE && $this->isGranted(WebpageVoter::ADMIN_ACTION_LIST, Webpage::class)) {
-            $adminUrlGenerator = $this->container->get(AdminUrlGenerator::class);
-            return $this->redirect($adminUrlGenerator->setController(WebpageCrudController::class)->generateUrl());
+            // $adminUrlGenerator = $this->container->get(AdminUrlGenerator::class);
+            return $this->redirect($this->adminUrlGenerator->setController(WebpageCrudController::class)->generateUrl());
         }
         // Admin default homepage
         /** @see https://symfony.com/bundles/EasyAdminBundle/current/dashboards.html#customizing-the-dashboard-contents */
@@ -166,6 +167,12 @@ class DashboardController extends AbstractDashboardController
     public function configureUserMenu(UserInterface $user): UserMenu
     {
         /** @var LaboUserInterface $user */
+        $profil_url = $this->adminUrlGenerator
+            ->setController(UserCrudController::class)
+            ->setEntityId($user->getId())
+            ->setAction(Crud::PAGE_DETAIL)
+            ->generateUrl();
+        /** @var LaboUserInterface $user */
         // Usually it's better to call the parent method because that gives you a
         // user menu with some menu items already created ("sign out", "exit impersonation", etc.)
         // if you prefer to create the user menu from scratch, use: return UserMenu::new()->...
@@ -186,6 +193,7 @@ class DashboardController extends AbstractDashboardController
             // you can use any type of menu item, except submenus
             ->addMenuItems([
                 MenuItem::linkToRoute('Retour au site', 'fa fa-home', 'app_home'),
+                MenuItem::linkToUrl('Mon profil', 'fa-'.User::FA_ICON, $profil_url),
                 // MenuItem::linkToRoute('Settings', 'fa fa-user-cog', '...', ['...' => '...']),
                 // MenuItem::section(),
                 // MenuItem::linkToLogout('Logout', 'fa fa-sign-out'),

@@ -24,15 +24,6 @@ class CrudvoterCrudController extends BaseCrudController
 {
     public const ENTITY = Crudvoter::class;
     public const VOTER = CrudvoterVoter::class;
-
-    // protected ?CrudvoterService $manager = null;
-
-    public function __construct(
-        CrudvoterServiceInterface $manager,
-        protected LaboUserServiceInterface $userService,
-    ) {
-        parent::__construct($manager, $userService);
-    }
     
     public function configureFilters(Filters $filters): Filters
     {

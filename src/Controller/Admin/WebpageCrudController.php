@@ -9,11 +9,11 @@ use Aequation\LaboBundle\Service\Interface\LaboUserServiceInterface;
 use Aequation\LaboBundle\Service\Interface\WebpageServiceInterface;
 use Aequation\LaboBundle\Service\Tools\Classes;
 use Aequation\LaboBundle\Service\Tools\Strings;
-use App\Entity\Category;
+use Aequation\LaboBundle\Field\ThumbnailField;
+Use Aequation\LaboBundle\Model\Interface\LaboUserInterface;
+
 use App\Entity\Webpage;
 use App\Repository\CategoryRepository;
-use App\Repository\WebpageRepository;
-use Aequation\LaboBundle\Field\ThumbnailField;
 
 use EasyCorp\Bundle\EasyAdminBundle\Config\Crud;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Filters;
@@ -43,15 +43,6 @@ class WebpageCrudController extends BaseCrudController
     public const ENTITY = Webpage::class;
     public const VOTER = WebpageVoter::class;
 
-    public function __construct(
-        WebpageServiceInterface $manager,
-        protected LaboUserServiceInterface $userService,
-        // protected AdminUrlGenerator $adminUrlGenerator,
-        // protected WebpageRepository $webpageRepository,
-    ) {
-        parent::__construct($manager, $userService);
-    }
-
     public function configureFilters(Filters $filters): Filters
     {
         return $filters
@@ -63,7 +54,7 @@ class WebpageCrudController extends BaseCrudController
     {
         $this->checkGrants($pageName);
         // $info = $this->getContextInfo();
-        /** @var User $user */
+        /** @var LaboUserInterface $user */
         $user = $this->getUser();
         $timezone = $this->getParameter('timezone');
         $current_tz = $timezone !== $user->getTimezone() ? $user->getTimezone() : $timezone;
