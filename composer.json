@@ -85,7 +85,7 @@
     "conflict": {
         "symfony/flex": "<1.13"
     },
-    "minimum-stability": "dev",
+    "minimum-stability": "stable",
     "config": {
         "allow-plugins": {
             "symfony/flex": false,
