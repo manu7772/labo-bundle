@@ -153,6 +153,7 @@ class LaboAppGlobalSubscriber implements EventSubscriberInterface
                 // TEST/DEMO WEBSITES RESTRICTED AREA
                 // **********************************
                 $validHosts = [
+                    '127.0.0.1',
                     'localhost',
                     $website_host,
                     'www.'.$website_host,
@@ -177,6 +178,7 @@ class LaboAppGlobalSubscriber implements EventSubscriberInterface
                 // COUNTDOWN/LAUNCH WEBSITES
                 // **********************************
                 $validHosts = [
+                    // '127.0.0.1',
                     // 'localhost',
                     $website_host,
                     'www.'.$website_host,

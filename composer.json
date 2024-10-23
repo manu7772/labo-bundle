@@ -2,7 +2,7 @@
     "name": "aequation/labo",
     "type": "symfony-bundle",
     "description": "This bundle is my standard starter for all my Symfony projects.",
-    "keywords": [ "symfony" ],
+    "keywords": [ "symfony","symfony-bundle" ],
     "homepage": "https://www.aequation.fr",
     "license": "MIT",
     "authors": [
