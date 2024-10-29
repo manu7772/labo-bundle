@@ -87,8 +87,8 @@ class LaboFormsSubscriber implements EventSubscriberInterface
         if($entity instanceof AppEntityInterface) {
             if(!$entity->__isAppManaged()) $this->appEntityManager->setManagerToEntity($entity);
             if($entity instanceof HasOrderedInterface) {
-                $attributes = Classes::getPropertysAttributes($entity, RelationOrder::class);
-                if(empty($attributes)) throw new Exception(vsprintf('Error %s line %d: no field found for %s in entity %s!', [__METHOD__, __LINE__, RelationOrder::class, $entity->getClassname()]));
+                $attributes = Classes::getPropertyAttributes($entity, RelationOrder::class);
+                if($this->appEntityManager->isDev() && empty($attributes)) throw new Exception(vsprintf('Error %s line %d: no field found for %s in entity %s!', [__METHOD__, __LINE__, RelationOrder::class, $entity->getClassname()]));
                 $form_fields = $form->all();
                 foreach ($attributes as $attr) {
                     $attr = reset($attr);

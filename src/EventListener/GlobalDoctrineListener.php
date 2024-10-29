@@ -69,7 +69,7 @@ class GlobalDoctrineListener
     {
         /** @var AppEntityInterface */
         $entity = $event->getObject();
-        dd($entity);
+        // dd($entity);
         // Specificity entity
         if($entity instanceof OwnerInterface) {
             $this->manager->defineEntityOwner($entity, false);

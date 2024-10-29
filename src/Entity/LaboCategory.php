@@ -44,6 +44,7 @@ abstract class LaboCategory extends MappSuperClassEntity implements LaboCategory
 
     #[ORM\Column(updatable: false, nullable: false)]
     protected ?string $type;
+    protected ?array $categoryTypeChoices;
 
     #[ORM\Column(length: 64, nullable: true)]
     protected ?string $description = null;
@@ -73,7 +74,23 @@ abstract class LaboCategory extends MappSuperClassEntity implements LaboCategory
 
     public function getTypeChoices(): array
     {
-        return $this->_service->getCategoryTypeChoices(true);
+        return $this->categoryTypeChoices ??= $this->_service->getCategoryTypeChoices(true);
+    }
+
+    /**
+     * Get list of available types
+     * 
+     * Returns array of classname => shortname
+     * 
+     * @return array
+     */
+    public function getAvailableTypes(): array
+    {
+        $types = [];
+        foreach ($this->getTypeChoices() as $classname => $values) {
+            $types[$classname] = Classes::getShortname($values);
+        }
+        return $types;
     }
 
     public function getType(): string
@@ -104,6 +121,13 @@ abstract class LaboCategory extends MappSuperClassEntity implements LaboCategory
 
     public function setType(string $type): static
     {
+        $availables = $this->getAvailableTypes();
+        if(!array_key_exists($type, $availables)) {
+            $memtype = $type;
+            if(false === ($type = array_search($type, $availables))) {
+                throw new Exception(vsprintf('Error %s line %d: type "%s" not found!', [__METHOD__, __LINE__, $memtype]));
+            }
+        }
         $this->type = $type;
         return $this;
     }

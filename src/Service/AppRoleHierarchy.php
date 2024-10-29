@@ -9,7 +9,7 @@ use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\Security\Core\Role\RoleHierarchy;
 use Symfony\Component\Security\Core\User\UserInterface;
 
-#[AsAlias(AppRoleHierarchyInterface::class)]
+#[AsAlias(AppRoleHierarchyInterface::class, public: true)]
 class AppRoleHierarchy extends RoleHierarchy implements AppRoleHierarchyInterface
 {
 

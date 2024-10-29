@@ -12,6 +12,7 @@ use Aequation\LaboBundle\Model\Interface\SlugInterface;
 use Aequation\LaboBundle\Model\Interface\LaboUserInterface;
 use Aequation\LaboBundle\Model\Interface\WebpageInterface;
 use Aequation\LaboBundle\Service\Base\BaseService;
+use Aequation\LaboBundle\Service\Interface\AppRoleHierarchyInterface;
 use Aequation\LaboBundle\Service\Interface\AppServiceInterface;
 use Aequation\LaboBundle\Service\Interface\CacheServiceInterface;
 use Aequation\LaboBundle\Service\Interface\ServiceInterface;
@@ -342,6 +343,7 @@ class AppService extends BaseService implements AppServiceInterface
     ): bool
     {
         if($attributes instanceof LaboUserInterface) {
+            $attributes->setRoleHierarchy($this->get(AppRoleHierarchyInterface::class));
             $attributes = $attributes->getHigherRole();
         }
         return $this->security->isGranted($attributes, $subject);

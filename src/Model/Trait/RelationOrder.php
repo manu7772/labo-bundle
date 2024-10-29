@@ -33,7 +33,7 @@ trait RelationOrder
     #[AppEvent(groups: AppEvent::beforePreUpdate)]
     public function updateRelationOrder(): bool
     {
-        $attributes = Classes::getPropertysAttributes($this, AttributeRelationOrder::class, true);
+        $attributes = Classes::getPropertyAttributes($this, AttributeRelationOrder::class, true);
         if(empty($attributes)) throw new Exception(vsprintf('Error %s line %d: no field found for %s in entity %s!', [__METHOD__, __LINE__, AttributeRelationOrder::class, $this->getClassname()]));
         $old = $this->getRelationOrder();
         ksort($old);

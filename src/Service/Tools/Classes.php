@@ -489,10 +489,10 @@ class Classes extends BaseService
         }
         $attributes = $reflClass->getAttributes($attributeClass, ReflectionAttribute::IS_INSTANCEOF);
         foreach ($attributes as $key => $attr) {
-            if($attr->getTarget() & Attribute::TARGET_CLASS === Attribute::TARGET_CLASS) {
+            // if($attr->getTarget() & Attribute::TARGET_CLASS === Attribute::TARGET_CLASS) {
                 $attributes[$key] = $attr = $attr->newInstance();
                 if($attr instanceof AppAttributeClassInterface) $attr->setClass(is_object($objectOrClass) ? $objectOrClass : $reflClass);
-            }
+            // }
         }
         if(empty($attributes) && $searchParents) {
             // Try find in parent class (recursively)
@@ -514,11 +514,10 @@ class Classes extends BaseService
         } else {
             $reflClass = new ReflectionClass($objectOrClass);
         }
-        $propertys = $reflClass->getProperties();
         $attributes = [];
-        foreach ($propertys as $property) {
+        foreach ($reflClass->getProperties() as $property) {
             foreach ($property->getAttributes($attributeClass, ReflectionAttribute::IS_INSTANCEOF) as $attr) {
-                if($attr->getTarget() & Attribute::TARGET_PROPERTY === Attribute::TARGET_PROPERTY) {
+                if(($attr->getTarget() & Attribute::TARGET_PROPERTY) === Attribute::TARGET_PROPERTY) {
                     $attr = $attr->newInstance();
                     if($attr instanceof AppAttributePropertyInterface) {
                         $attr->setClass(is_object($objectOrClass) ? $objectOrClass : $reflClass);
@@ -556,7 +555,7 @@ class Classes extends BaseService
         $attributes = [];
         foreach ($methods as $method) {
             foreach ($method->getAttributes($attributeClass, ReflectionAttribute::IS_INSTANCEOF) as $attr) {
-                if($attr->getTarget() & Attribute::TARGET_METHOD === Attribute::TARGET_METHOD) {
+                // if($attr->getTarget() & Attribute::TARGET_METHOD === Attribute::TARGET_METHOD) {
                     $attr = $attr->newInstance();
                     if($attr instanceof AppAttributeMethodInterface) {
                         $attr->setClass(is_object($objectOrClass) ? $objectOrClass : $reflClass);
@@ -564,7 +563,7 @@ class Classes extends BaseService
                     }
                     $attributes[$method->name] ??= [];
                     $attributes[$method->name][] = $attr;
-                }
+                // }
             }
         }
         if($searchParents) {
@@ -595,7 +594,7 @@ class Classes extends BaseService
         foreach ($constants as $name => $value) {
             $reflClassConstant = new ReflectionClassConstant($objectOrClass, $name);
             foreach ($reflClassConstant->getAttributes($attributeClass, ReflectionAttribute::IS_INSTANCEOF) as $attr) {
-                if($attr->getTarget() & Attribute::TARGET_CLASS_CONSTANT === Attribute::TARGET_CLASS_CONSTANT) {
+                // if($attr->getTarget() & Attribute::TARGET_CLASS_CONSTANT === Attribute::TARGET_CLASS_CONSTANT) {
                     $attr = $attr->newInstance();
                     if($attr instanceof AppAttributeConstantInterface) {
                         // $attr->setConstant($constant);
@@ -605,7 +604,7 @@ class Classes extends BaseService
                     }
                     $attributes[$reflClassConstant->name] ??= [];
                     $attributes[$reflClassConstant->name][] = $attr;
-                }
+                // }
             }
         }
         if($searchParents) {

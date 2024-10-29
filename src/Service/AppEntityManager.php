@@ -213,6 +213,14 @@ class AppEntityManager extends BaseService implements AppEntityManagerInterface
         return $icon.'<strong>'.Classes::getShortname($classOrEntity, true).'</strong>'.($classname ? '&nbsp;<small><i class="text-muted">'.$classOrEntity.'</i></small>' : '');
     }
 
+    /**
+     * Get all relations of Entity as list of classnames => [(object) XxxMapping, string type]
+     * 
+     * @param string|AppEntityInterface $objectOrClass
+     * @param string|array|null|null $relationTypes
+     * @param boolean $excludeSelf
+     * @return array
+     */
     public function getRelateds(
         string|AppEntityInterface $objectOrClass,
         string|array|null $relationTypes = null,

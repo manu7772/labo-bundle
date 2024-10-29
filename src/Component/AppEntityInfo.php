@@ -88,7 +88,7 @@ class AppEntityInfo implements AppEntityInfoInterface
 
     public function getPropertysAttributes(string $attribute): array
     {
-        return Classes::getPropertysAttributes($this->entity, $attribute);
+        return Classes::getPropertyAttributes($this->entity, $attribute);
     }
 
     public function getManager(): AppEntityManagerInterface
