@@ -569,10 +569,9 @@ class AppEntityManager extends BaseService implements AppEntityManagerInterface
     ): AppEntityInterface|false
     {
         $classname ??= static::ENTITY;
-        if(!$this->entityExists($classname, false, true)) {
+        if(!class_exists($classname) || !$this->entityExists($classname, false, true)) {
             throw new Exception(vsprintf("Error %s line %d: %s entity does not exist or is not instantiable", [__METHOD__, __LINE__, $classname]));
         }
-        // if(!class_exists($classname)) return false;
         /** @var AppEntityInterface $new */
         $new = new $classname();
         if(!($new instanceof AppEntityInterface)) return false;

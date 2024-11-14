@@ -11,6 +11,7 @@ use Aequation\LaboBundle\Service\Tools\Classes;
 
 use App\Entity\Menu;
 use App\Repository\CategoryRepository;
+use App\Repository\WebpageRepository;
 use App\Repository\MenuRepository;
 
 use EasyCorp\Bundle\EasyAdminBundle\Config\Action;
@@ -82,13 +83,18 @@ class MenuCrudController extends BaseCrudController
                     ->autocomplete()
                     ->setFormTypeOptions(['by_reference' => false])
                     ->setColumns(6);
+                yield AssociationField::new('webpage', 'Page web')
+                    ->setSortProperty('name')
+                    ->autocomplete()
+                    ->setFormTypeOptions(['by_reference' => false])
+                    ->setColumns(6);
                 yield AssociationField::new('categorys', 'Catégories')
                     ->setQueryBuilder(static fn (QueryBuilder $qb): QueryBuilder => CategoryRepository::QB_CategoryChoices($qb, Menu::class))
                     ->autocomplete()
                     ->setSortProperty('name')
                     ->setFormTypeOptions(['by_reference' => false])
                     ->setColumns(6);
-                yield AssociationField::new('owner', 'Propriétaire')->autocomplete()->setColumns(6)->setPermission('ROLE_ADMIN');
+                yield AssociationField::new('owner', 'Propriétaire')->autocomplete()->setColumns(6)->setPermission('ROLE_ADMIN')->setCrudController(UserCrudController::class);
                 yield BooleanField::new('enabled', 'Activé');
                 yield BooleanField::new('softdeleted', 'Supprimé')->setPermission('ROLE_SUPER_ADMIN');
                 break;
@@ -102,13 +108,18 @@ class MenuCrudController extends BaseCrudController
                     ->autocomplete()
                     ->setFormTypeOption('by_reference', false)
                     ->setColumns(6);
+                yield AssociationField::new('webpage', 'Page web')
+                    ->setSortProperty('name')
+                    ->autocomplete()
+                    ->setFormTypeOptions(['by_reference' => false])
+                    ->setColumns(6);
                 yield AssociationField::new('categorys', 'Catégories')
                     ->setQueryBuilder(static fn (QueryBuilder $qb): QueryBuilder => CategoryRepository::QB_CategoryChoices($qb, Menu::class))
                     ->setSortProperty('name')
                     ->autocomplete()
                     ->setFormTypeOptions(['by_reference' => false])
                     ->setColumns(6);
-                yield AssociationField::new('owner', 'Propriétaire')->autocomplete()->setColumns(6)->setPermission('ROLE_ADMIN');
+                yield AssociationField::new('owner', 'Propriétaire')->autocomplete()->setColumns(6)->setPermission('ROLE_ADMIN')->setCrudController(UserCrudController::class);
                 yield BooleanField::new('prefered', 'Menu principal');
                 yield BooleanField::new('enabled', 'Activé');
                 yield BooleanField::new('softdeleted', 'Supprimé')->setPermission('ROLE_SUPER_ADMIN');
@@ -116,6 +127,7 @@ class MenuCrudController extends BaseCrudController
             default:
                 yield IdField::new('id')->setPermission('ROLE_SUPER_ADMIN');
                 yield TextField::new('name', 'Nom');
+                yield AssociationField::new('webpage', 'Page web');
                 yield AssociationField::new('items', 'Éléments du menu')->setTextAlign('center');
                 yield BooleanField::new('prefered', 'Menu principal')->setTextAlign('center');
                 yield BooleanField::new('enabled', 'Activé')->setTextAlign('center');

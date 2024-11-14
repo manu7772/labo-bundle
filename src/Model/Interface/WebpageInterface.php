@@ -7,6 +7,7 @@ interface WebpageInterface extends ItemInterface, CreatedInterface, EnabledInter
 {
 
     public function getMainmenu(): ?MenuInterface;
+    public function getTwigfile(): ?string;
 
 }
 

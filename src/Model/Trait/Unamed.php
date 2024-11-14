@@ -1,12 +1,15 @@
 <?php
 namespace Aequation\LaboBundle\Model\Trait;
 
+// Aequation
 use Aequation\LaboBundle\Entity\Uname;
-use Aequation\LaboBundle\EventListener\Attribute\AppEvent;
-
+use Aequation\LaboBundle\Model\Interface\UnamedInterface;
+// Symfony
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 use Symfony\Component\Serializer\Attribute as Serializer;
+// PHP
+use Exception;
 
 trait Unamed
 {
@@ -18,6 +21,13 @@ trait Unamed
     protected readonly Uname $uname;
 
     public ?string $_tempUname = null;
+
+    public function __construct_unamed(): void
+    {
+        if(!($this instanceof UnamedInterface)) {
+            throw new Exception('This trait must be used with the UnamedInterface');
+        }
+    }
 
     // #[AppEvent(AppEvent::beforePrePersist)]
     public function autoUpdateUname(): static

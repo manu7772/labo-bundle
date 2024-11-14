@@ -1,6 +1,7 @@
 <?php
 namespace Aequation\LaboBundle\Model\Trait;
 
+use Aequation\LaboBundle\Model\Interface\EnabledInterface;
 use Doctrine\ORM\Mapping as ORM;
 use Exception;
 use Symfony\Component\Serializer\Attribute as Serializer;
@@ -21,6 +22,9 @@ trait Enabled
 
     public function __construct_enabled(): void
     {
+        if(!($this instanceof EnabledInterface)) {
+            throw new Exception('This trait must be used with the EnabledInterface');
+        }
         $this->enabled = static::INIT_ENABLED_ENABLED;
         $this->softdeleted = static::INIT_ENABLED_SOFTDELETED;
     }

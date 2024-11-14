@@ -36,7 +36,10 @@ class Pdf extends Item implements PdfInterface, SlugInterface
     public const FA_ICON = 'file-pdf';
 
     #[ORM\Column(type: Types::TEXT, nullable: true)]
-    private ?string $description = null;
+    protected ?string $description = null;
+
+    #[ORM\Column(type: Types::TEXT, nullable: true)]
+    protected ?string $content = null;
 
     // #[Assert\NotNull(message: 'Le nom de fichier ne peut être null')]
     #[ORM\Column(length: 255)]
@@ -87,7 +90,6 @@ class Pdf extends Item implements PdfInterface, SlugInterface
             if(empty($this->filename)) $this->setFilename($this->file->getClientOriginalName());
             $this->updateName();
         }
-        // dd($this->file, $this);
         return $this;
     }
 
@@ -166,6 +168,17 @@ class Pdf extends Item implements PdfInterface, SlugInterface
     public function setDescription(?string $description): static
     {
         $this->description = $description;
+        return $this;
+    }
+
+    public function getContent(): ?string
+    {
+        return $this->content;
+    }
+
+    public function setContent(?string $content): static
+    {
+        $this->content = $content;
         return $this;
     }
 

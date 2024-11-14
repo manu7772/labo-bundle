@@ -211,9 +211,11 @@ class CssDeclaration extends BaseService implements CssDeclarationInterface
     {
         if(!isset($this->computed_classes)) {
             $this->computed_classes = [];
-            foreach ($this->getCssAttributes() as $cssClass) {
-                foreach ($cssClass->getCssClasses() as $class) {
-                    $this->computed_classes[$class] = $class;
+            foreach ($this->getCssAttributes() as $cssAttributes) {
+                foreach ($cssAttributes as $cssClass) {
+                    foreach ($cssClass->getCssClasses() as $class) {
+                        $this->computed_classes[$class] = $class;
+                    }
                 }
             }
         }

@@ -1,12 +1,16 @@
 <?php
 namespace Aequation\LaboBundle\Model\Trait;
 
-use Doctrine\ORM\Mapping as ORM;
-use Symfony\Component\Validator\Constraints as Assert;
+// Symfony
 
+use Aequation\LaboBundle\Model\Interface\CreatedInterface;
+use Doctrine\ORM\Mapping as ORM;
+use Doctrine\Persistence\Event\LifecycleEventArgs;
+use Symfony\Component\Validator\Constraints as Assert;
+// PHP
 use DateTimeImmutable;
 use DateTimeZone;
-use Doctrine\Persistence\Event\LifecycleEventArgs;
+use Exception;
 
 trait Created
 {
@@ -24,6 +28,9 @@ trait Created
 
     public function __construct_created(): void
     {
+        if(!($this instanceof CreatedInterface)) {
+            throw new Exception('This trait must be used with the CreatedInterface');
+        }
         $this->updateCreatedAt();
         $this->setTimezone('Europe/Paris');
     }

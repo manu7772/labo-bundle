@@ -17,6 +17,7 @@ use EasyCorp\Bundle\EasyAdminBundle\Field\IdField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\ImageField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\IntegerField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\SlugField;
+use EasyCorp\Bundle\EasyAdminBundle\Field\TextareaField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\TextEditorField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\TextField;
 use EasyCorp\Bundle\EasyAdminBundle\Filter\DateTimeFilter;
@@ -57,7 +58,7 @@ class PdfCrudController extends BaseCrudController
                 yield TextField::new('originalname');
                 // yield TextField::new('filename');
                 yield TextField::new('mime');
-                yield TextEditorField::new('description');
+                yield TextareaField::new('description');
                 yield IntegerField::new('size')->formatValue(function ($value) { return intval($value/1024).'Ko'; });
                 yield DateTimeField::new('createdAt', 'Date création')->setFormat('dd/MM/Y - HH:mm');
                 break;
@@ -67,7 +68,7 @@ class PdfCrudController extends BaseCrudController
                 yield TextField::new('file', 'Fichier PDF')
                     ->setTemplatePath('')
                     ->setFormType(VichFileType::class)
-                    ->setRequired(true)
+                    ->setRequired(false)
                     ->setFormTypeOptions([
                         'allow_delete' => false,
                         // 'accept' => 'application/pdf',
@@ -81,8 +82,9 @@ class PdfCrudController extends BaseCrudController
                 //             'accept' => 'application/pdf'
                 //         ]
                 //     ]);
-                yield TextEditorField::new('description')->setColumns(6);
-                yield AssociationField::new('owner', 'Propriétaire')->autocomplete()->setColumns(6)->setPermission('ROLE_ADMIN');
+                yield TextareaField::new('description')->setColumns(6);
+                yield TextEditorField::new('content')->setColumns(6)->setCssClass('editorjs')->setHelp('Contenu du document : si vous avez désigné un fichier PDF, ce contenu sera ignoré');
+                yield AssociationField::new('owner', 'Propriétaire')->autocomplete()->setColumns(6)->setPermission('ROLE_ADMIN')->setCrudController(UserCrudController::class);
                 break;
             case Crud::PAGE_EDIT:
                 yield TextField::new('name')->setColumns(6)->setRequired(true);
@@ -96,8 +98,9 @@ class PdfCrudController extends BaseCrudController
                     ]);
                 yield BooleanField::new('updateSlug')->setLabel('Mettre à jour le slug')->setColumns(6);
                 yield SlugField::new('slug')->setTargetFieldName('name')->setColumns(6);
-                yield TextEditorField::new('description')->setColumns(12);
-                yield AssociationField::new('owner', 'Propriétaire')->autocomplete()->setColumns(6)->setPermission('ROLE_ADMIN');
+                yield TextareaField::new('description')->setColumns(6);
+                yield TextEditorField::new('content')->setColumns(6)->setCssClass('editorjs')->setHelp('Contenu du document : si vous avez désigné un fichier PDF, ce contenu sera ignoré');
+                yield AssociationField::new('owner', 'Propriétaire')->autocomplete()->setColumns(6)->setPermission('ROLE_ADMIN')->setCrudController(UserCrudController::class);
                 break;
             default:
                 yield IdField::new('id')->setPermission('ROLE_SUPER_ADMIN');

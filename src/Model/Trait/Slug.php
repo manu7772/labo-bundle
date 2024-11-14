@@ -17,6 +17,9 @@ trait Slug
 
     public function __construct_slug(): void
     {
+        if(!($this instanceof \Aequation\LaboBundle\Model\Interface\SlugInterface)) {
+            throw new \Exception('This trait must be used with the SlugInterface');
+        }
         $this->slug = '-';
         $this->updateSlug = false;
     }
