@@ -80,22 +80,23 @@ class MenuCrudController extends BaseCrudController
                 yield AssociationField::new('items', 'Éléments du menu')
                     ->setQueryBuilder(fn (QueryBuilder $qb): QueryBuilder => ItemRepository::getQB_orderedChoicesList($qb, Menu::class, 'items'))
                     ->setSortProperty('name')
-                    ->autocomplete()
+                    // ->autocomplete()
                     ->setFormTypeOptions(['by_reference' => false])
                     ->setColumns(6);
                 yield AssociationField::new('webpage', 'Page web')
                     ->setSortProperty('name')
-                    ->autocomplete()
+                    // ->autocomplete()
                     ->setFormTypeOptions(['by_reference' => false])
                     ->setColumns(6);
                 yield AssociationField::new('categorys', 'Catégories')
                     ->setQueryBuilder(static fn (QueryBuilder $qb): QueryBuilder => CategoryRepository::QB_CategoryChoices($qb, Menu::class))
-                    ->autocomplete()
+                    // ->autocomplete()
                     ->setSortProperty('name')
                     ->setFormTypeOptions(['by_reference' => false])
                     ->setColumns(6);
                 yield AssociationField::new('owner', 'Propriétaire')->autocomplete()->setColumns(6)->setPermission('ROLE_ADMIN')->setCrudController(UserCrudController::class);
-                yield BooleanField::new('enabled', 'Activé');
+                yield BooleanField::new('enabled', 'Activé')->setColumns(6);
+                yield SlugField::new('slug')->setTargetFieldName('name')->setColumns(6);
                 yield BooleanField::new('softdeleted', 'Supprimé')->setPermission('ROLE_SUPER_ADMIN');
                 break;
             case Crud::PAGE_EDIT:
@@ -105,28 +106,31 @@ class MenuCrudController extends BaseCrudController
                     ->setQueryBuilder(function (QueryBuilder $qb) {
                         return ItemRepository::getQB_orderedChoicesList($qb, Menu::class, 'items', []);
                     })
-                    ->autocomplete()
+                    // ->autocomplete()
                     ->setFormTypeOption('by_reference', false)
                     ->setColumns(6);
                 yield AssociationField::new('webpage', 'Page web')
                     ->setSortProperty('name')
-                    ->autocomplete()
-                    ->setFormTypeOptions(['by_reference' => false])
+                    // ->autocomplete()
+                    // ->setFormTypeOptions(['by_reference' => false])
                     ->setColumns(6);
                 yield AssociationField::new('categorys', 'Catégories')
                     ->setQueryBuilder(static fn (QueryBuilder $qb): QueryBuilder => CategoryRepository::QB_CategoryChoices($qb, Menu::class))
                     ->setSortProperty('name')
-                    ->autocomplete()
+                    // ->autocomplete()
                     ->setFormTypeOptions(['by_reference' => false])
                     ->setColumns(6);
                 yield AssociationField::new('owner', 'Propriétaire')->autocomplete()->setColumns(6)->setPermission('ROLE_ADMIN')->setCrudController(UserCrudController::class);
                 yield BooleanField::new('prefered', 'Menu principal');
                 yield BooleanField::new('enabled', 'Activé');
                 yield BooleanField::new('softdeleted', 'Supprimé')->setPermission('ROLE_SUPER_ADMIN');
+                yield BooleanField::new('updateSlug')->setLabel('Mettre à jour le slug')->setColumns(6)->setHelp('Si vous cochez cette case, le slug sera mis à jour avec le nom du menu.<br><strong>Il n\'est pas recommandé de modifier le slug</strong> car cela change le lien URL du document.');
+                yield SlugField::new('slug')->setTargetFieldName('name')->setColumns(6);
                 break;
             default:
                 yield IdField::new('id')->setPermission('ROLE_SUPER_ADMIN');
                 yield TextField::new('name', 'Nom');
+                yield TextField::new('slug');
                 yield AssociationField::new('webpage', 'Page web');
                 yield AssociationField::new('items', 'Éléments du menu')->setTextAlign('center');
                 yield BooleanField::new('prefered', 'Menu principal')->setTextAlign('center');

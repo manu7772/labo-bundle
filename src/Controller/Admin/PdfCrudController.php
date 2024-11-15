@@ -5,6 +5,7 @@ use Aequation\LaboBundle\Entity\Pdf;
 use Aequation\LaboBundle\Security\Voter\PdfVoter;
 
 use Aequation\LaboBundle\Controller\Admin\Base\BaseCrudController;
+use Aequation\LaboBundle\Field\EditorjsField;
 use Aequation\LaboBundle\Field\VichFileField;
 use Aequation\LaboBundle\Service\Interface\PdfServiceInterface;
 use Aequation\LaboBundle\Service\Interface\LaboUserServiceInterface;
@@ -66,6 +67,7 @@ class PdfCrudController extends BaseCrudController
                 yield TextField::new('name')->setColumns(6)->setRequired(true);
                 // yield VichFileField::new('file')->setColumns(6);
                 yield TextField::new('file', 'Fichier PDF')
+                    ->setColumns(3)
                     ->setTemplatePath('')
                     ->setFormType(VichFileType::class)
                     ->setRequired(false)
@@ -73,6 +75,7 @@ class PdfCrudController extends BaseCrudController
                         'allow_delete' => false,
                         // 'accept' => 'application/pdf',
                     ]);
+                yield SlugField::new('slug')->setTargetFieldName('name')->setColumns(3);
                 // yield ImageField::new('file', 'Fichier PDF')
                 //     ->setFormType(FileUploadType::class)
                 //     ->setBasePath('uploads/pdf/') //see documentation about ImageField to understand the difference beetwen setBasePath and setUploadDir
@@ -82,8 +85,8 @@ class PdfCrudController extends BaseCrudController
                 //             'accept' => 'application/pdf'
                 //         ]
                 //     ]);
-                yield TextareaField::new('description')->setColumns(6);
-                yield TextEditorField::new('content')->setColumns(6)->setCssClass('editorjs')->setHelp('Contenu du document : si vous avez désigné un fichier PDF, ce contenu sera ignoré');
+                yield TextEditorField::new('content', 'Contenu du fichier PDF')->setColumns(12)->setHelp('Contenu du document : si vous avez désigné un fichier PDF, ce contenu sera ignoré');
+                yield TextareaField::new('description', 'Description du contenu du PDF')->setColumns(6);
                 yield AssociationField::new('owner', 'Propriétaire')->autocomplete()->setColumns(6)->setPermission('ROLE_ADMIN')->setCrudController(UserCrudController::class);
                 break;
             case Crud::PAGE_EDIT:
@@ -96,15 +99,16 @@ class PdfCrudController extends BaseCrudController
                         'allow_delete' => false,
                         // 'accept' => 'application/pdf',
                     ]);
-                yield BooleanField::new('updateSlug')->setLabel('Mettre à jour le slug')->setColumns(6);
+                yield BooleanField::new('updateSlug')->setLabel('Mettre à jour le slug')->setColumns(6)->setHelp('Si vous cochez cette case, le slug sera mis à jour avec le nom du document.<br><strong>Il n\'est pas recommandé de modifier le slug</strong> car cela change le lien URL du document.');
                 yield SlugField::new('slug')->setTargetFieldName('name')->setColumns(6);
-                yield TextareaField::new('description')->setColumns(6);
-                yield TextEditorField::new('content')->setColumns(6)->setCssClass('editorjs')->setHelp('Contenu du document : si vous avez désigné un fichier PDF, ce contenu sera ignoré');
+                yield TextEditorField::new('content', 'Contenu du fichier PDF')->setColumns(12)->setHelp('Contenu du document : si vous avez désigné un fichier PDF, ce contenu sera ignoré');
+                yield TextareaField::new('description', 'Description du contenu du PDF')->setColumns(6);
                 yield AssociationField::new('owner', 'Propriétaire')->autocomplete()->setColumns(6)->setPermission('ROLE_ADMIN')->setCrudController(UserCrudController::class);
                 break;
             default:
                 yield IdField::new('id')->setPermission('ROLE_SUPER_ADMIN');
                 yield TextField::new('name', 'Nom du document');
+                // yield TextField::new('slug');
                 yield TextField::new('originalname', 'Nom du fichier');
                 yield TextField::new('filepathname', 'Consulter')->setTemplatePath('@EasyAdmin/crud/field/pdf_link.html.twig');
                 yield IntegerField::new('size')->setTextAlign('right')->formatValue(function ($value) { return intval($value/1024).'Ko'; });

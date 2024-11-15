@@ -23,9 +23,9 @@ trait Screenable
     #[ORM\ManyToOne(targetEntity: WebpageInterface::class)]
     #[ORM\JoinColumn(nullable: true)]
     #[Serializer\Ignore]
-    protected WebpageInterface $webpage;
+    protected ?WebpageInterface $webpage;
 
-    public function getWebpage(): WebpageInterface
+    public function getWebpage(): ?WebpageInterface
     {
         return $this->webpage;
     }
