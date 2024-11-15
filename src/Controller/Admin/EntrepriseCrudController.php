@@ -103,7 +103,7 @@ class EntrepriseCrudController extends LaboUserCrudController
                 // yield TextField::new('lastname', 'Prénom')->setColumns(6);
                 yield TextField::new('fonction', 'Secteur activité')->setColumns(6);
                 yield AssociationField::new('categorys')->setQueryBuilder(static fn (QueryBuilder $qb): QueryBuilder => LaboCategoryRepository::QB_CategoryChoices($qb, Entreprise::class))
-                    ->autocomplete()
+                    // ->autocomplete()
                     ->setSortProperty('name')
                     ->setFormTypeOptions(['by_reference' => false])
                     ->setColumns(6);
@@ -111,7 +111,7 @@ class EntrepriseCrudController extends LaboUserCrudController
                     ->setFormType(PortraitType::class)
                     ->setColumns(6);
                 yield AssociationField::new('members', 'Membres')
-                    ->autocomplete()
+                    // ->autocomplete()
                     ->setSortProperty('firstname')
                     ->setFormTypeOptions(['by_reference' => false])
                     ;
@@ -132,7 +132,7 @@ class EntrepriseCrudController extends LaboUserCrudController
                 // yield TextField::new('lastname', 'Prénom')->setColumns(6);
                 yield TextField::new('fonction', 'Secteur activité')->setColumns(6);
                 yield AssociationField::new('categorys')->setQueryBuilder(static fn (QueryBuilder $qb): QueryBuilder => LaboCategoryRepository::QB_CategoryChoices($qb, Entreprise::class))
-                    ->autocomplete()
+                    // ->autocomplete()
                     ->setSortProperty('name')
                     ->setFormTypeOptions(['by_reference' => false])
                     ->setColumns(6);
@@ -149,7 +149,7 @@ class EntrepriseCrudController extends LaboUserCrudController
                 yield BooleanField::new('softdeleted')->setFormTypeOption('attr', ['class' => 'border-danger text-bg-danger'])->setColumns(3)->setPermission('ROLE_SUPER_ADMIN');
                 yield FormField::AddTab(label: 'Membres', icon: 'users')->setHelp('Membres de l\'entreprise');
                 yield AssociationField::new('members', 'Membres')
-                    ->autocomplete()
+                    // ->autocomplete()
                     ->setSortProperty('firstname')
                     ->setFormTypeOptions(['by_reference' => false])
                     ;

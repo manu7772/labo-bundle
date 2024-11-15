@@ -67,7 +67,7 @@ class ImageCrudController extends BaseCrudController
                     ->setFormType(VichImageType::class)
                     ->setColumns(6);
                 yield TextEditorField::new('description')->setColumns(6);
-                yield AssociationField::new('owner', 'Propriétaire')->autocomplete()->setColumns(6)->setPermission('ROLE_ADMIN')->setCrudController(UserCrudController::class);
+                yield AssociationField::new('owner', 'Propriétaire')->setColumns(6)->setPermission('ROLE_ADMIN')->setCrudController(UserCrudController::class);
                 break;
             case Crud::PAGE_EDIT:
                 yield TextField::new('name')->setColumns(6)->setRequired(true);
@@ -77,7 +77,7 @@ class ImageCrudController extends BaseCrudController
                 yield BooleanField::new('updateSlug')->setLabel('Mettre à jour le slug')->setColumns(6);
                 yield SlugField::new('slug')->setTargetFieldName('name')->setColumns(6);
                 yield TextEditorField::new('description')->setColumns(12);
-                yield AssociationField::new('owner', 'Propriétaire')->autocomplete()->setColumns(6)->setPermission('ROLE_ADMIN')->setCrudController(UserCrudController::class);
+                yield AssociationField::new('owner', 'Propriétaire')->setColumns(6)->setPermission('ROLE_ADMIN')->setCrudController(UserCrudController::class);
                 break;
             default:
                 yield IdField::new('id')->setPermission('ROLE_SUPER_ADMIN');

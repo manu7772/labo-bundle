@@ -134,7 +134,7 @@ class SliderCrudController extends BaseCrudController
 
                     yield BooleanField::new('enabled', 'Activé')->setColumns(3)->setHelp('Si le diaporama n\'est pas activé, il ne sera pas visible sur le site.');
                     yield BooleanField::new('softdeleted', 'Supprimé')->setPermission('ROLE_SUPER_ADMIN')->setColumns(3);
-                    yield AssociationField::new('owner', 'Propriétaire')->autocomplete()->setColumns(6)->setPermission('ROLE_ADMIN')->setCrudController(UserCrudController::class);
+                    yield AssociationField::new('owner', 'Propriétaire')->setColumns(6)->setPermission('ROLE_ADMIN')->setCrudController(UserCrudController::class);
 
                     break;
             case Crud::PAGE_EDIT:
@@ -159,7 +159,7 @@ class SliderCrudController extends BaseCrudController
                 yield TextEditorField::new('content', 'Texte')->setColumns(12);
                 yield BooleanField::new('enabled', 'Activé')->setColumns(3)->setHelp('Si le diaporama n\'est pas activé, il ne sera pas visible sur le site.');
                 yield BooleanField::new('softdeleted', 'Supprimé')->setPermission('ROLE_SUPER_ADMIN')->setColumns(3);
-                yield AssociationField::new('owner', 'Propriétaire')->autocomplete()->setColumns(6)->setPermission('ROLE_ADMIN')->setCrudController(UserCrudController::class);
+                yield AssociationField::new('owner', 'Propriétaire')->setColumns(6)->setPermission('ROLE_ADMIN')->setCrudController(UserCrudController::class);
                 break;
             default:
                 yield IdField::new('id')->setPermission('ROLE_SUPER_ADMIN');

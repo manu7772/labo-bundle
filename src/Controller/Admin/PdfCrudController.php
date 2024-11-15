@@ -87,7 +87,7 @@ class PdfCrudController extends BaseCrudController
                 //     ]);
                 yield TextEditorField::new('content', 'Contenu du fichier PDF')->setColumns(12)->setHelp('Contenu du document : si vous avez désigné un fichier PDF, ce contenu sera ignoré');
                 yield TextareaField::new('description', 'Description du contenu du PDF')->setColumns(6);
-                yield AssociationField::new('owner', 'Propriétaire')->autocomplete()->setColumns(6)->setPermission('ROLE_ADMIN')->setCrudController(UserCrudController::class);
+                yield AssociationField::new('owner', 'Propriétaire')->setColumns(6)->setPermission('ROLE_ADMIN')->setCrudController(UserCrudController::class);
                 break;
             case Crud::PAGE_EDIT:
                 yield TextField::new('name')->setColumns(6)->setRequired(true);
@@ -103,7 +103,7 @@ class PdfCrudController extends BaseCrudController
                 yield SlugField::new('slug')->setTargetFieldName('name')->setColumns(6);
                 yield TextEditorField::new('content', 'Contenu du fichier PDF')->setColumns(12)->setHelp('Contenu du document : si vous avez désigné un fichier PDF, ce contenu sera ignoré');
                 yield TextareaField::new('description', 'Description du contenu du PDF')->setColumns(6);
-                yield AssociationField::new('owner', 'Propriétaire')->autocomplete()->setColumns(6)->setPermission('ROLE_ADMIN')->setCrudController(UserCrudController::class);
+                yield AssociationField::new('owner', 'Propriétaire')->setColumns(6)->setPermission('ROLE_ADMIN')->setCrudController(UserCrudController::class);
                 break;
             default:
                 yield IdField::new('id')->setPermission('ROLE_SUPER_ADMIN');
