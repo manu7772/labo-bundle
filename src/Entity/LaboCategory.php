@@ -121,11 +121,14 @@ abstract class LaboCategory extends MappSuperClassEntity implements LaboCategory
 
     public function setType(string $type): static
     {
-        $availables = $this->getAvailableTypes();
+        $availables = [];
+        foreach ($this->_service->getCategoryTypeChoices(false) as $classname => $values) {
+            $availables[$classname] = Classes::getShortname($classname);
+        }
         if(!array_key_exists($type, $availables)) {
             $memtype = $type;
             if(false === ($type = array_search($type, $availables))) {
-                throw new Exception(vsprintf('Error %s line %d: type "%s" not found!', [__METHOD__, __LINE__, $memtype]));
+                throw new Exception(vsprintf('Error %s line %d: type "%s" not found in this list: %s!', [__METHOD__, __LINE__, $memtype, json_encode($availables)]));
             }
         }
         $this->type = $type;
