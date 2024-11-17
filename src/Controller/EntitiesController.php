@@ -32,7 +32,7 @@ class EntitiesController extends CommonController
         if(count($fails) > 0) {
             $this->addFlash('error', vsprintf('Des erreurs (total : %d) ont été trouvées dans les structures d\'entités. Veuillez les corriger svp.', [count($fails)]));
         } else {
-            $this->addFlash('info', vsprintf('Toutes les entités semblent valides.', []));
+            // $this->addFlash('info', vsprintf('Toutes les entités semblent valides.', []));
         }
         ClassmetadataReport::sortReports($metadatas);
         $data = [
