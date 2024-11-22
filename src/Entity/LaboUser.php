@@ -118,6 +118,7 @@ abstract class LaboUser extends MappSuperClassEntity implements LaboUserInterfac
     #[RelationOrder()]
     protected Collection $categorys;
 
+
     public function __construct()
     {
         parent::__construct();
@@ -512,8 +513,8 @@ abstract class LaboUser extends MappSuperClassEntity implements LaboUserInterfac
     public function setFonction(?string $fonction): static
     {
         $this->fonction = $fonction;
-
         return $this;
     }
+
 
 }

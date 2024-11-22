@@ -100,7 +100,7 @@ class UserCrudController extends LaboUserCrudController
                 yield TextField::new('lastname', 'Prénom')->setColumns(6);
                 yield TextField::new('fonction', 'Fonction')->setColumns(6);
                 yield AssociationField::new('categorys')->setQueryBuilder(static fn (QueryBuilder $qb): QueryBuilder => LaboCategoryRepository::QB_CategoryChoices($qb, User::class))
-                    ->autocomplete()
+                    // ->autocomplete()
                     ->setSortProperty('name')
                     ->setFormTypeOptions(['by_reference' => false])
                     ->setColumns(6);
@@ -115,7 +115,7 @@ class UserCrudController extends LaboUserCrudController
                 yield BooleanField::new('softdeleted')->setFormTypeOption('attr', ['class' => 'border-danger text-bg-danger'])->setColumns(3)->setPermission('ROLE_SUPER_ADMIN');
                 yield FormField::AddTab(label: 'Entreprises', icon: Entreprise::FA_ICON)->setHelp('Entreprises intégrées')->setPermission('ROLE_ADMIN');
                 yield AssociationField::new('entreprises', 'Entreprises')
-                    ->autocomplete()
+                    // ->autocomplete()
                     ->setSortProperty('firstname')
                     ->setFormTypeOptions(['by_reference' => false])
                     ->setPermission('ROLE_ADMIN');
@@ -124,6 +124,8 @@ class UserCrudController extends LaboUserCrudController
                 if(!$manager->isLoggable($user)) {
                     $this->addFlash('error', new TranslatableMessage('Cet utilisateur ne peut actuellement pas se connecter à son compte (compte expiré, désactivé ou autre raison).'));
                 }
+                yield FormField::AddTab(label: 'Actions', icon: 'fa fa-cog')->setHelp('Actions sur cet utilisateur')->setPermission('ROLE_ADMIN');
+                yield BooleanField::new('mainentreprise', 'Membre de l\'association')->setColumns(6)->setHelp('En plaçant cet utilisateur "membre de l\'association", il sera :<br><ul><li>visible dans l\'équipe sur le site</li><li>sera automatiquement attribué en ADMIN du site</li>')->setColumns(12)->setPermission('ROLE_ADMIN');
                 yield FormField::AddTab(label: 'Sécurité', icon: 'lock');
                 yield EmailField::new('email')->setColumns($this->isGranted('ROLE_ADMIN') ? 4 : 6)->setHelp('Le mail doit être unique : l\'enregistrement sera rejeté si une autre personne utilise le mail sur le même site.');
                 yield TextField::new('plainPassword', 'Mot de passe', 'Nouveau mot de passe')->setColumns($this->isGranted('ROLE_ADMIN') ? 4 : 6)->setHelp('<strong class="text-danger">ATTENTION</strong> : ne remplissez ce champ QUE SI vous souhaitez changer votre mot de passe. <strong>Dans ce cas, pensez à bien le noter !</strong>');
@@ -133,7 +135,7 @@ class UserCrudController extends LaboUserCrudController
                 yield TextField::new('lastname', 'Prénom')->setColumns(6);
                 yield TextField::new('fonction', 'Fonction')->setColumns(6);
                 yield AssociationField::new('categorys')->setQueryBuilder(static fn (QueryBuilder $qb): QueryBuilder => LaboCategoryRepository::QB_CategoryChoices($qb, User::class))
-                    ->autocomplete()
+                    // ->autocomplete()
                     ->setSortProperty('name')
                     ->setFormTypeOptions(['by_reference' => false])
                     ->setColumns(6);
@@ -144,13 +146,13 @@ class UserCrudController extends LaboUserCrudController
                 yield TimezoneField::new('timezone')->setColumns(4);
                 yield DateTimeField::new('expiresAt')->setColumns(3)->setPermission('ROLE_ADMIN')->setTimezone($current_tz);
                 yield DateTimeField::new('lastLogin')->setColumns(3)->setPermission('ROLE_SUPER_ADMIN')->setTimezone($current_tz);
-                yield BooleanField::new('enabled')->setColumns(3)->setPermission('ROLE_ADMIN');
+                // yield BooleanField::new('enabled')->setColumns(3)->setPermission('ROLE_ADMIN');
                 yield BooleanField::new('isVerified')->setColumns(3)->setHelp('Compte vérifié')->setPermission('ROLE_ADMIN');
                 yield BooleanField::new('darkmode')->setColumns(3)->setHelp('Interface graphique en mode sombre');
                 yield BooleanField::new('softdeleted')->setFormTypeOption('attr', ['class' => 'border-danger text-bg-danger'])->setColumns(3)->setPermission('ROLE_SUPER_ADMIN');
                 yield FormField::AddTab(label: 'Entreprises', icon: Entreprise::FA_ICON)->setHelp('Entreprises intégrées')->setPermission('ROLE_ADMIN');
                 yield AssociationField::new('entreprises', 'Entreprises')
-                    ->autocomplete()
+                    // ->autocomplete()
                     ->setSortProperty('firstname')
                     ->setFormTypeOptions(['by_reference' => false])
                     ->setPermission('ROLE_ADMIN');

@@ -14,7 +14,7 @@ use Exception;
 trait Unamed
 {
 
-    #[ORM\OneToOne(cascade: ['persist'], orphanRemoval: true)]
+    #[ORM\OneToOne(cascade: ['persist'], orphanRemoval: true, fetch: 'LAZY')]
     #[ORM\JoinColumn(nullable: false)]
     #[Assert\Valid()]
     #[Serializer\Ignore]

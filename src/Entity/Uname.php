@@ -16,8 +16,8 @@ use Symfony\Component\Serializer\Attribute as Serializer;
 use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: UnameRepository::class)]
-#[UniqueEntity('uname', message: 'Ce uname {{ value }} est déjà utilisé !')]
 #[UniqueEntity('euidofentity', message: 'Cet euid-of-entity {{ value }} est déjà utilisé !')]
+// #[UniqueEntity('uname', message: 'Ce uname {{ value }} est déjà utilisé !')]
 #[EA\ClassCustomService(UnameServiceInterface::class)]
 class Uname extends MappSuperClassEntity implements UnameInterface
 {

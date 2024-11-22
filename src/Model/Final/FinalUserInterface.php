@@ -11,5 +11,10 @@ interface FinalUserInterface extends LaboUserInterface
     public function addEntreprise(FinalEntrepriseInterface $entreprise): static;
     public function hasEntreprise(FinalEntrepriseInterface $entreprise = null): bool;
     public function removeEntreprise(FinalEntrepriseInterface $entreprise): static;
+    /** ACTIONS */
+    public function getMainentreprise(): bool;
+    public function getComputedMainentreprise(): bool;
+    public function setMainentreprise(bool $mainentreprise): static;
+    public function isCheckMainentreprise(): bool;
 
 }

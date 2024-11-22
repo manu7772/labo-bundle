@@ -29,6 +29,7 @@ interface LaboUserInterface extends UserInterface, PasswordAuthenticatedUserInte
     public function getLastname(): ?string;
     public function hasRole(string $role): bool;
     public function addRole(string $role): static;
+    public function removeRole(string $role): static;
 
 }
 

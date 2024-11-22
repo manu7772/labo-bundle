@@ -3,6 +3,7 @@ namespace Aequation\LaboBundle\EventListener;
 
 use Aequation\LaboBundle\Component\AppEntityInfo;
 use Aequation\LaboBundle\EventListener\Attribute\AppEvent;
+use Aequation\LaboBundle\Model\Final\FinalUserInterface;
 use Aequation\LaboBundle\Model\Interface\AppEntityInterface;
 use Aequation\LaboBundle\Model\Interface\EnabledInterface;
 use Aequation\LaboBundle\Model\Interface\HasOrderedInterface;
@@ -16,7 +17,7 @@ use Aequation\LaboBundle\Model\Interface\WebpageInterface;
 use Aequation\LaboBundle\Service\Interface\AppEntityManagerInterface;
 use Aequation\LaboBundle\Service\Interface\AppRoleHierarchyInterface;
 use Aequation\LaboBundle\Service\SlugService;
-
+use App\Entity\Entreprise;
 use Doctrine\Bundle\DoctrineBundle\Attribute\AsDoctrineListener;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\EntityManagerInterface;
@@ -35,6 +36,7 @@ use Exception;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Component\Form\FormEvents;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
+use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 
 #[AsDoctrineListener(event: AppEvent::onCreate)]
 #[AsDoctrineListener(event: Events::postLoad, priority: 100)]
@@ -141,26 +143,71 @@ class GlobalDoctrineListener
 
     public function preUpdate(PreUpdateEventArgs $event): void
     {
+        $entity_update = false;
         /** @var AppEntityInterface */
         $entity = $event->getObject();
         // $entity->_service->dispatchEvent($entity, Events::preUpdate);
 
-        // Specificity entity
-        switch (true) {
-            case $entity instanceof LaboUserInterface:
-                $plainPassword = $entity->getPlainPassword();
-                if(is_string($plainPassword) && !empty($plainPassword)) {
-                    $hashed = $this->userPasswordHasher->hashPassword($entity, $plainPassword);
-                    $entity->setPassword($hashed);
-                    $entity->updateUpdatedAt();
+        // LaboUserInterface
+        if($entity instanceof LaboUserInterface) {
+            // Password
+            $plainPassword = $entity->getPlainPassword();
+            if(is_string($plainPassword) && !empty($plainPassword)) {
+                $hashed = $this->userPasswordHasher->hashPassword($entity, $plainPassword);
+                $entity->setPassword($hashed);
+                $entity->updateUpdatedAt();
+            }
+            // User
+            if($entity instanceof FinalUserInterface) {
+                // Check mainentreprise
+                // dd('--- '.($entity->isCheckMainentreprise() ? 'CHECK' : 'NO CHECK').' : mainentreprise is '.json_encode($entity->getMainentreprise()).' / computed is '.json_encode($entity->getComputedMainentreprise()), $entity);
+                if($entity->isCheckMainentreprise()) {
+                    /** @var ServiceEntityRepository */
+                    $entrepriseRepository = $this->manager->getRepository(Entreprise::class);
+                    $mainentreprise = $entrepriseRepository->findOneBy(['prefered' => true]);
+                    $computeChangeSet = false;
+                    if($mainentreprise) {
+                        if($entity->getMainentreprise()) {
+                            $entity->addRole('ROLE_ADMIN');
+                            // Set mainentreprise
+                            if(!$entity->getEntreprises()->contains($mainentreprise)) {
+                                $entity->addEntreprise($mainentreprise);
+                                $computeChangeSet = true;
+                            }
+                        } else {
+                            $entity->removeRole('ROLE_ADMIN');
+                            // Unset mainentreprise
+                            if($entity->getEntreprises()->contains($mainentreprise)) {
+                                $entity->removeEntreprise($mainentreprise);
+                                $computeChangeSet = true;
+                            }
+                        }
+                        if($computeChangeSet) {
+                            /** @var EntityManagerInterface $em */
+                            $em = $event->getObjectManager();
+                            $uow = $em->getUnitOfWork();
+                            $uow->computeChangeSet($em->getClassMetadata($mainentreprise::class), $mainentreprise);
+                        }
+                    } else if($this->manager->isDev()) {
+                        // Prefered entreprise not found
+                        throw new Exception(vsprintf('Error line %d %s(): %s can not be updated without prefered entreprise!', [__LINE__, __METHOD__, $entity::class]));
+                    }
                 }
-                if(count($entity->getRoles()) > 1) $entity->setIsVerified(true);
-                break;
+            }
+            // Verified
+            if(count($entity->getRoles()) > 1) $entity->setIsVerified(true);
         }
 
         // Uname
         if($entity instanceof UnamedInterface && empty($entity->getUname())) {
+            if($this->manager->isDev()) {
+                throw new Exception(vsprintf('Error line %d %s(): %s can not be updated without uname!', [__LINE__, __METHOD__, $entity::class]));
+            }
             $entity->autoUpdateUname();
+            $entity_update = true;
+        }
+
+        if($entity_update) {
             /** @var EntityManagerInterface $em */
             $em = $event->getObjectManager();
             $uow = $em->getUnitOfWork();

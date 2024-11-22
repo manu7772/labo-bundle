@@ -95,12 +95,12 @@ class WebpageCrudController extends BaseCrudController
                 yield BooleanField::new('prefered', 'Page principale')->setPermission('ROLE_SUPER_ADMIN')->setColumns(3)->setHelp('Définir comme page principale du site. Si ce choix est activé, les utilisateurs arriveront directement sur cette page désormais définie comme page d\'accueil.');
                 yield TextField::new('title', 'Titre de la page')->setColumns(8);
                 yield AssociationField::new('categorys')->setQueryBuilder(fn (QueryBuilder $qb): QueryBuilder => CategoryRepository::QB_CategoryChoices($qb, Webpage::class))
-                    ->autocomplete()
+                    // ->autocomplete()
                     ->setSortProperty('name')
                     ->setFormTypeOptions(['by_reference' => false])
                     ->setColumns(4);
                 yield AssociationField::new('items', 'Sections de pages')
-                    ->autocomplete()
+                    // ->autocomplete()
                     ->setQueryBuilder(fn (QueryBuilder $qb): QueryBuilder => EcollectionRepository::QB_collectionChoices($qb, Webpage::class, 'items'))
                     ->setSortProperty('sectiontype')
                     ->setFormTypeOptions(['by_reference' => false])
@@ -151,11 +151,11 @@ class WebpageCrudController extends BaseCrudController
 
                         yield TextField::new('title', 'Titre de la page');
                         yield AssociationField::new('categorys')->setQueryBuilder(fn (QueryBuilder $qb): QueryBuilder => CategoryRepository::QB_CategoryChoices($qb, Webpage::class))
-                            ->autocomplete()
+                            // ->autocomplete()
                             ->setSortProperty('name')
                             ->setFormTypeOptions(['by_reference' => false]);
                         yield AssociationField::new('items', 'Sections de pages')
-                            ->autocomplete()
+                            // ->autocomplete()
                             ->setQueryBuilder(fn (QueryBuilder $qb): QueryBuilder => EcollectionRepository::QB_collectionChoices($qb, Webpage::class, 'items'))
                             ->setSortProperty('sectiontype')
                             ->setFormTypeOptions(['by_reference' => false])
