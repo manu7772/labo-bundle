@@ -54,6 +54,7 @@ use DateTimeImmutable;
 use DateTimeZone;
 use Exception;
 use ArrayObject;
+use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
 
 #[AsAlias(AppServiceInterface::class, public: true)]
 #[Autoconfigure(autowire: true, lazy: false)]
@@ -76,6 +77,7 @@ class AppService extends BaseService implements AppServiceInterface
         public readonly ParameterBagInterface $parameterBag,
         public readonly Security $security,
         public readonly AccessDecisionManagerInterface $accessDecisionManager,
+        public readonly AuthorizationCheckerInterface $authorizationChecker,
         public readonly Environment $twig,
         public readonly NormalizerInterface $normalizer,
     ) {
@@ -118,6 +120,9 @@ class AppService extends BaseService implements AppServiceInterface
         int $invalidBehavior = ContainerInterface::NULL_ON_INVALID_REFERENCE
     ): ?object
     {
+        if($this->isDev()) {
+            $invalidBehavior = ContainerInterface::EXCEPTION_ON_INVALID_REFERENCE;
+        }
         return $this->getContainer()->get($id, $invalidBehavior);
     }
 
@@ -331,6 +336,16 @@ class AppService extends BaseService implements AppServiceInterface
         return $this->get(LaboUserServiceInterface::class)->getMainAdmin();
     }
 
+    // protected function getAuthorizationChecker(): AuthorizationCheckerInterface
+    // {
+    //     return $this->authorizationChecker;
+    // }
+
+    // public function getAccessDescisionManager(): AccessDecisionManagerInterface
+    // {
+    //     return $this->accessDecisionManager;
+    // }
+
     /**
      * Subjec is granted with attributes for current User
      * @param mixed $attributes
@@ -346,24 +361,55 @@ class AppService extends BaseService implements AppServiceInterface
             $attributes->setRoleHierarchy($this->get(AppRoleHierarchyInterface::class));
             $attributes = $attributes->getHigherRole();
         }
-        return $this->security->isGranted($attributes, $subject);
+        return $this->authorizationChecker->isGranted($attributes, $subject);
     }
 
+    // public function isUserGrantedXXX(
+    //     mixed $attributes,
+    //     mixed $subject = null,
+    //     LaboUserInterface $user = null,
+    //     string $firewallName = null,
+    // ): bool
+    // {
+    //     $user ??= $this->getUser();
+    //     $firewallName ??= $this->appContext->getFirewallName();
+    //     if($user instanceof LaboUserInterface) {
+    //         $token = new UsernamePasswordToken($user, $firewallName, $user?->getRoles() ?: []);
+    //         return $this->accessDecisionManager->decide($token, (array)$attributes, $subject);
+    //     }
+    //     if(!in_array($firewallName, static::PUBLIC_FIREWALLS)) return false;
+    //     return $this->isGranted($attributes, $subject);
+    // }
+
+    /**
+     * Is user granted for attributes
+     * @see https://www.remipoignon.fr/symfony-comment-verifier-le-role-dun-utilisateur-en-respectant-la-hierarchie-des-roles/
+     *
+     * @param LaboUserInterface $user
+     * @param [type] $attributes
+     * @param [type] $object
+     * @param string $firewallName = 'none'
+     * @return boolean
+     */
     public function isUserGranted(
-        mixed $attributes,
-        mixed $subject = null,
-        LaboUserInterface $user = null,
-        string $firewallName = null,
+        LaboUserInterface $user,
+        $attributes,
+        $object = null,
+        string $firewallName = 'none'
     ): bool
     {
-        $user ??= $this->getUser();
-        $firewallName ??= $this->appContext->getFirewallName();
-        if($user instanceof LaboUserInterface) {
-            $token = new UsernamePasswordToken($user, $firewallName, $user?->getRoles() ?: []);
-            return $this->accessDecisionManager->decide($token, (array)$attributes, $subject);
+        if(empty($firewallName)) {
+            $firewallName = 'none';
         }
-        if(!in_array($firewallName, static::PUBLIC_FIREWALLS)) return false;
-        return $this->isGranted($attributes, $subject);
+        if(!in_array($firewallName, array_merge(['none'], static::PUBLIC_FIREWALLS))) {
+            if($this->isDev()) {
+                throw new Exception(vsprintf('Error %s line %d: could not determine user for firewall %s!', [__METHOD__, __LINE__, $firewallName]));
+            }
+            return false;
+        }
+        $attributes = (array)$attributes;
+        $token = new UsernamePasswordToken($user, $firewallName, $user->getRoles());
+        return $this->accessDecisionManager->decide($token, $attributes, $object);
     }
 
     /**
@@ -377,14 +423,18 @@ class AppService extends BaseService implements AppServiceInterface
         AppEntityInterface $entity,
         string $action,
         ?LaboUserInterface $user = null,
-        string $firewallName = null,
+        string $firewallName = 'none',
     ): bool
     {
         // return false;
-        // $user = $this->getUser();
-        // $entityService = $this->getEntityService($entity);
-        // return $entityService->isValidForAction($entity, $action, $user);
-        return $this->isUserGranted($action, $entity, $user, $firewallName);
+        $user ??= $this->getUser();
+        if(!($user instanceof LaboUserInterface)) {
+            if($this->isDev()) {
+                throw new Exception(vsprintf('Error %s line %d: could not determine user for action %s!', [__METHOD__, __LINE__, $action]));
+            }
+            return false;
+        }
+        return $this->isUserGranted($user, $action, $entity, $firewallName);
     }
 
     // /**

@@ -25,6 +25,7 @@ use Twig\Environment;
 
 use Attribute;
 use Exception;
+use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
 
 #[AsAlias(LaboBundleServiceInterface::class, public: true)]
 #[Autoconfigure(autowire: true, lazy: true)]
@@ -42,11 +43,12 @@ class LaboBundleService extends AppService implements LaboBundleServiceInterface
         ParameterBagInterface $parameterBag,
         Security $security,
         AccessDecisionManagerInterface $accessDecisionManager,
+        AuthorizationCheckerInterface $authorizationChecker,
         Environment $twig,
         NormalizerInterface $normalizer,
         protected FormServiceInterface $formService,
     ) {
-        parent::__construct($requestStack, $kernel, $parameterBag, $security, $accessDecisionManager, $twig, $normalizer);
+        parent::__construct($requestStack, $kernel, $parameterBag, $security, $accessDecisionManager, $authorizationChecker, $twig, $normalizer);
         $this->tool_files = $this->get('Tool:Files');
         $this->stopPublic();
     }

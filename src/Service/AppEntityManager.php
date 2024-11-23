@@ -887,13 +887,13 @@ class AppEntityManager extends BaseService implements AppEntityManagerInterface
     }
 
     public function isUserGranted(
-        mixed $attributes,
-        mixed $subject = null,
-        LaboUserInterface $user = null,
-        string $firewallName = null,
+        LaboUserInterface $user,
+        $attributes,
+        $object = null,
+        string $firewallName = 'none'
     ): bool
     {
-        return $this->appService->isUserGranted(attributes: $attributes, subject: $subject, user: $user, firewallName: $firewallName);
+        return $this->appService->isUserGranted($user, $attributes, $object, $firewallName);
     }
 
     public function checkEntityAccess(

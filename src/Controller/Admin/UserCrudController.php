@@ -56,6 +56,7 @@ class UserCrudController extends LaboUserCrudController
                 yield EmailField::new('email');
                 yield TextField::new('fonction', 'Fonction');
                 // yield TextField::new('password', 'Mot de passe (codé)')->setPermission('ROLE_SUPER_ADMIN');
+                yield BooleanField::new('mainentreprise', 'Membre de l\'association');
                 yield TextField::new('higherRole')
                     ->setCssClass('text-warning')
                     ->setHelp('<h5>Tous les roles<br>pour cet utilisateur&nbsp;:</h5><div><ul><li>'.implode('</li><li>', $this->translate($user->getReachableRoles())).'</li></ul></div>')
@@ -85,6 +86,7 @@ class UserCrudController extends LaboUserCrudController
                 yield BooleanField::new('darkmode');
                 yield BooleanField::new('enabled');
                 yield BooleanField::new('isVerified');
+                yield BooleanField::new('admin');
                 yield BooleanField::new('softdeleted')->setPermission('ROLE_SUPER_ADMIN');
                 break;
             case Crud::PAGE_NEW:
@@ -165,15 +167,16 @@ class UserCrudController extends LaboUserCrudController
                     ->setBasePath($this->getParameter('vich_dirs.user_portrait'))
                     ->setTextAlign('center')
                     ->setSortable(false);
-                yield TextField::new('higherRole')->setTextAlign('center')->formatValue(fn ($value) => '<small class="text-muted"><i>'.$this->translate($value).'</i></small>');
+                yield TextField::new('higherRole', 'Statut')->setTextAlign('center')->formatValue(fn ($value) => '<small class="text-muted"><i>'.$this->translate($value).'</i></small>');
                 // yield DateTimeField::new('createdAt')->setFormat('dd/MM/Y - HH:mm')->setTimezone($current_tz);
                 // yield BooleanField::new('darkmode')->setTextAlign('center');
                 yield AssociationField::new('entreprises', 'Entreprises')->setTextAlign('center');
-                yield BooleanField::new('enabled')->setTextAlign('center')->setPermission('ROLE_ADMIN');
-                yield BooleanField::new('isVerified')->setTextAlign('center');
-                yield BooleanField::new('softdeleted')->setTextAlign('center')->setPermission('ROLE_SUPER_ADMIN');
+                // yield BooleanField::new('mainentreprise', 'Membre asso')->setTextAlign('center')->setPermission('ROLE_ADMIN');
+                yield BooleanField::new('enabled', 'Activé')->setTextAlign('center')->setPermission('ROLE_ADMIN');
+                yield BooleanField::new('isVerified', 'Vérifié')->setTextAlign('center');
+                yield BooleanField::new('softdeleted', 'Supprimé')->setTextAlign('center')->setPermission('ROLE_SUPER_ADMIN');
                 // yield TimezoneField::new('timezone')->setTextAlign('center');
-                yield DateTimeField::new('lastLogin')->setFormat('dd/MM/YY HH:mm')->setTimezone($current_tz);
+                yield DateTimeField::new('lastLogin', 'Dern.log')->setFormat('dd/MM/YY HH:mm')->setTimezone($current_tz);
                 break;
         }
     }

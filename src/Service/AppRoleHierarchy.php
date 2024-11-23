@@ -17,7 +17,8 @@ class AppRoleHierarchy extends RoleHierarchy implements AppRoleHierarchyInterfac
      * @param array<string, list<string>> $hierarchy
      */
     public function __construct(
-        #[Autowire(param: 'security.role_hierarchy.roles')] array $hierarchy
+        #[Autowire(param: 'security.role_hierarchy.roles')]
+        array $hierarchy
     )
     {
         parent::__construct($hierarchy);
@@ -28,16 +29,31 @@ class AppRoleHierarchy extends RoleHierarchy implements AppRoleHierarchyInterfac
         return $this->getName();
     }
 
+    /**
+     * Get name of service
+     * 
+     * @return string
+     */
     public function getName(): string
     {
         return static::class;
     }
 
+    /**
+     * Get roles map
+     * 
+     * @return array
+     */
     public function getRolesMap(): array
     {
         return $this->map;
     }
 
+    /**
+     * Get flat map of roles
+     * 
+     * @return array
+     */
     public function getRolesFlatMap(): array
     {
         $flat = [];
@@ -50,6 +66,13 @@ class AppRoleHierarchy extends RoleHierarchy implements AppRoleHierarchyInterfac
         return $flat;
     }
 
+    /**
+     * Sort roles by hierarchy - From lower to higher
+     * 
+     * @param array &$roles
+     * @param bool $filter_main_roles = false
+     * @return void
+     */
     public function sortRoles(
         array &$roles,
         bool $filter_main_roles = false
@@ -70,15 +93,25 @@ class AppRoleHierarchy extends RoleHierarchy implements AppRoleHierarchyInterfac
     /**
      * Get only main roles : keys of map
      * (removes some secondary roles like ROLE_ALLOWED_TO_SWITCH, etc.)
+     * 
      * @return array
      */
     public function getMainRoles(): array
     {
         $roles = array_keys($this->map);
+        // Add ROLE_USER as first role
         array_unshift($roles, LaboUserInterface::ROLE_USER);
+        $this->sortRoles($roles, false);
         return $roles;
     }
 
+    /**
+     * Returns only main roles in $roles : keys of map
+     * (removes some secondary roles like ROLE_ALLOWED_TO_SWITCH, etc.)
+     * 
+     * @param array $roles
+     * @return array
+     */
     public function getReachableRoleNames(array $roles): array
     {
         $roles = parent::getReachableRoleNames($roles);
@@ -86,37 +119,58 @@ class AppRoleHierarchy extends RoleHierarchy implements AppRoleHierarchyInterfac
         return $roles;
     }
 
+    /**
+     * Get higher role of $roles in hierarchy
+     * 
+     * @param array $roles
+     * @return string|false
+     */
     public function getHigherRole(array $roles): string|false
     {
         $this->sortRoles($roles, true);
         return end($roles);
     }
 
+    /**
+     * Get lower role of $roles in hierarchy
+     * 
+     * @param array $roles
+     * @return string|false
+     */
     public function getLowerRole(array $roles): string|false
     {
         $this->sortRoles($roles, true);
         return reset($roles);
     }
 
+    /**
+     * Get inferior roles of $max role given
+     *
+     * @param string $max
+     * @return array
+     */
     public function getInferiorRoles(string $max): array
     {
-        return array_filter($this->getReachableRoleNames($this->getMainRoles()), function ($role) use ($max):bool { return $role !== $max; });
+        return array_filter($this->getReachableRoleNames($this->getMainRoles()), fn ($role) => $role !== $max );
     }
 
     /**
-     * Filter only main roles : keys of map
+     * Get only main roles in $roles : keys of map
      * (removes some secondary roles like ROLE_ALLOWED_TO_SWITCH, etc.)
+     * 
      * @param [string] $roles
      * @return array
      */
     public function filterMainRoles(array $roles): array
     {
-        $mainroles = $this->getMainRoles();
-        return array_filter($roles, function($role) use ($mainroles):bool { return in_array($role, $mainroles); });
+        return $this->getReachableRoleNames($roles);
+        // $mainroles = $this->getMainRoles();
+        // return array_filter($roles, function($role) use ($mainroles):bool { return in_array($role, $mainroles); });
     }
 
     /**
      * Get roles for form choices by User
+     * 
      * @param UserInterface $user
      * @return array
      */

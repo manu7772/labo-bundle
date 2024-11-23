@@ -10,9 +10,6 @@ interface LaboUserInterface extends UserInterface, PasswordAuthenticatedUserInte
 
     public const ROLE_USER = "ROLE_USER";
 
-    public function setRoleHierarchy(AppRoleHierarchyInterface $roleHierarchy): void;
-    public function getHigherRole(): string;
-    public function getRolesChoices(UserInterface $user = null): array;
     public function isVerified(): ?bool;
     public function isDisabled(): bool;
     public function isExpired(): bool;
@@ -27,9 +24,19 @@ interface LaboUserInterface extends UserInterface, PasswordAuthenticatedUserInte
     public function setIsVerified(bool $isVerified): static;
     public function getFirstname(): ?string;
     public function getLastname(): ?string;
+    /** ROLES */
+    public function getReachableRoles(): array;
+    public function sortRoles(): void;
+    public function setRoleHierarchy(AppRoleHierarchyInterface $roleHierarchy): void;
+    public function getRolesChoices(UserInterface $user = null): array;
     public function hasRole(string $role): bool;
     public function addRole(string $role): static;
     public function removeRole(string $role): static;
+    public function setRoles(array $roles): static;
+    public function getRoles(): array;
+    public function getInferiorRoles(): array;
+    public function getLowerRole(): string;
+    public function getHigherRole(): string;
 
 }
 

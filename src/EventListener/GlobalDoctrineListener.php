@@ -168,14 +168,16 @@ class GlobalDoctrineListener
                     $computeChangeSet = false;
                     if($mainentreprise) {
                         if($entity->getMainentreprise()) {
-                            $entity->addRole('ROLE_ADMIN');
+                            if(!$this->manager->isGranted()) {
+                                $entity->addRole('ROLE_ADMIN');
+                            }
                             // Set mainentreprise
                             if(!$entity->getEntreprises()->contains($mainentreprise)) {
                                 $entity->addEntreprise($mainentreprise);
                                 $computeChangeSet = true;
                             }
                         } else {
-                            $entity->removeRole('ROLE_ADMIN');
+                            $entity->setRoles([]);
                             // Unset mainentreprise
                             if($entity->getEntreprises()->contains($mainentreprise)) {
                                 $entity->removeEntreprise($mainentreprise);

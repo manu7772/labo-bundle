@@ -58,8 +58,9 @@ interface AppServiceInterface extends ServiceInterface
     public function getMainSAdmin(): ?LaboUserInterface;
     public function getMainAdmin(): ?LaboUserInterface;
     public function isGranted(mixed $attributes, mixed $subject = null): bool;
-    public function isUserGranted(mixed $attributes, mixed $subject = null, LaboUserInterface $user = null, string $firewallName = null): bool;
-    public function isValidForAction(AppEntityInterface $entity, string $action, ?LaboUserInterface $user = null, string $firewallName = null): bool;
+    // public function isUserGranted(mixed $attributes, mixed $subject = null, LaboUserInterface $user = null, string $firewallName = null): bool;
+    public function isUserGranted(LaboUserInterface $user, $attributes, $object = null, string $firewallName = 'none'): bool;
+    public function isValidForAction(AppEntityInterface $entity, string $action, ?LaboUserInterface $user = null, string $firewallName = 'none'): bool;
     // Date time zone
     public function getCurrentTimezone(bool $asString = false): string|DateTimeZone;
     public function getDatetimeTimezone(string $date = 'NOW'): DateTimeImmutable;

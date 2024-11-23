@@ -264,7 +264,7 @@ abstract class LaboUser extends MappSuperClassEntity implements LaboUserInterfac
         return $this;
     }
 
-    public function addRole($role): static
+    public function addRole(string $role): static
     {
         $this->roles = array_unique(array_merge($this->roles, [$role]));
         $this->sortRoles();
