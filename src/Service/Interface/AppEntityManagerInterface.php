@@ -31,6 +31,8 @@ interface AppEntityManagerInterface extends ServiceInterface
     public function getUser(): ?LaboUserInterface;
     public function getMainSAdmin(): ?LaboUserInterface;
     public function getMainAdmin(): ?LaboUserInterface;
+    public function isGranted(mixed $attributes, mixed $subject = null): bool;
+    public function isUserGranted(LaboUserInterface $user, $attributes, $object = null, string $firewallName = 'none'): bool;
     // EM & REPO
     public function getEntityManager(): EntityManagerInterface;
     public function getRepository(string $classname = null): CommonReposInterface;

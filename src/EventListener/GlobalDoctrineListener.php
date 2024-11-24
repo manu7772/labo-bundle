@@ -168,16 +168,23 @@ class GlobalDoctrineListener
                     $computeChangeSet = false;
                     if($mainentreprise) {
                         if($entity->getMainentreprise()) {
-                            if(!$this->manager->isGranted()) {
+                            if($entity->isSoftdeleted()) {
+                                throw new Exception(vsprintf('Error line %d %s(): %s can not be updated when softdeleted!', [__LINE__, __METHOD__, $entity::class]));
+                            }
+                            if(!$this->manager->isUserGranted($entity, 'ROLE_ADMIN')) {
                                 $entity->addRole('ROLE_ADMIN');
                             }
+                            $entity->setEnabled(true);
+                            $entity->setIsVerified(true);
                             // Set mainentreprise
                             if(!$entity->getEntreprises()->contains($mainentreprise)) {
                                 $entity->addEntreprise($mainentreprise);
                                 $computeChangeSet = true;
                             }
                         } else {
-                            $entity->setRoles([]);
+                            if($this->manager->isUserGranted($entity, 'ROLE_ADMIN')) {
+                                $entity->removeRole('ROLE_ADMIN');
+                            }
                             // Unset mainentreprise
                             if($entity->getEntreprises()->contains($mainentreprise)) {
                                 $entity->removeEntreprise($mainentreprise);

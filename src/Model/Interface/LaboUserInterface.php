@@ -4,6 +4,7 @@ namespace Aequation\LaboBundle\Model\Interface;
 use Aequation\LaboBundle\Service\Interface\AppRoleHierarchyInterface;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
+use DateTimeImmutable;
 
 interface LaboUserInterface extends UserInterface, PasswordAuthenticatedUserInterface, AppEntityInterface, EnabledInterface, CreatedInterface
 {
@@ -24,6 +25,8 @@ interface LaboUserInterface extends UserInterface, PasswordAuthenticatedUserInte
     public function setIsVerified(bool $isVerified): static;
     public function getFirstname(): ?string;
     public function getLastname(): ?string;
+    public function getLastLogin(): ?DateTimeImmutable;
+    public function getExpiresAt(): ?DateTimeImmutable;
     /** ROLES */
     public function getReachableRoles(): array;
     public function sortRoles(): void;

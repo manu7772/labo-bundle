@@ -102,7 +102,7 @@ abstract class LaboUser extends MappSuperClassEntity implements LaboUserInterfac
     protected ?AppRoleHierarchyInterface $roleHierarchy = null;
 
     #[ORM\Column(nullable: true)]
-    protected ?\DateTimeImmutable $lastLogin = null;
+    protected ?DateTimeImmutable $lastLogin = null;
 
     #[ORM\OneToOne(cascade: ['persist', 'remove'], orphanRemoval: true)]
     #[Assert\Valid()]
@@ -410,12 +410,12 @@ abstract class LaboUser extends MappSuperClassEntity implements LaboUserInterfac
         return $this;
     }
 
-    public function getLastLogin(): ?\DateTimeImmutable
+    public function getLastLogin(): ?DateTimeImmutable
     {
         return $this->lastLogin;
     }
 
-    public function setLastLogin(?\DateTimeImmutable $lastLogin): static
+    public function setLastLogin(?DateTimeImmutable $lastLogin): static
     {
         $this->lastLogin = $lastLogin;
 
