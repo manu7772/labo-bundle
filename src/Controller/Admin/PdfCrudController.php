@@ -2,32 +2,35 @@
 namespace Aequation\LaboBundle\Controller\Admin;
 
 use Aequation\LaboBundle\Entity\Pdf;
-use Aequation\LaboBundle\Security\Voter\PdfVoter;
-
-use Aequation\LaboBundle\Controller\Admin\Base\BaseCrudController;
 use Aequation\LaboBundle\Field\EditorjsField;
+
 use Aequation\LaboBundle\Field\VichFileField;
-use Aequation\LaboBundle\Service\Interface\PdfServiceInterface;
-use Aequation\LaboBundle\Service\Interface\LaboUserServiceInterface;
-use EasyCorp\Bundle\EasyAdminBundle\Config\Crud;
-use EasyCorp\Bundle\EasyAdminBundle\Config\Filters;
-use EasyCorp\Bundle\EasyAdminBundle\Field\AssociationField;
-use EasyCorp\Bundle\EasyAdminBundle\Field\BooleanField;
-use EasyCorp\Bundle\EasyAdminBundle\Field\DateTimeField;
-use EasyCorp\Bundle\EasyAdminBundle\Field\IdField;
-use EasyCorp\Bundle\EasyAdminBundle\Field\ImageField;
-use EasyCorp\Bundle\EasyAdminBundle\Field\IntegerField;
-use EasyCorp\Bundle\EasyAdminBundle\Field\SlugField;
-use EasyCorp\Bundle\EasyAdminBundle\Field\TextareaField;
-use EasyCorp\Bundle\EasyAdminBundle\Field\TextEditorField;
-use EasyCorp\Bundle\EasyAdminBundle\Field\TextField;
-use EasyCorp\Bundle\EasyAdminBundle\Filter\DateTimeFilter;
-use EasyCorp\Bundle\EasyAdminBundle\Filter\NumericFilter;
-use EasyCorp\Bundle\EasyAdminBundle\Filter\TextFilter;
-use EasyCorp\Bundle\EasyAdminBundle\Form\Type\FileUploadType;
-use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Vich\UploaderBundle\Form\Type\VichFileType;
+use EasyCorp\Bundle\EasyAdminBundle\Config\Crud;
 use Vich\UploaderBundle\Form\Type\VichImageType;
+use Aequation\LaboBundle\Security\Voter\PdfVoter;
+use EasyCorp\Bundle\EasyAdminBundle\Field\IdField;
+use EasyCorp\Bundle\EasyAdminBundle\Config\Filters;
+use EasyCorp\Bundle\EasyAdminBundle\Field\FormField;
+use EasyCorp\Bundle\EasyAdminBundle\Field\SlugField;
+use EasyCorp\Bundle\EasyAdminBundle\Field\TextField;
+use EasyCorp\Bundle\EasyAdminBundle\Field\ImageField;
+use EasyCorp\Bundle\EasyAdminBundle\Field\ChoiceField;
+use EasyCorp\Bundle\EasyAdminBundle\Filter\TextFilter;
+use EasyCorp\Bundle\EasyAdminBundle\Field\BooleanField;
+use EasyCorp\Bundle\EasyAdminBundle\Field\IntegerField;
+use EasyCorp\Bundle\EasyAdminBundle\Field\DateTimeField;
+use EasyCorp\Bundle\EasyAdminBundle\Field\TextareaField;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
+use EasyCorp\Bundle\EasyAdminBundle\Filter\NumericFilter;
+use EasyCorp\Bundle\EasyAdminBundle\Field\TextEditorField;
+use EasyCorp\Bundle\EasyAdminBundle\Filter\DateTimeFilter;
+use EasyCorp\Bundle\EasyAdminBundle\Field\AssociationField;
+use EasyCorp\Bundle\EasyAdminBundle\Form\Type\FileUploadType;
+use Aequation\LaboBundle\Service\Interface\PdfServiceInterface;
+use Aequation\LaboBundle\Controller\Admin\Base\BaseCrudController;
+use Aequation\LaboBundle\Service\Interface\LaboUserServiceInterface;
+use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 
 #[IsGranted('ROLE_COLLABORATOR')]
 class PdfCrudController extends BaseCrudController
@@ -56,7 +59,12 @@ class PdfCrudController extends BaseCrudController
                 yield AssociationField::new('owner', 'Propriétaire');
                 yield TextField::new('name');
                 yield TextField::new('slug');
+                yield TextField::new('euid', 'URL EUID')
+                    ->setPermission('ROLE_SUPER_ADMIN')
+                    ->formatValue(function ($value) { return urlencode($value); })
+                    ;
                 yield TextField::new('originalname');
+                yield TextField::new('filepathname', 'Consulter')->setTemplatePath('@EasyAdmin/crud/field/pdf_link.html.twig');
                 // yield TextField::new('filename');
                 yield TextField::new('mime');
                 yield TextareaField::new('description');
@@ -64,7 +72,14 @@ class PdfCrudController extends BaseCrudController
                 yield DateTimeField::new('createdAt', 'Date création')->setFormat('dd/MM/Y - HH:mm');
                 break;
             case Crud::PAGE_NEW:
+                yield FormField::AddTab(label: 'Informations', icon: 'fa6-solid:info');
                 yield TextField::new('name')->setColumns(6)->setRequired(true);
+                yield SlugField::new('slug')->setTargetFieldName('name')->setColumns(6);
+                yield ChoiceField::new('sourcetype', 'Type de source')->setChoices(Pdf::getSourcetypeChoices())->setColumns(6)->setPermission('ROLE_SUPER_ADMIN');
+                yield AssociationField::new('owner', 'Propriétaire')->setColumns(6)->setPermission('ROLE_ADMIN')->setCrudController(UserCrudController::class);
+                yield TextareaField::new('description', 'Description du contenu du PDF')->setColumns(12);
+                // Source: PDF file
+                yield FormField::AddTab(label: 'Fichier source', icon: 'fa6-solid:file-pdf')->setHelp('Vous pouvez choisir un fichier PDF');
                 // yield VichFileField::new('file')->setColumns(6);
                 yield TextField::new('file', 'Fichier PDF')
                     ->setColumns(3)
@@ -75,42 +90,66 @@ class PdfCrudController extends BaseCrudController
                         'allow_delete' => false,
                         // 'accept' => 'application/pdf',
                     ]);
-                yield SlugField::new('slug')->setTargetFieldName('name')->setColumns(3);
-                // yield ImageField::new('file', 'Fichier PDF')
-                //     ->setFormType(FileUploadType::class)
-                //     ->setBasePath('uploads/pdf/') //see documentation about ImageField to understand the difference beetwen setBasePath and setUploadDir
-                //     ->setUploadDir('public/uploads/pdf/')
-                //     ->setColumns(6)
-                //     ->setFormTypeOptions(['attr' => [
-                //             'accept' => 'application/pdf'
-                //         ]
-                //     ]);
+                // Source: content
+                yield FormField::AddTab(label: 'Contenu source', icon: 'fa6-solid:pencil')->setHelp('Vous pouvez saisir le contenu du document.<br><strong>Si vous avez désigné un fichier PDF, tout ce contenu sera ignoré</strong>');
+                yield ChoiceField::new('paper', 'Format document')->setChoices(Pdf::getPaperChoices())->setColumns(6);
+                yield ChoiceField::new('orientation', 'Orientation document')->setFormTypeOption('expanded', true)->setChoices(Pdf::getOrientationChoices())->setColumns(6);
                 yield TextEditorField::new('content', 'Contenu du fichier PDF')->setColumns(12)->setHelp('Contenu du document : si vous avez désigné un fichier PDF, ce contenu sera ignoré');
-                yield TextareaField::new('description', 'Description du contenu du PDF')->setColumns(6);
-                yield AssociationField::new('owner', 'Propriétaire')->setColumns(6)->setPermission('ROLE_ADMIN')->setCrudController(UserCrudController::class);
                 break;
             case Crud::PAGE_EDIT:
+                yield FormField::AddTab(label: 'Informations', icon: 'fa6-solid:info');
                 yield TextField::new('name')->setColumns(6)->setRequired(true);
-                yield TextField::new('file', 'Fichier PDF')
-                    ->setTemplatePath('')
-                    ->setFormType(VichFileType::class)
-                    ->setRequired(false)
-                    ->setFormTypeOptions([
-                        'allow_delete' => false,
-                        // 'accept' => 'application/pdf',
-                    ]);
-                yield BooleanField::new('updateSlug')->setLabel('Mettre à jour le slug')->setColumns(6)->setHelp('Si vous cochez cette case, le slug sera mis à jour avec le nom du document.<br><strong>Il n\'est pas recommandé de modifier le slug</strong> car cela change le lien URL du document.');
                 yield SlugField::new('slug')->setTargetFieldName('name')->setColumns(6);
-                yield TextEditorField::new('content', 'Contenu du fichier PDF')->setColumns(12)->setHelp('Contenu du document : si vous avez désigné un fichier PDF, ce contenu sera ignoré');
-                yield TextareaField::new('description', 'Description du contenu du PDF')->setColumns(6);
+                yield ChoiceField::new('sourcetype', 'Type de source')->setChoices(Pdf::getSourcetypeChoices())->setColumns(6)->setPermission('ROLE_SUPER_ADMIN');
                 yield AssociationField::new('owner', 'Propriétaire')->setColumns(6)->setPermission('ROLE_ADMIN')->setCrudController(UserCrudController::class);
+                yield TextareaField::new('description', 'Description du contenu du PDF')->setColumns(12);
+                switch ($info['entity']->getSourcetype()) {
+                    case 2:
+                        # file
+                        // Source: PDF file
+                        yield FormField::AddTab(label: 'Fichier source', icon: 'fa6-solid:file-pdf')->setHelp('Vous pouvez choisir un fichier PDF');
+                        // yield VichFileField::new('file')->setColumns(6);
+                        yield TextField::new('file', 'Fichier PDF')
+                            ->setColumns(3)
+                            ->setTemplatePath('')
+                            ->setFormType(VichFileType::class)
+                            ->setRequired(false)
+                            ->setFormTypeOptions([
+                                'allow_delete' => false,
+                                // 'accept' => 'application/pdf',
+                            ]);
+                        break;
+                    default:
+                        # document
+                        // Source: content
+                        yield FormField::AddTab(label: 'Contenu source', icon: 'fa6-solid:pencil')->setHelp('Vous pouvez saisir le contenu du document.<br><strong>Si vous avez désigné un fichier PDF, tout ce contenu sera ignoré</strong>');
+                        yield ChoiceField::new('paper', 'Format document')->setChoices(Pdf::getPaperChoices())->setColumns(6)->setRequired(false);
+                        yield ChoiceField::new('orientation', 'Orientation document')->setFormTypeOption('expanded', true)->setChoices(Pdf::getOrientationChoices())->setColumns(6)->setRequired(false);
+                        yield TextEditorField::new('content', 'Contenu du fichier PDF')->setColumns(12)->setHelp('Contenu du document : si vous avez désigné un fichier PDF, ce contenu sera ignoré');
+                        break;
+                }
+                // yield TextField::new('name')->setColumns(6)->setRequired(true);
+                // yield TextField::new('file', 'Fichier PDF')
+                //     ->setTemplatePath('')
+                //     ->setFormType(VichFileType::class)
+                //     ->setRequired(false)
+                //     ->setFormTypeOptions([
+                //         'allow_delete' => false,
+                //         // 'accept' => 'application/pdf',
+                //     ]);
+                // yield BooleanField::new('updateSlug')->setLabel('Mettre à jour le slug')->setColumns(6)->setHelp('Si vous cochez cette case, le slug sera mis à jour avec le nom du document.<br><strong>Il n\'est pas recommandé de modifier le slug</strong> car cela change le lien URL du document.');
+                // yield SlugField::new('slug')->setTargetFieldName('name')->setColumns(6);
+                // yield TextEditorField::new('content', 'Contenu du fichier PDF')->setColumns(12)->setHelp('Contenu du document : si vous avez désigné un fichier PDF, ce contenu sera ignoré');
+                // yield TextareaField::new('description', 'Description du contenu du PDF')->setColumns(6);
+                // yield AssociationField::new('owner', 'Propriétaire')->setColumns(6)->setPermission('ROLE_ADMIN')->setCrudController(UserCrudController::class);
                 break;
             default:
                 yield IdField::new('id')->setPermission('ROLE_SUPER_ADMIN');
                 yield TextField::new('name', 'Nom du document');
                 // yield TextField::new('slug');
-                yield TextField::new('originalname', 'Nom du fichier');
-                yield TextField::new('filepathname', 'Consulter')->setTemplatePath('@EasyAdmin/crud/field/pdf_link.html.twig');
+                // yield TextField::new('filename', 'Nom du fichier');
+                yield TextField::new('sourcetypeName', 'Type')->setTextAlign('center');
+                yield TextField::new('filepathname', 'Consulter')->setTextAlign('center')->setTemplatePath('@EasyAdmin/crud/field/pdf_link.html.twig');
                 yield IntegerField::new('size')->setTextAlign('right')->formatValue(function ($value) { return intval($value/1024).'Ko'; });
                 yield AssociationField::new('owner', 'Propriétaire');
                 yield DateTimeField::new('createdAt', 'Date création')->setTextAlign('center')->setFormat('dd/MM/Y - HH:mm');

@@ -60,26 +60,39 @@ class WebpageCrudController extends BaseCrudController
         $current_tz = $timezone !== $user->getTimezone() ? $user->getTimezone() : $timezone;
         switch ($pageName) {
             case Crud::PAGE_DETAIL:
-                yield IdField::new('id');
-                yield AssociationField::new('owner', 'Propriétaire');
-                yield TextField::new('name', 'Nom');
-                yield TextField::new('slug', 'Slug');
-                yield BooleanField::new('prefered', 'Page principale');
-                yield TextField::new('title', 'Titre de la page');
-                yield TextareaField::new('linktitle', 'Titre de lien externe')->formatValue(fn ($value) => Strings::markup($value));
-                yield AssociationField::new('mainmenu', 'Menu intégré');
-                yield TextField::new('twigfileName', 'Nom du modèle');
-                yield TextField::new('twigfile', 'Chemin du modèle')->setPermission('ROLE_SUPER_ADMIN');
-                yield TextField::new('content', 'Texte de la page')->renderAsHtml();
-                yield ArrayField::new('items', 'Sections de pages');
-                yield AssociationField::new('slider', 'Diaporama');
-                yield ArrayField::new('categorys', 'Catégories');
-                yield TextareaField::new('relationOrderDetails', '[Rel.order info]')->setPermission('ROLE_SUPER_ADMIN');
-                yield ThumbnailField::new('photo', 'Photo')->setBasePath($this->getParameter('vich_dirs.item_photo'));
-                yield BooleanField::new('enabled', 'Activée');
-                yield BooleanField::new('softdeleted', 'Supprimée')->setPermission('ROLE_SUPER_ADMIN');
-                yield DateTimeField::new('createdAt', 'Création')->setFormat('dd/MM/Y - HH:mm')->setTimezone($current_tz);
-                yield DateTimeField::new('updatedAt', 'Modification')->setFormat('dd/MM/Y - HH:mm')->setTimezone($current_tz);
+                
+                yield FormField::addColumn('col-md-12 col-lg-6');
+                yield FormField::addPanel(label: 'Mise en page', icon: 'fa6-solid:file-lines');
+                    yield BooleanField::new('prefered', 'Page principale');
+                    yield TextField::new('title', 'Titre de la page');
+                    yield TextareaField::new('linktitle', 'Titre de lien externe')->formatValue(fn ($value) => Strings::markup($value));
+                    yield AssociationField::new('mainmenu', 'Menu intégré')->setCrudController(MenuCrudController::class);
+                    yield TextField::new('twigfileName', 'Nom du modèle')->setPermission('ROLE_SUPER_ADMIN');
+                    yield TextField::new('twigfile', 'Chemin du modèle')->setPermission('ROLE_SUPER_ADMIN');
+                    yield TextField::new('content', 'Texte de la page')->renderAsHtml();
+                    yield ArrayField::new('items', 'Sections de pages');
+                    yield ThumbnailField::new('photo', 'Photo')->setBasePath($this->getParameter('vich_dirs.item_photo'));
+                    yield TextField::new('pdfUrlAccess', 'Version PDF')->setTemplatePath('@EasyAdmin/crud/field/pdf_link.html.twig');
+                
+                yield FormField::addColumn('col-md-12 col-lg-6');
+                yield FormField::addPanel(label: 'Médias associés', icon: 'fa6-solid:link');
+                    yield AssociationField::new('slider', 'Diaporama')->setCrudController(SliderCrudController::class);
+                    yield ArrayField::new('pdfiles', 'Fichiers PDF');
+                    yield ArrayField::new('categorys', 'Catégories');
+
+                yield FormField::addPanel(label: 'Autres informations', icon: 'fa6-solid:info');
+                    yield TextField::new('name', 'Nom');
+                    yield TextField::new('slug', 'Slug');
+                    yield TextField::new('euid', 'Id Unique');
+                    yield DateTimeField::new('createdAt', 'Création')->setFormat('dd/MM/Y - HH:mm')->setTimezone($current_tz);
+                    yield DateTimeField::new('updatedAt', 'Modification')->setFormat('dd/MM/Y - HH:mm')->setTimezone($current_tz);
+
+                yield FormField::addPanel(label: 'Sécurité', icon: 'fa6-solid:lock');
+                    yield AssociationField::new('owner', 'Propriétaire')->setCrudController(UserCrudController::class);
+                    yield IdField::new('id');
+                    yield BooleanField::new('enabled', 'Activée');
+                    yield BooleanField::new('softdeleted', 'Supprimée')->setPermission('ROLE_SUPER_ADMIN');
+                    yield TextareaField::new('relationOrderDetails', '[Rel.order info]')->setPermission('ROLE_SUPER_ADMIN');
                 break;
             case Crud::PAGE_NEW:
                 yield TextField::new('name', 'Nom de la page')
@@ -125,7 +138,7 @@ class WebpageCrudController extends BaseCrudController
             case Crud::PAGE_EDIT:
 
                 yield FormField::addTab('Informations de base')
-                    ->setIcon('info')
+                    ->setIcon('fa6-solid:info')
                     // ->addCssClass('optional')
                     ->setHelp('Informations pour l\'administration. Ces informations ne sont pas visibles sur le site public.');
 
@@ -143,37 +156,41 @@ class WebpageCrudController extends BaseCrudController
                     yield BooleanField::new('prefered', 'Page principale')->setColumns(2)->setHelp('Définir comme page principale du site. Si ce choix est activé, les utilisateurs arriveront directement sur cette page désormais définie comme page d\'accueil.');
 
                 yield FormField::addTab('Contenu de la page')
-                    ->setIcon('globe')
+                    ->setIcon('fa6-solid:globe')
                     // ->addCssClass('optional')
                     ->setHelp('Contenu textes et médias de la page');
 
                     yield FormField::addColumn('col-md-8');
 
-                        yield TextField::new('title', 'Titre de la page');
-                        yield AssociationField::new('categorys')->setQueryBuilder(fn (QueryBuilder $qb): QueryBuilder => CategoryRepository::QB_CategoryChoices($qb, Webpage::class))
-                            // ->autocomplete()
-                            ->setSortProperty('name')
-                            ->setFormTypeOptions(['by_reference' => false]);
-                        yield AssociationField::new('items', 'Sections de pages')
-                            // ->autocomplete()
-                            ->setQueryBuilder(fn (QueryBuilder $qb): QueryBuilder => EcollectionRepository::QB_collectionChoices($qb, Webpage::class, 'items'))
-                            ->setSortProperty('sectiontype')
-                            ->setFormTypeOptions(['by_reference' => false])
-                            ->setRequired(!$this->isGranted('ROLE_SUPER_ADMIN'));
-                        yield AssociationField::new('mainmenu', 'Menu intégré');
-                        yield TextareaField::new('linktitle', 'Titre de lien externe')
-                            ->setHelp('Entrez ici le texte pour les liens qui dirigeront vers cette page web. Optionel : si non renseigné, le Titre de la page sera utilisé.');
-                        yield TextEditorField::new('content', 'Texte de la page')
-                            ->formatValue(fn ($value) => Strings::markup($value));
+                    yield TextField::new('title', 'Titre de la page');
+                    yield AssociationField::new('categorys')->setQueryBuilder(fn (QueryBuilder $qb): QueryBuilder => CategoryRepository::QB_CategoryChoices($qb, Webpage::class))
+                        // ->autocomplete()
+                        ->setSortProperty('name')
+                        ->setFormTypeOptions(['by_reference' => false]);
+                    yield AssociationField::new('items', 'Sections de pages')
+                        // ->autocomplete()
+                        ->setQueryBuilder(fn (QueryBuilder $qb): QueryBuilder => EcollectionRepository::QB_collectionChoices($qb, Webpage::class, 'items'))
+                        ->setSortProperty('sectiontype')
+                        ->setFormTypeOptions(['by_reference' => false])
+                        ->setRequired(!$this->isGranted('ROLE_SUPER_ADMIN'));
+                    yield AssociationField::new('mainmenu', 'Menu intégré');
+                    yield TextareaField::new('linktitle', 'Titre de lien externe')
+                        ->setHelp('Entrez ici le texte pour les liens qui dirigeront vers cette page web. Optionel : si non renseigné, le Titre de la page sera utilisé.');
+                    yield TextEditorField::new('content', 'Contenu de la page')
+                        ->formatValue(fn ($value) => Strings::markup($value));
 
                     yield FormField::addColumn('col-md-4');
-
-                        yield TextField::new('photo', 'Photo')
-                            ->setFormType(PhotoType::class);
+                        yield BooleanField::new('pdfExportable', 'Exportable en PDF')->setHelp('Si activé, un lien vers une version document PDF de cette page sera disponible sur le site public en téléchargement.');
+                        yield TextField::new('photo', 'Photo')->setFormType(PhotoType::class);
                         yield AssociationField::new('slider', 'Diaporama');
 
+                yield FormField::addTab('Médias associés')
+                    ->setIcon('fa6-solid:link');
+
+                    yield AssociationField::new('pdfiles', 'Fichiers PDF')->setColumns(6)->setCrudController(PdfCrudController::class);
+    
                 yield FormField::addTab('Statut')
-                    ->setIcon('lock');
+                    ->setIcon('fa6-solid:lock');
     
                     yield BooleanField::new('enabled', 'Activée');
                     yield BooleanField::new('softdeleted', 'Supprimée')->setPermission('ROLE_SUPER_ADMIN');
@@ -193,8 +210,9 @@ class WebpageCrudController extends BaseCrudController
                 // yield TextField::new('content', 'Texte de la page')->formatValue(fn ($value) => Strings::markup($value))->setSortable(false);
                 // yield AssociationField::new('items', 'Sections de pages')->setTextAlign('center');
                 // yield AssociationField::new('mainmenu', 'Menu intégré')->setTextAlign('center');
+                yield TextField::new('pdfUrlAccess', 'Vers.PDF')->setTextAlign('center')->setTemplatePath('@EasyAdmin/crud/field/pdf_link.html.twig');
                 yield BooleanField::new('enabled', 'Activée')->setTextAlign('center');
-                yield AssociationField::new('owner', 'Propriétaire');
+                yield AssociationField::new('owner', 'Propriétaire')->setCrudController(UserCrudController::class);
                 yield DateTimeField::new('createdAt', 'Création')->setFormat('dd/MM/Y - HH:mm')->setTimezone($current_tz);
                 break;
         }

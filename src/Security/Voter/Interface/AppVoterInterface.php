@@ -6,7 +6,15 @@ use Symfony\Component\Security\Core\Authorization\Voter\VoterInterface;
 interface AppVoterInterface extends VoterInterface
 {
 
-    public const ADD_ACTION_DUPLICATE       = 'duplicate';
+    public const ADD_ACTION_DUPLICATE       = [
+            'name' => 'duplicate',
+            'label' => false,
+            'icon' => 'fa fa-copy',
+            // 'icon' => 'fa6-solid:copy',
+            // 'class' => 'btn btn-sm btn-secondary',
+            'title' => 'action.duplicate',
+            // 'translation_domain' => 'EasyAdminBundle',
+    ];
 
     public const ACTION_LIST                = 'action_list';
     public const ACTION_CREATE              = 'action_create';

@@ -1,0 +1,24 @@
+{# @var ea \EasyCorp\Bundle\EasyAdminBundle\Context\AdminContext #}
+<form class="d-none" method="post" id="duplicate-form">
+    <input type="hidden" name="token" value="{{ ea_csrf_token('ea-duplicate') }}" />
+</form>
+
+<div id="modal-duplicate" class="modal fade" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-body">
+                <h4>{{ 'duplicate_modal.title'|trans([], 'EasyAdminBundle') }}</h4>
+                <p>{{ 'duplicate_modal.content'|trans([], 'EasyAdminBundle') }}</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" data-bs-dismiss="modal" class="btn btn-secondary">
+                    <span class="btn-label">{{ 'action.cancel'|trans([], 'EasyAdminBundle') }}</span>
+                </button>
+
+                <button type="button" data-bs-dismiss="modal" class="btn btn-info" id="modal-duplicate-button" form="duplicate-form">
+                    <span class="btn-label">{{ 'action.duplicate'|trans([], 'EasyAdminBundle') }}</span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

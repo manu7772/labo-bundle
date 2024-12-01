@@ -56,7 +56,7 @@ class EntrepriseCrudController extends LaboUserCrudController
         $current_tz = $timezone !== $entreprise->getTimezone() ? $entreprise->getTimezone() : $timezone;
         switch ($pageName) {
             case Crud::PAGE_DETAIL:
-                yield FormField::addPanel(label: 'Sécurité', icon: 'lock');
+                yield FormField::addPanel(label: 'Sécurité', icon: 'fa6-solid:lock');
                 yield IdField::new('id');
                 yield EmailField::new('email');
                 yield TextField::new('fonction', 'Secteur activité');
@@ -94,7 +94,7 @@ class EntrepriseCrudController extends LaboUserCrudController
                 yield BooleanField::new('softdeleted')->setPermission('ROLE_SUPER_ADMIN');
                 break;
             case Crud::PAGE_NEW:
-                yield FormField::addPanel(label: 'Sécurité', icon: 'lock');
+                yield FormField::addPanel(label: 'Sécurité', icon: 'fa6-solid:lock');
                 yield EmailField::new('email')->setColumns($this->isGranted('ROLE_ADMIN') ? 4 : 6)->setHelp('Le mail doit être unique : l\'enregistrement sera rejeté si une autre personne utilise le mail sur le même site.');
                 yield TextField::new('plainPassword', 'Mot de passe')->setRequired(true)->setColumns($this->isGranted('ROLE_ADMIN') ? 4 : 6)->setHelp('Utilisez des lettres, des signes et des chiffres, et au moins 12 caractères.');
                 yield ChoiceField::new('roles')->setChoices(function(?Entreprise $entreprise): array { return $entreprise->getRolesChoices($this->getUser()); })->setColumns(4)->allowMultipleChoices(true)->setHelp('Les roles déterminent les niveaux d\'accès à l\'administration du site.')->setPermission('ROLE_SUPER_ADMIN');
@@ -123,11 +123,11 @@ class EntrepriseCrudController extends LaboUserCrudController
                 yield BooleanField::new('softdeleted')->setFormTypeOption('attr', ['class' => 'border-danger text-bg-danger'])->setColumns(3)->setPermission('ROLE_SUPER_ADMIN');
                 break;
             case Crud::PAGE_EDIT:
-                yield FormField::AddTab(label: 'Sécurité', icon: 'lock');
+                yield FormField::AddTab(label: 'Sécurité', icon: 'fa6-solid:lock');
                 yield EmailField::new('email')->setColumns($this->isGranted('ROLE_ADMIN') ? 4 : 6)->setHelp('Le mail doit être unique : l\'enregistrement sera rejeté si une autre personne utilise le mail sur le même site.');
                 yield TextField::new('plainPassword', 'Mot de passe', 'Nouveau mot de passe')->setColumns($this->isGranted('ROLE_ADMIN') ? 4 : 6)->setHelp('<strong class="text-danger">ATTENTION</strong> : ne remplissez ce champ QUE SI vous souhaitez changer votre mot de passe. <strong>Dans ce cas, pensez à bien le noter !</strong>');
                 yield ChoiceField::new('roles')->setChoices(function(?Entreprise $entreprise): array { return $entreprise->getRolesChoices($this->getUser()); })->setColumns(4)->allowMultipleChoices(true)->setHelp('Les roles déterminent les niveaux d\'accès à l\'administration du site.')->setPermission('ROLE_SUPER_ADMIN')->renderAsBadges();
-                yield FormField::AddTab(label: 'Autres informations', icon: Entreprise::FA_ICON)->setHelp('Informations supplémentaires');
+                yield FormField::AddTab(label: 'Autres informations', icon: 'fa6-solid:industry')->setHelp('Informations supplémentaires');
                 yield TextField::new('firstname', 'Nom')->setColumns(6);
                 // yield TextField::new('lastname', 'Prénom')->setColumns(6);
                 yield TextField::new('fonction', 'Secteur activité')->setColumns(6);
@@ -147,7 +147,7 @@ class EntrepriseCrudController extends LaboUserCrudController
                 yield BooleanField::new('isVerified')->setColumns(3)->setHelp('Compte vérifié')->setPermission('ROLE_ADMIN');
                 yield BooleanField::new('darkmode')->setColumns(3)->setHelp('Interface graphique en mode sombre')->setPermission('ROLE_SUPER_ADMIN');
                 yield BooleanField::new('softdeleted')->setFormTypeOption('attr', ['class' => 'border-danger text-bg-danger'])->setColumns(3)->setPermission('ROLE_SUPER_ADMIN');
-                yield FormField::AddTab(label: 'Membres', icon: 'users')->setHelp('Membres de l\'entreprise');
+                yield FormField::AddTab(label: 'Membres', icon: 'fa6-solid:users')->setHelp('Membres de l\'entreprise');
                 yield AssociationField::new('members', 'Membres')
                     // ->autocomplete()
                     ->setSortProperty('firstname')

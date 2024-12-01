@@ -1,47 +1,53 @@
 <?php
 namespace Aequation\LaboBundle\EventListener;
 
+use Aequation\LaboBundle\Entity\Pdf;
+use Aequation\LaboBundle\Service\SlugService;
 use Aequation\LaboBundle\Component\AppEntityInfo;
-use Aequation\LaboBundle\EventListener\Attribute\AppEvent;
+use Aequation\LaboBundle\Model\Interface\PdfInterface;
+use Aequation\LaboBundle\Model\Interface\SlugInterface;
 use Aequation\LaboBundle\Model\Final\FinalUserInterface;
-use Aequation\LaboBundle\Model\Interface\AppEntityInterface;
-use Aequation\LaboBundle\Model\Interface\EnabledInterface;
-use Aequation\LaboBundle\Model\Interface\HasOrderedInterface;
 use Aequation\LaboBundle\Model\Interface\ImageInterface;
 use Aequation\LaboBundle\Model\Interface\OwnerInterface;
-use Aequation\LaboBundle\Model\Interface\PreferedInterface;
-use Aequation\LaboBundle\Model\Interface\SlugInterface;
 use Aequation\LaboBundle\Model\Interface\UnamedInterface;
-use Aequation\LaboBundle\Model\Interface\LaboUserInterface;
+use Aequation\LaboBundle\EventListener\Attribute\AppEvent;
+use Aequation\LaboBundle\Model\Interface\EnabledInterface;
 use Aequation\LaboBundle\Model\Interface\WebpageInterface;
+use Aequation\LaboBundle\Model\Interface\LaboUserInterface;
+use Aequation\LaboBundle\Model\Interface\PreferedInterface;
+use Aequation\LaboBundle\Model\Interface\AppEntityInterface;
+use Aequation\LaboBundle\Model\Interface\HasOrderedInterface;
+use Aequation\LaboBundle\Service\Interface\PdfServiceInterface;
 use Aequation\LaboBundle\Service\Interface\AppEntityManagerInterface;
 use Aequation\LaboBundle\Service\Interface\AppRoleHierarchyInterface;
-use Aequation\LaboBundle\Service\SlugService;
+// App
 use App\Entity\Entreprise;
-use Doctrine\Bundle\DoctrineBundle\Attribute\AsDoctrineListener;
-use Doctrine\Common\Collections\ArrayCollection;
-use Doctrine\ORM\EntityManagerInterface;
+// Symfony
 use Doctrine\ORM\Events;
-use Doctrine\Persistence\Event\LifecycleEventArgs;
-use Doctrine\ORM\Event\PostLoadEventArgs;
+use Doctrine\ORM\UnitOfWork;
+use Symfony\Component\Form\FormEvents;
+use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Event\OnFlushEventArgs;
+use Doctrine\ORM\Event\PostLoadEventArgs;
 use Doctrine\ORM\Event\PostFlushEventArgs;
-use Doctrine\ORM\Event\PostPersistEventArgs;
+use Doctrine\ORM\Event\PreUpdateEventArgs;
 use Doctrine\ORM\Event\PostRemoveEventArgs;
 use Doctrine\ORM\Event\PostUpdateEventArgs;
 use Doctrine\ORM\Event\PrePersistEventArgs;
-use Doctrine\ORM\Event\PreUpdateEventArgs;
-use Exception;
-// use Exception;
-use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
-use Symfony\Component\Form\FormEvents;
-use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
+use Doctrine\ORM\Event\PostPersistEventArgs;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Persistence\Event\LifecycleEventArgs;
+use Doctrine\Bundle\DoctrineBundle\Attribute\AsDoctrineListener;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
+use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
+// PHP
+use Exception;
 
 #[AsDoctrineListener(event: AppEvent::onCreate)]
 #[AsDoctrineListener(event: Events::postLoad, priority: 100)]
 // #[AsDoctrineListener(event: AppEvent::onLoad)]
-#[AsDoctrineListener(event: Events::prePersist)]
+#[AsDoctrineListener(event: Events::prePersist, priority: 100)]
 #[AsDoctrineListener(event: Events::postPersist)]
 #[AsDoctrineListener(event: Events::preUpdate)]
 #[AsDoctrineListener(event: Events::postUpdate)]
@@ -105,6 +111,13 @@ class GlobalDoctrineListener
             $entity->updateName();
         }
 
+        if($entity instanceof PdfInterface) {
+            if(empty($entity->getFile())) {
+                // Create PDF file from content
+                // dd($entity);
+            }
+        }
+
         // Specificity entity
         switch (true) {
             case $entity instanceof LaboUserInterface:
@@ -122,6 +135,7 @@ class GlobalDoctrineListener
             $entity->autoUpdateUname();
             /** @var EntityManagerInterface $em */
             $em = $event->getObjectManager();
+            /** @var Doctrine\ORM\UnitOfWork $uow */
             $uow = $em->getUnitOfWork();
             $uow->recomputeSingleEntityChangeSet($em->getClassMetadata($entity::class), $entity);
         }
@@ -259,6 +273,7 @@ class GlobalDoctrineListener
 
     public function onFlush(OnFlushEventArgs $args): void
     {
+        /** @var UnitOfWork */
         $uow = $this->em->getUnitOfWork();
 
         // SLUG ******************************************************************************************************************************************************
@@ -272,6 +287,32 @@ class GlobalDoctrineListener
                         // $resetSlugsControls = true;
                     }
                     break;
+            }
+            if($entity instanceof PdfInterface) {
+                if(empty($entity->getFile())) {
+                    // Create Pdf from content
+                    $entity->setSourcetype('document');
+                    if($entity->getFilename() === null) {
+                        $entity->setFilename($entity->getSlug());
+                        // $uow->recomputeSingleEntityChangeSet($this->em->getClassMetadata(get_class($entity)), $entity);
+                    }
+                    // if($entity->getOriginalname() === null) {
+                    //     $entity->setOriginalname($entity->getSlug());
+                    //     $uow->recomputeSingleEntityChangeSet($this->em->getClassMetadata(get_class($entity)), $entity);
+                    // }
+                    $entity->setOriginalname(null);
+                    /** @var PdfServiceInterface */
+                    $pdfService = $this->manager->getEntityService(Pdf::class);
+                    $stream = $pdfService->output($entity);
+                    $entity->setSize(mb_strlen($stream));
+                    // $uow->recomputeSingleEntityChangeSet($this->em->getClassMetadata(get_class($entity)), $entity);
+                    $entity->setMime('application/pdf');
+                    // $uow->recomputeSingleEntityChangeSet($this->em->getClassMetadata(get_class($entity)), $entity);
+                } else {
+                    // Create Pdf from PDF file
+                    $entity->setSourcetype('file');
+                }
+                $uow->recomputeSingleEntityChangeSet($this->em->getClassMetadata(get_class($entity)), $entity);
             }
         }
         // Update
@@ -368,6 +409,30 @@ class GlobalDoctrineListener
                         }
                     }
                 } while ($done);
+            }
+        }
+
+        // Softdelete
+        foreach ($uow->getScheduledEntityDeletions() as $entity) {
+            if($entity instanceof EnabledInterface && !$entity->isSoftdeleted()) {
+                throw new Exception(vsprintf('Error line %d %s(): %s can not be deleted!', [__LINE__, __METHOD__, $entity::class]));
+                // if(!$entity->isSoftdeleted() || !$this->manager->isGranted('ROLE_SUPER_ADMIN')) {
+                    // $id = $entity->getId();
+                    // $classname = $entity->getClassname();
+                    // detach entity
+                    // $uow->detach($entity);
+                    // retrieve entity
+                    // $entity = $this->manager->getRepository($classname)->find($id);
+                    // $entity->setSoftdeleted(true);
+                    // $uow->scheduleForUpdate($entity);
+                    // $uow->recomputeSingleEntityChangeSet($this->em->getClassMetadata(get_class($entity)), $entity);
+                    // if($uow->isScheduledForDelete($entity)) {
+                    //     throw new Exception(vsprintf('Error line %d %s(): %s can not be deleted!', [__LINE__, __METHOD__, $entity::class]));
+                    // }
+                    // if(!$uow->isScheduledForUpdate($entity)) {
+                    //     throw new Exception(vsprintf('Error line %d %s(): %s can not be softdeleted!', [__LINE__, __METHOD__, $entity::class]));
+                    // }
+                // }
             }
         }
 

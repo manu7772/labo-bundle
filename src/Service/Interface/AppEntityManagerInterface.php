@@ -47,6 +47,9 @@ interface AppEntityManagerInterface extends ServiceInterface
     public function getEntityClassesOfInterface(string|array $interfaces, bool $allnamespaces = false): array;
     public static function getEntityNameAsHtml(string|AppEntityInterface $classOrEntity, bool $icon = true, bool $classname = true): string;
 
+    public function findEntityByUniqueValue(string $value): ?AppEntityInterface;
+    public function findEntityByEuid(string $euid): ?AppEntityInterface;
+
     public function getScheduledForInsert(string|array|callable $filter = null): array;
     public function getScheduledForUpdate(string|array|callable $filter = null): array;
     public function getScheduledForDelete(string|array|callable $filter = null): array;

@@ -70,7 +70,8 @@
         "symfony/ux-turbo": "^2.19",
         "symfony/ux-twig-component": "^2.19",
         "symfony/ux-live-component": "^2.19",
-        "symfony/ux-icons": "^2.19"
+        "symfony/ux-icons": "^2.19",
+        "nucleos/dompdf-bundle": "^4.3"
     },
     "require-dev": {
         "phpunit/phpunit": "^9.5",

@@ -75,19 +75,19 @@ class SliderCrudController extends BaseCrudController
                 break;
             case Crud::PAGE_NEW:
                 yield FormField::addTab('Informations')
-                    ->setIcon('info-circle');
+                    ->setIcon('fa6-solid:info');
 
                     yield TextField::new('name', 'Nom du diaporama')->setColumns(6)->setHelp('Ce nom est administratif, il n\'est pas utilisé dans le site');
-                    yield SlugField::new('slug', 'Slug')->setTargetFieldName('name')->setColumns(3)->setHelp('Utilisez un nom simple et pas trop long. <strong>Il est préférable de ne jamais changer ce slug</strong> car il changera l\'URL de la page et cela réduit l\'efficacité du référencement du site.');
-                    yield BooleanField::new('updateSlug')->setLabel('Mettre à jour le slug')->setColumns(2)->setHelp('Il est recommandé d\'éviter de changer le slug car il est indexé par les moteurs de recherche. Faites-le uniquement si le nom du slug n\'a plus aucun rapport avec le contenu de ce que vous êtes en train d\'éditer.');
-                    yield TextField::new('title', 'Titre')->setColumns(6)->setRequired(false);
+                    yield SlugField::new('slug', 'Slug')->setTargetFieldName('name')->setColumns(5)->setHelp('Utilisez un nom simple et pas trop long. <strong>Il est préférable de bien choisir et de ne jamais changer ce slug ensuite</strong> car il changera l\'URL de la page et cela réduit l\'efficacité du référencement du site.<br>Laissez ce champ comme tel pour que le slug soit généré automatiquement (d\'après le texte du champ "Nom du ...")');
+                    // yield BooleanField::new('updateSlug')->setLabel('Mettre à jour le slug')->setColumns(2)->setHelp('Il est recommandé d\'éviter de changer le slug car il est indexé par les moteurs de recherche. Faites-le uniquement si le nom du slug n\'a plus aucun rapport avec le contenu de ce que vous êtes en train d\'éditer.');
+                    yield TextField::new('title', 'Titre')->setColumns(6)->setHelp('Titre du diaporama, qui peut être affiché conjointement')->setRequired(false);
                     yield ChoiceField::new('slidertype', 'Type de diaporama')
                         ->setChoices(Slider::getSlidertypeChoices(true))
                         ->escapeHtml(false)
                         ->setColumns(6)
                         ->setRequired(true)
                         ;
-                    yield TextEditorField::new('content', 'Texte')->setColumns(12);
+                    yield TextEditorField::new('content', 'Texte de présentation')->setColumns(12);
                     // yield TextareaField::new('content', 'Texte')
                     //     ->setFormType(CKEditorType::class)
                     //     ->setFormTypeOptions(
@@ -99,7 +99,7 @@ class SliderCrudController extends BaseCrudController
                     //     ->setColumns(12);
 
                     yield FormField::addTab('Diapositives')
-                        ->setIcon(Slide::ICON);
+                        ->setIcon('fa6-solid:camera');
 
                     yield AssociationField::new('items', 'Diapositives')
                         ->setQueryBuilder(static fn (QueryBuilder $qb): QueryBuilder => EcollectionRepository::QB_collectionChoices($qb, Slider::class, 'items'))
@@ -130,7 +130,7 @@ class SliderCrudController extends BaseCrudController
                     //     ]);
 
                 yield FormField::addTab('Statut')
-                    ->setIcon('lock');
+                    ->setIcon('fa6-solid:lock');
 
                     yield BooleanField::new('enabled', 'Activé')->setColumns(3)->setHelp('Si le diaporama n\'est pas activé, il ne sera pas visible sur le site.');
                     yield BooleanField::new('softdeleted', 'Supprimé')->setPermission('ROLE_SUPER_ADMIN')->setColumns(3);
@@ -138,28 +138,34 @@ class SliderCrudController extends BaseCrudController
 
                     break;
             case Crud::PAGE_EDIT:
-                yield TextField::new('name', 'Nom du diaporama')->setColumns(6)->setHelp('Ce nom est administratif, il n\'est pas utilisé dans le site');
-                yield SlugField::new('slug', 'Slug')->setTargetFieldName('name')->setColumns(3)->setHelp('Utilisez un nom simple et pas trop long. <strong>Il est préférable de ne jamais changer ce slug</strong> car il changera l\'URL de la page et cela réduit l\'efficacité du référencement du site.');
-                yield BooleanField::new('updateSlug')->setLabel('Mettre à jour le slug')->setColumns(2)->setHelp('Il est recommandé d\'éviter de changer le slug car il est indexé par les moteurs de recherche. Faites-le uniquement si le nom du slug n\'a plus aucun rapport avec le contenu de ce que vous êtes en train d\'éditer.');
-                yield TextField::new('title', 'Titre')->setColumns(6)->setRequired(false);
-                yield ChoiceField::new('slidertype', 'Type de diaporama')
-                    ->setChoices($info['entity']->getSlidertypeChoices(true))
-                    ->escapeHtml(false)
-                    ->setColumns(6)
-                    ->setRequired(true)
-                    ->setDisabled(!empty($info['entity']->getSlidertype()))
-                    ;
-                yield AssociationField::new('items', 'Diapositives')
-                    ->setQueryBuilder(static fn (QueryBuilder $qb): QueryBuilder => EcollectionRepository::QB_collectionChoices($qb, Slider::class, 'items'))
-                    // ->autocomplete()
-                    ->setSortProperty('name')
-                    ->setRequired(false)
-                    ->setFormTypeOption('by_reference', false)
-                    ->setColumns(12);
-                yield TextEditorField::new('content', 'Texte')->setColumns(12);
-                yield BooleanField::new('enabled', 'Activé')->setColumns(3)->setHelp('Si le diaporama n\'est pas activé, il ne sera pas visible sur le site.');
-                yield BooleanField::new('softdeleted', 'Supprimé')->setPermission('ROLE_SUPER_ADMIN')->setColumns(3);
-                yield AssociationField::new('owner', 'Propriétaire')->setColumns(6)->setPermission('ROLE_ADMIN')->setCrudController(UserCrudController::class);
+                    yield FormField::addTab('Informations')
+                        ->setIcon('fa6-solid:info');
+                    yield TextField::new('name', 'Nom du diaporama')->setColumns(6)->setHelp('Ce nom est administratif, il n\'est pas utilisé dans le site');
+                    yield SlugField::new('slug', 'Slug')->setTargetFieldName('name')->setColumns(3)->setHelp('Utilisez un nom simple et pas trop long. <strong>Il est préférable de ne jamais changer ce slug</strong> car il changera l\'URL de la page et cela réduit l\'efficacité du référencement du site.');
+                    yield BooleanField::new('updateSlug')->setLabel('Mettre à jour le slug')->setColumns(2)->setHelp('Il est recommandé d\'éviter de changer le slug car il est indexé par les moteurs de recherche. Faites-le uniquement si le nom du slug n\'a plus aucun rapport avec le contenu de ce que vous êtes en train d\'éditer.');
+                    yield TextField::new('title', 'Titre')->setColumns(6)->setRequired(false);
+                    yield ChoiceField::new('slidertype', 'Type de diaporama')
+                        ->setChoices(Slider::getSlidertypeChoices(true))
+                        ->escapeHtml(false)
+                        ->setColumns(6)
+                        ->setRequired(true)
+                        ;
+                    yield TextEditorField::new('content', 'Texte de présentation')->setColumns(12);
+                    yield FormField::addTab('Diapositives')
+                        ->setIcon('fa6-solid:camera');
+                    yield AssociationField::new('items', 'Diapositives')
+                        ->setQueryBuilder(static fn (QueryBuilder $qb): QueryBuilder => EcollectionRepository::QB_collectionChoices($qb, Slider::class, 'items'))
+                        // ->autocomplete()
+                        ->setSortProperty('name')
+                        ->setRequired(false)
+                        ->setFormTypeOption('by_reference', false)
+                        ->setColumns(12);
+                    yield FormField::addTab('Statut')
+                        ->setIcon('fa6-solid:lock');
+                    yield BooleanField::new('enabled', 'Activé')->setColumns(3)->setHelp('Si le diaporama n\'est pas activé, il ne sera pas visible sur le site.');
+                    yield BooleanField::new('softdeleted', 'Supprimé')->setPermission('ROLE_SUPER_ADMIN')->setColumns(3);
+                    yield AssociationField::new('owner', 'Propriétaire')->setColumns(6)->setPermission('ROLE_ADMIN')->setCrudController(UserCrudController::class);
+
                 break;
             default:
                 yield IdField::new('id')->setPermission('ROLE_SUPER_ADMIN');

@@ -60,7 +60,8 @@ abstract class BaseVoter extends Voter implements VoterInterface, AppVoterInterf
      */
     public static function getAddedActions(): array
     {
-        return array_filter(Classes::getConstants(static::class), fn($name) => preg_match('/^ADD_ACTION_/', $name), ARRAY_FILTER_USE_KEY);
+        $added = array_filter(Classes::getConstants(static::class), fn($name) => preg_match('/^ADD_ACTION_/', $name), ARRAY_FILTER_USE_KEY);
+        return $added;
     }
 
     /**
@@ -159,13 +160,13 @@ abstract class BaseVoter extends Voter implements VoterInterface, AppVoterInterf
     public static function getAddedActionsDescription(): array
     {
         $data = [];
-        foreach (static::getAddedActions() as $const_name => $name) {
-            $data[$const_name] = [
-                'name' => $name,
-                'action' => constant('static::'.strtoupper('ACTION_'.$name)),
-                'action_main' => constant('static::'.strtoupper('MAIN_ACTION_'.$name)),
-                'action_admin' => constant('static::'.strtoupper('ADMIN_ACTION_'.$name)),
+        foreach (static::getAddedActions() as $const_name => $init_data) {
+            $add_data = [
+                'action' => constant('static::'.strtoupper('ACTION_'.$init_data['name'])),
+                'action_main' => constant('static::'.strtoupper('MAIN_ACTION_'.$init_data['name'])),
+                'action_admin' => constant('static::'.strtoupper('ADMIN_ACTION_'.$init_data['name'])),
             ];
+            $data[$const_name] = array_merge($init_data, $add_data);
         }
         return $data;
     }

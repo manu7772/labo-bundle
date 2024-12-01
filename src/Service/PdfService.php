@@ -3,15 +3,20 @@ namespace Aequation\LaboBundle\Service;
 
 use Aequation\LaboBundle\Entity\Pdf;
 use Aequation\LaboBundle\Model\Interface\PdfInterface;
-use Aequation\LaboBundle\Service\Interface\PdfServiceInterface;
+use Aequation\LaboBundle\Model\Interface\PdfizableInterface;
 use Aequation\LaboBundle\Service\Interface\AppServiceInterface;
-
+use Aequation\LaboBundle\Service\Interface\PdfServiceInterface;
+// Symfony
 use Doctrine\ORM\EntityManagerInterface;
-use Liip\ImagineBundle\Imagine\Cache\CacheManager;
 use Symfony\Component\DependencyInjection\Attribute\AsAlias;
-use Symfony\Component\Security\Core\Authorization\AccessDecisionManagerInterface;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
+use Symfony\Component\Security\Core\Authorization\AccessDecisionManagerInterface;
+use Liip\ImagineBundle\Imagine\Cache\CacheManager;
+use Nucleos\DompdfBundle\Factory\DompdfFactoryInterface;
 use Vich\UploaderBundle\Templating\Helper\UploaderHelper;
+// PHP
+use Exception;
+use DateTimeImmutable;
 
 #[AsAlias(PdfServiceInterface::class, public: true)]
 class PdfService extends ItemService implements PdfServiceInterface
@@ -25,11 +30,41 @@ class PdfService extends ItemService implements PdfServiceInterface
         protected ValidatorInterface $validator,
         protected UploaderHelper $vichHelper,
         protected CacheManager $liipCache,
+        protected DompdfFactoryInterface $dompdfFactory,
     )
     {
         parent::__construct($em, $appService, $accessDecisionManager, $validator);
     }
 
+    /**
+     * Output a PDF from HTML content
+     * 
+     * @param string $htmlContent
+     * @param string $paper
+     * @param string $orientation
+     * @param array $options
+     * @return string
+     */
+    public function outputHtml(
+        string $htmlContent,
+        string $paper = 'A4',
+        string $orientation = 'portrait',
+        array $options = []
+    ): string
+    {
+        $dompdf = $this->dompdfFactory->create($options);
+        $dompdf->loadHtml($htmlContent);
+        $dompdf->setPaper($paper, $orientation);
+        $dompdf->render();
+        return $dompdf->output();
+    }
+
+    /**
+     * Get the browser path of a PDF
+     * 
+     * @param PdfInterface $pdf
+     * @return string
+     */
     public function getBrowserPath(
         PdfInterface $pdf,
     ): string
@@ -38,5 +73,21 @@ class PdfService extends ItemService implements PdfServiceInterface
         // dump($browserPath);
         return $browserPath;
     }
+
+    /**
+     * Output a PDF from a PdfizableInterface
+     * 
+     * @param PdfizableInterface $pdf
+     * @return string
+     */
+    public function outputDoc(
+        PdfizableInterface $pdf
+    ): string
+    {
+        $template = $this->appService->twig->createTemplate($pdf->getContent(), $pdf->getFilename());
+        $htmlContent = $template->render(['date' => new DateTimeImmutable()]);
+        return $this->outputHtml($htmlContent, $pdf->getPaper(), $pdf->getOrientation());
+    }
+
 
 }

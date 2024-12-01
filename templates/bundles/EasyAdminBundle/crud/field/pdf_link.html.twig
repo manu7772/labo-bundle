@@ -1,5 +1,8 @@
-{% if field.value %}
-    <a href="{{ field.value }}" target="_blank">Ouvrir <i class="fa fa-{{ constant('Aequation\\LaboBundle\\Entity\\Pdf::ICON') }} fa-fw"></i></a>
+{% set obj = entity.instance %}
+{% if obj.active and field.value %}
+    <a href="{{ obj.getPdfUrlAccess(null, 'inline') }}" target="_blank" class="{{ obj.pdfExportable ? 'text-success' : 'text-warning text-opacity-50' }} mx-2" title="Voir dans un nouvel onglet"><twig:ux:icon name="fa6-solid:file-pdf" width="16" /></a>
+    <a href="{{ obj.getPdfUrlAccess(null, 'attachment') }}" target="_blank" class="{{ obj.pdfExportable ? 'text-success' : 'text-warning text-opacity-50' }}" title="Télécharger sur votre disque dur"><twig:ux:icon name="fa6-solid:download" width="16" /></a>
 {% else %}
-    <i class="fa fa-{{ constant('Aequation\\LaboBundle\\Entity\\Pdf::ICON') }} fa-fw"></i>
+    <span class="text-dark mx-2"><twig:ux:icon name="fa6-solid:file-pdf" width="16" /></span>
+    <span class="text-dark"><twig:ux:icon name="fa6-solid:download" width="16" /></span>
 {% endif %}

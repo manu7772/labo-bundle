@@ -1,32 +1,34 @@
 <?php
 namespace Aequation\LaboBundle\Controller\Admin;
 
-use Aequation\LaboBundle\Security\Voter\UserVoter;
+use App\Entity\User;
+use App\Entity\Entreprise;
+use Doctrine\ORM\QueryBuilder;
+use Aequation\LaboBundle\Field\ThumbnailField;
 use Aequation\LaboBundle\Form\Type\PortraitType;
+use EasyCorp\Bundle\EasyAdminBundle\Config\Crud;
+use Aequation\LaboBundle\Security\Voter\UserVoter;
+use EasyCorp\Bundle\EasyAdminBundle\Field\IdField;
+
+use EasyCorp\Bundle\EasyAdminBundle\Field\FormField;
+use EasyCorp\Bundle\EasyAdminBundle\Field\TextField;
+use EasyCorp\Bundle\EasyAdminBundle\Field\ArrayField;
+use EasyCorp\Bundle\EasyAdminBundle\Field\EmailField;
+use EasyCorp\Bundle\EasyAdminBundle\Field\ImageField;
+use EasyCorp\Bundle\EasyAdminBundle\Field\ChoiceField;
+// use Symfony\Component\Translation\TranslatableMessage;
+use function Symfony\Component\Translation\t;
+use Symfony\Contracts\Translation\TranslatorInterface;
+use EasyCorp\Bundle\EasyAdminBundle\Field\BooleanField;
 use Aequation\LaboBundle\Model\Final\FinalUserInterface;
+use EasyCorp\Bundle\EasyAdminBundle\Field\DateTimeField;
+use EasyCorp\Bundle\EasyAdminBundle\Field\TimezoneField;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
+use EasyCorp\Bundle\EasyAdminBundle\Field\CollectionField;
 use Aequation\LaboBundle\Model\Interface\LaboUserInterface;
 use Aequation\LaboBundle\Repository\LaboCategoryRepository;
-use Aequation\LaboBundle\Service\Interface\LaboUserServiceInterface;
-use App\Entity\Entreprise;
-use App\Entity\User;
-
-use Doctrine\ORM\QueryBuilder;
-use EasyCorp\Bundle\EasyAdminBundle\Config\Crud;
-use EasyCorp\Bundle\EasyAdminBundle\Field\TextField;
-use EasyCorp\Bundle\EasyAdminBundle\Field\TimezoneField;
-use EasyCorp\Bundle\EasyAdminBundle\Field\ArrayField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\AssociationField;
-use EasyCorp\Bundle\EasyAdminBundle\Field\BooleanField;
-use EasyCorp\Bundle\EasyAdminBundle\Field\ChoiceField;
-use EasyCorp\Bundle\EasyAdminBundle\Field\CollectionField;
-use EasyCorp\Bundle\EasyAdminBundle\Field\DateTimeField;
-use EasyCorp\Bundle\EasyAdminBundle\Field\EmailField;
-use EasyCorp\Bundle\EasyAdminBundle\Field\FormField;
-use EasyCorp\Bundle\EasyAdminBundle\Field\IdField;
-use EasyCorp\Bundle\EasyAdminBundle\Field\ImageField;
-use Symfony\Component\Security\Http\Attribute\IsGranted;
-use Symfony\Component\Translation\TranslatableMessage;
-use Symfony\Contracts\Translation\TranslatorInterface;
+use Aequation\LaboBundle\Service\Interface\LaboUserServiceInterface;
 
 #[IsGranted('ROLE_COLLABORATOR')]
 class UserCrudController extends LaboUserCrudController
@@ -49,10 +51,11 @@ class UserCrudController extends LaboUserCrudController
         switch ($pageName) {
             case Crud::PAGE_DETAIL:
                 if(!$manager->isLoggable($user)) {
-                    $this->addFlash('error', new TranslatableMessage('Cet utilisateur ne peut actuellement pas se connecter à son compte (compte expiré, désactivé ou autre raison).'));
+                    $this->addFlash('error', t('Cet utilisateur ne peut actuellement pas se connecter à son compte (compte expiré, désactivé ou autre raison).'));
                 }
                 // ------------------------------------------------- Sécurité
-                yield FormField::addPanel(label: 'Sécurité', icon: 'lock');
+                yield FormField::addColumn('col-md-12 col-lg-6');
+                yield FormField::addPanel(label: 'Sécurité', icon: 'fa6-solid:lock');
                 yield IdField::new('id');
                 yield EmailField::new('email');
                 yield TextField::new('fonction', 'Fonction');
@@ -72,12 +75,12 @@ class UserCrudController extends LaboUserCrudController
                 yield BooleanField::new('isVerified', 'Vérifié');
                 yield BooleanField::new('softdeleted', 'Supprimé')->setPermission('ROLE_SUPER_ADMIN');
                 // ------------------------------------------------- Autres informations
-                yield FormField::addPanel(label: 'Autres informations', icon: 'user')->setHelp('Informations supplémentaires');
+                yield FormField::addColumn('col-md-12 col-lg-6');
+                yield FormField::addPanel(label: 'Autres informations', icon: 'fa6-solid:user')->setHelp('Informations supplémentaires');
                 yield TextField::new('firstname', 'Nom');
                 yield TextField::new('lastname', 'Prénom');
                 yield ArrayField::new('entreprises', 'Entreprises');
-                yield ImageField::new('portrait', 'Photo')
-                    ->setFormType(PortraitType::class)
+                yield ThumbnailField::new('portrait', 'Photo')
                     ->setBasePath($this->getParameter('vich_dirs.user_portrait'));
                 yield CollectionField::new('categorys', 'Catégories');
                 yield TextField::new('timezone');
@@ -95,7 +98,7 @@ class UserCrudController extends LaboUserCrudController
                 break;
             case Crud::PAGE_NEW:
                 // ------------------------------------------------- Sécurité
-                yield FormField::AddTab(label: 'Sécurité', icon: 'lock');
+                yield FormField::AddTab(label: 'Sécurité', icon: 'fa6-solid:lock');
                 yield EmailField::new('email')->setColumns($this->isGranted('ROLE_ADMIN') ? 4 : 6)->setHelp('Le mail doit être unique : l\'enregistrement sera rejeté si une autre personne utilise le mail sur le même site.');
                 yield TextField::new('plainPassword', 'Mot de passe')->setRequired(true)->setColumns($this->isGranted('ROLE_ADMIN') ? 4 : 6)->setHelp('Utilisez des lettres, des signes et des chiffres, et au moins 12 caractères.');
                 yield ChoiceField::new('roles')->setChoices(function(?LaboUserInterface $user): array {
@@ -108,7 +111,7 @@ class UserCrudController extends LaboUserCrudController
                 yield BooleanField::new('darkmode')->setColumns(2)->setHelp('Interface graphique en mode sombre');
                 yield BooleanField::new('softdeleted', 'Supprimé')->setFormTypeOption('attr', ['class' => 'border-danger text-bg-danger'])->setColumns(2)->setPermission('ROLE_SUPER_ADMIN');
                 // ------------------------------------------------- Autres informations
-                yield FormField::AddTab(label: 'Autres informations', icon: 'user')->setHelp('Informations supplémentaires');
+                yield FormField::AddTab(label: 'Autres informations', icon: 'fa6-solid:user')->setHelp('Informations supplémentaires');
                 yield TextField::new('firstname', 'Nom')->setColumns(6);
                 yield TextField::new('lastname', 'Prénom')->setColumns(6);
                 yield TextField::new('fonction', 'Fonction')->setColumns(6);
@@ -121,7 +124,7 @@ class UserCrudController extends LaboUserCrudController
                     ->setFormType(PortraitType::class)
                     ->setColumns(6);
                 yield TimezoneField::new('timezone')->setColumns(4);
-                yield FormField::AddTab(label: 'Entreprises', icon: Entreprise::FA_ICON)->setHelp('Entreprises intégrées')->setPermission('ROLE_ADMIN');
+                yield FormField::AddTab(label: 'Entreprises', icon: 'fa6-solid:industry')->setHelp('Entreprises intégrées')->setPermission('ROLE_ADMIN');
                 yield AssociationField::new('entreprises', 'Entreprises')
                     // ->autocomplete()
                     ->setSortProperty('firstname')
@@ -130,13 +133,13 @@ class UserCrudController extends LaboUserCrudController
                 break;
             case Crud::PAGE_EDIT:
                 if(!$manager->isLoggable($user)) {
-                    $this->addFlash('info', new TranslatableMessage('Cet utilisateur ne peut actuellement pas se connecter à son compte (compte expiré, désactivé ou autre raison).'));
+                    $this->addFlash('info', t('Cet utilisateur ne peut actuellement pas se connecter à son compte (compte expiré, désactivé ou autre raison).'));
                 }
                 // ------------------------------------------------- Actions
                 yield FormField::AddTab(label: 'Actions', icon: 'fa fa-cog')->setHelp('Actions concernant cet utilisateur')->setPermission('ROLE_ADMIN');
                 yield BooleanField::new('mainentreprise', 'Membre de l\'association')->setColumns(6)->setHelp('En plaçant cet utilisateur "membre de l\'association", il sera :<ul><li>visible dans l\'équipe sur le site</li><li>sera ajouté aux ADMIN du site</li></ul>À l\'inverse :<ul><li>ne sera plus visible dans l\'équipe sur le site</li><li>sera retiré des ADMIN du site</li></ul>')->setColumns(12)->setPermission('ROLE_ADMIN');
                 // ------------------------------------------------- Sécurité
-                yield FormField::AddTab(label: 'Sécurité', icon: 'lock');
+                yield FormField::AddTab(label: 'Sécurité', icon: 'fa6-solid:lock');
                 yield EmailField::new('email')->setColumns($this->isGranted('ROLE_ADMIN') ? 4 : 6)->setHelp('Le mail doit être unique : l\'enregistrement sera rejeté si une autre personne utilise le mail sur le même site.');
                 yield TextField::new('plainPassword', 'Mot de passe', 'Nouveau mot de passe')->setColumns($this->isGranted('ROLE_ADMIN') ? 4 : 6)->setHelp('<strong class="text-danger">ATTENTION</strong> : ne remplissez ce champ QUE SI vous souhaitez changer votre mot de passe. <strong>Dans ce cas, pensez à bien le noter !</strong>');
                 yield ChoiceField::new('roles')->setChoices(function(?User $user): array { return $user->getRolesChoices($this->getUser()); })->setColumns(4)->allowMultipleChoices(true)->setHelp('Les roles déterminent les niveaux d\'accès à l\'administration du site.')->setPermission('ROLE_ADMIN')->renderAsBadges();
@@ -146,7 +149,7 @@ class UserCrudController extends LaboUserCrudController
                 yield BooleanField::new('isVerified', 'Vérifié')->setColumns(2)->setHelp('Compte vérifié')->setPermission('ROLE_ADMIN');
                 yield BooleanField::new('softdeleted', 'Supprimé')->setFormTypeOption('attr', ['class' => 'border-danger text-bg-danger'])->setColumns(2)->setPermission('ROLE_SUPER_ADMIN');
                 // ------------------------------------------------- Autres informations
-                yield FormField::AddTab(label: 'Autres informations', icon: 'user')->setHelp('Informations supplémentaires');
+                yield FormField::AddTab(label: 'Autres informations', icon: 'fa6-solid:user')->setHelp('Informations supplémentaires');
                 yield TextField::new('firstname', 'Nom')->setColumns(6);
                 yield TextField::new('lastname', 'Prénom')->setColumns(6);
                 yield TextField::new('fonction', 'Fonction')->setColumns(6);
@@ -162,7 +165,7 @@ class UserCrudController extends LaboUserCrudController
                 yield TimezoneField::new('timezone')->setColumns(4);
                 yield BooleanField::new('darkmode')->setColumns(3)->setHelp('Interface graphique en mode sombre');
                 // ------------------------------------------------- Entreprises
-                yield FormField::AddTab(label: 'Entreprises', icon: Entreprise::FA_ICON)->setHelp('Entreprises intégrées')->setPermission('ROLE_ADMIN');
+                yield FormField::AddTab(label: 'Entreprises', icon: 'fa6-solid:industry')->setHelp('Entreprises intégrées')->setPermission('ROLE_ADMIN');
                 yield AssociationField::new('entreprises', 'Entreprises')
                     // ->autocomplete()
                     ->setSortProperty('firstname')
@@ -173,11 +176,11 @@ class UserCrudController extends LaboUserCrudController
                 yield IdField::new('id')->setPermission('ROLE_SUPER_ADMIN');
                 yield EmailField::new('email');
                 yield TextField::new('firstname', 'Nom')->setTextAlign('center');
-                yield ImageField::new('portrait', 'Photo')
+                yield ThumbnailField::new('portrait', 'Photo')
                     ->setBasePath($this->getParameter('vich_dirs.user_portrait'))
                     ->setTextAlign('center')
                     ->setSortable(false);
-                yield TextField::new('higherRole', 'Statut')->setTextAlign('center')->formatValue(fn ($value) => '<small class="text-muted"><i>'.$this->translate($value).'</i></small>');
+                yield TextField::new('higherRole', 'Statut')->setTextAlign('center')->setCssClass('text-muted italic')->formatValue(fn ($value) => $this->translate($value));
                 // yield DateTimeField::new('createdAt')->setFormat('dd/MM/Y - HH:mm')->setTimezone($current_tz);
                 // yield BooleanField::new('darkmode')->setTextAlign('center');
                 yield AssociationField::new('entreprises', 'Entreprises')->setTextAlign('center');

@@ -14,7 +14,8 @@ use Aequation\LaboBundle\Model\Trait\Unamed;
 use Aequation\LaboBundle\Service\Interface\AppEntityManagerInterface;
 use Aequation\LaboBundle\Service\Interface\LaboCategoryServiceInterface;
 use Aequation\LaboBundle\Service\Tools\Classes;
-
+use Doctrine\ORM\Event\PrePersistEventArgs;
+use Doctrine\ORM\Event\PreUpdateEventArgs;
 use Doctrine\ORM\Mapping as ORM;
 use Doctrine\ORM\Mapping\HasLifecycleCallbacks;
 use Doctrine\ORM\Mapping\MappedSuperclass;
@@ -96,6 +97,19 @@ abstract class LaboCategory extends MappSuperClassEntity implements LaboCategory
     public function getType(): string
     {
         return $this->type;
+    }
+
+    #[ORM\PrePersist]
+    #[ORM\PreUpdate]
+    public function checkType(
+        PrePersistEventArgs|PreUpdateEventArgs $event
+    ): bool
+    {
+        $exists = $this->_service->entityExists($this->type, true, false);
+        if(!$exists && $this->_service->isDev()) {
+            throw new Exception(vsprintf('Error %s line %d: type entity %s does not exist!', [__METHOD__, __LINE__, $this->type]));
+        }
+        return $exists;
     }
 
     public function getShorttype(): string

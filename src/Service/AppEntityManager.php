@@ -7,6 +7,7 @@ use Aequation\LaboBundle\Component\HydratedReferences;
 use Aequation\LaboBundle\Component\Opresult;
 use Aequation\LaboBundle\EventListener\Attribute\AppEvent;
 use Aequation\LaboBundle\Model\Interface\AppEntityInterface;
+use Aequation\LaboBundle\Model\Interface\EnabledInterface;
 use Aequation\LaboBundle\Model\Interface\OwnerInterface;
 use Aequation\LaboBundle\Model\Interface\UnamedInterface;
 use Aequation\LaboBundle\Model\Interface\LaboUserInterface;
@@ -373,6 +374,15 @@ class AppEntityManager extends BaseService implements AppEntityManagerInterface
         // if(!empty($field)) dump($classname, $field, get_class($repo));
         if(!($repo instanceof CommonReposInterface)) dd($this->__toString(), $origin_classname, $classname, $cmd, $cmd->name, $repo);
         return $repo;
+    }
+
+    public function findEntityByUniqueValue(
+        string $value
+    ): ?AppEntityInterface
+    {
+        return Encoders::isEuidFormatValid($value)
+            ? $this->findEntityByEuid($value)
+            : $this->findByUname($value, false);
     }
 
     /**
@@ -829,6 +839,24 @@ class AppEntityManager extends BaseService implements AppEntityManagerInterface
     }
 
     public function delete(
+        AppEntityInterface $entity,
+        bool|Opresult $opresultException = true
+    ): bool
+    {
+        if($entity instanceof EnabledInterface) {
+            if($entity->isSoftDeleted() && $this->isGranted('ROLE_SUPER_ADMIN')) {
+                $this->doDelete($entity, $opresultException);
+            } else {
+                $entity->setSoftDeleted(true);
+                $this->em->flush();
+            }
+        } else {
+            $this->doDelete($entity, $opresultException);
+        }
+        return true;
+    }
+
+    protected function doDelete(
         AppEntityInterface $entity,
         bool|Opresult $opresultException = true
     ): bool

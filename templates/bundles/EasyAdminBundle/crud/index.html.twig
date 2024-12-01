@@ -41,7 +41,7 @@
         {% set custom_page_title = ea.crud.customPageTitle('index', null, ea.i18n.translationParameters) %}
         {{ custom_page_title is null
             ? ea.crud.defaultPageTitle('index', null, ea.i18n.translationParameters)|trans|raw
-            : custom_page_title|trans|raw }}
+            : custom_page_title|trans|raw }} <small>({{ entities|length }})</small>
     {%- endapply -%}
 {% endblock %}
 
@@ -93,6 +93,7 @@
     {% set has_filters = filters|length > 0 %}
     {% set num_results = entities|length %}
 
+    {% do laboPrepareDto(entities, 'index') %}
     <table class="table datagrid {{ entities is empty ? 'datagrid-empty' }}">
         {% if num_results > 0 %}
             <thead>
@@ -138,7 +139,7 @@
                 {% if entity.isAccessible %}
                     <tr data-id="{{ entity.primaryKeyValueAsString }}">
                         {% if has_batch_actions %}
-                            <td class="batch-actions-selector">
+                            <td class="batch-actions-selector {{ laboFilterDtoClass(entity.fields|first.cssClass) }}">
                                 <div class="form-check">
                                     <input type="checkbox" class="form-check-input form-batch-checkbox" id="form-batch-checkbox-{{ loop.index0 }}" value="{{ entity.primaryKeyValue }}">
                                 </div>
@@ -152,7 +153,7 @@
                         {% endfor %}
 
                         {% block entity_actions %}
-                            <td class="actions {{ ea.crud.showEntityActionsAsDropdown ? 'actions-as-dropdown' }}">
+                            <td class="actions {{ ea.crud.showEntityActionsAsDropdown ? 'actions-as-dropdown' }} {{ laboFilterDtoClass(entity.fields|first.cssClass) }}">
                                 {% if entity.actions.count > 0 %}
                                     {% if ea.crud.showEntityActionsAsDropdown %}
                                         <div class="dropdown dropdown-actions">
@@ -231,6 +232,9 @@
     {% block delete_form %}
         {{ include('@EasyAdmin/crud/includes/_delete_form.html.twig', with_context = false) }}
     {% endblock delete_form %}
+    {% block duplicate_form %}
+        {{ include('@EasyAdmin/crud/includes/_duplicate_form.html.twig', with_context = false) }}
+    {% endblock duplicate_form %}
 
     {% if has_filters %}
         {{ include('@EasyAdmin/crud/includes/_filters_modal.html.twig') }}

@@ -85,7 +85,7 @@ abstract class BaseCrudController extends AbstractCrudController
     protected function translate(
         mixed $data,
         array $parameters = [],
-        string $domain = null,
+        string $domain = 'EasyAdminBundle',
         string $locale = null,
     ): mixed
     {
@@ -123,12 +123,12 @@ abstract class BaseCrudController extends AbstractCrudController
         $action_lnks = [];
         foreach ($voter::getAddedActionsDescription() as $action_data) {
             $action_lnks[$action_data['name']] = Action::new($action_data['name'],'')
+                ->setLabel($this->translate($action_data['label']))
                 ->linkToCrudAction($action_data['name'])
-                ->setHtmlAttributes(['title' => ucfirst($action_data['name'])])
-                ->setIcon('fa fa-copy')
+                ->setHtmlAttributes(['title' => $this->translate($action_data['title'])])
+                ->setIcon($action_data['icon'])
                 ->displayAsLink()
                 ->displayIf(fn(AppEntityInterface $entity) => $this->isGranted($action_data['action'], $entity))
-                // ->displayIf(fn(AppEntityInterface $entity) => !preg_match('/(\s-\scopie\d+)$/', $entity->getName()))
                 ;
         }
 
@@ -145,9 +145,9 @@ abstract class BaseCrudController extends AbstractCrudController
         $actions->add(Crud::PAGE_INDEX, Action::DETAIL);
         $actions->update(Crud::PAGE_INDEX, Action::DETAIL, function(Action $action) use ($voter) {
             $action
-                ->setLabel('')
+                ->setLabel(false)
                 ->setIcon('fa fa-eye')
-                ->setHtmlAttributes(['title' => 'Consulter'])
+                ->setHtmlAttributes(['title' => $this->translate('action.detail')])
                 ->displayIf(function (AppEntityInterface $entity) use ($voter) {
                     return $this->isGranted($voter::ACTION_READ, $entity);
                 });
@@ -157,7 +157,7 @@ abstract class BaseCrudController extends AbstractCrudController
         // NEW
         $actions->update(Crud::PAGE_INDEX, Action::NEW, function(Action $action) use ($voter) {
             $action
-                ->setLabel('Nouveau')
+                ->setLabel($this->translate('action.new'))
                 ->setIcon('fa fa-plus')
                 ->displayIf(function (?AppEntityInterface $entity) use ($voter) {
                     return $this->isGranted($voter::ACTION_CREATE, $entity ?? static::ENTITY);
@@ -168,9 +168,9 @@ abstract class BaseCrudController extends AbstractCrudController
         // EDIT
         $actions->update(Crud::PAGE_INDEX, Action::EDIT, function(Action $action) use ($voter) {
             $action
-                ->setLabel('')
+                ->setLabel(false)
                 ->setIcon('fa fa-pencil')
-                ->setHtmlAttributes(['title' => 'Éditer'])
+                ->setHtmlAttributes(['title' => $this->translate('action.edit')])
                 ->displayIf(function (AppEntityInterface $entity) use ($voter) {
                     return $this->isGranted($voter::ACTION_UPDATE, $entity);
                 });
@@ -180,9 +180,9 @@ abstract class BaseCrudController extends AbstractCrudController
         // DELETE
         $actions->update(Crud::PAGE_INDEX, Action::DELETE, function(Action $action) use ($voter) {
             $action
-                ->setLabel('')
+                ->setLabel(false)
                 ->setIcon('fa fa-trash text-muted')
-                ->setHtmlAttributes(['title' => 'Supprimer'])
+                ->setHtmlAttributes(['title' => $this->translate('action.delete')])
                 ->displayIf(function (AppEntityInterface $entity) use ($voter) {
                     return $this->isGranted($voter::ACTION_DELETE, $entity);
                 });
@@ -198,9 +198,9 @@ abstract class BaseCrudController extends AbstractCrudController
         // INDEX
         $actions->update(Crud::PAGE_DETAIL, Action::INDEX, function(Action $action) use ($voter) {
             $action
-                ->setLabel('Liste')
+                ->setLabel($this->translate('action.index'))
                 ->setIcon('fa fa-list')
-                ->setHtmlAttributes(['title' => 'Retour à la liste'])
+                ->setHtmlAttributes(['title' => $this->translate('action.index')])
                 ->displayIf(function (AppEntityInterface $entity) use ($voter) {
                     return $this->isGranted($voter::ACTION_LIST, $entity);
                 });
@@ -266,7 +266,9 @@ abstract class BaseCrudController extends AbstractCrudController
 
         $actions
             ->add(Crud::PAGE_INDEX, $action_lnks['duplicate'])
-            ->reorder(Crud::PAGE_INDEX, [Action::DELETE, 'duplicate', Action::EDIT, Action::DETAIL]);
+            ->add(Crud::PAGE_DETAIL, $action_lnks['duplicate'])
+            ->reorder(Crud::PAGE_INDEX, [Action::DELETE, 'duplicate', Action::EDIT, Action::DETAIL])
+            ;
 
         // $goToStripe = Action::new('goToStripe')
         //     ->createAsGlobalAction()
@@ -320,6 +322,11 @@ abstract class BaseCrudController extends AbstractCrudController
             throw new InsufficientEntityPermissionException($context);
         }
 
+        // $csrfToken = $context->getRequest()->request->get('token');
+        // if ($this->container->has('security.csrf.token_manager') && !$this->isCsrfTokenValid('ea-duplicate', $csrfToken)) {
+        //     return $this->redirectToRoute($context->getDashboardRouteName());
+        // }
+
         // Get clone from original entity
         /** @var AppEntityInterface $model */
         $model = $context->getEntity()->getInstance();
@@ -355,6 +362,10 @@ abstract class BaseCrudController extends AbstractCrudController
 
             return $this->getRedirectResponseAfterSave($context, Action::NEW);
         }
+
+        // if (null !== $referrer = $context->getReferrer()) {
+        //     return $this->redirect($referrer);
+        // }
 
         $responseParameters = $this->configureResponseParameters(KeyValueStore::new([
             'pageName' => Crud::PAGE_NEW,
@@ -510,7 +521,6 @@ abstract class BaseCrudController extends AbstractCrudController
     {
         $this->manager->delete($entityInstance);
     }
-
 
     public function createEditFormBuilder(EntityDto $entityDto, KeyValueStore $formOptions, AdminContext $context): FormBuilderInterface
     {
