@@ -73,6 +73,25 @@ class Encoders extends BaseService
 
 
     /*************************************************************************************
+     * RANDOMS
+     *************************************************************************************/
+
+    /**
+     * Generate Random String of numbers
+     *
+     * @param integer $length
+     * @return string
+     */
+    public static function generateRandomNumber(
+        int $length
+    ): string
+    {
+        $max = (10 ** $length) - 1;
+        return str_pad((string)rand(0, $max), $length, '0', STR_PAD_LEFT);
+    } 
+
+
+    /*************************************************************************************
      * JSON
      *************************************************************************************/
 

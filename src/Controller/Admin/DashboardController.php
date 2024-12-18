@@ -32,6 +32,7 @@ use EasyCorp\Bundle\EasyAdminBundle\Config\Crud;
 use Symfony\Component\Security\Core\User\UserInterface;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Dashboard;
 use EasyCorp\Bundle\EasyAdminBundle\Config\MenuItem;
+use EasyCorp\Bundle\EasyAdminBundle\Config\Option\EA;
 use EasyCorp\Bundle\EasyAdminBundle\Config\UserMenu;
 use EasyCorp\Bundle\EasyAdminBundle\Controller\AbstractDashboardController;
 use EasyCorp\Bundle\EasyAdminBundle\Router\AdminUrlGenerator;
@@ -171,6 +172,7 @@ class DashboardController extends AbstractDashboardController
             ->setController(UserCrudController::class)
             ->setEntityId($user->getId())
             ->setAction(Crud::PAGE_DETAIL)
+            ->set('detail_option', 'user_profile')
             ->generateUrl();
         /** @var LaboUserInterface $user */
         // Usually it's better to call the parent method because that gives you a

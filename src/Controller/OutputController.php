@@ -38,11 +38,14 @@ class OutputController extends AbstractController
         return $response;
     }
 
+    /**
+     * ACTION : inline / attachment
+     */
     #[Route('/pdf/{action<(inline|attachment)>}/{pdf}/{paper}/{orientation}', name: 'pdf_action', methods: ['GET'], defaults: ['action' => 'inline', 'paper' => null, 'orientation' => 'portrait'])]
     public function pdfOutputAction(
-        string $action = 'inline',
         string $pdf,
         string $paper = null,
+        string $action = 'inline',
         string $orientation = 'portrait',
         PdfServiceInterface $pdfService
     ): Response
