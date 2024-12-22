@@ -43,11 +43,11 @@ class OutputController extends AbstractController
      */
     #[Route('/pdf/{action<(inline|attachment)>}/{pdf}/{paper}/{orientation}', name: 'pdf_action', methods: ['GET'], defaults: ['action' => 'inline', 'paper' => null, 'orientation' => 'portrait'])]
     public function pdfOutputAction(
+        PdfServiceInterface $pdfService,
         string $pdf,
-        string $paper = null,
         string $action = 'inline',
-        string $orientation = 'portrait',
-        PdfServiceInterface $pdfService
+        ?string $paper = null,
+        string $orientation = 'portrait'
     ): Response
     {
         $doc = $this->appEm->findEntityByUniqueValue($pdf);
