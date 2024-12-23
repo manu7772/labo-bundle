@@ -1,6 +1,7 @@
 <?php
 namespace Aequation\LaboBundle\Model\Interface;
 
+use DateTimeInterface;
 use Symfony\Component\HttpFoundation\File\File;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
@@ -24,7 +25,7 @@ interface PdfInterface extends ItemInterface, SlugInterface, PdfizableInterface
     public function getFile(): File|null;
     public function getFilepathname($filter = null, array $runtimeConfig = [], $resolver = null, $referenceType = UrlGeneratorInterface::ABSOLUTE_URL): ?string;
     public function updateName(): static;
-    public function getFilename(): ?string;
+    public function getFilename(bool|DateTimeInterface $versioned = false): ?string;
     public function setFilename(?string $filename): static;
     public function getSize(): ?int;
     public function setSize(?int $size): static;

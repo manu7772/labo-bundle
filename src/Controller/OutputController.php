@@ -5,6 +5,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Aequation\LaboBundle\Model\Interface\PdfInterface;
 use Aequation\LaboBundle\Model\Interface\PdfizableInterface;
+use Aequation\LaboBundle\Model\Interface\WebpageInterface;
 // Symfony
 use Aequation\LaboBundle\Service\Interface\PdfServiceInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -27,10 +28,10 @@ class OutputController extends AbstractController
     {
         $response = new Response(status: Response::HTTP_OK);
         $response->headers->set('Content-Type', $pdf->getMime());
-        $response->headers->set('Content-Disposition', $action.'; filename="' . $pdf->getFilename() . '"');
+        $response->headers->set('Content-Disposition', $action.'; filename="' . $pdf->getFilename(true) . '"');
         if($pdf instanceof PdfInterface && $pdf->getSourcetype() === 2) {
             if($path = $pdf->getFilepathname()) {
-                dd($path, file_exists($path));
+                // dd($path, file_exists($path));
                 return $this->redirect($path, Response::HTTP_FOUND);
             }
         }
@@ -50,7 +51,11 @@ class OutputController extends AbstractController
         string $orientation = 'portrait'
     ): Response
     {
-        $doc = $this->appEm->findEntityByUniqueValue($pdf);
+        // Try by Webpage slug first
+        /** @var ServiceEntityRepository */
+        $repo = $this->appEm->getRepository(WebpageInterface::class);
+        $doc = $repo->findOneBySlug($pdf);
+        $doc ??= $this->appEm->findEntityByUniqueValue($pdf);
         /** @var ServiceEntityRepository $repo */
         $repo = $this->pdfService->getRepository();
         $doc ??= $repo->find($pdf);

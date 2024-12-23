@@ -19,6 +19,7 @@ use Symfony\Component\Serializer\Attribute as Serializer;
 use Aequation\LaboBundle\Model\Interface\PdfizableInterface;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Aequation\LaboBundle\Service\Interface\PdfServiceInterface;
+use DateTimeInterface;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 
 #[ORM\Entity(repositoryClass: PdfRepository::class)]
@@ -176,9 +177,18 @@ class Pdf extends Item implements PdfInterface
         return $this;
     }
 
-    public function getFilename(): ?string
+    public function getFilename(
+        bool|DateTimeInterface $versioned = false
+    ): ?string
     {
-        return $this->filename;
+        $date = null;
+        if($versioned === true) {
+            $date = $this->getUpdatedAt() ?? $this->getCreatedAt();
+        } elseif($versioned instanceof DateTimeInterface) {
+            $date = $versioned;
+        }
+        return $this->filename.($date ? '_v'.$date->format('Ymd-His') : '').'.pdf';
+        // return $this->filename;
     }
 
     public function setFilename(?string $filename): static

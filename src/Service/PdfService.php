@@ -4,6 +4,7 @@ namespace Aequation\LaboBundle\Service;
 use Aequation\LaboBundle\Entity\Pdf;
 use Aequation\LaboBundle\Model\Interface\PdfInterface;
 use Aequation\LaboBundle\Model\Interface\PdfizableInterface;
+use Aequation\LaboBundle\Model\Interface\WebpageInterface;
 use Aequation\LaboBundle\Service\Interface\AppServiceInterface;
 use Aequation\LaboBundle\Service\Interface\PdfServiceInterface;
 // Symfony
@@ -53,6 +54,14 @@ class PdfService extends ItemService implements PdfServiceInterface
     ): string
     {
         $dompdf = $this->dompdfFactory->create($options);
+        // --- Set options
+        // $options = $dompdf->getOptions();
+        // dump($options);
+        // $options->setChroot(['/public/assets', '/public/media']);
+        // $options->set('isRemoteEnabled', true);
+        // dd($options);
+        // $dompdf->setOptions($options);
+        // --- Load HTML content
         $dompdf->loadHtml($htmlContent);
         $dompdf->setPaper($paper, $orientation);
         $dompdf->render();
@@ -81,11 +90,21 @@ class PdfService extends ItemService implements PdfServiceInterface
      * @return string
      */
     public function outputDoc(
-        PdfizableInterface $pdf
+        PdfizableInterface $pdf,
+        string $template = '@AequationLabo/pdf/webpage_export.html.twig'
     ): string
     {
-        $template = $this->appService->twig->createTemplate($pdf->getContent(), $pdf->getFilename());
-        $htmlContent = $template->render(['date' => new DateTimeImmutable()]);
+        $content = $pdf->getContent();
+        if($pdf instanceof WebpageInterface) {
+            $htmlContent = $this->appService->twig->render($template, ['webpage' => $pdf, 'date' => new DateTimeImmutable(), 'appServie' => $this->appService]);
+            // if (!empty($photo = $pdf->getPhoto())) {
+            //     $content = '<img src="'.$photo->getFilepathname().'" style="width: 80%; height: auto; margin: 20px auto;">'.$content;
+            // }
+            // $content = '<h1 style="font-size: 2.4rem; text-align: center; margin: 0 auto 48px; color: darkblue;">'.$pdf->getTitle().'</h1>'.$content;
+        } else {
+            $template = $this->appService->twig->createTemplate($content, $pdf->getFilename(true));
+            $htmlContent = $template->render(['date' => new DateTimeImmutable(), 'appServie' => $this->appService]);
+        }
         return $this->outputHtml($htmlContent, $pdf->getPaper(), $pdf->getOrientation());
     }
 
