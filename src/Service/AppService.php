@@ -67,7 +67,7 @@ class AppService extends BaseService implements AppServiceInterface
     protected ?Request $request;
     protected ?Session $session;
     protected Identity $identity;
-    protected string $project_dir;
+    // protected string $project_dir;
     protected ?string $_route;
     protected mixed $_route_params;
 
@@ -258,8 +258,8 @@ class AppService extends BaseService implements AppServiceInterface
         bool $endSeparator = false,
     ): string
     {
-        $this->project_dir ??= $this->getDir(null, false);
-        return $this->project_dir.($endSeparator ? DIRECTORY_SEPARATOR : '');
+        $project_dir = preg_replace('/\\'.DIRECTORY_SEPARATOR.'*$/', '', $this->kernel->getProjectDir());
+        return $endSeparator ? $project_dir.DIRECTORY_SEPARATOR : $project_dir;
     }
 
     public function getDir(
@@ -267,12 +267,8 @@ class AppService extends BaseService implements AppServiceInterface
         bool $endSeparator = false,
     ): string
     {
-        $dir = preg_replace('/\\'.DIRECTORY_SEPARATOR.'+/', DIRECTORY_SEPARATOR, $this->getProjectDir(true).$path.DIRECTORY_SEPARATOR);
-        if(!$endSeparator) {
-            $dir = preg_replace('/\\'.DIRECTORY_SEPARATOR.'*$/', '', $dir);
-        }
-        return $dir;
-        // return file_exists($dir) ? $dir : false;
+        $dir = $this->getProjectDir(true).ltrim(ltrim($path, DIRECTORY_SEPARATOR), DIRECTORY_SEPARATOR).DIRECTORY_SEPARATOR;
+        return $endSeparator ? $dir : preg_replace('/\\'.DIRECTORY_SEPARATOR.'*$/', '', $dir);
     }
 
 

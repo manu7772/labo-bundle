@@ -267,7 +267,7 @@ class WebsectionCrudController extends BaseCrudController
                 // yield AssociationField::new('mainmenu', 'Menu intégré')->setTextAlign('center');
                 yield AssociationField::new('owner', 'Propriétaire')->setTextAlign('center');
                 yield BooleanField::new('prefered', 'Section par défaut')->setTextAlign('center');
-                // yield BooleanField::new('enabled', 'Activée')->setTextAlign('center');
+                yield BooleanField::new('enabled', 'Activée')->setTextAlign('center');
                 // yield DateTimeField::new('createdAt', 'Création')->setFormat('dd/MM/Y - HH:mm')->setTimezone($current_tz);
                 break;
         }

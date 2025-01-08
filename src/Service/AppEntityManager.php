@@ -879,6 +879,11 @@ class AppEntityManager extends BaseService implements AppEntityManagerInterface
         return true;
     }
 
+    public function flush(): void
+    {
+        $this->em->flush();
+    }
+
 
     /*********************************************************************************************/
     /** USER / GRANTS                                                                            */

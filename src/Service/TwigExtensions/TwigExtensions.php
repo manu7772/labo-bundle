@@ -65,6 +65,7 @@ class TwigExtensions extends AbstractExtension implements GlobalsInterface
             new TwigFunction('url_if_exists', [$this->appService, 'getUrlIfExists']),
             new TwigFunction('is_current_route', [$this->appService, 'isCurrentRoute']),
             // HTML tools & icons
+            new TwigFunction('getImageBase64', [$this, 'getImageBase64']),
             new TwigFunction('decorate', [Strings::class, 'decorate']),
             new TwigFunction('icon', [$this, 'getIcon'], ['is_safe' => ['html']]),
             new TwigFunction('validIcon', [$this, 'getValidIcon'], ['is_safe' => ['html']]),
@@ -167,6 +168,19 @@ class TwigExtensions extends AbstractExtension implements GlobalsInterface
             $icon = $this->iconRenderer->renderIcon($icon['icon'], $icon['attributes']);
         }
         return $icon;
+    }
+
+    public function getImageBase64(string $path): ?string
+    {
+        $path = preg_replace('#(resolve\\/)#', '', $path); // ?????
+        $path = ltrim($path, '/');
+        $path = $this->appService->getDir('public/'.$path);
+        if(!file_exists($path)) {
+            throw new \Exception("File not found: $path");
+        }
+        return @file_exists($path)
+            ? 'data:image/'.pathinfo($path, PATHINFO_EXTENSION).';base64,'.base64_encode(file_get_contents($path))
+            : null;
     }
 
     public function getValidIcon(

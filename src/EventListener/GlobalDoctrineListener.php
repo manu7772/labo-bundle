@@ -99,6 +99,9 @@ class GlobalDoctrineListener
         if($entity instanceof LaboUserInterface) {
             $entity->setRoleHierarchy($this->roleHierarchy);
         }
+        if($entity instanceof HasOrderedInterface) {
+            $entity->loadedRelationOrder();
+        }
     }
 
     public function prePersist(PrePersistEventArgs $event): void

@@ -1,23 +1,23 @@
 <?php
 namespace Aequation\LaboBundle\Controller\Cruds;
 
-use Aequation\LaboBundle\Form\Type\WebpageType;
+use Aequation\LaboBundle\Form\Type\WebsectionType;
 use Aequation\LaboBundle\Security\Voter\WebsectionVoter;
 use App\Entity\Websection;
-use App\Entity\Webpage;
 
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[Route(path: '/ae-labo/entity', name: 'aequation_labo_entity_')]
-class LaboWebpageController extends LaboEntityController
+class LaboWebsectionController extends LaboEntityController
 {
 
-    public const CLASSNAME = Webpage::class;
-    public const ENTITY = 'Webpage';
-    public const ENTITYL = 'webpage';
-    public const ENTITY_TYPE = WebpageType::class;
+    public const CLASSNAME = Websection::class;
+    public const ENTITY = 'Websection';
+    public const ENTITYL = 'websection';
+    public const ENTITY_TYPE = WebsectionType::class;
 
     #[Route('/'.self::ENTITYL, name: self::ENTITYL.'_index', methods: ['GET'])]
     public function index(): Response
@@ -39,35 +39,25 @@ class LaboWebpageController extends LaboEntityController
     public function delete(Request $request, int $id): Response
     { return parent::delete($request, $id); }
 
-    #[Route('/'.self::ENTITYL.'/remove-websection/{webpage}/{websection}', name: self::ENTITYL.'_remove_websection', methods: ['GET'])]
-    public function removeWebsection(
-        Webpage $webpage,
-        Websection $websection,
-        Request $request
-    ): Response
-    {
-        // dd($webpage, $websection, $request);
-        $webpage->removeWebsection($websection);
-        $this->manager->flush();
-        $route = $request->headers->get('referer');
-        $route ??= $this->generateUrl('app_home');
-        return $this->redirect($route);
-    }
-
-    #[Route('/'.self::ENTITYL.'/move-websection/{webpage}/{websection}/{position}', name: self::ENTITYL.'_move_websection', methods: ['GET'])]
+    #[Route('/'.self::ENTITYL.'/enable/{websection}/{value}', name: self::ENTITYL.'_enable', methods: ['GET'])]
+    #[IsGranted('ROLE_EDITOR')]
     public function moveWebsection(
-        Webpage $webpage,
         Websection $websection,
-        string $position,
+        int $value,
         Request $request
     ): Response
     {
-        // dd($webpage, $websection, $position, $request);
-        if($webpage->changePosition($websection, $position)) {
+        $route = $request->headers->get('referer');
+        // dd($route, $websection, $value, $request);
+        switch ($value) {
+            case 0:
+                $websection->setEnabled(false);
+                break;
+            default:
+                $websection->setEnabled(true);
+                break;
         }
         $this->manager->flush();
-        $route = $request->headers->get('referer');
-        $route ??= $this->generateUrl('app_home');
         return $this->redirect($route);
     }
 

@@ -1,6 +1,7 @@
 <?php
 namespace Aequation\LaboBundle\Model\Trait;
 
+use Aequation\LaboBundle\Entity\Item;
 use Aequation\LaboBundle\EventListener\Attribute\AppEvent;
 use Aequation\LaboBundle\Model\Attribute\RelationOrder as AttributeRelationOrder;
 use Aequation\LaboBundle\Model\Interface\AppEntityInterface;
@@ -33,6 +34,7 @@ trait RelationOrder
     #[AppEvent(groups: AppEvent::beforePreUpdate)]
     public function updateRelationOrder(): bool
     {
+        // dd($this);
         $attributes = Classes::getPropertyAttributes($this, AttributeRelationOrder::class, true);
         if(empty($attributes)) throw new Exception(vsprintf('Error %s line %d: no field found for %s in entity %s!', [__METHOD__, __LINE__, AttributeRelationOrder::class, $this->getClassname()]));
         $old = $this->getRelationOrder();
@@ -142,9 +144,12 @@ trait RelationOrder
     }
 
     #[Serializer\Ignore]
-    public function getRelationOrder(): array
+    public function getRelationOrder(
+        bool $asJson = false
+    ): array|string|false
     {
-        return $this->relationOrder ??= [];
+        $relationOrder = $this->relationOrder ??= [];
+        return $asJson ? json_encode($relationOrder) : $relationOrder;
     }
 
     #[Serializer\Ignore]
@@ -168,5 +173,48 @@ trait RelationOrder
     //     $this->relationOrder[$property] = $relationOrder;
     //     return $this;
     // }
+
+    public function changePosition(
+        Item $item,
+        string $position
+    ): bool
+    {
+        $changed = false;
+        $mem_items = $this->items->toArray();
+        if($this->items->contains($item)) {
+            $this->items->removeElement($item);
+            switch ($position) {
+                case '-1':
+                case 'up':
+                    # code...
+                    break;
+                case '+1':
+                case 'down':
+                    # code...
+                    break;
+                case 'top':
+                    $items = $this->items->toArray();
+                    $this->items->clear();
+                    $this->items->add($item);
+                    foreach ($items as $it) {
+                        if(!$this->items->contains($it)) $this->items->add($it);
+                    }
+                    $changed = true;
+                    break;
+                case 'bottom':
+                    $this->items->add($item);
+                    $changed = true;
+                    break;
+            }
+        } else {
+            throw new Exception(vsprintf('Error %s line %d: can not move "%s" because %s "%s" does not contain this %s "%s".', [__METHOD__, __LINE__, $position, $this->getShortname(), $this->__toString(), $item->getShortname(), $item->__toString()]));
+        }
+        if($changed) {
+            $this->updateUpdatedAt();
+        }
+        // dd($changed, $mem_items, $this->items, $this);
+        // throw new Exception(vsprintf('Error %s line %d: can not move "%s" because %s "%s" does not contain this %s "%s".', [__METHOD__, __LINE__, $position, $this->getShortname(), $this->__toString(), $item->getShortname(), $item->__toString()]));
+        return $changed;
+    }
 
 }
