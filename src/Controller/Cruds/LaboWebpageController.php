@@ -47,8 +47,8 @@ class LaboWebpageController extends LaboEntityController
     ): Response
     {
         // dd($webpage, $websection, $request);
-        $webpage->removeWebsection($websection);
-        $this->manager->flush();
+        // $webpage->removeWebsection($websection);
+        // $this->manager->flush();
         $route = $request->headers->get('referer');
         $route ??= $this->generateUrl('app_home');
         return $this->redirect($route);
@@ -63,9 +63,9 @@ class LaboWebpageController extends LaboEntityController
     ): Response
     {
         // dd($webpage, $websection, $position, $request);
-        if($webpage->changePosition($websection, $position)) {
-        }
-        $this->manager->flush();
+        // if($webpage->changePosition($websection, $position)) {
+        // }
+        // $this->manager->flush();
         $route = $request->headers->get('referer');
         $route ??= $this->generateUrl('app_home');
         return $this->redirect($route);
