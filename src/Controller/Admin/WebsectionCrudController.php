@@ -70,6 +70,17 @@ class WebsectionCrudController extends BaseCrudController
                 yield TextareaField::new('content', 'Texte compilé')->formatValue(function ($value) use ($info) {
                     return $info['entity']->dumpContent();
                 })->setColumns(12);
+                // SLIDER
+                $slider = $info['entity']->getTwigfileMetadata()->getEasyadminField('slider', $pageName);
+                switch (true) {
+                    case $slider instanceof FieldInterface:
+                        /** @var FieldTrait $slider */
+                        yield $slider;
+                        break;
+                    case $slider === true:
+                        yield AssociationField::new('slider', 'Diaporama');
+                        break;
+                }
                 // PHOTO
                 $photo = $info['entity']->getTwigfileMetadata()->getEasyadminField('photo', $pageName);
                 switch (true) {
@@ -161,6 +172,18 @@ class WebsectionCrudController extends BaseCrudController
                             ->setColumns(6);
                         break;
                 }
+                // SLIDER
+                $slider = $info['entity']->getTwigfileMetadata()->getEasyadminField('slider', $pageName);
+                switch (true) {
+                    case $slider instanceof FieldInterface:
+                        /** @var FieldTrait $slider */
+                        yield $slider->setColumns(6);
+                        break;
+                    case $slider === true:
+                        yield AssociationField::new('slider', 'Diaporama')
+                            ->setColumns(6);
+                        break;
+                }
                 yield BooleanField::new('enabled', 'Activée');
                 yield BooleanField::new('softdeleted', 'Supprimée')->setPermission('ROLE_SUPER_ADMIN');
                 yield AssociationField::new('owner', 'Propriétaire')->setColumns(6)->setPermission('ROLE_ADMIN')->setCrudController(UserCrudController::class);
@@ -243,6 +266,18 @@ class WebsectionCrudController extends BaseCrudController
                         break;
                     case $mainmenu === true:
                         yield AssociationField::new('mainmenu', 'Menu intégré')
+                            ->setColumns(6);
+                        break;
+                }
+                // SLIDER
+                $slider = $info['entity']->getTwigfileMetadata()->getEasyadminField('slider', $pageName);
+                switch (true) {
+                    case $slider instanceof FieldInterface:
+                        /** @var FieldTrait $slider */
+                        yield $slider->setColumns(6);
+                        break;
+                    case $slider === true:
+                        yield AssociationField::new('slider', 'Diaporama')
                             ->setColumns(6);
                         break;
                 }
