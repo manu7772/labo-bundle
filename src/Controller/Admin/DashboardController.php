@@ -118,7 +118,7 @@ class DashboardController extends AbstractDashboardController
         yield MenuItem::section('Site public')->setCssClass($color);
         yield MenuItem::linkToUrl(label: 'Retour au site', icon: 'fas fa-fw fa-home '.$color, url: $this->generateUrl('app_home'));
         yield MenuItem::linkToUrl(label: 'Quitter', icon: 'fas fa-fw fa-unlock '.$color, url: $route_logout);
-        yield MenuItem::linkToUrl(label: 'Labo', icon: 'fas fa-fw fa-cog text-danger', url: $this->generateUrl('aequation_labo_home'))->setPermission('ROLE_ADMIN');
+        yield MenuItem::linkToUrl(label: 'Labo', icon: 'fas fa-fw fa-cog text-danger', url: $this->generateUrl('aequation_labo_home'))->setPermission('ROLE_SUPER_ADMIN');
         // yield MenuItem::linkToUrl(label: 'Sadmin', icon: 'fas fa-fw fa-lock text-danger', url: $this->generateUrl('sadmin_home'))->setPermission('ROLE_SUPER_ADMIN');
 
         // 2. MANAGER
