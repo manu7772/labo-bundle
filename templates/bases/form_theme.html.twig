@@ -76,7 +76,7 @@
     }) %}
     {%  set field = form.vars.ea_vars.field %}
 
-    <div class="{{ field.columns ?? field.defaultColumns ?? '' }}">
+    <div class="{{ field.columns (??) field.defaultColumns (??) '' }}">
         <div {% with { attr: row_attr } %}{{ block('attributes') }}{% endwith %}>
             {{- form_label(form) -}}
             <div class="form-widget">
@@ -98,9 +98,9 @@
                     {% endif %}
                 {% if has_input_groups %}</div>{% endif %}
 
-                {% if field.help ?? false %}
+                {% if field.help (??) false %}
                     <small class="form-text form-help">{{ field.help|trans(label_translation_parameters, translation_domain)|raw }}</small>
-                {% elseif form.vars.help ?? false %}
+                {% elseif form.vars.help (??) false %}
                     <small class="form-text form-help">{{ form.vars.help|trans(form.vars.help_translation_parameters, form.vars.translation_domain)|raw }}</small>
                 {% endif %}
 
@@ -148,7 +148,7 @@
     {# the "is iterable" check is needed because if an object implements __toString() and
                returns an empty string, "is empty" returns true even if it's not a collection #}
     {% set isEmptyCollection = value is null or (value is iterable and value is empty) %}
-    {% set is_array_field = 'EasyCorp\\Bundle\\EasyAdminBundle\\Field\\ArrayField' == form.vars.ea_vars.field.fieldFqcn ?? false %}
+    {% set is_array_field = 'EasyCorp\\Bundle\\EasyAdminBundle\\Field\\ArrayField' == form.vars.ea_vars.field.fieldFqcn (??) false %}
 
     <div class="ea-form-collection-items">
         {% if isEmptyCollection %}
@@ -175,10 +175,10 @@
 {% endblock collection_widget %}
 
 {% block collection_entry_row %}
-    {% set is_array_field = 'EasyCorp\\Bundle\\EasyAdminBundle\\Field\\ArrayField' == form_parent(form).vars.ea_vars.field.fieldFqcn ?? false %}
-    {% set is_complex = form_parent(form).vars.ea_vars.field.customOptions.get('entryIsComplex') ?? false %}
+    {% set is_array_field = 'EasyCorp\\Bundle\\EasyAdminBundle\\Field\\ArrayField' == form_parent(form).vars.ea_vars.field.fieldFqcn (??) false %}
+    {% set is_complex = form_parent(form).vars.ea_vars.field.customOptions.get('entryIsComplex') (??) false %}
     {% set allows_deleting_items = form_parent(form).vars.allow_delete|default(false) %}
-    {% set render_expanded = form_parent(form).vars.ea_vars.field.customOptions.get('renderExpanded') ?? false %}
+    {% set render_expanded = form_parent(form).vars.ea_vars.field.customOptions.get('renderExpanded') (??) false %}
     {% set delete_item_button %}
         <button type="button" class="btn btn-link btn-link-danger field-collection-delete-button"
                 title="{{ 'action.remove_item'|trans({}, 'EasyAdminBundle') }}">
@@ -313,7 +313,7 @@
                 'zip': 'fa-file-archive-o'
             } %}
             <a class="ea-vich-file-name" href="{{ asset_helper is same as(true) ? asset(download_uri) : download_uri }}">
-                <i class="fa fa-fw {{ extension_icons[file_extension] ?? 'fa-file-o' }}"></i>
+                <i class="fa fa-fw {{ extension_icons[file_extension] (??) 'fa-file-o' }}"></i>
                 {%- if download_label|default(false) -%}
                     {{ download_label|trans({}, 'VichUploaderBundle') }}
                 {%- else -%}
@@ -431,7 +431,7 @@
         {% set collapsible = fieldset_config.collapsible %}
         {% set collapsed = fieldset_config.collapsed %}
 
-        <div class="{{ fieldset_config.css_class ?? '' }}">
+        <div class="{{ fieldset_config.css_class (??) '' }}">
             <fieldset class="form-fieldset">
                 {% if fieldset_has_header %}
                     <div class="form-fieldset-header {{ collapsible ? 'collapsible' }} {{ fieldset_config.help|default(false) is not empty ? 'with-help' }}">

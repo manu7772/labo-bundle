@@ -61,6 +61,7 @@ class WebsectionCrudController extends BaseCrudController
                 yield IdField::new('id');
                 yield AssociationField::new('owner', 'Propriétaire');
                 yield TextField::new('name', 'Nom');
+                yield TextField::new('euid', 'Euid')->setPermission('ROLE_SUPER_ADMIN');
                 yield TextField::new('sectiontype', 'Type de section');
                 yield TextField::new('title', 'Titre de la section');
                 yield AssociationField::new('mainmenu', 'Menu intégré');

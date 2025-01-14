@@ -9,8 +9,10 @@ use App\Entity\Webpage;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[Route(path: '/ae-labo/entity', name: 'aequation_labo_entity_')]
+#[IsGranted('ROLE_EDITOR')]
 class LaboWebpageController extends LaboEntityController
 {
 
@@ -39,22 +41,26 @@ class LaboWebpageController extends LaboEntityController
     public function delete(Request $request, int $id): Response
     { return parent::delete($request, $id); }
 
-    #[Route('/'.self::ENTITYL.'/remove-websection/{webpage}/{websection}', name: self::ENTITYL.'_remove_websection', methods: ['GET'])]
+    #[Route('/webpage/remove-websection/{webpage}/{websection}', name: 'webpage_remove_websection', methods: ['GET'])]
     public function removeWebsection(
         Webpage $webpage,
         Websection $websection,
         Request $request
     ): Response
     {
+        // return new Response(vsprintf('Remove websection %s from webpage %s', [$websection->getId(), $webpage->getId()]));
         // dd($webpage, $websection, $request);
-        $webpage->removeWebsection($websection);
-        $this->manager->flush();
+        $websections = $webpage->getWebsections();
+        if($websections->contains($websection)) {
+            $webpage->removeWebsection($websection);
+            $this->manager->flush();
+        }
         $route = $request->headers->get('referer');
         $route ??= $this->generateUrl('app_home');
         return $this->redirect($route);
     }
 
-    #[Route('/'.self::ENTITYL.'/move-websection/{webpage}/{websection}/{position}', name: self::ENTITYL.'_move_websection', methods: ['GET'])]
+    #[Route('/webpage/move-websection/{webpage}/{websection}/{position}', name: 'webpage_move_websection', methods: ['GET'])]
     public function moveWebsection(
         Webpage $webpage,
         Websection $websection,
@@ -62,6 +68,7 @@ class LaboWebpageController extends LaboEntityController
         Request $request
     ): Response
     {
+        // return new Response(vsprintf('Move websection %s from webpage %s', [$websection->getId(), $webpage->getId()]));
         // dd($webpage, $websection, $position, $request);
         if($webpage->changePosition($websection, $position)) {
         }
