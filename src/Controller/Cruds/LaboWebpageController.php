@@ -71,8 +71,8 @@ class LaboWebpageController extends LaboEntityController
         // return new Response(vsprintf('Move websection %s from webpage %s', [$websection->getId(), $webpage->getId()]));
         // dd($webpage, $websection, $position, $request);
         if($webpage->changePosition($websection, $position)) {
+            $this->manager->flush();
         }
-        $this->manager->flush();
         $route = $request->headers->get('referer');
         $route ??= $this->generateUrl('app_home');
         return $this->redirect($route);

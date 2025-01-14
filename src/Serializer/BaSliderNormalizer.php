@@ -52,7 +52,7 @@ class BaSliderNormalizer implements NormalizerInterface
         // ], UrlGeneratorInterface::ABSOLUTE_URL);
         
         // $data['admin'] = [
-        //     'home' => $this->adminRouter->setRoute('admin_home')->generateUrl(),
+        //     'home' => $this->adminRouter->setRoute('easyadmin')->generateUrl(),
         // ];
         
         return $data;

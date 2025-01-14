@@ -47,7 +47,6 @@ use Symfony\Contracts\Translation\TranslatorInterface;
  * @see https://symfonycasts.com/screencast/easyadminbundle/override-template
  * Templates/Views @link vendor/easycorp/easyadmin-bundle/src/Resources/views
  */
-#[Route(path: '/admin', name: 'admin_')]
 #[IsGranted('ROLE_COLLABORATOR')]
 class DashboardController extends AbstractDashboardController
 {
@@ -62,7 +61,7 @@ class DashboardController extends AbstractDashboardController
         // 
     }
 
-    #[Route('', name: 'home')]
+    #[Route(path: '/easyadmin', name: 'easyadmin')]
     public function index(): Response
     {
         // dump($this->isGranted(WebpageVoter::ADMIN_ACTION_LIST, Webpage::class));
@@ -77,11 +76,10 @@ class DashboardController extends AbstractDashboardController
         return parent::index();
     }
 
-    #[Route(path: '/connexion', name: 'login')]
     public function login(AuthenticationUtils $authenticationUtils): Response
     {
         if ($this->getUser()) {
-            return $this->redirectToRoute('admin_home');
+            return $this->redirectToRoute('easyadmin');
         }
         $data = [
             'last_username' => $authenticationUtils->getLastUsername(),
@@ -91,7 +89,6 @@ class DashboardController extends AbstractDashboardController
         return $this->render('@AequationLabo/security/login.html.twig', $data);
     }
 
-    #[Route(path: '/deconnexion', name: 'logout')]
     public function logout(): void
     {
         throw new \LogicException('This method can be blank - it will be intercepted by the logout key on your firewall.');
@@ -119,7 +116,6 @@ class DashboardController extends AbstractDashboardController
         yield MenuItem::linkToUrl(label: 'Retour au site', icon: 'fas fa-fw fa-home '.$color, url: $this->generateUrl('app_home'));
         yield MenuItem::linkToUrl(label: 'Quitter', icon: 'fas fa-fw fa-unlock '.$color, url: $route_logout);
         yield MenuItem::linkToUrl(label: 'Labo', icon: 'fas fa-fw fa-cog text-danger', url: $this->generateUrl('aequation_labo_home'))->setPermission('ROLE_SUPER_ADMIN');
-        // yield MenuItem::linkToUrl(label: 'Sadmin', icon: 'fas fa-fw fa-lock text-danger', url: $this->generateUrl('sadmin_home'))->setPermission('ROLE_SUPER_ADMIN');
 
         // 2. MANAGER
         $color = 'text-primary-emphasis';

@@ -15,7 +15,7 @@
             <ul class="my-4">
                 <li>- le site n'est pas encore installé, alors rendez-vous sur <a href="{{ path('aequation_labo_home') }}" class="font-black underline text-secondary-600">le Labo</a> pour procéder à l'installation,</li>
                 <li>- le site est installé, mais vous devez maintenant surcharger cette page d'accueil...</li>
-                <li>- voici également le lien vers la page <a href="{{ path('admin_home') }}" class="font-black underline text-secondary-600">administration</a> de vos data.</li>
+                <li>- voici également le lien vers la page <a href="{{ path('easyadmin') }}" class="font-black underline text-secondary-600">administration</a> de vos data.</li>
                 {% if app.user %}
                 <li>- enfin, pour vous <strong>déconnecter</strong>, c'est <a href="{{ path('app_logout') }}" class="font-black underline text-secondary-600">ici</a>.</li>
                 {% else %}

@@ -173,7 +173,7 @@ class LaboBundleService extends AppService implements LaboBundleServiceInterface
                 'access' => 'ROLE_USER',
             ],
             'Admin' => [
-                'route' => 'admin_home',
+                'route' => 'easyadmin',
                 'access' => 'ROLE_EDITOR',
             ],
             'Labo' => [
