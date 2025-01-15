@@ -57,9 +57,9 @@ class LaboAppGlobalSubscriber implements EventSubscriberInterface
     public function onRequest(RequestEvent $event): void
     {
         if(!$event->isMainRequest()) return;
+        $this->initAppContext($event);
         // $main_host = $this->appService->getParam('router.request_context.host');
         // dd($main_host); // (eg. vetoalliance.com)
-        $this->initAppContext($event);
 
         // $hosts = ['localhost2', $main_host];
         // if(!preg_match('/^'.implode('|', $hosts).'/', $event->getRequest()->getHost(), $matches)) {
@@ -75,6 +75,17 @@ class LaboAppGlobalSubscriber implements EventSubscriberInterface
     {
         // Disable control
         if(!$this->appService->isProd()) return;
+        // DUMP ALL if LOCAL prod
+        $host = $event->getRequest()->getHost();
+        $validHosts = [
+            '127.0.0.1',
+            'localhost',
+        ];
+        if(in_array($host, $validHosts)) {
+            dump($event->getThrowable());
+            dd($event);
+        }
+
         if($event->getRequest()->query->get('debug', 0) === "1") {
             return;
         }

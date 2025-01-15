@@ -75,7 +75,7 @@ class ClassmetadataReport implements ClassmetadataReportInterface
         $data = [
             'classname' => $this->classname,
             'managerID' => $this->managerID,
-            'phpChilds' => $this->phpChilds,
+            'phpChilds' => $this->getPhpChilds(),
         ];
         return $data;
     }
@@ -138,7 +138,7 @@ class ClassmetadataReport implements ClassmetadataReportInterface
             return [
                 'classname' => $this->classname,
                 'managerID' => $this->managerID,
-                'phpChilds' => $this->phpChilds,
+                'phpChilds' => $this->getPhpChilds(),
                 'parent_classes' => $this->getParentClasses(),
             ];
         }
