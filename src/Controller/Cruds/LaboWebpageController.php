@@ -70,8 +70,20 @@ class LaboWebpageController extends LaboEntityController
     {
         // return new Response(vsprintf('Move websection %s from webpage %s', [$websection->getId(), $webpage->getId()]));
         // dd($webpage, $websection, $position, $request);
+        $em = $this->manager->getEntityManager();
+        $uow = $this->manager->getUnitOfWork();
         if($webpage->changePosition($websection, $position)) {
+            // dump(
+            //     $position,
+            //     $webpage,
+            //     $websection,
+            //     $uow->isScheduledForUpdate($webpage),
+            //     $uow->isScheduledForUpdate($websection),
+            //     $uow->getEntityChangeSet($webpage),
+            //     $uow->getEntityChangeSet($websection),
+            // );
             $this->manager->flush();
+            // dd($webpage);
         }
         $route = $request->headers->get('referer');
         $route ??= $this->generateUrl('app_home');

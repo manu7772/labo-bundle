@@ -27,6 +27,8 @@ trait RelationOrder
     #[Serializer\Ignore]
     protected ?array $relationOrder = [];
 
+    protected bool $isDirtyOrder = true;
+
     // #[ORM\PrePersist]
     // #[ORM\PreUpdate]
     #[AppEvent(groups: FormEvents::POST_SUBMIT)]
@@ -56,6 +58,7 @@ trait RelationOrder
             }
         }
         ksort($new);
+        $this->isDirtyOrder = false;
         // dd($new);
         if($old !== json_encode($new)) {
             $this->relationOrder = $new;
@@ -68,7 +71,6 @@ trait RelationOrder
         return false;
     }
 
-    // #[ORM\PostLoad]
     #[AppEvent(groups: AppEvent::onLoad)]
     public function loadedRelationOrder(
         ?AppEntityManagerInterface $manager = null,
@@ -179,8 +181,7 @@ trait RelationOrder
         string $position
     ): bool
     {
-        $changed = false;
-        $mem_items = $this->items->toArray();
+        $this->getItems();
         if($this->items->contains($item)) {
             $this->items->removeElement($item);
             switch ($position) {
@@ -209,12 +210,7 @@ trait RelationOrder
         } else {
             throw new Exception(vsprintf('Error %s line %d: can not move "%s" because %s "%s" does not contain this %s "%s".', [__METHOD__, __LINE__, $position, $this->getShortname(), $this->__toString(), $item->getShortname(), $item->__toString()]));
         }
-        if($changed) {
-            $this->updateUpdatedAt();
-        }
-        // dd($changed, $mem_items, $this->items, $this);
-        // throw new Exception(vsprintf('Error %s line %d: can not move "%s" because %s "%s" does not contain this %s "%s".', [__METHOD__, __LINE__, $position, $this->getShortname(), $this->__toString(), $item->getShortname(), $item->__toString()]));
-        return $changed;
+        return $this->updateRelationOrder();
     }
 
 }

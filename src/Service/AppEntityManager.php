@@ -93,6 +93,11 @@ class AppEntityManager extends BaseService implements AppEntityManagerInterface
         return $this->em;
     }
 
+    public function getUnitOfWork(): UnitOfWork
+    {
+        return $this->em->getUnitOfWork();
+    }
+
 
     /****************************************************************************************************/
     /** INFO                                                                                          */

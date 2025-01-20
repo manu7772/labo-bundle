@@ -13,6 +13,8 @@ interface FinalUserInterface extends LaboUserInterface
     public function removeEntreprise(FinalEntrepriseInterface $entreprise): static;
     public function isAdmin(): bool;
     /** ACTIONS */
+    public function memorizeMainentrepriseAfterLoad(): static;
+    public function wasMainentreprise(): bool;
     public function getMainentreprise(): bool;
     public function getComputedMainentreprise(): bool;
     public function setMainentreprise(bool $mainentreprise): static;

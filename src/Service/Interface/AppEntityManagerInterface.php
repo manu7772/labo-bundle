@@ -10,6 +10,7 @@ use Aequation\LaboBundle\Model\Interface\OwnerInterface;
 use Aequation\LaboBundle\Repository\Interface\CommonReposInterface;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Mapping\ClassMetadata;
+use Doctrine\ORM\UnitOfWork;
 
 interface AppEntityManagerInterface extends ServiceInterface
 {
@@ -35,6 +36,7 @@ interface AppEntityManagerInterface extends ServiceInterface
     public function isUserGranted(LaboUserInterface $user, $attributes, $object = null, string $firewallName = 'none'): bool;
     // EM & REPO
     public function getEntityManager(): EntityManagerInterface;
+    public function getUnitOfWork(): UnitOfWork;
     public function getRepository(string $classname = null): CommonReposInterface;
 
     // public function getEntityNamespaces(): array;

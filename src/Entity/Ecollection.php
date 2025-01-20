@@ -73,6 +73,14 @@ abstract class Ecollection extends Item implements EcollectionInterface
         return $this->items->filter(fn($item) => $item->isActive());
     }
 
+    public function setItems(Collection $items): static
+    {
+        foreach($items->toArray() as $item) {
+            $this->addItem($item);
+        }
+        return $this;
+    }
+
     #[Serializer\Ignore]
     public function addItem(ItemInterface $item): bool
     {

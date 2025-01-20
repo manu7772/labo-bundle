@@ -70,7 +70,7 @@ class WebsectionCrudController extends BaseCrudController
                 yield TextField::new('content', 'Texte de la section')->renderAsHtml();
                 yield TextareaField::new('content', 'Texte compilé')->formatValue(function ($value) use ($info) {
                     return $info['entity']->dumpContent();
-                })->setColumns(12);
+                })->setColumns(12)->setPermission('ROLE_SUPER_ADMIN');
                 // SLIDER
                 $slider = $info['entity']->getTwigfileMetadata()->getEasyadminField('slider', $pageName);
                 switch (true) {

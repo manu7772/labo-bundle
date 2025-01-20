@@ -5,6 +5,7 @@ use Aequation\LaboBundle\Service\Interface\AppRoleHierarchyInterface;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
 use DateTimeImmutable;
+use Doctrine\Common\Collections\Collection;
 
 interface LaboUserInterface extends UserInterface, PasswordAuthenticatedUserInterface, AppEntityInterface, EnabledInterface, CreatedInterface
 {
@@ -27,6 +28,11 @@ interface LaboUserInterface extends UserInterface, PasswordAuthenticatedUserInte
     public function getLastname(): ?string;
     public function getLastLogin(): ?DateTimeImmutable;
     public function getExpiresAt(): ?DateTimeImmutable;
+    public function getCategorys(): Collection;
+    public function addCategory(LaboCategoryInterface $category): static;
+    public function removeCategory(LaboCategoryInterface $category): static;
+    public function removeCategorys(): static;
+    
     /** ROLES */
     public function getReachableRoles(): array;
     public function sortRoles(): void;

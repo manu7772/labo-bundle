@@ -7,6 +7,7 @@ use Aequation\LaboBundle\Repository\Interface\LaboUserRepositoryInterface;
 use Aequation\LaboBundle\Service\Tools\Emails;
 
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\ORM\QueryBuilder;
 use Symfony\Component\DependencyInjection\Attribute\AsAlias;
 use Symfony\Component\Security\Core\Exception\UnsupportedUserException;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
@@ -87,6 +88,70 @@ class LaboUserRepository extends CommonRepos implements PasswordUpgraderInterfac
         }
         $data = $qb->getQuery()->getArrayResult();
         return count($data) ? reset($data) : [];
+    }
+
+    public function findAllUsers(
+        null|string|array $roles = null,
+        bool $contextFilter = false
+    ): array
+    {
+        $qb = $this->createQueryBuilder(static::NAME);
+        $this->qb_findAllUsers($roles, $qb);
+        if($contextFilter) {
+            $this->__context_Qb($qb);
+        }
+        // dd($qb->getQuery()->getSql());
+        return $qb->getQuery()->getResult();
+    }
+
+
+    public function qb_findAllUsers(
+        null|string|array $roles = null,
+        ?QueryBuilder $query = null
+    ): QueryBuilder
+    {
+        $query ??= $this->createQueryBuilder(static::NAME);
+        if(!empty($roles)) {
+            $where = 'where';
+            foreach ((array)$roles as $role) {
+                $query->$where(static::NAME.'.roles LIKE :role')
+                    ->setParameter('role', '%"'.$role.'"%')
+                ;
+                $where = 'orWhere';
+                if($role === 'ROLE_USER') {
+                    $query->$where(static::NAME.'.roles LIKE \'[]\'');
+                }
+            }
+        }
+        return $query;
+    }
+
+    public function qb_filterByEntreprises(
+        int|array $entreprise_ids,
+        ?QueryBuilder $query = null
+    ): QueryBuilder
+    {
+        $query ??= $this->createQueryBuilder(static::NAME);
+        $query
+            ->addSelect('e')
+            ->innerJoin(static::NAME.'.entreprises', 'e')
+            ->andWhere($query->expr()->in('e.id', ':eids'))
+            ->setParameter('eids', (array)$entreprise_ids);
+        return $query;
+    }
+
+    public function qb_filterByCategories(
+        int|array $category_ids,
+        ?QueryBuilder $query = null
+    ): QueryBuilder
+    {
+        $query ??= $this->createQueryBuilder(static::NAME);
+        $query
+            ->addSelect('e')
+            ->innerJoin(static::NAME.'.categorys', 'c')
+            ->andWhere($query->expr()->in('c.id', ':cids'))
+            ->setParameter('cids', (array)$category_ids);
+        return $query;
     }
 
 //    /**

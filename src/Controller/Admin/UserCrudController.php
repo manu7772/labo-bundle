@@ -59,9 +59,7 @@ class UserCrudController extends LaboUserCrudController
                 yield IdField::new('id');
                 yield EmailField::new('email');
                 yield TextField::new('fonction', 'Fonction');
-                $admin = BooleanField::new('admin', 'Administrateur du site');
-                if($this->manager->isUserGranted($user, 'ROLE_ADMIN')) $admin->setCssClass('text-warning');
-                yield $admin;
+                yield BooleanField::new('admin', 'Administrateur du site');
                 // yield TextField::new('password', 'Mot de passe (codé)')->setPermission('ROLE_SUPER_ADMIN');
                 yield BooleanField::new('mainentreprise', 'Membre de l\'association');
                 yield TextField::new('higherRole')
@@ -137,7 +135,7 @@ class UserCrudController extends LaboUserCrudController
                 }
                 // ------------------------------------------------- Actions
                 yield FormField::AddTab(label: 'Actions', icon: 'fa fa-cog')->setHelp('Actions concernant cet utilisateur')->setPermission('ROLE_ADMIN');
-                yield BooleanField::new('mainentreprise', 'Membre de l\'association')->setColumns(6)->setHelp('En plaçant cet utilisateur "membre de l\'association", il sera :<ul><li>visible dans l\'équipe sur le site</li><li>sera ajouté aux ADMIN du site</li></ul>À l\'inverse :<ul><li>ne sera plus visible dans l\'équipe sur le site</li><li>sera retiré des ADMIN du site</li></ul>')->setColumns(12)->setPermission('ROLE_ADMIN');
+                yield BooleanField::new('mainentreprise', 'Membre de l\'association')->setColumns(6)->setHelp('En plaçant cet utilisateur "membre de l\'association", il sera :<ul><li>visible dans l\'équipe sur le site</li><li>sera ajouté aux ADMIN du site</li><li>se verra attribué la catégorie correspondante</li></ul>À l\'inverse :<ul><li>ne sera plus visible dans l\'équipe sur le site</li><li>sera retiré des ADMIN du site</li><li>se verra retirer la catégorie correspondante</li></ul>')->setColumns(12)->setPermission('ROLE_ADMIN');
                 // ------------------------------------------------- Sécurité
                 yield FormField::AddTab(label: 'Sécurité', icon: 'fa6-solid:lock');
                 yield EmailField::new('email')->setColumns($this->isGranted('ROLE_ADMIN') ? 4 : 6)->setHelp('Le mail doit être unique : l\'enregistrement sera rejeté si une autre personne utilise le mail sur le même site.');

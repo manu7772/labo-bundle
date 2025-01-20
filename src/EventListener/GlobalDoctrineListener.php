@@ -22,6 +22,7 @@ use Aequation\LaboBundle\Service\Interface\AppEntityManagerInterface;
 use Aequation\LaboBundle\Service\Interface\AppRoleHierarchyInterface;
 // App
 use App\Entity\Entreprise;
+use App\Entity\Category;
 // Symfony
 use Doctrine\ORM\Events;
 use Doctrine\ORM\UnitOfWork;
@@ -182,37 +183,55 @@ class GlobalDoctrineListener
                     /** @var ServiceEntityRepository */
                     $entrepriseRepository = $this->manager->getRepository(Entreprise::class);
                     $mainentreprise = $entrepriseRepository->findOneBy(['prefered' => true]);
+                    /** @var ServiceEntityRepository */
+                    $categoryRepository = $this->manager->getRepository(Category::class);
+                    $maincategory = $categoryRepository->find(Category::ID_OF_MAIN_FOR_ENTREPRISE);
                     $computeChangeSet = false;
-                    if($mainentreprise) {
+                    if($mainentreprise && $maincategory) {
                         if($entity->getMainentreprise()) {
-                            if($entity->isSoftdeleted()) {
-                                throw new Exception(vsprintf('Error line %d %s(): %s can not be updated when softdeleted!', [__LINE__, __METHOD__, $entity::class]));
-                            }
-                            if(!$this->manager->isUserGranted($entity, 'ROLE_ADMIN')) {
-                                $entity->addRole('ROLE_ADMIN');
-                            }
-                            $entity->setEnabled(true);
-                            $entity->setIsVerified(true);
-                            // Set mainentreprise
-                            if(!$entity->getEntreprises()->contains($mainentreprise)) {
-                                $entity->addEntreprise($mainentreprise);
-                                $computeChangeSet = true;
+                            if(!$entity->wasMainentreprise()) {
+                                if($entity->isSoftdeleted()) {
+                                    throw new Exception(vsprintf('Error line %d %s(): %s can not be updated when softdeleted!', [__LINE__, __METHOD__, $entity::class]));
+                                }
+                                if(!$this->manager->isUserGranted($entity, 'ROLE_ADMIN')) {
+                                    $entity->addRole('ROLE_ADMIN');
+                                }
+                                $entity->setEnabled(true);
+                                $entity->setIsVerified(true);
+                                // Set mainentreprise
+                                if(!$entity->getEntreprises()->contains($mainentreprise)) {
+                                    $entity->addEntreprise($mainentreprise);
+                                    $computeChangeSet = true;
+                                }
+                                // Set maincategory
+                                if(!$entity->getCategorys()->contains($maincategory)) {
+                                    $entity->addCategory($maincategory);
+                                    $computeChangeSet = true;
+                                }
                             }
                         } else {
-                            if($this->manager->isUserGranted($entity, 'ROLE_ADMIN')) {
-                                $entity->removeRole('ROLE_ADMIN');
-                            }
-                            // Unset mainentreprise
-                            if($entity->getEntreprises()->contains($mainentreprise)) {
-                                $entity->removeEntreprise($mainentreprise);
-                                $computeChangeSet = true;
+                            if($entity->wasMainentreprise()) {
+                                if($this->manager->isUserGranted($entity, 'ROLE_ADMIN')) {
+                                    $entity->removeRole('ROLE_ADMIN');
+                                }
+                                // Unset mainentreprise
+                                if($entity->getEntreprises()->contains($mainentreprise)) {
+                                    $entity->removeEntreprise($mainentreprise);
+                                    $computeChangeSet = true;
+                                }
+                                // Unset maincategory
+                                if($entity->getCategorys()->contains($maincategory)) {
+                                    $entity->removeCategory($maincategory);
+                                    $computeChangeSet = true;
+                                }
                             }
                         }
                         if($computeChangeSet) {
                             /** @var EntityManagerInterface $em */
                             $em = $event->getObjectManager();
                             $uow = $em->getUnitOfWork();
-                            $uow->computeChangeSet($em->getClassMetadata($mainentreprise::class), $mainentreprise);
+                            $uow->computeChangeSet($em->getClassMetadata($entity->getClassname()), $entity); // --> for Category
+                            $uow->computeChangeSet($em->getClassMetadata($mainentreprise->getClassname()), $mainentreprise); // --> for Entreprise
                         }
                     } else if($this->manager->isDev()) {
                         // Prefered entreprise not found
