@@ -1,11 +1,17 @@
 <?php
 namespace Aequation\LaboBundle\Controller\Cruds;
 
+use Aequation\LaboBundle\Entity\Ecollection;
+use Aequation\LaboBundle\Entity\Item;
 use Aequation\LaboBundle\Form\Type\WebpageType;
+use Aequation\LaboBundle\Model\Interface\EcollectionInterface;
 use Aequation\LaboBundle\Security\Voter\WebsectionVoter;
+use Aequation\LaboBundle\Service\Interface\AppServiceInterface;
+use Aequation\LaboBundle\Service\Interface\EcollectionServiceInterface;
 use App\Entity\Websection;
 use App\Entity\Webpage;
-
+use Aequation\LaboBundle\Model\Interface\WebpageInterface;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
@@ -40,6 +46,60 @@ class LaboWebpageController extends LaboEntityController
     #[Route('/'.self::ENTITYL.'/{id}', name: self::ENTITYL.'_delete', methods: ['POST'])]
     public function delete(Request $request, int $id): Response
     { return parent::delete($request, $id); }
+
+    #[Route('/collection/sort-items/{entity}', name: 'sort_items', methods: ['POST'])]
+    public function sortItems(
+        Ecollection $entity,
+        Request $request,
+        AppServiceInterface $appService
+    ): JsonResponse
+    {
+        /** @var WebpageInterface|EcollectionInterface $entity */
+        /** @var EcollectionServiceInterface */
+        $service = $this->manager->getEntityService($entity);
+        $raw = json_decode($request->getContent(), true);
+        $field = $raw['parentFieldName'] ?? Ecollection::RELATION_FIELDNAME;
+        $items = $raw['items'] ?? null;
+        if(empty($raw)) {
+            // Get only list of items
+            $items = $entity->getWebsectionsOrdered(false)->toArray();
+            $status = Response::HTTP_OK;
+            $data = [
+                'user' => $appService->getNormalized($this->getUser(), null, ['groups' => ['index']]),
+                'result' => 'Sorted items',
+                'message' => 'Got sorted items of entity',
+                'date' => date(DATE_ATOM),
+                'entity' => $entity->getId(),
+                'items' => $appService->getNormalized($items, null, ['groups' => ['index']]), // serialized
+            ];    
+            return new JsonResponse($data, $status);
+        }
+        if(is_array($items)) {
+            // set the order of the items
+            /** @var WebpageInterface|EcollectionInterface $entity */
+            $entity = $service->setEcollectionItems($entity, $items, $field);
+            $sorted_items = $entity->getWebsectionsOrdered(false)->toArray();
+            $sorted_items_euid = array_map(fn(Item $item) => $item->getEuid(), $sorted_items);
+            $changed = json_encode($items) === json_encode($sorted_items_euid);
+            $message = $changed ? 'Items are sorted' : 'No items were sorted';
+            $result = $changed ? 'changed' : 'unchanged';
+            $status = Response::HTTP_OK;
+        } else {
+            $sorted_items = false;
+            $message = 'No items to sort';
+            $result = 'failed';
+            $status = Response::HTTP_BAD_REQUEST;
+        }
+        $data = [
+            'user' => $appService->getNormalized($this->getUser(), null, ['groups' => ['index']]),
+            'result' => $result,
+            'message' => $message,
+            'date' => date(DATE_ATOM),
+            'entity' => $entity->getId(),
+            'items' => $appService->getNormalized($sorted_items, null, ['groups' => ['index']]), // serialized
+        ];
+        return new JsonResponse($data, $status);
+    }
 
     #[Route('/webpage/remove-websection/{webpage}/{websection}', name: 'webpage_remove_websection', methods: ['GET'])]
     public function removeWebsection(

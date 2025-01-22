@@ -13,6 +13,7 @@ trait Slug
     #[Serializer\Groups(['index'])]
     protected ?string $slug = null;
 
+    #[Serializer\Ignore]
     protected ?bool $updateSlug = null;
 
     public function __construct_slug(): void

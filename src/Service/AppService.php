@@ -40,6 +40,7 @@ use Symfony\Component\Security\Core\Authorization\AccessDecisionManagerInterface
 use Symfony\UX\Turbo\TurboBundle;
 use Symfony\Component\Routing\RouterInterface;
 use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
+use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Contracts\Cache\ItemInterface;
 use Symfony\Component\Routing\RequestContext;
 use Symfony\Bundle\SecurityBundle\Security\FirewallConfig;
@@ -55,6 +56,7 @@ use DateTimeZone;
 use Exception;
 use ArrayObject;
 use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
+use Symfony\Component\Serializer\Normalizer\AbstractObjectNormalizer;
 
 #[AsAlias(AppServiceInterface::class, public: true)]
 #[Autoconfigure(autowire: true, lazy: false)]
@@ -80,6 +82,7 @@ class AppService extends BaseService implements AppServiceInterface
         public readonly AuthorizationCheckerInterface $authorizationChecker,
         public readonly Environment $twig,
         public readonly NormalizerInterface $normalizer,
+        public readonly SerializerInterface $serializer,
     ) {
         $this->container = $this->kernel->getContainer();
         // $this->project_dir = $this->kernel->getProjectDir();
@@ -238,6 +241,18 @@ class AppService extends BaseService implements AppServiceInterface
     /** NORMALIZER / SERIALIZER                                                                         */
     /****************************************************************************************************/
 
+    public function getSerialized(
+        mixed $object,
+        ?string $format = null,
+        array $context = []
+    ): array|string|int|float|bool|ArrayObject|null
+    {
+        if($object instanceof Collection) $object = $object->toArray();
+        if(is_array($object)) $object = array_values($object); // for React, can not be object, but array
+        // $context[AbstractObjectNormalizer::ENABLE_MAX_DEPTH] = true;
+        return $this->serializer->serialize($object, $format, $context);
+    }
+
     public function getNormalized(
         mixed $object,
         ?string $format = null,
@@ -246,6 +261,7 @@ class AppService extends BaseService implements AppServiceInterface
     {
         if($object instanceof Collection) $object = $object->toArray();
         if(is_array($object)) $object = array_values($object); // for React, can not be object, but array
+        // $context[AbstractObjectNormalizer::ENABLE_MAX_DEPTH] = true;
         return $this->normalizer->normalize($object, $format, $context);
     }
 

@@ -54,11 +54,13 @@ abstract class MappSuperClassEntity implements AppEntityInterface
         return $this->id;
     }
 
+    #[Serializer\Ignore]
     public function getSelf(): static
     {
         return $this;
     }
 
+    #[Serializer\Ignore]
     public function __toString(): string
     {
         $id = $this->_appManaged->isNew() ? '' : '@'.$this->getId();

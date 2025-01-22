@@ -40,7 +40,9 @@ trait AppEntity
     #[Serializer\Groups('index')]
     protected readonly string $shortname;
 
+    #[Serializer\Ignore]
     protected bool $_isClone = false;
+    #[Serializer\Ignore]
     protected readonly bool $_isModel;
 
     #[Serializer\Ignore]
@@ -118,6 +120,7 @@ trait AppEntity
         return $this->euid ??= $this->getNewEuid();
     }
 
+    #[Serializer\Ignore]
     public function getUnameThenEuid(): string
     {
         if($this instanceof UnamedInterface) {
@@ -157,6 +160,7 @@ trait AppEntity
      * @param string $type
      * @return string
      */
+    #[Serializer\Ignore]
     public function getShortnameFormated(
         string $type = 'camel',
     ): string
@@ -169,6 +173,7 @@ trait AppEntity
      * @param string $type
      * @return string
      */
+    #[Serializer\Ignore]
     public function getShortnameDecorated(
         string $type = 'camel',
         string $prefix = null,
@@ -192,6 +197,7 @@ trait AppEntity
             : $this->shortname;
     }
 
+    #[Serializer\Ignore]
     public static function _shortname(
         string $type,
         string $prefix = null,
@@ -202,6 +208,7 @@ trait AppEntity
         return Strings::stringFormated($prefix.$rc->getShortName().$suffix, $type);
     }
 
+    #[Serializer\Ignore]
     public static function getIcon(bool|string $asClass = false, array|string $addClasses = ['fa-fw']): string
     {
         $icon = preg_replace('/^(fa(s|b)?-)*/', '', static::FA_ICON);
@@ -236,11 +243,13 @@ trait AppEntity
         }
     }
 
+    #[Serializer\Ignore]
     public function __isAppManaged(): bool
     {
         return isset($this->_appManaged);
     }
 
+    #[Serializer\Ignore]
     protected function canUpdateAppManaged(): bool
     {
         return !isset($this->_appManaged)

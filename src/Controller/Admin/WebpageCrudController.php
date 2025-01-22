@@ -10,6 +10,7 @@ use Aequation\LaboBundle\Service\Interface\WebpageServiceInterface;
 use Aequation\LaboBundle\Service\Tools\Classes;
 use Aequation\LaboBundle\Service\Tools\Strings;
 use Aequation\LaboBundle\Field\ThumbnailField;
+use Aequation\LaboBundle\Field\WebsectionsField;
 Use Aequation\LaboBundle\Model\Interface\LaboUserInterface;
 
 use App\Entity\Webpage;
@@ -61,38 +62,42 @@ class WebpageCrudController extends BaseCrudController
         switch ($pageName) {
             case Crud::PAGE_DETAIL:
                 
-                yield FormField::addColumn('col-md-12 col-lg-6');
-                yield FormField::addPanel(label: 'Mise en page', icon: 'fa6-solid:file-lines');
-                    yield BooleanField::new('prefered', 'Page principale');
-                    yield TextField::new('title', 'Titre de la page');
-                    yield TextareaField::new('linktitle', 'Titre de lien externe')->formatValue(fn ($value) => Strings::markup($value));
-                    yield AssociationField::new('mainmenu', 'Menu intégré')->setCrudController(MenuCrudController::class);
-                    yield TextField::new('twigfileName', 'Nom du modèle')->setPermission('ROLE_SUPER_ADMIN');
-                    yield TextField::new('twigfile', 'Chemin du modèle')->setPermission('ROLE_SUPER_ADMIN');
-                    yield TextField::new('content', 'Texte de la page')->renderAsHtml();
-                    yield ArrayField::new('items', 'Sections de pages');
-                    yield ThumbnailField::new('photo', 'Photo')->setBasePath($this->getParameter('vich_dirs.item_photo'));
-                    yield TextField::new('pdfUrlAccess', 'Version PDF')->setTemplatePath('@EasyAdmin/crud/field/pdf_link.html.twig');
+                yield FormField::addColumn('col-md-12 col-lg-7');
+
+                    yield FormField::addPanel(label: 'Mise en page', icon: 'fa6-solid:file-lines');
+                        yield BooleanField::new('prefered', 'Page principale');
+                        yield TextField::new('title', 'Titre de la page');
+                        yield TextareaField::new('linktitle', 'Titre de lien externe')->formatValue(fn ($value) => Strings::markup($value));
+                        yield AssociationField::new('mainmenu', 'Menu intégré')->setCrudController(MenuCrudController::class);
+                        yield TextField::new('twigfileName', 'Nom du modèle')->setPermission('ROLE_SUPER_ADMIN');
+                        yield TextField::new('twigfile', 'Chemin du modèle')->setPermission('ROLE_SUPER_ADMIN');
+                        yield TextField::new('content', 'Texte de la page')->renderAsHtml();
+                        yield WebsectionsField::new('items', 'Sections de page')
+                            ->setUseJavascript(true)
+                            ->setHelp('Vous pouvez modifier ici l\'ordre des sections de la page web.');
+                        yield ThumbnailField::new('photo', 'Photo')->setBasePath($this->getParameter('vich_dirs.item_photo'));
+                        yield TextField::new('pdfUrlAccess', 'Version PDF')->setTemplatePath('@EasyAdmin/crud/field/pdf_link.html.twig');
                 
-                yield FormField::addColumn('col-md-12 col-lg-6');
-                yield FormField::addPanel(label: 'Médias associés', icon: 'fa6-solid:link');
-                    yield AssociationField::new('slider', 'Diaporama')->setCrudController(SliderCrudController::class);
-                    yield ArrayField::new('pdfiles', 'Fichiers PDF');
-                    yield ArrayField::new('categorys', 'Catégories');
+                yield FormField::addColumn('col-md-12 col-lg-5');
 
-                yield FormField::addPanel(label: 'Autres informations', icon: 'fa6-solid:info');
-                    yield TextField::new('name', 'Nom');
-                    yield TextField::new('slug', 'Slug');
-                    yield TextField::new('euid', 'Id Unique');
-                    yield DateTimeField::new('createdAt', 'Création')->setFormat('dd/MM/Y - HH:mm')->setTimezone($current_tz);
-                    yield DateTimeField::new('updatedAt', 'Modification')->setFormat('dd/MM/Y - HH:mm')->setTimezone($current_tz);
+                    yield FormField::addPanel(label: 'Médias associés', icon: 'fa6-solid:link');
+                        yield AssociationField::new('slider', 'Diaporama')->setCrudController(SliderCrudController::class);
+                        yield ArrayField::new('pdfiles', 'Fichiers PDF');
+                        yield ArrayField::new('categorys', 'Catégories');
 
-                yield FormField::addPanel(label: 'Sécurité', icon: 'fa6-solid:lock');
-                    yield AssociationField::new('owner', 'Propriétaire')->setCrudController(UserCrudController::class);
-                    yield IdField::new('id');
-                    yield BooleanField::new('enabled', 'Activée');
-                    yield BooleanField::new('softdeleted', 'Supprimée')->setPermission('ROLE_SUPER_ADMIN');
-                    yield TextareaField::new('relationOrderDetails', '[Rel.order info]')->setPermission('ROLE_SUPER_ADMIN');
+                    yield FormField::addPanel(label: 'Autres informations', icon: 'fa6-solid:info');
+                        yield TextField::new('name', 'Nom');
+                        yield TextField::new('slug', 'Slug');
+                        yield TextField::new('euid', 'Id Unique');
+                        yield DateTimeField::new('createdAt', 'Création')->setFormat('dd/MM/Y - HH:mm')->setTimezone($current_tz);
+                        yield DateTimeField::new('updatedAt', 'Modification')->setFormat('dd/MM/Y - HH:mm')->setTimezone($current_tz);
+
+                    yield FormField::addPanel(label: 'Sécurité', icon: 'fa6-solid:lock');
+                        yield AssociationField::new('owner', 'Propriétaire')->setCrudController(UserCrudController::class);
+                        yield IdField::new('id');
+                        yield BooleanField::new('enabled', 'Activée');
+                        yield BooleanField::new('softdeleted', 'Supprimée')->setPermission('ROLE_SUPER_ADMIN');
+                        yield TextareaField::new('relationOrderDetails', '[Rel.order info]')->setPermission('ROLE_SUPER_ADMIN');
                 break;
             case Crud::PAGE_NEW:
                 yield TextField::new('name', 'Nom de la page')
@@ -112,7 +117,7 @@ class WebpageCrudController extends BaseCrudController
                     ->setSortProperty('name')
                     ->setFormTypeOptions(['by_reference' => false])
                     ->setColumns(4);
-                yield AssociationField::new('items', 'Sections de pages')
+                yield WebsectionsField::new('items', 'Sections de pages')
                     // ->autocomplete()
                     ->setQueryBuilder(fn (QueryBuilder $qb): QueryBuilder => EcollectionRepository::QB_collectionChoices($qb, Webpage::class, 'items'))
                     ->setSortProperty('sectiontype')
@@ -167,7 +172,7 @@ class WebpageCrudController extends BaseCrudController
                         // ->autocomplete()
                         ->setSortProperty('name')
                         ->setFormTypeOptions(['by_reference' => false]);
-                    yield AssociationField::new('items', 'Sections de pages')
+                    yield WebsectionsField::new('items', 'Sections de pages')
                         // ->autocomplete()
                         ->setQueryBuilder(fn (QueryBuilder $qb): QueryBuilder => EcollectionRepository::QB_collectionChoices($qb, Webpage::class, 'items'))
                         ->setSortProperty('sectiontype')
@@ -208,7 +213,7 @@ class WebpageCrudController extends BaseCrudController
                 // yield TextField::new('slug', 'Slug');
                 yield TextField::new('twigfileName', 'Modèle')->setTextAlign('center');
                 // yield TextField::new('content', 'Texte de la page')->formatValue(fn ($value) => Strings::markup($value))->setSortable(false);
-                // yield AssociationField::new('items', 'Sections de pages')->setTextAlign('center');
+                // yield WebsectionsField::new('items', 'Sections de pages')->setTextAlign('center');
                 // yield AssociationField::new('mainmenu', 'Menu intégré')->setTextAlign('center');
                 yield TextField::new('pdfUrlAccess', 'Vers.PDF')->setTextAlign('center')->setTemplatePath('@EasyAdmin/crud/field/pdf_link.html.twig');
                 yield BooleanField::new('enabled', 'Activée')->setTextAlign('center');

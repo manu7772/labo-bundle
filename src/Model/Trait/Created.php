@@ -1,12 +1,12 @@
 <?php
 namespace Aequation\LaboBundle\Model\Trait;
 
-// Symfony
-
 use Aequation\LaboBundle\Model\Interface\CreatedInterface;
+// Symfony
 use Doctrine\ORM\Mapping as ORM;
 use Doctrine\Persistence\Event\LifecycleEventArgs;
 use Symfony\Component\Validator\Constraints as Assert;
+use Symfony\Component\Serializer\Attribute as Serializer;
 // PHP
 use DateTimeImmutable;
 use DateTimeZone;
@@ -17,13 +17,16 @@ trait Created
 
     #[ORM\Column(updatable: false, nullable: false)]
     #[Assert\NotNull()]
+    #[Serializer\Groups('detail')]
     protected DateTimeImmutable $createdAt;
 
     #[ORM\Column(nullable: true)]
+    #[Serializer\Groups('detail')]
     protected ?DateTimeImmutable $updatedAt = null;
 
     #[ORM\Column]
     #[Assert\NotNull()]
+    #[Serializer\Groups('detail')]
     protected ?string $timezone = null;
 
     public function __construct_created(): void

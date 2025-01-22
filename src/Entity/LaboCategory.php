@@ -41,13 +41,17 @@ abstract class LaboCategory extends MappSuperClassEntity implements LaboCategory
     public readonly AppEntityManagerInterface|LaboCategoryServiceInterface $_service;
 
     #[ORM\Column(nullable: false)]
+    #[Serializer\Groups('index')]
     protected ?string $name = null;
 
     #[ORM\Column(updatable: false, nullable: false)]
+    #[Serializer\Groups('detail')]
     protected ?string $type;
+    #[Serializer\Ignore]
     protected ?array $categoryTypeChoices;
 
     #[ORM\Column(length: 64, nullable: true)]
+    #[Serializer\Groups('detail')]
     protected ?string $description = null;
 
 
@@ -73,6 +77,7 @@ abstract class LaboCategory extends MappSuperClassEntity implements LaboCategory
         return $this;
     }
 
+    #[Serializer\Ignore]
     public function getTypeChoices(): array
     {
         return $this->categoryTypeChoices ??= $this->_service->getCategoryTypeChoices(true);
@@ -85,6 +90,7 @@ abstract class LaboCategory extends MappSuperClassEntity implements LaboCategory
      * 
      * @return array
      */
+    #[Serializer\Ignore]
     public function getAvailableTypes(): array
     {
         $types = [];
@@ -112,11 +118,13 @@ abstract class LaboCategory extends MappSuperClassEntity implements LaboCategory
         return $exists;
     }
 
+    #[Serializer\Groups('index')]
     public function getShorttype(): string
     {
         return Classes::getShortname($this->type);
     }
 
+    #[Serializer\Ignore]
     public function getTypeAsHtml(
         bool $icon = true,
         bool $classname = false
@@ -128,6 +136,7 @@ abstract class LaboCategory extends MappSuperClassEntity implements LaboCategory
         return $this->_service::getEntityNameAsHtml($this->type, $icon, $classname);
     }
 
+    #[Serializer\Ignore]
     public function getLongTypeAsHtml(): string
     {
         return $this->_service::getEntityNameAsHtml($this->type, true, true);

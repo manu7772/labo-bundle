@@ -19,6 +19,7 @@ use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpKernel\KernelInterface;
 use Symfony\Component\Security\Core\Authorization\AccessDecisionManagerInterface;
 use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
+use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Contracts\Cache\ItemInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Twig\Environment;
@@ -46,9 +47,10 @@ class LaboBundleService extends AppService implements LaboBundleServiceInterface
         AuthorizationCheckerInterface $authorizationChecker,
         Environment $twig,
         NormalizerInterface $normalizer,
+        SerializerInterface $serializer,
         protected FormServiceInterface $formService,
     ) {
-        parent::__construct($requestStack, $kernel, $parameterBag, $security, $accessDecisionManager, $authorizationChecker, $twig, $normalizer);
+        parent::__construct($requestStack, $kernel, $parameterBag, $security, $accessDecisionManager, $authorizationChecker, $twig, $normalizer, $serializer);
         $this->tool_files = $this->get('Tool:Files');
         $this->stopPublic();
     }

@@ -5,7 +5,10 @@ use Aequation\LaboBundle\Model\Interface\LaboUserInterface;
 use Aequation\LaboBundle\Entity\LaboUser;
 use Aequation\LaboBundle\Model\Attribute\CurrentUser;
 use Aequation\LaboBundle\Model\Interface\OwnerInterface;
+// Symfony
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Attribute as Serializer;
+// PHP
 use Exception;
 
 trait Owner
@@ -14,6 +17,7 @@ trait Owner
     #[ORM\ManyToOne(targetEntity: LaboUser::class)]
     #[ORM\JoinColumn(name: 'owner_entity')]
     #[CurrentUser]
+    #[Serializer\Groups('detail')]
     private ?LaboUserInterface $owner = null;
 
     public function __construct_owner(): void

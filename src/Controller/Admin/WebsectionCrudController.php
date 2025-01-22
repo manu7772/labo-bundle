@@ -110,11 +110,19 @@ class WebsectionCrudController extends BaseCrudController
                     ->setChoices(static fn (Websection $websection): array => $websection->getTwigfileChoices() ?: [])
                     ->escapeHtml(false)
                     ->setFormTypeOption('by_reference', false)
-                    ->setColumns(8);
+                    ->setHelp('Choisissez un modèle de mise en page pour cette section. Cela définira le rendu dans la page web, et également le type de section (banner, section classique, footer, etc.).')
+                    ->setColumns(12);
                 // yield ChoiceField::new('sectiontype', 'Type de section')
                 //     ->setChoices(static fn (Websection $websection): array => $websection->getTwigfileMetadata()->getSectiontypeChoices() ?: [])
                 //     ->setColumns(4);
-                yield BooleanField::new('prefered', 'Section par défaut')->setColumns(4)->setHelp('Définir comme section attribuée par défaut dans une nouvelle page web');
+                yield AssociationField::new('categorys','Catégories')->setQueryBuilder(static fn (QueryBuilder $qb): QueryBuilder => CategoryRepository::QB_CategoryChoices($qb, Websection::class))
+                    // ->autocomplete()
+                    ->setSortProperty('name')
+                    ->setFormTypeOptions(['by_reference' => false])
+                    ->setColumns(6);
+                yield BooleanField::new('prefered', 'Section par défaut')
+                    ->setHelp('Cette section sera affectée automatiquement lors de la création d\'une nouvelle page web')
+                    ->setColumns(6);
                 // cumputed form fields
                 // TITLE
                 $title = $info['entity']->getTwigfileMetadata()->getEasyadminField('title', $pageName);
@@ -129,11 +137,6 @@ class WebsectionCrudController extends BaseCrudController
                             ->setRequired(false);
                         break;
                 }
-                yield AssociationField::new('categorys')->setQueryBuilder(static fn (QueryBuilder $qb): QueryBuilder => CategoryRepository::QB_CategoryChoices($qb, Websection::class))
-                    // ->autocomplete()
-                    ->setSortProperty('name')
-                    ->setFormTypeOptions(['by_reference' => false])
-                    ->setColumns(4);
                 // CONTENT
                 $content = $info['entity']->getTwigfileMetadata()->getEasyadminField('content', $pageName);
                 switch (true) {
@@ -182,6 +185,7 @@ class WebsectionCrudController extends BaseCrudController
                         break;
                     case $slider === true:
                         yield AssociationField::new('slider', 'Diaporama')
+                            ->setHelp('Vous pouvez utiliser un diaporama existant, ou en créer un nouveau pour cette section')
                             ->setColumns(6);
                         break;
                 }
@@ -279,6 +283,7 @@ class WebsectionCrudController extends BaseCrudController
                         break;
                     case $slider === true:
                         yield AssociationField::new('slider', 'Diaporama')
+                            ->setHelp('Vous pouvez utiliser un diaporama existant, ou en créer un nouveau pour cette section')
                             ->setColumns(6);
                         break;
                 }

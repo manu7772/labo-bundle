@@ -27,6 +27,7 @@ trait RelationOrder
     #[Serializer\Ignore]
     protected ?array $relationOrder = [];
 
+    #[Serializer\Ignore]
     protected bool $isDirtyOrder = true;
 
     // #[ORM\PrePersist]

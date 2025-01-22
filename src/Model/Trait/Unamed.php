@@ -17,9 +17,11 @@ trait Unamed
     #[ORM\OneToOne(cascade: ['persist'], orphanRemoval: true, fetch: 'LAZY')]
     #[ORM\JoinColumn(nullable: false)]
     #[Assert\Valid()]
-    #[Serializer\Ignore]
+    #[Serializer\Groups('detail')]
+    #[Serializer\MaxDepth(1)]
     protected readonly Uname $uname;
 
+    #[Serializer\Ignore]
     public ?string $_tempUname = null;
 
     public function __construct_unamed(): void
@@ -52,6 +54,7 @@ trait Unamed
         return $this;
     }
 
+    #[Serializer\Ignore]
     public function getUname(): ?Uname
     {
         if(!isset($this->uname)) $this->updateUname();

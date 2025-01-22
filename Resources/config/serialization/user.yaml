@@ -1,0 +1,7 @@
+# config/serializer/user.yaml
+App\Entity\User:
+    attributes:
+        createdAt:
+            type: datetime
+            format: 'Y-m-d H:i:s'
+            groups: [ 'index' ]

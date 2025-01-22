@@ -1,0 +1,57 @@
+{# @var ea \EasyCorp\Bundle\EasyAdminBundle\Context\AdminContext #}
+{# @var field \EasyCorp\Bundle\EasyAdminBundle\Dto\FieldDto #}
+{# @var entity \EasyCorp\Bundle\EasyAdminBundle\Dto\EntityDto #}
+{% set value = entity.instance.getWebsectionsOrdered(false) %}
+{# {% set value = field.value %} #}
+
+{# <div>
+    {{ dump(app.user|serialize('json', {groups: 'index'})) }}
+    {{ dump(entity.instance|serialize('json', {groups: 'index'})) }}
+</div> #}
+
+{% if value is iterable %}
+
+    {% if field.customOption('useJavascript', true) %}
+
+        {% set prototype -%}
+        <li id="item-id-__item.id__" data-euid="__item.euid__" class="sortable-item list-group-item list-group-item-action d-flex justify-content-between align-items-center user-select-none" title="__item.sectiontype__ - __item.name__">
+            <span>
+                <a href="{{ url('easyadmin_websection_detail', {entityId: '__item.id__'}) }}" class="mr-1" title="Voir __item.name__ }}"><span class="fa fa-eye"></span></a>
+                <span class="">__item.name__</span>
+            </span>
+            <span>
+                <a href="{{ path('aequation_labo_entity_webpage_remove_websection', {webpage: '__entity.id__', websection: '__item.id__' }) }}" class="mx-1" title="Retirer"><span class="fa fa-times"></span></a>
+                <span class="badge badge-primary badge-pill">__item.sectiontype__</span>
+            </span>
+        </li>
+        {%- endset %}
+        <ul data-debug="{{ app.debug|json_encode }}" data-prototype="{{- prototype|json_encode -}}" data-entity="{{- entity.instance|serialize('json', {groups: 'index'}) -}}" class="list-group sortable-group" id="websections-list-{{ entity.instance.id }}" data-euid="{{ entity.instance.euid }}" data-parent-field-name="{{ field.customOption('parentFieldName', 'items') }}" data-url="{{ path('aequation_labo_entity_sort_items', {entity: entity.instance.id}) }}" data-title="Glissez-déposez les éléments ci-dessous pour en changer l'ordre."></ul>
+
+    {% else %}
+
+        <ul class="list-group">
+            {% for item in value %}
+            <li class="list-group-item list-group-item-action d-flex justify-content-between align-items-center user-select-none" title="{{ item.sectiontype }} - {{ item.name|striptags }}{{ not item.active ? ' - DÉSACTIVÉE' }}">
+                <span>
+                    <a href="{{ url('easyadmin_websection_detail', {entityId: item.id}) }}" class="{{ not item.active ? 'text-muted' }} mr-1" title="Voir {{ item.name|striptags }}"><span class="fa fa-eye"></span></a>
+                    <span class="{{ not item.active ? 'text-muted' }}">{{ item.name|striptags|u.truncate(36, '...') }}</span>
+                </span>
+                <span>
+                    {% if item.sectiontype in ['section'] %}
+                    <a href="{{ path('aequation_labo_entity_webpage_move_websection', {webpage: entity.instance.id, websection: item.id, position: 'up' }) }}" class="mx-1" title="Remonter d'un cran"><span class="fa fa-arrow-up"></span></a>
+                    <a href="{{ path('aequation_labo_entity_webpage_move_websection', {webpage: entity.instance.id, websection: item.id, position: 'down' }) }}" class="mx-1" title="Descendre d'un cran"><span class="fa fa-arrow-down"></span></a>
+                    {% endif %}
+                    <a href="{{ path('aequation_labo_entity_webpage_remove_websection', {webpage: entity.instance.id, websection: item.id }) }}" class="mx-1" title="Retirer"><span class="fa fa-times"></span></a>
+                    <span class="badge badge-{{ item.active ? 'light' : 'primary' }} badge-pill">{{ item.sectiontype }}</span>
+                </span>
+            </li>
+            {% endfor %}
+        </ul>
+
+    {% endif %}
+
+{% else %}
+
+    {{ value|raw }}
+
+{% endif %}

@@ -30,13 +30,16 @@ class Uname extends MappSuperClassEntity implements UnameInterface
 
     #[ORM\Column(length: 255)]
     #[Assert\Length(min: 3, minMessage: 'Uname doit contenir au moins {{ min }} lettres')]
+    #[Serializer\Groups('index')]
     private string $uname;
 
     #[ORM\Column(length: 255, updatable: false)]
     #[Assert\NotNull]
+    #[Serializer\Groups('index')]
     private string $euidofentity;
 
     #[Serializer\Ignore]
+    #[Serializer\MaxDepth(1)]
     public readonly AppEntityInterface $entity;
 
 

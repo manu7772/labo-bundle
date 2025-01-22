@@ -68,12 +68,14 @@ abstract class LaboUser extends MappSuperClassEntity implements LaboUserInterfac
     protected ?string $email = null;
 
     #[ORM\Column(type: Types::JSON)]
+    #[Serializer\Groups('detail')]
     protected array $roles = [];
 
     /**
      * @var string The hashed password
      */
     #[ORM\Column(type: Types::STRING)]
+    #[Serializer\Ignore]
     protected ?string $password = null;
 
     /** 
@@ -82,33 +84,43 @@ abstract class LaboUser extends MappSuperClassEntity implements LaboUserInterfac
      */
     #[SecurityAssert\UserPassword(message: 'Votre mot de passe n\'est pas valable', groups: ['registration'])]
     // #[Assert\PasswordStrength(minScore: PasswordStrength::STRENGTH_MEDIUM, message: 'Ce mot de passe n\'est pas assez sécurisé')]
+    #[Serializer\Ignore]
     protected ?string $plainPassword = null;
 
     #[ORM\Column(length: 255, nullable: true)]
+    #[Serializer\Groups('detail')]
     protected ?string $firstname = null;
 
     #[ORM\Column(length: 255, nullable: true)]
+    #[Serializer\Groups('detail')]
     protected ?string $lastname = null;
 
     #[ORM\Column]
+    #[Serializer\Groups('detail')]
     protected bool $darkmode = true;
 
     #[ORM\Column(nullable: true)]
+    #[Serializer\Groups('detail')]
     protected ?DateTimeImmutable $expiresAt = null;
 
     #[ORM\Column]
+    #[Serializer\Groups('detail')]
     protected ?bool $isVerified = false;
 
+    #[Serializer\Ignore]
     protected ?AppRoleHierarchyInterface $roleHierarchy = null;
 
     #[ORM\Column(nullable: true)]
+    #[Serializer\Groups('detail')]
     protected ?DateTimeImmutable $lastLogin = null;
 
     #[ORM\OneToOne(cascade: ['persist', 'remove'], orphanRemoval: true)]
     #[Assert\Valid()]
+    #[Serializer\Ignore]
     protected ?Portrait $portrait = null;
 
     #[ORM\Column(length: 255, nullable: true)]
+    #[Serializer\Groups('detail')]
     protected ?string $fonction = null;
 
     /**
@@ -116,6 +128,7 @@ abstract class LaboUser extends MappSuperClassEntity implements LaboUserInterfac
      */
     #[ORM\ManyToMany(targetEntity: Category::class)]
     #[RelationOrder()]
+    #[Serializer\Groups('detail')]
     protected Collection $categorys;
 
 

@@ -28,9 +28,12 @@ abstract class Ecollection extends Item implements EcollectionInterface
 {
     use TraitRelationOrder;
 
+    public const RELATION_FIELDNAME = 'items';
+
     #[ORM\ManyToMany(targetEntity: Item::class, mappedBy: 'parents', cascade: ['persist'])]
     #[RelationOrder()]
-    #[Serializer\Ignore]
+    #[Serializer\Groups('detail')]
+    #[Serializer\MaxDepth(1)]
     protected Collection $items;
 
     public function __construct()
@@ -73,9 +76,13 @@ abstract class Ecollection extends Item implements EcollectionInterface
         return $this->items->filter(fn($item) => $item->isActive());
     }
 
-    public function setItems(Collection $items): static
+    public function setItems(array|Collection $items): static
     {
-        foreach($items->toArray() as $item) {
+        $this->removeItems();
+        if($items instanceof Collection) {
+            $items = $items->toArray();
+        }
+        foreach($items as $item) {
             $this->addItem($item);
         }
         return $this;

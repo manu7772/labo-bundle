@@ -7,6 +7,7 @@ use Doctrine\Common\Collections\Collection;
 interface EcollectionInterface extends ItemInterface, HasOrderedInterface
 {
 
+    public function setItems(array|Collection $items): static;
     public function getItems(): Collection;
     public function addItem(ItemInterface $item): bool;
     public function removeItem(ItemInterface $item): static;
