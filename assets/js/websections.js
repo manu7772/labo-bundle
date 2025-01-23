@@ -36,9 +36,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             })
             .then((response) => response.json())
-            // .then((json) => {
-            //     if(this.debug) console.debug('Data sent successfully', json)
-            // })
             .catch((error) => {
                 if(this.debug) console.error('Error while sending data', error)
             })
