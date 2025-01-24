@@ -1,7 +1,7 @@
 <?php
 namespace Aequation\LaboBundle\Repository\Interface;
 
-interface ImageRepositoryInterface extends CommonReposInterface
+interface ImageRepositoryInterface extends ItemRepositoryInterface
 {
 
 }

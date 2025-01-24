@@ -17,9 +17,11 @@ use Aequation\LaboBundle\Model\Interface\LaboUserInterface;
 use Aequation\LaboBundle\Model\Interface\PreferedInterface;
 use Aequation\LaboBundle\Model\Interface\AppEntityInterface;
 use Aequation\LaboBundle\Model\Interface\HasOrderedInterface;
+use Aequation\LaboBundle\Model\Interface\LaboArticleInterface;
 use Aequation\LaboBundle\Service\Interface\PdfServiceInterface;
 use Aequation\LaboBundle\Service\Interface\AppEntityManagerInterface;
 use Aequation\LaboBundle\Service\Interface\AppRoleHierarchyInterface;
+use Aequation\LaboBundle\Service\Tools\Encoders;
 // App
 use App\Entity\Entreprise;
 use App\Entity\Category;
@@ -122,6 +124,14 @@ class GlobalDoctrineListener
             }
         }
 
+        if($entity instanceof LaboArticleInterface) {
+            if($entity->getStart() && $entity->getEnd() && $entity->getStart() > $entity->getEnd()) {
+                if($this->manager->isDev()) throw new Exception(vsprintf('Error line %d %s(): %s can not be updated when start is greater than end!', [__LINE__, __METHOD__, $entity::class]));
+                // Swap start and end
+                Encoders::swap($entity->getStart(), $entity->getEnd());
+            }
+        }
+
         // Specificity entity
         switch (true) {
             case $entity instanceof LaboUserInterface:
@@ -165,6 +175,14 @@ class GlobalDoctrineListener
         /** @var AppEntityInterface */
         $entity = $event->getObject();
         // $entity->_service->dispatchEvent($entity, Events::preUpdate);
+
+        if($entity instanceof LaboArticleInterface) {
+            if($entity->getStart() && $entity->getEnd() && $entity->getStart() > $entity->getEnd()) {
+                if($this->manager->isDev()) throw new Exception(vsprintf('Error line %d %s(): %s can not be updated when start is greater than end!', [__LINE__, __METHOD__, $entity::class]));
+                // Swap start and end
+                Encoders::swap($entity->getStart(), $entity->getEnd());
+            }
+        }
 
         // LaboUserInterface
         if($entity instanceof LaboUserInterface) {
