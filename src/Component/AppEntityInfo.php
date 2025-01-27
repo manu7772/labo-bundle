@@ -70,7 +70,8 @@ class AppEntityInfo implements AppEntityInfoInterface
             $this->manager instanceof $serviceName;
         } catch (\Throwable $th) {
             //throw $th;
-            dd($this->entity, $serviceName, $th->getMessage());
+            throw new Exception(vsprintf('Error on %s line %d: %s', [__METHOD__, __LINE__, $th->getMessage()]));
+            // dd($this->entity, $serviceName, $th->getMessage());
         }
         return
             $this->entity instanceof AppEntityInterface

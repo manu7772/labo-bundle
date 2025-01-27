@@ -53,6 +53,7 @@ interface AppEntityManagerInterface extends ServiceInterface
     public function findEntityByUniqueValue(string $value): ?AppEntityInterface;
     public function findEntityByEuid(string $euid): ?AppEntityInterface;
 
+    public function getNewHydrateds(string|array|callable $filter = null): array;
     public function getScheduledForInsert(string|array|callable $filter = null): array;
     public function getScheduledForUpdate(string|array|callable $filter = null): array;
     public function getScheduledForDelete(string|array|callable $filter = null): array;

@@ -3,7 +3,7 @@ namespace Aequation\LaboBundle\Model\Interface;
 
 use DateTimeInterface;
 
-interface LaboArticleInterface
+interface LaboArticleInterface extends SlugInterface
 {
     public function getTitle(): ?string;
     public function setTitle(?string $title): static;

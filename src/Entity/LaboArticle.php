@@ -1,26 +1,24 @@
 <?php
 namespace Aequation\LaboBundle\Entity;
 
+use Aequation\LaboBundle\Model\Trait\Slug;
+use Aequation\LaboBundle\Model\Attribute as EA;
+use Aequation\LaboBundle\Model\Attribute\RelationOrder;
+use Aequation\LaboBundle\Model\Attribute\Slugable;
+use Aequation\LaboBundle\Model\Final\FinalCategoryInterface;
+use Aequation\LaboBundle\Repository\LaboArticleRepository;
+use Aequation\LaboBundle\Model\Interface\LaboArticleInterface;
+use Aequation\LaboBundle\Service\Interface\LaboArticleServiceInterface;
+// Symfony
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
-use Aequation\LaboBundle\Model\Trait\Slug;
-use Aequation\LaboBundle\Service\Tools\Files;
-use Aequation\LaboBundle\Model\Attribute as EA;
-use Symfony\Component\HttpFoundation\File\File;
-use Aequation\LaboBundle\Model\Attribute\Slugable;
-use Aequation\LaboBundle\Repository\LaboArticleRepository;
-use Aequation\LaboBundle\Service\Tools\HttpRequest;
-use Vich\UploaderBundle\Mapping\Annotation as Vich;
-use Aequation\LaboBundle\Model\Interface\LaboArticleInterface;
-use Symfony\Component\Validator\Constraints as Assert;
-use Aequation\LaboBundle\Model\Interface\SlugInterface;
-use Symfony\Component\HttpFoundation\File\UploadedFile;
-use Symfony\Component\Serializer\Attribute as Serializer;
-use Aequation\LaboBundle\Model\Interface\LaboArticleizableInterface;
-use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
-use Aequation\LaboBundle\Service\Interface\LaboArticleServiceInterface;
-use DateTimeInterface;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
+use Symfony\Component\Serializer\Attribute as Serializer;
+use Vich\UploaderBundle\Mapping\Annotation as Vich;
+// PHP
+use DateTimeInterface;
 
 #[ORM\Entity(repositoryClass: LaboArticleRepository::class)]
 #[ORM\HasLifecycleCallbacks]
@@ -36,10 +34,16 @@ abstract class LaboArticle extends Item implements LaboArticleInterface
 
     public const ICON = "tabler:article";
     public const FA_ICON = "fa-regular fa-newspaper";
+    public const ITEMS_ACCEPT = [
+        'categorys' => [FinalCategoryInterface::class],
+    ];
 
 
     #[ORM\Column(type: Types::TEXT, nullable: true)]
     protected ?string $title = null;
+
+    #[ORM\Column(type: Types::STRING, nullable: false)]
+    protected string $webpage;
 
     #[ORM\Column]
     protected array $content = [];
@@ -50,6 +54,20 @@ abstract class LaboArticle extends Item implements LaboArticleInterface
     #[ORM\Column(type: Types::DATETIME_MUTABLE, nullable: true)]
     protected ?\DateTimeInterface $end = null;
 
+    /**
+     * @var Collection<int, FinalCategoryInterface>
+     */
+    #[ORM\ManyToMany(targetEntity: FinalCategoryInterface::class)]
+    #[RelationOrder()]
+    #[Serializer\Groups('detail')]
+    protected Collection $categorys;
+
+
+    public function __construct()
+    {
+        parent::__construct();
+        $this->categorys = new ArrayCollection();
+    }
 
     public function getTitle(): ?string
     {
@@ -59,6 +77,17 @@ abstract class LaboArticle extends Item implements LaboArticleInterface
     public function setTitle(?string $title): static
     {
         $this->title = $title;
+        return $this;
+    }
+
+    public function getWebpage(): string
+    {
+        return $this->webpage;
+    }
+
+    public function setWebpage(string $webpage): static
+    {
+        $this->webpage = $webpage;
         return $this;
     }
 
@@ -92,6 +121,37 @@ abstract class LaboArticle extends Item implements LaboArticleInterface
     public function setEnd(?\DateTimeInterface $end): static
     {
         $this->end = $end;
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, FinalCategoryInterface>
+     */
+    public function getCategorys(): Collection
+    {
+        return $this->categorys;
+    }
+
+    public function addCategory(FinalCategoryInterface $category): static
+    {
+        if (!$this->categorys->contains($category)) {
+            $this->categorys->add($category);
+        }
+        return $this;
+    }
+
+    public function removeCategory(FinalCategoryInterface $category): static
+    {
+        $this->categorys->removeElement($category);
+        return $this;
+    }
+
+    public function removeCategorys(): static
+    {
+        foreach ($this->categorys as $category) {
+            /** @var FinalCategoryInterface $category */
+            $this->removeCategory($category);
+        }
         return $this;
     }
 

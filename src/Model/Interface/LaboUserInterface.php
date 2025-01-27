@@ -1,11 +1,17 @@
 <?php
 namespace Aequation\LaboBundle\Model\Interface;
 
+use Aequation\LaboBundle\Model\Final\FinalCategoryInterface;
+use Aequation\LaboBundle\Model\Final\FinalEmailinkInterface;
+use Aequation\LaboBundle\Model\Final\FinalPhonelinkInterface;
+use Aequation\LaboBundle\Model\Final\FinalAddresslinkInterface;
 use Aequation\LaboBundle\Service\Interface\AppRoleHierarchyInterface;
-use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
-use Symfony\Component\Security\Core\User\UserInterface;
-use DateTimeImmutable;
+// Symfony
 use Doctrine\Common\Collections\Collection;
+use Symfony\Component\Security\Core\User\UserInterface;
+use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
+// PHP
+use DateTimeImmutable;
 
 interface LaboUserInterface extends UserInterface, PasswordAuthenticatedUserInterface, AppEntityInterface, EnabledInterface, CreatedInterface
 {
@@ -29,8 +35,8 @@ interface LaboUserInterface extends UserInterface, PasswordAuthenticatedUserInte
     public function getLastLogin(): ?DateTimeImmutable;
     public function getExpiresAt(): ?DateTimeImmutable;
     public function getCategorys(): Collection;
-    public function addCategory(LaboCategoryInterface $category): static;
-    public function removeCategory(LaboCategoryInterface $category): static;
+    public function addCategory(FinalCategoryInterface $category): static;
+    public function removeCategory(FinalCategoryInterface $category): static;
     public function removeCategorys(): static;
     
     /** ROLES */
@@ -46,6 +52,17 @@ interface LaboUserInterface extends UserInterface, PasswordAuthenticatedUserInte
     public function getInferiorRoles(): array;
     public function getLowerRole(): string;
     public function getHigherRole(): string;
+
+    /** COORDINATES */
+    public function getAddresses(): Collection;
+    public function addAddress(FinalAddresslinkInterface $address): static;
+    public function removeAddress(FinalAddresslinkInterface $address): static;
+    public function getEmails(): Collection;
+    public function addEmail(FinalEmailinkInterface $email): static;
+    public function removeEmail(FinalEmailinkInterface $email): static;
+    public function getPhones(): Collection;
+    public function addPhone(FinalPhonelinkInterface $phone): static;
+    public function removePhone(FinalPhonelinkInterface $phone): static;
 
 }
 

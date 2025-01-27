@@ -3,7 +3,6 @@ namespace Aequation\LaboBundle\EventListener;
 
 use Aequation\LaboBundle\Entity\Pdf;
 use Aequation\LaboBundle\Service\SlugService;
-use Aequation\LaboBundle\Component\AppEntityInfo;
 use Aequation\LaboBundle\Model\Interface\PdfInterface;
 use Aequation\LaboBundle\Model\Interface\SlugInterface;
 use Aequation\LaboBundle\Model\Final\FinalUserInterface;
@@ -11,8 +10,9 @@ use Aequation\LaboBundle\Model\Interface\ImageInterface;
 use Aequation\LaboBundle\Model\Interface\OwnerInterface;
 use Aequation\LaboBundle\Model\Interface\UnamedInterface;
 use Aequation\LaboBundle\EventListener\Attribute\AppEvent;
+use Aequation\LaboBundle\Model\Final\FinalCategoryInterface;
+use Aequation\LaboBundle\Model\Final\FinalEntrepriseInterface;
 use Aequation\LaboBundle\Model\Interface\EnabledInterface;
-use Aequation\LaboBundle\Model\Interface\WebpageInterface;
 use Aequation\LaboBundle\Model\Interface\LaboUserInterface;
 use Aequation\LaboBundle\Model\Interface\PreferedInterface;
 use Aequation\LaboBundle\Model\Interface\AppEntityInterface;
@@ -22,13 +22,9 @@ use Aequation\LaboBundle\Service\Interface\PdfServiceInterface;
 use Aequation\LaboBundle\Service\Interface\AppEntityManagerInterface;
 use Aequation\LaboBundle\Service\Interface\AppRoleHierarchyInterface;
 use Aequation\LaboBundle\Service\Tools\Encoders;
-// App
-use App\Entity\Entreprise;
-use App\Entity\Category;
 // Symfony
 use Doctrine\ORM\Events;
 use Doctrine\ORM\UnitOfWork;
-use Symfony\Component\Form\FormEvents;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Event\OnFlushEventArgs;
 use Doctrine\ORM\Event\PostLoadEventArgs;
@@ -199,13 +195,14 @@ class GlobalDoctrineListener
                 // dd('--- '.($entity->isCheckMainentreprise() ? 'CHECK' : 'NO CHECK').' : mainentreprise is '.json_encode($entity->getMainentreprise()).' / computed is '.json_encode($entity->getComputedMainentreprise()), $entity);
                 if($entity->isCheckMainentreprise()) {
                     /** @var ServiceEntityRepository */
-                    $entrepriseRepository = $this->manager->getRepository(Entreprise::class);
+                    $entrepriseRepository = $this->manager->getRepository(FinalEntrepriseInterface::class);
                     $mainentreprise = $entrepriseRepository->findOneBy(['prefered' => true]);
                     /** @var ServiceEntityRepository */
-                    $categoryRepository = $this->manager->getRepository(Category::class);
-                    $maincategory = $categoryRepository->find(Category::ID_OF_MAIN_FOR_ENTREPRISE);
+                    $categoryRepository = $this->manager->getRepository(FinalCategoryInterface::class);
+                    $idfme = FinalCategoryInterface::getIdForMainEntreprise();
+                    $maincategory = $idfme ? $categoryRepository->find($idfme) : null;
                     $computeChangeSet = false;
-                    if($mainentreprise && $maincategory) {
+                    if($mainentreprise) {
                         if($entity->getMainentreprise()) {
                             if(!$entity->wasMainentreprise()) {
                                 if($entity->isSoftdeleted()) {
@@ -222,9 +219,11 @@ class GlobalDoctrineListener
                                     $computeChangeSet = true;
                                 }
                                 // Set maincategory
-                                if(!$entity->getCategorys()->contains($maincategory)) {
-                                    $entity->addCategory($maincategory);
-                                    $computeChangeSet = true;
+                                if($maincategory) {
+                                    if(!$entity->getCategorys()->contains($maincategory)) {
+                                        $entity->addCategory($maincategory);
+                                        $computeChangeSet = true;
+                                    }
                                 }
                             }
                         } else {
@@ -343,7 +342,7 @@ class GlobalDoctrineListener
                     $entity->setOriginalname(null);
                     /** @var PdfServiceInterface */
                     $pdfService = $this->manager->getEntityService(Pdf::class);
-                    $stream = $pdfService->output($entity);
+                    $stream = $pdfService->outputDoc($entity);
                     $entity->setSize(mb_strlen($stream));
                     // $uow->recomputeSingleEntityChangeSet($this->em->getClassMetadata(get_class($entity)), $entity);
                     $entity->setMime('application/pdf');

@@ -43,18 +43,24 @@ class SlugService extends BaseService
     {
         $classname = is_object($entity) ? $entity->getClassname() : $entity;
         if(!is_object($entity)) $entity = null;
-        if(empty($entity) && empty($slug)) die(__METHOD__.__LINE__);
-        if(empty($slug ??= $entity->getSlug())) die(__METHOD__.__LINE__);
-        $filter = function($test) use ($entity, $classname, $slug) {
+        if(empty($entity) && empty($slug)) throw new Exception(vsprintf("Error %s line %d: %s or %s must be defined.", [__METHOD__, __LINE__, '$entity', '$slug']));
+        if(empty($slug ??= $entity->getSlug())) throw new Exception(vsprintf("Error %s line %d: %s must be defined.", [__METHOD__, __LINE__, '$slug']));
+        $filter = function(AppEntityInterface $test) use ($entity, $classname, $slug) {
             return (empty($entity) || $test !== $entity)
                 && is_a($test, $classname)
                 && $test instanceof SlugInterface
                 && $test->getSlug() === $slug;
         };
+        // New hydratateds
+        $ydrateds = $this->appEntityManager->getNewHydrateds($filter);
+        if(!empty($ydrateds)) return true;
+        // Inserts
         $inserts = $this->appEntityManager->getScheduledForInsert($filter);
         if(!empty($inserts)) return true;
+        // Updates
         $updates = $this->appEntityManager->getScheduledForUpdate($filter);
         if(!empty($updates)) return true;
+        // In database
         /** @var ServiceEntityRepository */
         $repo = $this->appEntityManager->getRepository($classname, 'slug');
         foreach ($repo->findBy(['slug' => $slug]) as $test) {

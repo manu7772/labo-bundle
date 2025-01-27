@@ -1,9 +1,8 @@
 <?php
 namespace Aequation\LaboBundle\Model\Interface;
 
-use App\Entity\Category;
-
 use Aequation\LaboBundle\Component\TwigfileMetadata;
+use Aequation\LaboBundle\Model\Final\FinalCategoryInterface;
 use Doctrine\Common\Collections\Collection;
 
 interface WebsectionInterface extends ItemInterface, CreatedInterface, EnabledInterface
@@ -20,8 +19,8 @@ interface WebsectionInterface extends ItemInterface, CreatedInterface, EnabledIn
     public function isPrefered(): bool;
     public function setPrefered(bool $prefered): static;
     public function getCategorys(): Collection;
-    public function addCategory(Category $category): static;
-    public function removeCategory(Category $category): static;
+    public function addCategory(FinalCategoryInterface $category): static;
+    public function removeCategory(FinalCategoryInterface $category): static;
     public function removeCategorys(): static;
     public function getMainmenu(): ?MenuInterface;
     public function setMainmenu(?MenuInterface $mainmenu): static;

@@ -3,7 +3,7 @@ namespace Aequation\LaboBundle\Service;
 
 use Aequation\LaboBundle\Component\AppContext;
 use Aequation\LaboBundle\Component\AppContextTemp;
-use Aequation\LaboBundle\Component\Identity;
+// use Aequation\LaboBundle\Component\Identity;
 use Aequation\LaboBundle\Component\Interface\AppContextInterface;
 use Aequation\LaboBundle\Model\Attribute\ClassCustomService;
 use Aequation\LaboBundle\Model\Interface\AppEntityInterface;
@@ -68,7 +68,7 @@ class AppService extends BaseService implements AppServiceInterface
     protected AppContextInterface $appContext;
     protected ?Request $request;
     protected ?Session $session;
-    protected Identity $identity;
+    // protected Identity $identity;
     // protected string $project_dir;
     protected ?string $_route;
     protected mixed $_route_params;
@@ -233,6 +233,17 @@ class AppService extends BaseService implements AppServiceInterface
     public function __call($name, $arguments)
     {
         return $this->appContext->$name(...$arguments);
+    }
+
+
+
+    /****************************************************************************************************/
+    /** MAIN ENTREPRISE                                                                                 */
+    /****************************************************************************************************/
+
+    public function getMainEntreprise(): ?Object
+    {
+        return $this->get('App\\Service\\Interface\\EntrepriseServiceInterface')->getMainEntreprise();
     }
 
 
@@ -899,11 +910,11 @@ class AppService extends BaseService implements AppServiceInterface
         }
     }
 
-    public function identity(): Identity
-    {
-        $params_identity = $this->getParam(Identity::ENTREPRISE_PARAM_NAME, $this->getParamsByRegex(Identity::REGEX_FIND_ENTREPRISE));
-        return $this->identity ??= new Identity($params_identity);
-    }
+    // public function identity(): Identity
+    // {
+    //     $params_identity = $this->getParam(Identity::ENTREPRISE_PARAM_NAME, $this->getParamsByRegex(Identity::REGEX_FIND_ENTREPRISE));
+    //     return $this->identity ??= new Identity($params_identity);
+    // }
 
     public function getParamsByRegex(string $regexp): array
     {

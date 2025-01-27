@@ -124,7 +124,7 @@ class TwigExtensions extends AbstractExtension implements GlobalsInterface
             // 'locale' => $this->kernel,
             'currentYear' => $this->getCurrentYear(),
             // 'AppService' => $this->appService,
-            'Identity' => $this->appService->Identity(),
+            'Identity' => $this->appService->getMainEntreprise(),
             // 'AS' => $this->appService,
         ];
     }

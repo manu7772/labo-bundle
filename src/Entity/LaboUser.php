@@ -10,7 +10,6 @@ use Aequation\LaboBundle\Entity\Image;
 use Aequation\LaboBundle\Entity\Portrait;
 use Aequation\LaboBundle\EventListener\Attribute\AppEvent;
 use Aequation\LaboBundle\Model\Attribute\RelationOrder;
-use Aequation\LaboBundle\Model\Interface\CategoryInterface;
 use Aequation\LaboBundle\Model\Interface\UnamedInterface;
 use Aequation\LaboBundle\Model\Trait\Unamed;
 use Aequation\LaboBundle\Repository\LaboUserRepository;
@@ -19,26 +18,27 @@ use Aequation\LaboBundle\Service\Interface\AppRoleHierarchyInterface;
 use Aequation\LaboBundle\Service\Tools\Encoders;
 use Aequation\LaboBundle\Service\LaboUserService;
 use Aequation\LaboBundle\Model\Attribute as EA;
+use Aequation\LaboBundle\Model\Final\FinalAddresslinkInterface;
+use Aequation\LaboBundle\Model\Final\FinalCategoryInterface;
+use Aequation\LaboBundle\Model\Final\FinalEmailinkInterface;
+use Aequation\LaboBundle\Model\Final\FinalPhonelinkInterface;
+use Aequation\LaboBundle\Model\Final\FinalUrlinkInterface;
 use Aequation\LaboBundle\Model\Interface\CreatedInterface;
 use Aequation\LaboBundle\Model\Interface\EnabledInterface;
-use Aequation\LaboBundle\Model\Interface\LaboCategoryInterface;
-use Aequation\LaboBundle\Service\Interface\LaboUserServiceInterface;
-
-use App\Entity\Category;
-
+// Symfony
 use Doctrine\ORM\Mapping as ORM;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
+use Doctrine\DBAL\Types\Types;
 use Symfony\Component\Validator\Constraints as Assert;
 use Symfony\Component\Security\Core\Validator\Constraints as SecurityAssert;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Security\Core\User\EquatableInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Serializer\Attribute as Serializer;
-
+// PHP
 use DateInterval;
 use DateTimeImmutable;
-use Doctrine\Common\Collections\ArrayCollection;
-use Doctrine\Common\Collections\Collection;
-use Doctrine\DBAL\Types\Types;
 
 #[ORM\Entity(repositoryClass: LaboUserRepository::class)]
 // #[EA\ClassCustomService(LaboUserServiceInterface::class)]
@@ -56,7 +56,10 @@ abstract class LaboUser extends MappSuperClassEntity implements LaboUserInterfac
     public const SERIALIZATION_PROPS = ['id','email'];
     // public const SERIALIZATION_PROPS = ['id','euid','firstname','lastname','darkmode','expiresAt','isVerified','lastLogin','email','roles','classname','shortname'];
     public const ITEMS_ACCEPT = [
-        'categorys' => [Category::class],
+        'categorys' => [FinalCategoryInterface::class],
+        'addresses' => [FinalAddresslinkInterface::class],
+        'emails' => [FinalEmailinkInterface::class],
+        'phones' => [FinalPhonelinkInterface::class],
     ];
 
     #[Serializer\Ignore]
@@ -88,7 +91,7 @@ abstract class LaboUser extends MappSuperClassEntity implements LaboUserInterfac
     protected ?string $plainPassword = null;
 
     #[ORM\Column(length: 255, nullable: true)]
-    #[Serializer\Groups('detail')]
+    #[Serializer\Groups('index')]
     protected ?string $firstname = null;
 
     #[ORM\Column(length: 255, nullable: true)]
@@ -96,7 +99,7 @@ abstract class LaboUser extends MappSuperClassEntity implements LaboUserInterfac
     protected ?string $lastname = null;
 
     #[ORM\Column]
-    #[Serializer\Groups('detail')]
+    #[Serializer\Groups('index')]
     protected bool $darkmode = true;
 
     #[ORM\Column(nullable: true)]
@@ -104,7 +107,7 @@ abstract class LaboUser extends MappSuperClassEntity implements LaboUserInterfac
     protected ?DateTimeImmutable $expiresAt = null;
 
     #[ORM\Column]
-    #[Serializer\Groups('detail')]
+    #[Serializer\Groups('index')]
     protected ?bool $isVerified = false;
 
     #[Serializer\Ignore]
@@ -120,22 +123,45 @@ abstract class LaboUser extends MappSuperClassEntity implements LaboUserInterfac
     protected ?Portrait $portrait = null;
 
     #[ORM\Column(length: 255, nullable: true)]
-    #[Serializer\Groups('detail')]
+    #[Serializer\Groups('index')]
     protected ?string $fonction = null;
 
     /**
-     * @var Collection<int, Category>
+     * @var Collection<int, FinalCategoryInterface>
      */
-    #[ORM\ManyToMany(targetEntity: Category::class)]
+    #[ORM\ManyToMany(targetEntity: FinalCategoryInterface::class)]
     #[RelationOrder()]
-    #[Serializer\Groups('detail')]
+    #[Serializer\Ignore]
     protected Collection $categorys;
 
+    #[ORM\ManyToMany(targetEntity: FinalUrlinkInterface::class, cascade: ['persist', 'remove'], orphanRemoval: true)]
+    #[RelationOrder()]
+    #[Serializer\Ignore]
+    protected Collection $relinks;
+
+    #[ORM\ManyToMany(targetEntity: FinalAddresslinkInterface::class, cascade: ['persist', 'remove'], orphanRemoval: true)]
+    #[RelationOrder()]
+    #[Serializer\Ignore]
+    protected Collection $addresses;
+
+    #[ORM\ManyToMany(targetEntity: FinalEmailinkInterface::class, cascade: ['persist', 'remove'], orphanRemoval: true)]
+    #[RelationOrder()]
+    #[Serializer\Ignore]
+    protected Collection $emails;
+
+    #[ORM\ManyToMany(targetEntity: FinalPhonelinkInterface::class, cascade: ['persist', 'remove'], orphanRemoval: true)]
+    #[RelationOrder()]
+    #[Serializer\Ignore]
+    protected Collection $phones;
 
     public function __construct()
     {
         parent::__construct();
         $this->categorys = new ArrayCollection();
+        $this->relinks = new ArrayCollection();
+        $this->addresses = new ArrayCollection();
+        $this->emails = new ArrayCollection();
+        $this->phones = new ArrayCollection();
     }
 
     public function isEqualTo(UserInterface $user): bool
@@ -488,14 +514,14 @@ abstract class LaboUser extends MappSuperClassEntity implements LaboUserInterfac
     }
 
     /**
-     * @return Collection<int, Category>
+     * @return Collection<int, FinalCategoryInterface>
      */
     public function getCategorys(): Collection
     {
         return $this->categorys;
     }
 
-    public function addCategory(LaboCategoryInterface $category): static
+    public function addCategory(FinalCategoryInterface $category): static
     {
         if (!$this->categorys->contains($category)) {
             $this->categorys->add($category);
@@ -503,7 +529,7 @@ abstract class LaboUser extends MappSuperClassEntity implements LaboUserInterfac
         return $this;
     }
 
-    public function removeCategory(LaboCategoryInterface $category): static
+    public function removeCategory(FinalCategoryInterface $category): static
     {
         $this->categorys->removeElement($category);
         return $this;
@@ -512,7 +538,7 @@ abstract class LaboUser extends MappSuperClassEntity implements LaboUserInterfac
     public function removeCategorys(): static
     {
         foreach ($this->categorys as $category) {
-            /** @var LaboCategoryInterface $category */
+            /** @var FinalCategoryInterface $category */
             $this->removeCategory($category);
         }
         return $this;
@@ -528,6 +554,84 @@ abstract class LaboUser extends MappSuperClassEntity implements LaboUserInterfac
         $this->fonction = $fonction;
         return $this;
     }
+
+
+    public function getRelinks(): Collection
+    {
+        return $this->relinks;
+    }
+
+    public function addRelink(FinalUrlinkInterface $relink): static
+    {
+        if (!$this->relinks->contains($relink)) {
+            $this->relinks->add($relink);
+        }
+        return $this;
+    }
+
+    public function removeRelink(FinalUrlinkInterface $relink): static
+    {
+        $this->relinks->removeElement($relink);
+        return $this;
+    }
+
+    public function getAddresses(): Collection
+    {
+        return $this->addresses;
+    }
+
+    public function addAddress(FinalAddresslinkInterface $address): static
+    {
+        if (!$this->addresses->contains($address)) {
+            $this->addresses->add($address);
+        }
+        return $this;
+    }
+
+    public function removeAddress(FinalAddresslinkInterface $address): static
+    {
+        $this->addresses->removeElement($address);
+        return $this;
+    }
+
+    public function getEmails(): Collection
+    {
+        return $this->emails;
+    }
+
+    public function addEmail(FinalEmailinkInterface $email): static
+    {
+        if (!$this->emails->contains($email)) {
+            $this->emails->add($email);
+        }
+        return $this;
+    }
+
+    public function removeEmail(FinalEmailinkInterface $email): static
+    {
+        $this->emails->removeElement($email);
+        return $this;
+    }
+
+    public function getPhones(): Collection
+    {
+        return $this->phones;
+    }
+
+    public function addPhone(FinalPhonelinkInterface $phone): static
+    {
+        if (!$this->phones->contains($phone)) {
+            $this->phones->add($phone);
+        }
+        return $this;
+    }
+
+    public function removePhone(FinalPhonelinkInterface $phone): static
+    {
+        $this->phones->removeElement($phone);
+        return $this;
+    }
+
 
 
 }
