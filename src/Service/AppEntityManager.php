@@ -1171,7 +1171,7 @@ class AppEntityManager extends BaseService implements AppEntityManagerInterface
                 foreach ($this->hydrateds->toArray() as $entity) {
                     $io->info(vsprintf('- %s "%s" sera enregistée', [$entity->getShortname(), $entity->__toString()]));
                 }
-                dd('Enf of info.');
+                // dd('Enf of info.');
 
                 foreach ($this->hydrateds->toArray() as $entity) {
                     // $this->save($entity, $result);
