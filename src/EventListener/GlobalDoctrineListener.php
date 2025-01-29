@@ -1,6 +1,8 @@
 <?php
 namespace Aequation\LaboBundle\EventListener;
 
+use App\Entity\Category;
+
 use Aequation\LaboBundle\Entity\Pdf;
 use Aequation\LaboBundle\Service\SlugService;
 use Aequation\LaboBundle\Model\Interface\PdfInterface;
@@ -199,7 +201,7 @@ class GlobalDoctrineListener
                     $mainentreprise = $entrepriseRepository->findOneBy(['prefered' => true]);
                     /** @var ServiceEntityRepository */
                     $categoryRepository = $this->manager->getRepository(FinalCategoryInterface::class);
-                    $idfme = FinalCategoryInterface::getIdForMainEntreprise();
+                    $idfme = Category::getIdForMainEntreprise();
                     $maincategory = $idfme ? $categoryRepository->find($idfme) : null;
                     $computeChangeSet = false;
                     if($mainentreprise) {
