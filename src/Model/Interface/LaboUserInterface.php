@@ -40,7 +40,7 @@ interface LaboUserInterface extends UserInterface, PasswordAuthenticatedUserInte
     public function removeCategorys(): static;
     
     /** ROLES */
-    public function getReachableRoles(): array;
+    // public function getReachableRoles(): array;
     public function sortRoles(): void;
     public function setRoleHierarchy(AppRoleHierarchyInterface $roleHierarchy): void;
     public function getRolesChoices(UserInterface $user = null): array;

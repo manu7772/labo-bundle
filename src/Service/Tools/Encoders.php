@@ -16,6 +16,8 @@ use Twig\Markup;
 class Encoders extends BaseService
 {
 
+    public const EUID_SCHEMA = '^([a-zA-Z0-9\\\\]+)\\|([a-f0-9]{14}\\.\\d{8})$';
+
     /*************************************************************************************
      * PASSWORD
      *************************************************************************************/
@@ -55,7 +57,7 @@ class Encoders extends BaseService
      */
     public static function isEuidFormatValid(mixed $euid): bool
     {
-        return is_string($euid) && preg_match('/^([a-zA-Z0-9\\\\]+)\\|([a-f0-9]{14}\\.\\d{8})$/', $euid);
+        return is_string($euid) && preg_match('/'.static::EUID_SCHEMA.'/', $euid);
     }
 
     /**
@@ -66,7 +68,7 @@ class Encoders extends BaseService
     public static function getClassOfEuid(string $euid): ?string
     {
         return static::isEuidFormatValid($euid)
-            ? preg_replace('/^([a-zA-Z0-9\\\\]+)\\|([a-f0-9]{14}\\.\\d{8})$/', '$1', $euid)
+            ? preg_replace('/'.static::EUID_SCHEMA.'/', '$1', $euid)
             : null;
         
     }

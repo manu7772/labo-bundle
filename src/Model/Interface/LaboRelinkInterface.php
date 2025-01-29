@@ -4,7 +4,7 @@ namespace Aequation\LaboBundle\Model\Interface;
 use Aequation\LaboBundle\Model\Final\FinalCategoryInterface;
 use Doctrine\Common\Collections\Collection;
 
-interface LaboRelinkInterface extends ItemInterface, SlugInterface, PreferedInterface
+interface LaboRelinkInterface extends ItemInterface, SlugInterface
 {
     public function isUrl(): bool;
     public function isRoute(): bool;
@@ -21,11 +21,11 @@ interface LaboRelinkInterface extends ItemInterface, SlugInterface, PreferedInte
     public function getTargetChoices(): array;
     public function getTarget(): ?string;
     public function setTarget(?string $target): static;
-    public function getParentrelink(): ?static;
-    public function setParentrelink(?LaboRelinkInterface $parentrelink): static;
-    public function getRelinks(): Collection;
-    public function addRelink(LaboRelinkInterface $child): static;
-    public function removeRelink(LaboRelinkInterface $child): static;
+    // public function getParentrelink(): ?static;
+    // public function setParentrelink(?LaboRelinkInterface $parentrelink): static;
+    // public function getRelinks(): Collection;
+    // public function addRelink(LaboRelinkInterface $child): static;
+    // public function removeRelink(LaboRelinkInterface $child): static;
     public function setTurboenabled(bool $turboenabled = true): static;
     public function isTurboenabled(): bool;
     public function getLinktitle(): ?string;

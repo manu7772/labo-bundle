@@ -20,6 +20,7 @@ use Twig\TwigFunction;
 use Exception;
 use Symfony\Component\PropertyAccess\PropertyAccess;
 use Twig\Markup;
+use Twig\TwigFilter;
 
 /**
  * Defines the filters and functions used to render the bundle's templates.
@@ -65,7 +66,7 @@ class LaboTwigExtensions extends AbstractExtension
     public function getFilters(): array
     {
         return [
-            // new TwigFilter('textToBr', [$this, 'textToBr']),
+            new TwigFilter('instance', [$this, 'isInstance']),
         ];
     }
 
@@ -246,6 +247,15 @@ class LaboTwigExtensions extends AbstractExtension
         if(empty($pattern)) $pattern = '/^(text|link)-(decoration|underline)/';
         $classes = array_filter($classes, fn($class) => !preg_match($pattern, $class));
         return implode(' ', $classes);
+    }
+
+    public function isInstance(
+        mixed $value,
+        string|object $class,
+    ): bool
+    {
+        if(is_object($class)) $class = $class instanceof AppEntityInterface ? $class->getClassname() : get_class($class);
+        return is_object($value) && $value instanceof $class;
     }
 
 }

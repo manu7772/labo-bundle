@@ -3,9 +3,10 @@ namespace Aequation\LaboBundle\Controller;
 
 use Aequation\LaboBundle\Component\ClassmetadataReport;
 use Aequation\LaboBundle\Controller\Base\CommonController;
+use Aequation\LaboBundle\Repository\Interface\CommonReposInterface;
 use Aequation\LaboBundle\Service\Interface\AppEntityManagerInterface;
 use Aequation\LaboBundle\Service\AppEntityManager;
-
+use Aequation\LaboBundle\Service\Tools\Encoders;
 use Symfony\Bridge\Twig\Attribute\Template;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
@@ -22,28 +23,15 @@ class EntitiesController extends CommonController
     ): array
     {
         $entities = $manager->getEntityNames(false, false);
-        $fails = [];
-        foreach ($entities as $classname) {
-            $metadatas[$classname] = $manager->getEntityMetadataReport($classname);
-            if($metadatas[$classname]->hasErrors()) {
-                $fails[$classname] = $metadatas[$classname];
-            }
-        }
-        if(count($fails) > 0) {
-            $this->addFlash('error', vsprintf('Des erreurs (total : %d) ont été trouvées dans les structures d\'entités. Veuillez les corriger svp.', [count($fails)]));
-        } else {
-            // $this->addFlash('info', vsprintf('Toutes les entités semblent valides.', []));
-        }
-        ClassmetadataReport::sortReports($metadatas);
         $data = [
             'entities' => $entities,
-            'meta_infos' => $metadatas,
+            'meta_infos' => $this->getMetaInfos($manager),
             // 'hierarchizeds' => ClassmetadataReport::getHierarchizedReports($metadatas),
         ];
         return $data;
     }
 
-    #[Route(path: '/entity/{classname}', name: 'entity_show')]
+    #[Route(path: '/entity/{classname<[\w\d\\\]+>}', name: 'entity_show')]
     #[Template('@AequationLabo/labo/entity_show.html.twig')]
     public function entity_show(
         string $classname,
@@ -53,6 +41,53 @@ class EntitiesController extends CommonController
         $data = [
             'classname' => $classname,
             'meta_info' => $manager->getEntityMetadataReport($classname),
+            'meta_infos' => $this->getMetaInfos($manager),
+        ];
+        return $data;
+    }
+
+    #[Route(path: '/entity/{euid}/{context}', name: 'entity_detail', requirements: ['euid' => Encoders::EUID_SCHEMA], defaults: ['context' => null])]
+    #[Template('@AequationLabo/labo/entity_detail.html.twig')]
+    public function entity_detail(
+        AppEntityManagerInterface $manager,
+        string $euid,
+        ?string $context = null,
+    ): array
+    {
+        if(empty($context)) {
+            $context = ['groups' => ['index']];
+        } else {
+            $context = json_decode($context, true);
+        }
+        $entity = Encoders::isEuidFormatValid($euid) ? $manager->findEntityByEuid($euid) : null;
+        $previous = $next = null;
+        if ($entity) {
+            $repo = $manager->getRepository($entity->getClassname());
+            if($repo instanceof CommonReposInterface) {
+                $list = $repo->findAllEuids();
+                $found = false;
+                foreach ($list as $euid) {
+                    if($found) {
+                        $next = $euid;
+                        break;
+                    }
+                    if($euid === $entity->getEuid()) {
+                        $found = true;
+                    } else {
+                        $previous = $euid;
+                    }
+                }
+            }
+        }
+        $data = [
+            'euid' => $euid,
+            'previous' => $previous,
+            'next' => $next,
+            'entity' => $entity,
+            'context' => $context,
+            'classname' => $entity ? $entity->getClassname() : null,
+            'meta_info' => $entity ? $manager->getEntityMetadataReport($entity->getClassname()) : null,
+            // 'meta_infos' => $this->getMetaInfos($manager),
         ];
         return $data;
     }
@@ -90,6 +125,25 @@ class EntitiesController extends CommonController
             'metadata' => $metadata,
         ];
         return $data;
+    }
+
+    protected function getMetaInfos(AppEntityManagerInterface $manager): array
+    {
+        $entities = $manager->getEntityNames(false, false);
+        $fails = [];
+        foreach ($entities as $classname) {
+            $metadatas[$classname] = $manager->getEntityMetadataReport($classname);
+            if($metadatas[$classname]->hasErrors()) {
+                $fails[$classname] = $metadatas[$classname];
+            }
+        }
+        if(count($fails) > 0) {
+            $this->addFlash('error', vsprintf('Des erreurs (total : %d) ont été trouvées dans les structures d\'entités. Veuillez les corriger svp.', [count($fails)]));
+        } else {
+            // $this->addFlash('info', vsprintf('Toutes les entités semblent valides.', []));
+        }
+        ClassmetadataReport::sortReports($metadatas);
+        return $metadatas;
     }
 
 

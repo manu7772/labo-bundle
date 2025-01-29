@@ -257,6 +257,29 @@ abstract class CommonRepos extends ServiceEntityRepository implements CommonRepo
         return $slugs;
     }
 
+    /**
+     * Find all euids of a class
+     * @param integer|null $exclude_euid
+     * @return array
+     */
+    public function findAllEuids(
+        ?string $exclude_euid = null
+    ): array
+    {
+        $euids = [];
+        if(is_a($this->getEntityName(), AppEntityInterface::class, true)) {
+            $qb = $this->createQueryBuilder(static::NAME)->select(static::NAME.'.euid');
+            if(!empty($exclude_euid)) {
+                $qb->where(static::NAME.'.euid != :exclude')->setParameter('exclude', $exclude_euid);
+            }
+            $results = $qb->getQuery()->getArrayResult();
+            foreach ($results as $result) {
+                $euids[$result['euid']] = $result['euid'];
+            }
+        }
+        return $euids;
+    }
+
     /*************************************************************************************************/
     /** add to QueryBuilders                                                                         */
     /*************************************************************************************************/

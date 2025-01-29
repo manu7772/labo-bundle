@@ -37,7 +37,7 @@ interface AppEntityManagerInterface extends ServiceInterface
     // EM & REPO
     public function getEntityManager(): EntityManagerInterface;
     public function getUnitOfWork(): UnitOfWork;
-    public function getRepository(string $classname = null): CommonReposInterface;
+    public function getRepository(string $classname = null, string $field = null, bool $onlyCommonRepos = true): ?CommonReposInterface;
 
     // public function getEntityNamespaces(): array;
     public static function isAppEntity(string|object $classname): bool;

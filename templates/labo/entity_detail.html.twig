@@ -1,0 +1,29 @@
+{% extends "@AequationLabo/base_labo.html.twig" %}
+{% import "@AequationLabo/partials/_labo_prints.html.twig" as prints %}
+
+{% block title %}Labo Entity {{ entity|default('unknown') }}{% endblock %}
+
+{% block title_h1 -%}{{ ux_icon('symfony', {height: '48px', width: '48px', class: 'text-success'}) }} LABO Entity <mark class="text-primary">{{ meta_info.shortname }}</mark><small><twig:ux:icon name="tabler:caret-right-filled" width="20px" class="text-muted" /> {{ entity|default('unknown') }}</small>{%- endblock %}
+
+{% block right_content %}
+
+{% if entity is not null %}
+    <div class="mb-2">
+        <twig:ux:icon name="tabler:caret-left-filled" width="24px" class="text-muted" /> <a href="{{ path('aequation_labo_entity_list') }}"{{ turbo_enable(false) }}>Liste des entités</a> <twig:ux:icon name="tabler:caret-left-filled" width="24px" class="text-muted" /> <a href="{{ path('aequation_labo_entity_show', {classname: meta_info.classname}) }}"{{ turbo_enable(false) }}>Informations de classe</a> <twig:ux:icon name="tabler:caret-left-filled" width="24px" class="text-muted" /> {{ prints.classname(meta_info, 18, false) }}
+    </div>
+
+    <article>
+        <div class="text-center">
+            <span title="Précédente">{% if previous %}<a href="{{ path('aequation_labo_entity_detail', {euid: previous, context: context|json_encode}) }}"><twig:ux:icon name="tabler:arrow-left" width="24px" /></a>{% else %}<twig:ux:icon name="tabler:arrow-left" width="24px" class="text-muted"/>{% endif %}<span>
+            <span>{{ entity }}</span>
+            <span title="Suivante">{% if next %}<a href="{{ path('aequation_labo_entity_detail', {euid: next, context: context|json_encode}) }}"><twig:ux:icon name="tabler:arrow-right" width="24px" /></a>{% else %}<twig:ux:icon name="tabler:arrow-right" width="24px" class="text-muted"/>{% endif %}<span>
+        </div>
+        <hr>
+        {{ prints.entity_serialize(entity, context) }}
+    </article>
+{% else %}
+    <h3 class="mt-3 pico-background-red-600 pico-color-slate-50 text-center" style="padding: 8px; border-radius: 6px;">
+        Aucune entité trouvée.
+    </h3>
+{% endif %}
+{% endblock %}

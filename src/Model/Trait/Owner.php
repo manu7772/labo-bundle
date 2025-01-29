@@ -16,8 +16,8 @@ trait Owner
 
     #[ORM\ManyToOne(targetEntity: LaboUser::class)]
     #[ORM\JoinColumn(name: 'owner_entity')]
+    #[Serializer\Ignore]
     #[CurrentUser]
-    #[Serializer\Groups('detail')]
     private ?LaboUserInterface $owner = null;
 
     public function __construct_owner(): void

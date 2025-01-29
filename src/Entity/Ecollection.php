@@ -32,7 +32,7 @@ abstract class Ecollection extends Item implements EcollectionInterface
 
     #[ORM\ManyToMany(targetEntity: Item::class, mappedBy: 'parents', cascade: ['persist'])]
     #[RelationOrder()]
-    #[Serializer\Groups('detail')]
+    // #[Serializer\Groups('detail')]
     #[Serializer\MaxDepth(1)]
     protected Collection $items;
 

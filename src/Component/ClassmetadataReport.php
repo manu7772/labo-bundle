@@ -343,6 +343,11 @@ class ClassmetadataReport implements ClassmetadataReportInterface
         usort($reports, function($a, $b) {
             return $a->arraySortValue($b);
         });
+        $rename = [];
+        foreach ($reports as $report) {
+            $rename[$report->classMetadata->name] = $report;
+        }
+        $reports = $rename;
     }
 
     public function computeReport(): static

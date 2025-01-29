@@ -21,10 +21,12 @@ use Vich\UploaderBundle\Mapping\Annotation as Vich;
 use DateTimeInterface;
 
 #[ORM\Entity(repositoryClass: LaboArticleRepository::class)]
-#[ORM\HasLifecycleCallbacks]
+#[EA\ClassCustomService(LaboArticleServiceInterface::class)]
+#[ORM\DiscriminatorColumn(name: "class_name", type: "string")]
+#[ORM\InheritanceType('JOINED')]
 // #[UniqueEntity('name', message: 'Ce nom {{ value }} existe déjà', repositoryMethod: 'findBy')]
 #[UniqueEntity('slug', message: 'Ce slug {{ value }} existe déjà', repositoryMethod: 'findBy')]
-#[EA\ClassCustomService(LaboArticleServiceInterface::class)]
+#[ORM\HasLifecycleCallbacks]
 #[Vich\Uploadable]
 #[Slugable('name')]
 abstract class LaboArticle extends Item implements LaboArticleInterface

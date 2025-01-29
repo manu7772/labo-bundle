@@ -35,7 +35,7 @@ abstract class LaboRelink extends Item implements LaboRelinkInterface
     public const FA_ICON = 'link';
     public const ITEMS_ACCEPT = [
         'categorys' => [FinalCategoryInterface::class],
-        'relinks' => [LaboRelinkInterface::class],
+        // 'relinks' => [LaboRelinkInterface::class],
     ];
     /**
      * @see https://www.w3schools.com/tags/att_a_target.asp 
@@ -78,13 +78,21 @@ abstract class LaboRelink extends Item implements LaboRelinkInterface
     protected ?array $params = null;
 
     #[ORM\Column(length: 16, nullable: true)]
-    #[Serializer\Groups('index')]
+    #[Serializer\Ignore]
     protected ?string $target = null;
 
-    #[ORM\ManyToOne(targetEntity: LaboRelink::class, inversedBy: 'relinks')]
-    #[Serializer\Groups('detail')]
-    #[Serializer\MaxDepth(1)]
-    protected ?LaboRelink $parentrelink = null;
+    // #[ORM\ManyToOne(targetEntity: LaboRelink::class, inversedBy: 'relinks', fetch: 'LAZY')]
+    // #[Serializer\Groups('detail')]
+    // #[Serializer\MaxDepth(1)]
+    // protected ?LaboRelink $parentrelink = null;
+
+    // /**
+    //  * @var Collection<int, LaboRelink>
+    //  */
+    // #[ORM\OneToMany(targetEntity: LaboRelink::class, mappedBy: 'parentrelink', fetch: 'EXTRA_LAZY')]
+    // #[RelationOrder()]
+    // #[Serializer\Ignore]
+    // protected Collection $relinks;
 
     #[ORM\Column]
     #[Serializer\Groups('index')]
@@ -93,15 +101,6 @@ abstract class LaboRelink extends Item implements LaboRelinkInterface
     #[ORM\Column(type: Types::TEXT, nullable: true)]
     #[Serializer\Groups('index')]
     protected ?string $linktitle = null;
-
-    /**
-     * @var Collection<int, LaboRelink>
-     */
-    #[Serializer\Groups('detail')]
-    #[Serializer\MaxDepth(1)]
-    #[ORM\OneToMany(targetEntity: LaboRelink::class, mappedBy: 'parentrelink')]
-    #[RelationOrder()]
-    protected Collection $relinks;
 
     /**
      * @var Collection<int, FinalCategoryInterface>
@@ -116,7 +115,7 @@ abstract class LaboRelink extends Item implements LaboRelinkInterface
         if(!in_array(static::RELINK_TYPE, static::RELINK_TYPES)) throw new \Exception(vsprintf('Error %s line %d: static::RELINK_TYPE is invalid. Should be one of these: %s!', [__METHOD__, __LINE__, implode(', ', static::RELINK_TYPES)]));
         parent::__construct();
         $this->categorys = new ArrayCollection();
-        $this->relinks = new ArrayCollection();
+        // $this->relinks = new ArrayCollection();
         $targets = static::TARGETS;
         $this->target = reset($targets);
     }
@@ -127,6 +126,7 @@ abstract class LaboRelink extends Item implements LaboRelinkInterface
         $this->prefered = false;
     }
 
+    #[Serializer\Groups('detail')]
     public function getALink(
         ?int $referenceType = Router::ABSOLUTE_PATH
     ): ?string
@@ -181,11 +181,13 @@ abstract class LaboRelink extends Item implements LaboRelinkInterface
         return $this->getRelinkType() === 'PHONE';
     }
 
+    #[Serializer\Groups('index')]
     public function getRelinkType(): ?string
     {
         return static::RELINK_TYPE;
     }
 
+    #[Serializer\Ignore]
     public function getRelinkTypeChoices(): array
     {
         return static::RELINK_TYPES;
@@ -224,11 +226,13 @@ abstract class LaboRelink extends Item implements LaboRelinkInterface
         return $this;
     }
 
+    #[Serializer\Ignore]
     public function getTargetChoices(): array
     {
         return static::TARGETS;
     }
 
+    #[Serializer\Groups('detail')]
     public function getTarget(): ?string
     {
         if($this->isUrl() || $this->isRoute()) {
@@ -242,6 +246,7 @@ abstract class LaboRelink extends Item implements LaboRelinkInterface
      * 
      * @return string|null
      */
+    #[Serializer\Groups('detail')]
     public function getLogicTarget(): ?string
     {
         if($this->isRoute()) return '_self';
@@ -254,44 +259,44 @@ abstract class LaboRelink extends Item implements LaboRelinkInterface
         return $this;
     }
 
-    public function getParentrelink(): ?static
-    {
-        return $this->parentrelink;
-    }
+    // public function getParentrelink(): ?static
+    // {
+    //     return $this->parentrelink;
+    // }
 
-    public function setParentrelink(?LaboRelinkInterface $parentrelink): static
-    {
-        $this->parentrelink = $parentrelink;
-        return $this;
-    }
+    // public function setParentrelink(?LaboRelinkInterface $parentrelink): static
+    // {
+    //     $this->parentrelink = $parentrelink;
+    //     return $this;
+    // }
 
-    /**
-     * @return Collection<int, LaboRelinkInterface>
-     */
-    public function getRelinks(): Collection
-    {
-        return $this->relinks;
-    }
+    // /**
+    //  * @return Collection<int, LaboRelinkInterface>
+    //  */
+    // public function getRelinks(): Collection
+    // {
+    //     return $this->relinks;
+    // }
 
-    public function addRelink(LaboRelinkInterface $child): static
-    {
-        if (empty($this->parentrelink) && !$this->relinks->contains($child)) {
-            $this->relinks->add($child);
-            $child->setParentrelink($this);
-        }
-        return $this;
-    }
+    // public function addRelink(LaboRelinkInterface $child): static
+    // {
+    //     if (empty($this->parentrelink) && !$this->relinks->contains($child)) {
+    //         $this->relinks->add($child);
+    //         $child->setParentrelink($this);
+    //     }
+    //     return $this;
+    // }
 
-    public function removeRelink(LaboRelinkInterface $child): static
-    {
-        if ($this->relinks->removeElement($child)) {
-            // set the owning side to null (unless already changed)
-            if ($child->getParentrelink() === $this) {
-                $child->setParentrelink(null);
-            }
-        }
-        return $this;
-    }
+    // public function removeRelink(LaboRelinkInterface $child): static
+    // {
+    //     if ($this->relinks->removeElement($child)) {
+    //         // set the owning side to null (unless already changed)
+    //         if ($child->getParentrelink() === $this) {
+    //             $child->setParentrelink(null);
+    //         }
+    //     }
+    //     return $this;
+    // }
 
     public function setTurboenabled(
         bool $turboenabled = true

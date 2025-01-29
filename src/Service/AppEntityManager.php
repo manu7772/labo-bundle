@@ -351,8 +351,9 @@ class AppEntityManager extends BaseService implements AppEntityManagerInterface
 
     public function getRepository(
         string $classname = null,
-        string $field = null // if field, find repository where is declared this $field
-    ): CommonReposInterface
+        string $field = null, // if field, find repository where is declared this $field
+        bool $onlyCommonRepos = true
+    ): ?CommonReposInterface
     {
         $origin_classname = $classname;
         $classname ??= static::ENTITY;
@@ -377,8 +378,8 @@ class AppEntityManager extends BaseService implements AppEntityManagerInterface
         /** @var CommonReposInterface */
         $repo = $this->em->getRepository($classname);
         // if(!empty($field)) dump($classname, $field, get_class($repo));
-        if(!($repo instanceof CommonReposInterface)) dd($this->__toString(), $origin_classname, $classname, $cmd, $cmd->name, $repo);
-        return $repo;
+        // if(!is_null($repo) && !($repo instanceof CommonReposInterface)) dd($this->__toString(), $origin_classname, $classname, $cmd, $cmd->name, $repo);
+        return $onlyCommonRepos && $repo instanceof CommonReposInterface ? $repo : null;
     }
 
     public function findEntityByUniqueValue(

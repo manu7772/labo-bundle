@@ -608,13 +608,18 @@
         vertical-align: top;
     }
 
+    table td
+    {
+        word-break: break-all;
+    }
+
     table th.cell,
     table td.cell
     {
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
-        max-width: 120px;
+        /* max-width: 120px; */
     }
 
     table .subcell

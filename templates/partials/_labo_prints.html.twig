@@ -1,0 +1,54 @@
+{% macro classname(meta_info, size = 28, anchor = false) %}
+    {% set color = meta_info.isPhpRoot() ? 'blue' : meta_info.isMappedSuperclass ? 'cyan' : 'green' %}
+    {% set colorint = meta_info.instantiable ? '-200' : '-500' %}
+    {% if anchor %}
+        <a href="#{{ meta_info.name|slug('_', true) }}"{{ turbo_enable(false) }} title="{{ meta_info.name }}">
+            {{ (meta_info.hasErrors ? '<span class="pico-color-red-400" title="Entity is INVALID">' ~ icon(meta_info.name, {width: size ~ 'px'}) ~ '</span>' : '<span class="pico-color-' ~ color ~ colorint ~ '" title="Entity is valid">' ~ icon(meta_info.name, {width: size ~ 'px'}) ~ '</span>')|raw }} {{ meta_info.name }}
+        </a>
+    {% else %}
+        {{ (meta_info.hasErrors ? '<span class="pico-color-red-400" title="Entity is INVALID">' ~ icon(meta_info.name, {width: size ~ 'px'}) ~ '</span>' : '<span class="pico-color-' ~ color ~ colorint ~ '" title="Entity is valid">' ~ icon(meta_info.name, {width: size ~ 'px'}) ~ '</span>')|raw }} {{ meta_info.name }}
+    {% endif %}
+    <a href="{{ path('aequation_labo_entity_show', {classname: meta_info.classname}) }}"{{ turbo_enable(false) }} class="{{ meta_info.instantiable ? 'pico-color-azure-300' : 'pico-color-azure-500' }}">{{ icon('tabler:info-square-rounded', {class: 'text-muted', width: size ~ 'px'}) }}</a>{{ meta_info.instantiable ? '<small class="text-muted"> [Instantiable]</small>' }}
+{% endmacro %}
+
+{% macro entity_data(entity) %}
+    <div>{{ printr(entity) }}</div>
+{% endmacro %}
+
+{% macro entity_serialize(entity, context = {groups: ['index']}) %}
+    {% set contexts = {
+        'none': {groups: []},
+        'index': {groups: ['index']},
+        'detail': {groups: ['detail']},
+        'full': {groups: ['full']},
+        'all': {groups: ['index', 'detail', 'full']},
+    } %}
+    <h4>Serialization of "{{ entity }}"</h4>
+    <div>
+        <h5>Context: <span class="text-muted">choissez un autre groupe: 
+            {% for contname,cont in contexts %}
+            <a role="button" class="ml-1 pt-1 pb-1 pr-2 pl-2" href="{{ path('aequation_labo_entity_detail', {euid: entity.euid, context: cont|json_encode}) }}"{{ turbo_enable(false) }}>{{ contname }}</a>
+            {% endfor %}</span>
+        </h5>
+        <pre class="p-3 pico-background-slate-800">{{ printr(context) }}</pre>
+    </div>
+    {% set entity_normalized = entity|normalize(null, context) %}
+    <div class="p-3">
+        <table>
+            <thead>
+                <tr>
+                    <th>Key <span class="text-muted">/ Found {{ entity_normalized|length }}</span></th>
+                    <th>Value</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for field,value in entity_normalized %}
+                <tr>
+                    <td class="text-muted ">{{ field }}</td>
+                    <td style="word-break: break-all;">{{ printr(value, 5, true) }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% endmacro %}

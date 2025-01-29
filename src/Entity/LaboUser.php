@@ -131,27 +131,36 @@ abstract class LaboUser extends MappSuperClassEntity implements LaboUserInterfac
      */
     #[ORM\ManyToMany(targetEntity: FinalCategoryInterface::class)]
     #[RelationOrder()]
-    #[Serializer\Ignore]
+    #[Serializer\Groups('detail')]
+    #[Serializer\MaxDepth(1)]
     protected Collection $categorys;
 
     #[ORM\ManyToMany(targetEntity: FinalUrlinkInterface::class, cascade: ['persist', 'remove'], orphanRemoval: true)]
     #[RelationOrder()]
-    #[Serializer\Ignore]
+    #[Assert\Valid()]
+    #[Serializer\Groups('detail')]
+    #[Serializer\MaxDepth(1)]
     protected Collection $relinks;
 
     #[ORM\ManyToMany(targetEntity: FinalAddresslinkInterface::class, cascade: ['persist', 'remove'], orphanRemoval: true)]
     #[RelationOrder()]
-    #[Serializer\Ignore]
+    #[Assert\Valid()]
+    #[Serializer\Groups('detail')]
+    #[Serializer\MaxDepth(1)]
     protected Collection $addresses;
 
     #[ORM\ManyToMany(targetEntity: FinalEmailinkInterface::class, cascade: ['persist', 'remove'], orphanRemoval: true)]
     #[RelationOrder()]
-    #[Serializer\Ignore]
+    #[Assert\Valid()]
+    #[Serializer\Groups('detail')]
+    #[Serializer\MaxDepth(1)]
     protected Collection $emails;
 
     #[ORM\ManyToMany(targetEntity: FinalPhonelinkInterface::class, cascade: ['persist', 'remove'], orphanRemoval: true)]
     #[RelationOrder()]
-    #[Serializer\Ignore]
+    #[Assert\Valid()]
+    #[Serializer\Groups('detail')]
+    #[Serializer\MaxDepth(1)]
     protected Collection $phones;
 
     public function __construct()
@@ -245,12 +254,13 @@ abstract class LaboUser extends MappSuperClassEntity implements LaboUserInterfac
         $this->sortRoles();
     }
 
-    public function getReachableRoles(): array
-    {
-        $roles = $this->roleHierarchy->getReachableRoleNames($this->getRoles());
-        $this->roleHierarchy->sortRoles($roles);
-        return $roles;
-    }
+    // #[Serializer\Ignore]
+    // public function getReachableRoles(): array
+    // {
+    //     $roles = $this->roleHierarchy->getReachableRoleNames($this->getRoles());
+    //     $this->roleHierarchy->sortRoles($roles);
+    //     return $roles;
+    // }
 
     #[ORM\PrePersist]
     #[ORM\PreUpdate]
@@ -267,6 +277,7 @@ abstract class LaboUser extends MappSuperClassEntity implements LaboUserInterfac
             : static::ROLE_USER;
     }
 
+    #[Serializer\Ignore]
     public function getLowerRole(): string
     {
         $role = $this->roleHierarchy->getLowerRole($this->roles);
@@ -275,11 +286,13 @@ abstract class LaboUser extends MappSuperClassEntity implements LaboUserInterfac
             : static::ROLE_USER;
     }
 
+    #[Serializer\Ignore]
     public function getInferiorRoles(): array
     {
         return $this->roleHierarchy->getInferiorRoles($this->getHigherRole());
     }
 
+    #[Serializer\Ignore]
     public function getRolesChoices(UserInterface $user = null): array
     {
         return $this->roleHierarchy->getRolesChoices($user ?? $this);
@@ -325,6 +338,7 @@ abstract class LaboUser extends MappSuperClassEntity implements LaboUserInterfac
         return $this;
     }
 
+    #[Serializer\Ignore]
     public function getPlainPassword(): ?string
     {
         return $this->plainPassword;
@@ -350,6 +364,7 @@ abstract class LaboUser extends MappSuperClassEntity implements LaboUserInterfac
     /**
      * @see PasswordAuthenticatedUserInterface
      */
+    #[Serializer\Ignore]
     public function getPassword(): ?string
     {
         return $this->password;
@@ -370,6 +385,7 @@ abstract class LaboUser extends MappSuperClassEntity implements LaboUserInterfac
         $this->plainPassword = null;
     }
 
+    #[Serializer\Groups(['index'])]
     public function getFirstname(): ?string
     {
         return $this->firstname;
@@ -382,6 +398,7 @@ abstract class LaboUser extends MappSuperClassEntity implements LaboUserInterfac
         return $this;
     }
 
+    #[Serializer\Groups(['index'])]
     public function getLastname(): ?string
     {
         return $this->lastname;
@@ -406,6 +423,7 @@ abstract class LaboUser extends MappSuperClassEntity implements LaboUserInterfac
         return $this;
     }
 
+    #[Serializer\Groups(['index'])]
     public function isExpired(): bool
     {
         return $this->expiresAt instanceof DateTimeImmutable
@@ -413,7 +431,8 @@ abstract class LaboUser extends MappSuperClassEntity implements LaboUserInterfac
             : false;
     }
 
-    public function expiresIn(): ?DateInterval
+    #[Serializer\Groups(['detail'])]
+    public function getExpiresIn(): ?DateInterval
     {
         return $this->expiresAt instanceof DateTimeImmutable
             ? $this->expiresAt->diff(new DateTimeImmutable())
@@ -476,11 +495,13 @@ abstract class LaboUser extends MappSuperClassEntity implements LaboUserInterfac
     //     return $this;
     // }
 
+    #[Serializer\Ignore]
     public function getFirstImage(): ?Image
     {
         return $this->portrait;
     }
 
+    #[Serializer\Ignore]
     public function getPortrait(): ?Portrait
     {
         return $this->portrait;
