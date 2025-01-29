@@ -254,13 +254,13 @@ abstract class LaboUser extends MappSuperClassEntity implements LaboUserInterfac
         $this->sortRoles();
     }
 
-    // #[Serializer\Ignore]
-    // public function getReachableRoles(): array
-    // {
-    //     $roles = $this->roleHierarchy->getReachableRoleNames($this->getRoles());
-    //     $this->roleHierarchy->sortRoles($roles);
-    //     return $roles;
-    // }
+    #[Serializer\Ignore]
+    public function getReachableRoles(): array
+    {
+        $roles = $this->roleHierarchy->getReachableRoleNames($this->getRoles());
+        $this->roleHierarchy->sortRoles($roles);
+        return $roles;
+    }
 
     #[ORM\PrePersist]
     #[ORM\PreUpdate]
