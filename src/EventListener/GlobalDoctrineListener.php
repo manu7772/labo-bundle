@@ -230,7 +230,7 @@ class GlobalDoctrineListener
                             }
                         } else {
                             if($entity->wasMainentreprise()) {
-                                if($this->manager->isUserGranted($entity, 'ROLE_ADMIN')) {
+                                if($this->manager->isUserGranted($entity, 'ROLE_ADMIN') && !$this->manager->isUserGranted($entity, 'ROLE_SUPER_ADMIN')) {
                                     $entity->removeRole('ROLE_ADMIN');
                                 }
                                 // Unset mainentreprise

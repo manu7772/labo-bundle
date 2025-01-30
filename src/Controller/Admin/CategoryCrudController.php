@@ -4,9 +4,13 @@ namespace Aequation\LaboBundle\Controller\Admin;
 use Aequation\LaboBundle\Controller\Admin\Base\BaseCrudController;
 use Aequation\LaboBundle\Service\Interface\LaboCategoryServiceInterface;
 use Aequation\LaboBundle\Model\Interface\LaboUserInterface;
-
+use Doctrine\ORM\QueryBuilder;
+use EasyCorp\Bundle\EasyAdminBundle\Collection\FieldCollection;
+use EasyCorp\Bundle\EasyAdminBundle\Collection\FilterCollection;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Crud;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Filters;
+use EasyCorp\Bundle\EasyAdminBundle\Dto\EntityDto;
+use EasyCorp\Bundle\EasyAdminBundle\Dto\SearchDto;
 use EasyCorp\Bundle\EasyAdminBundle\Field\BooleanField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\ChoiceField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\DateTimeField;
@@ -100,6 +104,18 @@ abstract class CategoryCrudController extends BaseCrudController
                 yield TextField::new('typeAsHtml', 'Classe d\'entité')->renderAsHtml(true)->setTextAlign('center');
                 break;
         }
+    }
+
+    public function createIndexQueryBuilder(SearchDto $searchDto, EntityDto $entityDto, FieldCollection $fields, FilterCollection $filters): QueryBuilder
+    {
+        $queryBuilder = parent::createIndexQueryBuilder($searchDto, $entityDto, $fields, $filters);
+        $type = $this->getQueryValue('type');
+        if($type && !class_exists($type)) $type = $this->manager->getClassnameByShortname($type);
+        if($type) {
+            $queryBuilder->andWhere('entity.type = :type')
+                ->setParameter('type', $type);
+        }
+        return $queryBuilder;
     }
 
 }

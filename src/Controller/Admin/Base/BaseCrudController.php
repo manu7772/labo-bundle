@@ -44,6 +44,7 @@ use Symfony\Component\Form\FormEvents;
 
 use Exception;
 use ReflectionClass;
+use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Security\Core\Authorization\Voter\VoterInterface;
 use Symfony\Contracts\Translation\TranslatorInterface;
@@ -55,8 +56,12 @@ abstract class BaseCrudController extends AbstractCrudController
     public const VOTER = 'undefined';
     public const DEFAULT_SORT = ['id' => 'ASC'];
     public const THROW_EXCEPTION_WHEN_FORBIDDEN = true;
+    public const CUT_NAME_LENGTH = 24;
+
+    public readonly array $query_values;
 
     public function __construct(
+        protected RequestStack $requestStack,
         protected AppEntityManagerInterface $manager,
         protected LaboUserServiceInterface $userService,
         protected TranslatorInterface $translator,
@@ -70,6 +75,21 @@ abstract class BaseCrudController extends AbstractCrudController
         if($this->userService instanceof LaboUserServiceInterface) {
             $this->userService->addMeToSuperAdmin();
         }
+        $this->query_values = $this->requestStack->getMainRequest()->query->all();
+        // dump($this->query_values);
+    }
+
+    public function getQueryValues(): array
+    {
+        return $this->query_values;
+    }
+
+    public function getQueryValue(
+        string $name,
+        mixed $default = null
+    ): mixed
+    {
+        return $this->query_values[$name] ?? $default;
     }
 
     public function configureAssets(Assets $assets): Assets
@@ -282,19 +302,36 @@ abstract class BaseCrudController extends AbstractCrudController
     public function configureCrud(Crud $crud): Crud
     {
         $crud->showEntityActionsInlined();
-        $shortname = Classes::getShortname(static::ENTITY, true);
+        // Entity name
+        $shortname = Classes::getShortname(static::ENTITY);
+        $sing_shortname = $this->translate('name', [], $shortname);
+        if($sing_shortname === 'name') $sing_shortname = ucfirst(Strings::singularize($shortname));
+        $plur_shortname = $this->translate('names', [], $shortname);
+        if($plur_shortname === 'names') $plur_shortname = ucfirst(Strings::pluralize($shortname));
+        // Configure Crud
         $crud
             ->setDefaultSort(static::DEFAULT_SORT)
             ->overrideTemplates([
                 'crud/field/id' => '@EasyAdmin/crud/field/id_with_icon.html.twig',
                 // 'crud/field/thumbnail' => '@EasyAdmin/crud/field/template.html.twig',
             ])
-            ->setEntityLabelInSingular(Strings::singularize($shortname))
-            ->setEntityLabelInPlural(Strings::pluralize($shortname))
+            ->setPageTitle('index', 'Liste des %entity_label_plural%')
+            ->setTimezone($this->manager->getAppService()->getAppContext()->getTimezone()->getName())
+            // ->setEntityLabelInSingular(Strings::singularize($shortname))
+            // ->setEntityLabelInPlural(Strings::pluralize($shortname))
+            ->setEntityLabelInSingular(
+                fn (?AppEntityInterface $entity, ?string $pageName) => $entity ? '<small>'.$sing_shortname.' </small>'.Strings::cutAt($entity->__toString(), static::CUT_NAME_LENGTH, true) : $sing_shortname
+            )
+            ->setEntityLabelInPlural(
+                fn (?AppEntityInterface $entity, ?string $pageName) => $pageName && in_array($pageName, ['edit','detail']) ? '<small>'.$plur_shortname.' </small>'.Strings::cutAt($entity->__toString(), static::CUT_NAME_LENGTH, true) : $plur_shortname
+            )
             // ->hideNullValues()
             // ->setFormOptions([
             //     'attr' => ['class' => 'text-info']
             // ])
+            // ->renderSidebarMinimized()
+            ->renderContentMaximized()
+            ->setPaginatorPageSize(20)
             ;
         return $crud;
     }

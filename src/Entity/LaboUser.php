@@ -332,7 +332,7 @@ abstract class LaboUser extends MappSuperClassEntity implements LaboUserInterfac
     {
         $this->roles = array_filter(
             $this->roles,
-            function ($in) use ($role) { return $in !== $role; }
+            fn ($in) => $in !== $role
         );
         $this->sortRoles();
         return $this;

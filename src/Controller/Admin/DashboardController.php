@@ -19,7 +19,9 @@ use Aequation\LaboBundle\Repository\LaboUserRepository;
 use Aequation\LaboBundle\Security\Voter\EntrepriseVoter;
 use Aequation\LaboBundle\Security\Voter\PdfVoter;
 use Aequation\LaboBundle\Security\Voter\WebsectionVoter;
-
+use Aequation\LaboBundle\Service\Interface\AppEntityManagerInterface;
+use Aequation\LaboBundle\Service\Interface\LaboCategoryServiceInterface;
+use Aequation\LaboBundle\Service\Tools\Classes;
 use App\Entity\Category;
 use App\Entity\Entreprise;
 use App\Entity\Menu;
@@ -53,8 +55,9 @@ class DashboardController extends AbstractDashboardController
     public const ADMIN_HOMEPAGE = false;
 
     public function __construct(
-        private TranslatorInterface $translator,
+        protected AppEntityManagerInterface $manager,
         private LaboUserRepository $userRepository,
+        private TranslatorInterface $translator,
         private AdminUrlGenerator $adminUrlGenerator,
     )
     {
@@ -120,6 +123,7 @@ class DashboardController extends AbstractDashboardController
         // 2. MANAGER
         $color = 'text-primary-emphasis';
         $webmanage = [];
+        $sub_webmanage = [];
         if($this->isGranted(WebpageVoter::ADMIN_ACTION_LIST, Webpage::class)) $webmanage['Webpage'] = MenuItem::linkToCrud(label: 'Pages web', icon: 'fas fa-fw fa-'.Webpage::getIcon(false).' '.$color, entityFqcn: Webpage::class);
         if($this->isGranted(WebsectionVoter::ADMIN_ACTION_LIST, Websection::class)) $webmanage['Websection'] = MenuItem::linkToCrud(label: 'Sections web', icon: 'fas fa-fw fa-'.Websection::getIcon(false).' '.$color, entityFqcn: Websection::class);
         if($this->isGranted(MenuVoter::ADMIN_ACTION_LIST, Menu::class)) $webmanage['Menu'] = MenuItem::linkToCrud(label: 'Menus', icon: 'fas fa-fw fa-'.Menu::getIcon(false).' '.$color, entityFqcn: Menu::class);
@@ -131,10 +135,25 @@ class DashboardController extends AbstractDashboardController
         // 3. MEDIAS
         $color = 'text-info';
         $medias = [];
+        $sub_medias = [];
         if($this->isGranted(SliderVoter::ADMIN_ACTION_LIST, Slider::class)) $medias['Slider'] = MenuItem::linkToCrud(label: 'Diaporamas', icon: 'fas fa-fw fa-'.Slider::getIcon(false).' '.$color, entityFqcn: Slider::class);
         if($this->isGranted(SlideVoter::ADMIN_ACTION_LIST, Slide::class)) $medias['Slide'] = MenuItem::linkToCrud(label: 'Diapositives', icon: 'fas fa-fw fa-'.Slide::getIcon(false).' '.$color, entityFqcn: Slide::class);
         if($this->isGranted(PdfVoter::ADMIN_ACTION_LIST, Pdf::class)) $medias['Pdf'] = MenuItem::linkToCrud(label: 'Fichiers PDF', icon: 'fas fa-fw fa-'.Pdf::getIcon(false).' '.$color, entityFqcn: Pdf::class);
-        if($this->isGranted(CategoryVoter::ADMIN_ACTION_LIST, Category::class)) $medias['Category'] = MenuItem::linkToCrud(label: 'Categories', icon: 'fas fa-fw fa-'.Category::getIcon(false).' '.$color, entityFqcn: Category::class);
+        if($this->isGranted(CategoryVoter::ADMIN_ACTION_LIST, Category::class)) {
+            // MenuItem::subMenu('Blog', 'fa fa-article')->setSubItems(...);
+            /** @var LaboCategoryServiceInterface */
+            $categoryService = $this->manager->getEntityService(Category::class);
+            $categoryTypes = $categoryService->getCategoryTypeChoices();
+            foreach ($categoryTypes as $type) {
+                $name = $this->translator->trans('names', [], Classes::getShortname($type));
+                if($name === 'names') $name = Classes::getShortname($type);
+                $url = $this->generateUrl('easyadmin_category_index', ['type' => Classes::getShortname($type)]);
+                $sub_medias[$type] = MenuItem::linkToUrl(label: 'Type '.ucfirst($name), icon: 'fas fa-fw fa-'.Category::getIcon(false).' '.$color, url: $url);
+            }
+            if(count($sub_medias)) {
+                $medias['Category'] = MenuItem::subMenu(label: 'Categories', icon: 'fas fa-fw fa-'.Category::getIcon(false).' '.$color)->setSubItems($sub_medias);
+            }
+        }
         if(count($medias)) {
             yield MenuItem::section('Médias & tags')->setCssClass($color);
             foreach ($medias as $menuItem) yield $menuItem;
@@ -143,6 +162,7 @@ class DashboardController extends AbstractDashboardController
         // 4. USERS
         $color = 'text-info-emphasis';
         $users = [];
+        $sub_users = [];
         if($this->isGranted(UserVoter::ADMIN_ACTION_LIST, User::class)) $users['User'] = MenuItem::linkToCrud(label: 'Utilisateurs', icon: 'fas fa-fw fa-'.User::getIcon(false).' '.$color, entityFqcn: User::class);
         if($this->isGranted(EntrepriseVoter::ADMIN_ACTION_LIST, Entreprise::class)) $users['Entreprise'] = MenuItem::linkToCrud(label: 'entreprises', icon: 'fas fa-fw fa-'.Entreprise::getIcon(false).' '.$color, entityFqcn: Entreprise::class);
         if(count($users)) {
@@ -153,6 +173,7 @@ class DashboardController extends AbstractDashboardController
         // 5. SUPER_ADMIN
         $color = 'text-warning';
         $sadmin = [];
+        $sub_sadmin = [];
         if($this->isGranted(CrudvoterVoter::ADMIN_ACTION_LIST, Crudvoter::class)) $sadmin['Crudvoter'] = MenuItem::linkToCrud(label: 'Autorisations', icon: 'fas fa-fw fa-'.Crudvoter::getIcon(false).' '.$color, entityFqcn: Crudvoter::class);
         if($this->isGranted(SiteparamsVoter::ADMIN_ACTION_LIST, Siteparams::class)) $sadmin['Siteparams'] = MenuItem::linkToCrud(label: 'Paramètres', icon: 'fas fa-fw fa-'.Siteparams::getIcon(false).' '.$color, entityFqcn: Siteparams::class);
         if(count($sadmin)) {
