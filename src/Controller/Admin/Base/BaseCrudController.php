@@ -75,7 +75,8 @@ abstract class BaseCrudController extends AbstractCrudController
         if($this->userService instanceof LaboUserServiceInterface) {
             $this->userService->addMeToSuperAdmin();
         }
-        $this->query_values = $this->requestStack->getMainRequest()->query->all();
+        $query = $this->requestStack->getMainRequest()?->query;
+        $this->query_values = $query ? $query->all() : [];
         // dump($this->query_values);
     }
 
