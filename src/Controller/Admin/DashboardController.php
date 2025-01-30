@@ -64,6 +64,30 @@ class DashboardController extends AbstractDashboardController
         // 
     }
 
+    protected function translate(
+        mixed $data,
+        array $parameters = [],
+        string $domain = 'EasyAdminBundle',
+        string $locale = null,
+    ): mixed
+    {
+        switch (true) {
+            case is_string($data):
+                $trans = $this->translator->trans($data, $parameters, $domain, $locale);
+                return in_array($trans, ['names', 'name'])
+                    ? ucfirst($domain)
+                    : $trans;
+                break;
+            case is_array($data):
+                return array_map(function($value) use ($parameters, $domain, $locale) { return $this->translate($value, $parameters, $domain, $locale); }, $data);
+                break;
+            default:
+                return $data;
+                break;
+        }
+        // throw new Exception(vsprintf('Erreur %s ligne %d: la traduction ne peut s\'appliquer qu\'à un texte ou un tableau de textes.'))
+    }
+
     #[Route(path: '/easyadmin', name: 'easyadmin')]
     public function index(): Response
     {
@@ -163,8 +187,8 @@ class DashboardController extends AbstractDashboardController
         $color = 'text-info-emphasis';
         $users = [];
         $sub_users = [];
-        if($this->isGranted(UserVoter::ADMIN_ACTION_LIST, User::class)) $users['User'] = MenuItem::linkToCrud(label: 'Utilisateurs', icon: 'fas fa-fw fa-'.User::getIcon(false).' '.$color, entityFqcn: User::class);
-        if($this->isGranted(EntrepriseVoter::ADMIN_ACTION_LIST, Entreprise::class)) $users['Entreprise'] = MenuItem::linkToCrud(label: 'entreprises', icon: 'fas fa-fw fa-'.Entreprise::getIcon(false).' '.$color, entityFqcn: Entreprise::class);
+        if($this->isGranted(UserVoter::ADMIN_ACTION_LIST, User::class)) $users['User'] = MenuItem::linkToCrud(label: $this->translate('names', [], Classes::getShortname(User::class)), icon: 'fas fa-fw fa-'.User::getIcon(false).' '.$color, entityFqcn: User::class);
+        if($this->isGranted(EntrepriseVoter::ADMIN_ACTION_LIST, Entreprise::class)) $users['Entreprise'] = MenuItem::linkToCrud(label: $this->translate('names', [], Classes::getShortname(Entreprise::class)), icon: 'fas fa-fw fa-'.Entreprise::getIcon(false).' '.$color, entityFqcn: Entreprise::class);
         if(count($users)) {
             yield MenuItem::section('Utilisateurs')->setCssClass($color);
             foreach ($users as $menuItem) yield $menuItem;

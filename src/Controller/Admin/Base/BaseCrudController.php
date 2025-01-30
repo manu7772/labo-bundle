@@ -111,7 +111,10 @@ abstract class BaseCrudController extends AbstractCrudController
     {
         switch (true) {
             case is_string($data):
-                return $this->translator->trans($data, $parameters, $domain, $locale);
+                $trans = $this->translator->trans($data, $parameters, $domain, $locale);
+                return in_array($trans, ['names', 'name'])
+                    ? ucfirst($domain)
+                    : $trans;
                 break;
             case is_array($data):
                 return array_map(function($value) use ($parameters, $domain, $locale) { return $this->translate($value, $parameters, $domain, $locale); }, $data);
