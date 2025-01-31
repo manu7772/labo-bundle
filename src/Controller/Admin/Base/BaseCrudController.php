@@ -30,6 +30,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\QueryBuilder;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Assets;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Dashboard;
+use EasyCorp\Bundle\EasyAdminBundle\Contracts\Field\FieldInterface;
 use EasyCorp\Bundle\EasyAdminBundle\Event\AfterCrudActionEvent;
 use EasyCorp\Bundle\EasyAdminBundle\Event\AfterEntityPersistedEvent;
 use EasyCorp\Bundle\EasyAdminBundle\Event\BeforeCrudActionEvent;
@@ -37,12 +38,15 @@ use EasyCorp\Bundle\EasyAdminBundle\Event\BeforeEntityPersistedEvent;
 use EasyCorp\Bundle\EasyAdminBundle\Exception\ForbiddenActionException;
 use EasyCorp\Bundle\EasyAdminBundle\Exception\InsufficientEntityPermissionException;
 use EasyCorp\Bundle\EasyAdminBundle\Factory\EntityFactory;
+use EasyCorp\Bundle\EasyAdminBundle\Field\Field;
 use EasyCorp\Bundle\EasyAdminBundle\Security\Permission;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\Form\FormEvent;
 use Symfony\Component\Form\FormEvents;
 
 use Exception;
+use Iterator;
+use phpDocumentor\Reflection\Types\Iterable_;
 use ReflectionClass;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\Response;
@@ -80,6 +84,10 @@ abstract class BaseCrudController extends AbstractCrudController
         // dump($this->query_values);
     }
 
+    /**
+     * Get the current request/session context
+     */
+
     public function getQueryValues(): array
     {
         return $this->query_values;
@@ -92,6 +100,57 @@ abstract class BaseCrudController extends AbstractCrudController
     {
         return $this->query_values[$name] ?? $default;
     }
+
+    /**
+     * Compile yield fields for the given page
+     */
+
+     public static function getFieldsAsIndexedArray(
+        iterable $yields
+     ): iterable
+     {
+        $fields = [];
+        foreach ($yields as $field) {
+            $fields[$field->getAsDto()->getProperty()] = $field;
+        }
+        return $fields;
+     }
+
+    protected function recomputeFields(
+        iterable $original_fields,
+        iterable $new_fields
+    ): Iterator
+    {
+        $original_fields = $this->getFieldsAsIndexedArray($original_fields);
+        foreach ($new_fields as $name => $field) {
+            if(!is_array($field)) {
+                $field = ['field' => $field];
+            }
+            if(!is_string($name) && $field['field'] instanceof FieldInterface) {
+                $name = $field['field']->getAsDto()->getProperty();
+            }
+            if(is_string($name)) {
+                switch (true) {
+                    case $field['field'] === true && isset($original_fields[$name]) && $original_fields[$name] instanceof FieldInterface:
+                        if(is_callable($field['action'] ?? null)) {
+                            $field['action']($original_fields[$name]);
+                        }
+                        yield $original_fields[$name];
+                        break;
+                    case $field['field'] instanceof FieldInterface:
+                        if(is_callable($field['action'] ?? null)) {
+                            $field['action']($field['field']);
+                        }
+                        yield $field['field'];
+                        break;
+                    default:
+                        # Do not add original field
+                        break;
+                }
+            }
+        }
+    }
+
 
     public function configureAssets(Assets $assets): Assets
     {
@@ -319,7 +378,10 @@ abstract class BaseCrudController extends AbstractCrudController
                 'crud/field/id' => '@EasyAdmin/crud/field/id_with_icon.html.twig',
                 // 'crud/field/thumbnail' => '@EasyAdmin/crud/field/template.html.twig',
             ])
-            ->setPageTitle('index', 'Liste des %entity_label_plural%')
+            ->setPageTitle('index', '<small>Liste des </small>%entity_label_plural%')
+            ->setPageTitle('detail', '<small>Détails </small>%entity_label_singular%')
+            ->setPageTitle('edit', '<small>Modifier </small>%entity_label_singular%')
+            ->setPageTitle('new', '<small>Créer </small>%entity_label_singular%')
             ->setTimezone($this->manager->getAppService()->getAppContext()->getTimezone()->getName())
             // ->setEntityLabelInSingular(Strings::singularize($shortname))
             // ->setEntityLabelInPlural(Strings::pluralize($shortname))

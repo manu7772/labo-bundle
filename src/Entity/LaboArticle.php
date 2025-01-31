@@ -39,6 +39,7 @@ abstract class LaboArticle extends Item implements LaboArticleInterface
     public const ITEMS_ACCEPT = [
         'categorys' => [FinalCategoryInterface::class],
     ];
+    public const DEFAULT_WEBPAGE = null;
 
 
     #[ORM\Column(type: Types::TEXT, nullable: true)]
@@ -47,8 +48,8 @@ abstract class LaboArticle extends Item implements LaboArticleInterface
     #[ORM\Column(type: Types::STRING, nullable: false)]
     protected string $webpage;
 
-    #[ORM\Column]
-    protected array $content = [];
+    #[ORM\Column(type: Types::TEXT, nullable: false)]
+    protected string $content;
 
     #[ORM\Column(type: Types::DATETIME_MUTABLE, nullable: true)]
     protected ?\DateTimeInterface $start = null;
@@ -93,12 +94,12 @@ abstract class LaboArticle extends Item implements LaboArticleInterface
         return $this;
     }
 
-    public function getContent(): array
+    public function getContent(): string
     {
         return $this->content;
     }
 
-    public function setContent(array $content): static
+    public function setContent(string $content): static
     {
         $this->content = $content;
         return $this;
