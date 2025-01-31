@@ -20,6 +20,7 @@ use EasyCorp\Bundle\EasyAdminBundle\Field\TextareaField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\TextEditorField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\TextField;
 use EasyCorp\Bundle\EasyAdminBundle\Filter\ChoiceFilter;
+use EasyCorp\Bundle\EasyAdminBundle\Filter\DateTimeFilter;
 use EasyCorp\Bundle\EasyAdminBundle\Filter\TextFilter;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
@@ -31,7 +32,12 @@ abstract class ArticleCrudController extends BaseCrudController
     {
         $filters
             ->add(TextFilter::new('name', 'Nom'))
+            ->add(TextFilter::new('slug', 'Slug'))
             ->add(TextFilter::new('content', 'Texte'))
+            ->add(DateTimeFilter::new('start', 'Début'))
+            ->add(DateTimeFilter::new('end', 'Fin'))
+            ->add(DateTimeFilter::new('createdAt', 'Créé'))
+            ->add(DateTimeFilter::new('updatedAt', 'Modifié'))
             ;
         return $filters;
     }
