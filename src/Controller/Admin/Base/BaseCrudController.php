@@ -110,44 +110,86 @@ abstract class BaseCrudController extends AbstractCrudController
      ): iterable
      {
         $fields = [];
+        $eaftindex = 0;
         foreach ($yields as $field) {
-            $fields[$field->getAsDto()->getProperty()] = $field;
+            $key = $field->getAsDto()->getProperty();
+            switch (true) {
+                case $key === 'ea_form_tab':
+                    $key .= '---'.$eaftindex++;
+                    break;
+                case array_key_exists($key, $fields):
+                    $key .= '---'.$eaftindex++;
+                    break;
+            }
+            $fields[$key] = $field;
         }
         return $fields;
-     }
+    }
 
     protected function recomputeFields(
         iterable $original_fields,
-        iterable $new_fields
+        iterable $new_fields,
+        bool $combine = false
     ): Iterator
     {
         $original_fields = $this->getFieldsAsIndexedArray($original_fields);
+        // list of all field names
+        $field_names = array_combine(array_keys($original_fields), array_keys($original_fields));
+        // Add new fields / except 'after' fields
         foreach ($new_fields as $name => $field) {
-            if(!is_array($field)) {
-                $field = ['field' => $field];
+            if(!isset($field['after'])) $field_names[$name] = $name;
+        }
+        // Add 'after' fields
+        $keys_field_names = array_keys($field_names);
+        foreach ($new_fields as $name => $field) {
+            if(isset($field['after']) && in_array($field['after'], $field_names)) {
+                $key = array_search($field['after'], $keys_field_names) + 1;
+                // dd($field['after'], $key, $field_names);
+                $field_names = array_merge(
+                    array_slice($field_names, 0, $key, true),
+                    [$name => $name],
+                    array_slice($field_names, $key, null, true)
+                );
             }
-            if(!is_string($name) && $field['field'] instanceof FieldInterface) {
-                $name = $field['field']->getAsDto()->getProperty();
+            if(isset($field['before']) && in_array($field['before'], $field_names)) {
+                $key = array_search($field['before'], $keys_field_names);
+                // dd($field['after'], $key, $field_names);
+                $field_names = array_merge(
+                    array_slice($field_names, 0, $key, true),
+                    [$name => $name],
+                    array_slice($field_names, $key, null, true)
+                );
             }
+        }
+        $newlist = [];
+        foreach ($field_names as $name) {
             if(is_string($name)) {
+                $field = $new_fields[$name] ?? $combine;
+                if(!is_array($field)) {
+                    $field = ['field' => $field];
+                }
                 switch (true) {
                     case $field['field'] === true && isset($original_fields[$name]) && $original_fields[$name] instanceof FieldInterface:
                         if(is_callable($field['action'] ?? null)) {
                             $field['action']($original_fields[$name]);
                         }
-                        yield $original_fields[$name];
+                        $newlist[$name] = $original_fields[$name];
                         break;
                     case $field['field'] instanceof FieldInterface:
                         if(is_callable($field['action'] ?? null)) {
                             $field['action']($field['field']);
                         }
-                        yield $field['field'];
+                        $newlist[$name] = $field['field'];
                         break;
                     default:
                         # Do not add original field
                         break;
                 }
             }
+        }
+        // dump($newlist);
+        foreach ($newlist as $name => $field) {
+            yield $name => $field;
         }
     }
 
@@ -229,7 +271,7 @@ abstract class BaseCrudController extends AbstractCrudController
         $actions->update(Crud::PAGE_INDEX, Action::DETAIL, function(Action $action) use ($voter) {
             $action
                 ->setLabel(false)
-                ->setIcon('fa fa-eye')
+                ->setIcon('tabler:eye')
                 ->setHtmlAttributes(['title' => $this->translate('action.detail')])
                 ->displayIf(function (AppEntityInterface $entity) use ($voter) {
                     return $this->isGranted($voter::ACTION_READ, $entity);
@@ -241,7 +283,7 @@ abstract class BaseCrudController extends AbstractCrudController
         $actions->update(Crud::PAGE_INDEX, Action::NEW, function(Action $action) use ($voter) {
             $action
                 ->setLabel($this->translate('action.new'))
-                ->setIcon('fa fa-plus')
+                ->setIcon('tabler:plus')
                 ->displayIf(function (?AppEntityInterface $entity) use ($voter) {
                     return $this->isGranted($voter::ACTION_CREATE, $entity ?? static::ENTITY);
                 });
@@ -252,7 +294,7 @@ abstract class BaseCrudController extends AbstractCrudController
         $actions->update(Crud::PAGE_INDEX, Action::EDIT, function(Action $action) use ($voter) {
             $action
                 ->setLabel(false)
-                ->setIcon('fa fa-pencil')
+                ->setIcon('tabler:pencil')
                 ->setHtmlAttributes(['title' => $this->translate('action.edit')])
                 ->displayIf(function (AppEntityInterface $entity) use ($voter) {
                     return $this->isGranted($voter::ACTION_UPDATE, $entity);
@@ -264,7 +306,7 @@ abstract class BaseCrudController extends AbstractCrudController
         $actions->update(Crud::PAGE_INDEX, Action::DELETE, function(Action $action) use ($voter) {
             $action
                 ->setLabel(false)
-                ->setIcon('fa fa-trash text-muted')
+                ->setIcon('tabler:trash')
                 ->setHtmlAttributes(['title' => $this->translate('action.delete')])
                 ->displayIf(function (AppEntityInterface $entity) use ($voter) {
                     return $this->isGranted($voter::ACTION_DELETE, $entity);
@@ -282,7 +324,7 @@ abstract class BaseCrudController extends AbstractCrudController
         $actions->update(Crud::PAGE_DETAIL, Action::INDEX, function(Action $action) use ($voter) {
             $action
                 ->setLabel($this->translate('action.index'))
-                ->setIcon('fa fa-list')
+                ->setIcon('tabler:list')
                 ->setHtmlAttributes(['title' => $this->translate('action.index')])
                 ->displayIf(function (AppEntityInterface $entity) use ($voter) {
                     return $this->isGranted($voter::ACTION_LIST, $entity);
@@ -304,7 +346,7 @@ abstract class BaseCrudController extends AbstractCrudController
         // EDIT
         $actions->update(Crud::PAGE_DETAIL, Action::EDIT, function(Action $action) use ($voter) {
             $action
-                ->setIcon('fa fa-pencil')
+                ->setIcon('tabler:pencil')
                 ->setHtmlAttributes(['title' => 'Éditer'])
                 ->displayIf(function (AppEntityInterface $entity) use ($voter) {
                     return $this->isGranted($voter::ACTION_UPDATE, $entity);
@@ -321,7 +363,7 @@ abstract class BaseCrudController extends AbstractCrudController
         $actions->update(Crud::PAGE_EDIT, Action::INDEX, function(Action $action) use ($voter) {
             $action
                 ->setLabel('Liste')
-                ->setIcon('fa fa-list')
+                ->setIcon('tabler:list')
                 ->setHtmlAttributes(['title' => 'Retour à la liste'])
                 ->displayIf(function (AppEntityInterface $entity) use ($voter) {
                     return $this->isGranted($voter::ACTION_LIST, $entity);
@@ -338,7 +380,7 @@ abstract class BaseCrudController extends AbstractCrudController
         $actions->update(Crud::PAGE_NEW, Action::INDEX, function(Action $action) use ($voter) {
             $action
                 ->setLabel('Liste')
-                ->setIcon('fa fa-list')
+                ->setIcon('tabler:list')
                 ->setHtmlAttributes(['title' => 'Retour à la liste'])
                 ->displayIf(function (AppEntityInterface $entity) use ($voter) {
                     return $this->isGranted($voter::ACTION_LIST, $entity);
@@ -379,7 +421,7 @@ abstract class BaseCrudController extends AbstractCrudController
                 // 'crud/field/thumbnail' => '@EasyAdmin/crud/field/template.html.twig',
             ])
             ->setPageTitle('index', '<small>Liste des </small>%entity_label_plural%')
-            ->setPageTitle('detail', '<small>Détails </small>%entity_label_singular%')
+            ->setPageTitle('detail', '%entity_label_singular%')
             ->setPageTitle('edit', '<small>Modifier </small>%entity_label_singular%')
             ->setPageTitle('new', '<small>Créer </small>%entity_label_singular%')
             ->setTimezone($this->manager->getAppService()->getAppContext()->getTimezone()->getName())

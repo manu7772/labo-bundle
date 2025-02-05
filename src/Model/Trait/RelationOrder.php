@@ -37,12 +37,10 @@ trait RelationOrder
     #[AppEvent(groups: AppEvent::beforePreUpdate)]
     public function updateRelationOrder(): bool
     {
-        // dd($this);
         $attributes = Classes::getPropertyAttributes($this, AttributeRelationOrder::class, true);
         if(empty($attributes)) throw new Exception(vsprintf('Error %s line %d: no field found for %s in entity %s!', [__METHOD__, __LINE__, AttributeRelationOrder::class, $this->getClassname()]));
         $old = $this->getRelationOrder();
         ksort($old);
-        // dump($old);
         $old = json_encode($old);
         $new = [];
         foreach ($attributes as $properties) {
@@ -60,15 +58,12 @@ trait RelationOrder
         }
         ksort($new);
         $this->isDirtyOrder = false;
-        // dd($new);
         if($old !== json_encode($new)) {
             $this->relationOrder = $new;
             // $this->_appManaged->setRelationOrderLoaded(false);
             $this->loadedRelationOrder(force: true);
-            // dd($this->getItems());
             return true;
         }
-        // dd($this->getItems());
         return false;
     }
 

@@ -99,7 +99,7 @@ class SlideCrudController extends BaseCrudController
                         ->setChoices(function (?Slide $slide) { return $slide ? $slide->getClassesChoices() : Slide::getClassesChoices(); })
                         ->setRequired(false)
                         ->allowMultipleChoices(true);
-                    yield CollectionField::new('overlays')
+                    yield CollectionField::new('overlays', 'Textes')
                         ->setRequired(false)
                         ->allowAdd()
                         ->allowDelete()
@@ -125,7 +125,7 @@ class SlideCrudController extends BaseCrudController
                 $hasOverlays = $info['entity']->hasOverlaysOption();
 
                 yield FormField::addTab('Informations')
-                    ->setIcon('fa6-solid:info');
+                    ->setIcon('tabler:info-circle');
 
                 yield TextField::new('name')->setColumns(12)->setRequired(true);
                 yield ChoiceField::new('classes', 'Styles')
@@ -142,14 +142,14 @@ class SlideCrudController extends BaseCrudController
                 yield TextEditorField::new('content','Texte')->setColumns(12)->formatValue(fn ($value) => Strings::markup($value));
     
                 yield FormField::addTab('Contenu média')
-                    ->setIcon('fa6-solid:camera');
+                    ->setIcon('tabler:camera');
 
                 yield TextField::new('file', 'Image')
                     ->setRequired(true)
                     ->setFormType(VichImageType::class)
                     ->setColumns(6);
                 if($hasOverlays) {
-                    yield CollectionField::new('overlays')
+                    yield CollectionField::new('overlays', 'Textes')
                         ->setRequired(false)
                         ->allowAdd()
                         ->allowDelete()
@@ -168,7 +168,7 @@ class SlideCrudController extends BaseCrudController
                 }
 
                 yield FormField::addTab('Statut')
-                    ->setIcon('fa6-solid:lock');
+                    ->setIcon('tabler:lock');
 
                 yield BooleanField::new('enabled', 'Activé')->setColumns(6)->setHelp('Si cette diapositive n\'est pas activée, ell ne sera pas visible dans le diaporama qui la contient.');
                 yield BooleanField::new('softdeleted', 'Supprimé')->setPermission('ROLE_SUPER_ADMIN')->setColumns(6);
@@ -180,7 +180,7 @@ class SlideCrudController extends BaseCrudController
                 $hasOverlays = $info['entity']->hasOverlaysOption();
 
                 yield FormField::addTab('Informations')
-                    ->setIcon('fa6-solid:info');
+                    ->setIcon('tabler:info-circle');
 
                 yield TextField::new('name')->setColumns(12)->setRequired(true);
                 yield ChoiceField::new('classes', 'Styles')
@@ -197,14 +197,14 @@ class SlideCrudController extends BaseCrudController
                 yield TextEditorField::new('content','Texte')->setColumns(12)->formatValue(fn ($value) => Strings::markup($value));
 
                 yield FormField::addTab('Contenu média')
-                    ->setIcon('fa6-solid:camera');
+                    ->setIcon('tabler:camera');
 
                 yield TextField::new('file', 'Image')
                     ->setFormType(VichImageType::class)
                     ->setFormTypeOption('allow_delete', false)
                     ->setColumns(6);
                 if($hasOverlays) {
-                    yield CollectionField::new('overlays')
+                    yield CollectionField::new('overlays', 'Textes')
                         ->setRequired(false)
                         ->allowAdd()
                         ->allowDelete()
@@ -223,7 +223,7 @@ class SlideCrudController extends BaseCrudController
                 }
 
                 yield FormField::addTab('Statut')
-                    ->setIcon('fa6-solid:lock');
+                    ->setIcon('tabler:lock');
 
                 yield BooleanField::new('enabled', 'Activé')->setColumns(6)->setHelp('Si cette diapositive n\'est pas activée, ell ne sera pas visible dans le diaporama qui la contient.');
                 yield BooleanField::new('softdeleted', 'Supprimé')->setPermission('ROLE_SUPER_ADMIN')->setColumns(6);

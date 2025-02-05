@@ -9,8 +9,7 @@ interface AppVoterInterface extends VoterInterface
     public const ADD_ACTION_DUPLICATE       = [
             'name' => 'duplicate',
             'label' => false,
-            'icon' => 'fa fa-copy',
-            // 'icon' => 'fa6-solid:copy',
+            'icon' => 'tabler:copy',
             // 'class' => 'btn btn-sm btn-secondary',
             'title' => 'action.duplicate',
             // 'translation_domain' => 'EasyAdminBundle',

@@ -3,6 +3,7 @@ namespace Aequation\LaboBundle\Controller\Admin;
 
 use Aequation\LaboBundle\Entity\Crudvoter;
 use Aequation\LaboBundle\Entity\Image;
+use Aequation\LaboBundle\Entity\LaboRelink;
 use Aequation\LaboBundle\Entity\Pdf;
 use Aequation\LaboBundle\Security\Voter\CategoryVoter;
 use Aequation\LaboBundle\Security\Voter\CrudvoterVoter;
@@ -17,14 +18,23 @@ use Aequation\LaboBundle\Security\Voter\WebpageVoter;
 use Aequation\LaboBundle\Entity\Siteparams;
 use Aequation\LaboBundle\Model\Interface\LaboUserInterface;
 use Aequation\LaboBundle\Repository\LaboUserRepository;
+use Aequation\LaboBundle\Security\Voter\AddresslinkVoter;
+use Aequation\LaboBundle\Security\Voter\EmailinkVoter;
 use Aequation\LaboBundle\Security\Voter\EntrepriseVoter;
 use Aequation\LaboBundle\Security\Voter\PdfVoter;
+use Aequation\LaboBundle\Security\Voter\PhonelinkVoter;
+use Aequation\LaboBundle\Security\Voter\UrlinkVoter;
 use Aequation\LaboBundle\Security\Voter\WebsectionVoter;
 use Aequation\LaboBundle\Service\Interface\AppEntityManagerInterface;
 use Aequation\LaboBundle\Service\Interface\LaboCategoryServiceInterface;
+use Aequation\LaboBundle\Service\Interface\LaboRelinkServiceInterface;
 use Aequation\LaboBundle\Service\Tools\Classes;
 use App\Entity\Advert;
 use App\Entity\Category;
+use App\Entity\Addresslink;
+use App\Entity\Emailink;
+use App\Entity\Phonelink;
+use App\Entity\Urlink;
 use App\Entity\Entreprise;
 use App\Entity\Menu;
 use App\Entity\Slide;
@@ -32,6 +42,7 @@ use App\Entity\Slider;
 use App\Entity\Webpage;
 use App\Entity\Websection;
 use App\Entity\User;
+use EasyCorp\Bundle\EasyAdminBundle\Config\Assets;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Crud;
 use Symfony\Component\Security\Core\User\UserInterface;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Dashboard;
@@ -64,6 +75,11 @@ class DashboardController extends AbstractDashboardController
     )
     {
         // 
+    }
+
+    public function configureAssets(): Assets
+    {
+        return Assets::new()->useCustomIconSet();
     }
 
     protected function translate(
@@ -142,17 +158,16 @@ class DashboardController extends AbstractDashboardController
         // 1. PUBLIC HOMEPAGE
         $color = 'text-success-emphasis';
         yield MenuItem::section('Site public')->setCssClass($color);
-        yield MenuItem::linkToUrl(label: 'Retour au site', icon: 'fas fa-fw fa-home '.$color, url: $this->generateUrl('app_home'));
-        yield MenuItem::linkToUrl(label: 'Quitter', icon: 'fas fa-fw fa-unlock '.$color, url: $route_logout);
-        yield MenuItem::linkToUrl(label: 'Labo', icon: 'fas fa-fw fa-cog text-danger', url: $this->generateUrl('aequation_labo_home'))->setPermission('ROLE_SUPER_ADMIN');
+        yield MenuItem::linkToUrl(label: 'Retour au site', icon: 'tabler:home-filled', url: $this->generateUrl('app_home'));
+        yield MenuItem::linkToUrl(label: 'Quitter', icon: 'tabler:lock-filled', url: $route_logout);
+        yield MenuItem::linkToUrl(label: 'Labo', icon: 'tabler:settings-cog', url: $this->generateUrl('aequation_labo_home'))->setPermission('ROLE_SUPER_ADMIN');
 
         // 2. MANAGER
         $color = 'text-primary-emphasis';
         $webmanage = [];
-        $sub_webmanage = [];
-        if($this->isGranted(WebpageVoter::ADMIN_ACTION_LIST, Webpage::class)) $webmanage['Webpage'] = MenuItem::linkToCrud(label: 'Pages web', icon: 'fas fa-fw fa-'.Webpage::getIcon(false).' '.$color, entityFqcn: Webpage::class);
-        if($this->isGranted(WebsectionVoter::ADMIN_ACTION_LIST, Websection::class)) $webmanage['Websection'] = MenuItem::linkToCrud(label: 'Sections web', icon: 'fas fa-fw fa-'.Websection::getIcon(false).' '.$color, entityFqcn: Websection::class);
-        if($this->isGranted(MenuVoter::ADMIN_ACTION_LIST, Menu::class)) $webmanage['Menu'] = MenuItem::linkToCrud(label: 'Menus', icon: 'fas fa-fw fa-'.Menu::getIcon(false).' '.$color, entityFqcn: Menu::class);
+        if($this->isGranted(WebpageVoter::ADMIN_ACTION_LIST, Webpage::class)) $webmanage['Webpage'] = MenuItem::linkToCrud(label: 'Pages web', icon: Webpage::ICON, entityFqcn: Webpage::class);
+        if($this->isGranted(WebsectionVoter::ADMIN_ACTION_LIST, Websection::class)) $webmanage['Websection'] = MenuItem::linkToCrud(label: 'Sections web', icon: Websection::ICON, entityFqcn: Websection::class);
+        if($this->isGranted(MenuVoter::ADMIN_ACTION_LIST, Menu::class)) $webmanage['Menu'] = MenuItem::linkToCrud(label: 'Menus', icon: Menu::ICON, entityFqcn: Menu::class);
         if(count($webmanage)) {
             yield MenuItem::section('Contenu du site')->setCssClass($color);
             foreach ($webmanage as $menuItem) yield $menuItem;
@@ -162,27 +177,35 @@ class DashboardController extends AbstractDashboardController
         $color = 'text-info';
         $medias = [];
         $sub_medias = [];
-        if($this->isGranted(AdvertVoter::ADMIN_ACTION_LIST, Advert::class)) $medias['Advert'] = MenuItem::linkToCrud(label: 'Annonces', icon: 'fas fa-fw fa-'.Advert::getIcon(false).' '.$color, entityFqcn: Advert::class);
-        if($this->isGranted(SliderVoter::ADMIN_ACTION_LIST, Slider::class)) $medias['Slider'] = MenuItem::linkToCrud(label: 'Diaporamas', icon: 'fas fa-fw fa-'.Slider::getIcon(false).' '.$color, entityFqcn: Slider::class);
-        if($this->isGranted(SlideVoter::ADMIN_ACTION_LIST, Slide::class)) $medias['Slide'] = MenuItem::linkToCrud(label: 'Diapositives', icon: 'fas fa-fw fa-'.Slide::getIcon(false).' '.$color, entityFqcn: Slide::class);
-        if($this->isGranted(PdfVoter::ADMIN_ACTION_LIST, Pdf::class)) $medias['Pdf'] = MenuItem::linkToCrud(label: 'Fichiers PDF', icon: 'fas fa-fw fa-'.Pdf::getIcon(false).' '.$color, entityFqcn: Pdf::class);
+        if($this->isGranted(AdvertVoter::ADMIN_ACTION_LIST, Advert::class)) $medias['Advert'] = MenuItem::linkToCrud(label: 'Annonces', icon: Advert::ICON, entityFqcn: Advert::class);
+        if($this->isGranted(SliderVoter::ADMIN_ACTION_LIST, Slider::class)) $medias['Slider'] = MenuItem::linkToCrud(label: 'Diaporamas', icon: Slider::ICON, entityFqcn: Slider::class);
+        if($this->isGranted(SlideVoter::ADMIN_ACTION_LIST, Slide::class)) $medias['Slide'] = MenuItem::linkToCrud(label: 'Diapositives', icon: Slide::ICON, entityFqcn: Slide::class);
+        if($this->isGranted(PdfVoter::ADMIN_ACTION_LIST, Pdf::class)) $medias['Pdf'] = MenuItem::linkToCrud(label: 'Fichiers PDF', icon: Pdf::ICON, entityFqcn: Pdf::class);
+        $sub_medias = [];
         if($this->isGranted(CategoryVoter::ADMIN_ACTION_LIST, Category::class)) {
-            // MenuItem::subMenu('Blog', 'fa fa-article')->setSubItems(...);
             /** @var LaboCategoryServiceInterface */
-            $categoryService = $this->manager->getEntityService(Category::class);
-            $categoryTypes = $categoryService->getCategoryTypeChoices();
+            $entService = $this->manager->getEntityService(Category::class);
+            $categoryTypes = $entService->getCategoryTypeChoices();
             foreach ($categoryTypes as $type) {
                 $name = $this->translator->trans('names', [], Classes::getShortname($type));
                 if($name === 'names') $name = Classes::getShortname($type);
                 $url = $this->generateUrl('easyadmin_category_index', ['type' => Classes::getShortname($type)]);
-                $sub_medias[$type] = MenuItem::linkToUrl(label: 'Type '.ucfirst($name), icon: 'fas fa-fw fa-'.Category::getIcon(false).' '.$color, url: $url);
+                $sub_medias[$type] = MenuItem::linkToUrl(label: 'Type '.ucfirst($this->translate('names', [], Classes::getShortname($type))), icon: Category::ICON, url: $url);
             }
             if(count($sub_medias)) {
-                $medias['Category'] = MenuItem::subMenu(label: 'Categories', icon: 'fas fa-fw fa-'.Category::getIcon(false).' '.$color)->setSubItems($sub_medias);
+                $medias['Category'] = MenuItem::subMenu(label: 'Categories', icon: Category::ICON)->setSubItems($sub_medias);
             }
         }
+        $sub_medias = [];
+        if($this->isGranted(AddresslinkVoter::ADMIN_ACTION_LIST, Addresslink::class)) $sub_medias[$type] = MenuItem::linkToCrud(label: ucfirst($this->translate('names', [], Classes::getShortname(Addresslink::class))), icon: Addresslink::ICON, entityFqcn: Addresslink::class);
+        if($this->isGranted(PhonelinkVoter::ADMIN_ACTION_LIST, Phonelink::class)) $sub_medias[$type] = MenuItem::linkToCrud(label: ucfirst($this->translate('names', [], Classes::getShortname(Phonelink::class))), icon: Phonelink::ICON, entityFqcn: Phonelink::class);
+        if($this->isGranted(EmailinkVoter::ADMIN_ACTION_LIST, Emailink::class)) $sub_medias[$type] = MenuItem::linkToCrud(label: ucfirst($this->translate('names', [], Classes::getShortname(Emailink::class))), icon: Emailink::ICON, entityFqcn: Emailink::class);
+        if($this->isGranted(UrlinkVoter::ADMIN_ACTION_LIST, Urlink::class)) $sub_medias[$type] = MenuItem::linkToCrud(label: ucfirst($this->translate('names', [], Classes::getShortname(Urlink::class))), icon: Urlink::ICON, entityFqcn: Urlink::class);
+        if(count($sub_medias)) {
+            $medias['Urlinks'] = MenuItem::subMenu(label: 'Contacts', icon: LaboRelink::ICON)->setSubItems($sub_medias);
+        }
         if(count($medias)) {
-            yield MenuItem::section('Médias & tags')->setCssClass($color);
+            yield MenuItem::section('Médias & liens')->setCssClass($color);
             foreach ($medias as $menuItem) yield $menuItem;
         }
 
@@ -190,8 +213,8 @@ class DashboardController extends AbstractDashboardController
         $color = 'text-info-emphasis';
         $users = [];
         $sub_users = [];
-        if($this->isGranted(UserVoter::ADMIN_ACTION_LIST, User::class)) $users['User'] = MenuItem::linkToCrud(label: $this->translate('names', [], Classes::getShortname(User::class)), icon: 'fas fa-fw fa-'.User::getIcon(false).' '.$color, entityFqcn: User::class);
-        if($this->isGranted(EntrepriseVoter::ADMIN_ACTION_LIST, Entreprise::class)) $users['Entreprise'] = MenuItem::linkToCrud(label: $this->translate('names', [], Classes::getShortname(Entreprise::class)), icon: 'fas fa-fw fa-'.Entreprise::getIcon(false).' '.$color, entityFqcn: Entreprise::class);
+        if($this->isGranted(UserVoter::ADMIN_ACTION_LIST, User::class)) $users['User'] = MenuItem::linkToCrud(label: $this->translate('names', [], Classes::getShortname(User::class)), icon: User::ICON, entityFqcn: User::class);
+        if($this->isGranted(EntrepriseVoter::ADMIN_ACTION_LIST, Entreprise::class)) $users['Entreprise'] = MenuItem::linkToCrud(label: $this->translate('names', [], Classes::getShortname(Entreprise::class)), icon: Entreprise::ICON, entityFqcn: Entreprise::class);
         if(count($users)) {
             yield MenuItem::section('Utilisateurs')->setCssClass($color);
             foreach ($users as $menuItem) yield $menuItem;
@@ -201,8 +224,8 @@ class DashboardController extends AbstractDashboardController
         $color = 'text-warning';
         $sadmin = [];
         $sub_sadmin = [];
-        if($this->isGranted(CrudvoterVoter::ADMIN_ACTION_LIST, Crudvoter::class)) $sadmin['Crudvoter'] = MenuItem::linkToCrud(label: 'Autorisations', icon: 'fas fa-fw fa-'.Crudvoter::getIcon(false).' '.$color, entityFqcn: Crudvoter::class);
-        if($this->isGranted(SiteparamsVoter::ADMIN_ACTION_LIST, Siteparams::class)) $sadmin['Siteparams'] = MenuItem::linkToCrud(label: 'Paramètres', icon: 'fas fa-fw fa-'.Siteparams::getIcon(false).' '.$color, entityFqcn: Siteparams::class);
+        if($this->isGranted(CrudvoterVoter::ADMIN_ACTION_LIST, Crudvoter::class)) $sadmin['Crudvoter'] = MenuItem::linkToCrud(label: 'Autorisations', icon: Crudvoter::ICON, entityFqcn: Crudvoter::class);
+        if($this->isGranted(SiteparamsVoter::ADMIN_ACTION_LIST, Siteparams::class)) $sadmin['Siteparams'] = MenuItem::linkToCrud(label: 'Paramètres', icon: Siteparams::ICON, entityFqcn: Siteparams::class);
         if(count($sadmin)) {
             yield MenuItem::section('Super Admin')->setCssClass($color);
             foreach ($sadmin as $menuItem) yield $menuItem;
@@ -238,8 +261,8 @@ class DashboardController extends AbstractDashboardController
 
             // you can use any type of menu item, except submenus
             ->addMenuItems([
-                MenuItem::linkToRoute('Retour au site', 'fa fa-home', 'app_home'),
-                MenuItem::linkToUrl('Mon profil', 'fa-'.User::FA_ICON, $profil_url),
+                MenuItem::linkToRoute('Retour au site', 'tabler:home-filled', 'app_home'),
+                MenuItem::linkToUrl('Mon profil', User::ICON, $profil_url),
                 // MenuItem::linkToRoute('Settings', 'fa fa-user-cog', '...', ['...' => '...']),
                 // MenuItem::section(),
                 // MenuItem::linkToLogout('Logout', 'fa fa-sign-out'),

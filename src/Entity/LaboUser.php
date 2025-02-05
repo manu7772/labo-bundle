@@ -25,6 +25,7 @@ use Aequation\LaboBundle\Model\Final\FinalPhonelinkInterface;
 use Aequation\LaboBundle\Model\Final\FinalUrlinkInterface;
 use Aequation\LaboBundle\Model\Interface\CreatedInterface;
 use Aequation\LaboBundle\Model\Interface\EnabledInterface;
+use Aequation\LaboBundle\Model\Interface\LaboRelinkInterface;
 // Symfony
 use Doctrine\ORM\Mapping as ORM;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -577,6 +578,44 @@ abstract class LaboUser extends MappSuperClassEntity implements LaboUserInterfac
     }
 
 
+    /**
+     * LABO RELINKS -------------------------------------------------------------------------
+     */
+
+
+     protected function getMainLaboRelink(
+        string $class,
+        bool $anyway = true
+    ): ?LaboRelinkInterface
+    {
+        $propertys = [
+            'addresses' => FinalAddresslinkInterface::class,
+            'emails' => FinalEmailinkInterface::class,
+            'phones' => FinalPhonelinkInterface::class,
+            'relinks' => FinalUrlinkInterface::class,
+        ];
+        $property = array_search($class, $propertys);
+        $notHasPrefered = !method_exists($class, 'isPrefered');
+        $first = $this->$property->first() instanceof LaboRelinkInterface ? $this->$property->first() : null;
+        if(empty($first)) {
+            return null;
+        } else if($notHasPrefered) {
+            return $first;
+        }
+        if($first && ($notHasPrefered || $first->isPrefered())) return $first;
+        foreach ($this->$property as $item) {
+            if($notHasPrefered || $item->isPrefered()) return $item;
+        }
+        return $anyway && $first instanceof LaboRelinkInterface ? $first : null;
+    }
+
+    public function getMainRelink(
+        bool $anyway = true
+    ): ?FinalUrlinkInterface
+    {
+        return $this->getMainLaboRelink(FinalUrlinkInterface::class, $anyway);
+    }
+
     public function getRelinks(): Collection
     {
         return $this->relinks;
@@ -594,6 +633,13 @@ abstract class LaboUser extends MappSuperClassEntity implements LaboUserInterfac
     {
         $this->relinks->removeElement($relink);
         return $this;
+    }
+
+    public function getMainAddress(
+        bool $anyway = true
+    ): ?FinalAddresslinkInterface
+    {
+        return $this->getMainLaboRelink(FinalAddresslinkInterface::class, $anyway);
     }
 
     public function getAddresses(): Collection
@@ -615,6 +661,13 @@ abstract class LaboUser extends MappSuperClassEntity implements LaboUserInterfac
         return $this;
     }
 
+    public function getMainEmail(
+        bool $anyway = true
+    ): ?FinalEmailinkInterface
+    {
+        return $this->getMainLaboRelink(FinalEmailinkInterface::class, $anyway);
+    }
+
     public function getEmails(): Collection
     {
         return $this->emails;
@@ -632,6 +685,13 @@ abstract class LaboUser extends MappSuperClassEntity implements LaboUserInterfac
     {
         $this->emails->removeElement($email);
         return $this;
+    }
+
+    public function getMainPhone(
+        bool $anyway = true
+    ): ?FinalPhonelinkInterface
+    {
+        return $this->getMainLaboRelink(FinalPhonelinkInterface::class, $anyway);
     }
 
     public function getPhones(): Collection

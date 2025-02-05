@@ -1,12 +1,12 @@
 <?php
 namespace Aequation\LaboBundle\Security\Voter;
 
-use Aequation\LaboBundle\Model\Interface\LaboArticleInterface;
+use Aequation\LaboBundle\Model\Interface\LaboRelinkInterface;
 
-class AdvertVoter extends ArticleVoter
+class AddresslinkVoter extends RelinkVoter
 {
 
-    public const INTERFACE = LaboArticleInterface::class;
+    public const INTERFACE = LaboRelinkInterface::class;
 
     // /**
     //  * Vote on attribute
