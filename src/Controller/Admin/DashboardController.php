@@ -42,6 +42,7 @@ use App\Entity\Slider;
 use App\Entity\Webpage;
 use App\Entity\Websection;
 use App\Entity\User;
+use EasyCorp\Bundle\EasyAdminBundle\Attribute\AdminDashboard;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Assets;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Crud;
 use Symfony\Component\Security\Core\User\UserInterface;
@@ -63,6 +64,7 @@ use Symfony\Contracts\Translation\TranslatorInterface;
  * Templates/Views @link vendor/easycorp/easyadmin-bundle/src/Resources/views
  */
 #[IsGranted('ROLE_COLLABORATOR')]
+#[AdminDashboard(routePath: 'easyadmin', routeName: 'easyadmin')]
 class DashboardController extends AbstractDashboardController
 {
     public const ADMIN_HOMEPAGE = false;
@@ -75,6 +77,21 @@ class DashboardController extends AbstractDashboardController
     )
     {
         // 
+    }
+
+    #[Route(path: '/easyadmin', name: 'easyadmin')]
+    public function index(): Response
+    {
+        // dump($this->isGranted(WebpageVoter::ADMIN_ACTION_LIST, Webpage::class));
+        // Admin granted page
+        if(!static::ADMIN_HOMEPAGE && $this->isGranted(WebpageVoter::ADMIN_ACTION_LIST, Webpage::class)) {
+            // $adminUrlGenerator = $this->container->get(AdminUrlGenerator::class);
+            return $this->redirect($this->adminUrlGenerator->setController(WebpageCrudController::class)->generateUrl());
+        }
+        // Admin default homepage
+        /** @see https://symfony.com/bundles/EasyAdminBundle/current/dashboards.html#customizing-the-dashboard-contents */
+        // return $this->render('bundles/EasyAdminBundle/dashboard.html.twig', []);
+        return parent::index();
     }
 
     public function configureAssets(): Assets
@@ -104,21 +121,6 @@ class DashboardController extends AbstractDashboardController
                 break;
         }
         // throw new Exception(vsprintf('Erreur %s ligne %d: la traduction ne peut s\'appliquer qu\'à un texte ou un tableau de textes.'))
-    }
-
-    #[Route(path: '/easyadmin', name: 'easyadmin')]
-    public function index(): Response
-    {
-        // dump($this->isGranted(WebpageVoter::ADMIN_ACTION_LIST, Webpage::class));
-        // Admin granted page
-        if(!static::ADMIN_HOMEPAGE && $this->isGranted(WebpageVoter::ADMIN_ACTION_LIST, Webpage::class)) {
-            // $adminUrlGenerator = $this->container->get(AdminUrlGenerator::class);
-            return $this->redirect($this->adminUrlGenerator->setController(WebpageCrudController::class)->generateUrl());
-        }
-        // Admin default homepage
-        /** @see https://symfony.com/bundles/EasyAdminBundle/current/dashboards.html#customizing-the-dashboard-contents */
-        // return $this->render('bundles/EasyAdminBundle/dashboard.html.twig', []);
-        return parent::index();
     }
 
     public function login(AuthenticationUtils $authenticationUtils): Response
