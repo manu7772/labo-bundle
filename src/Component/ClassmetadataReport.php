@@ -377,7 +377,7 @@ class ClassmetadataReport implements ClassmetadataReportInterface
             }
             if(count($methodAttrs) > $nb_callbacks) {
                 $this->errors[] = vsprintf('Certains Callbacks ne sont pas trouvés par "HasLifecycleCallbacks" : pour cette entité %s, %d méthodes ont été trouvées, et seules %d seront prises en compte.', [$this->classMetadata->name, count($methodAttrs), $nb_callbacks]);
-                dump($this->classMetadata->name, $methodAttrs);
+                // dump($this->classMetadata->name, $methodAttrs);
             }
             if($nb_callbacks > 0 && !$hasLifecycleCallbacks) {
                 $this->errors[] = vsprintf('La propriété "HasLifecycleCallbacks" est manquante : cette entité %s contient des callbacks (%s) qui ne seront pas appelés.', [$this->classMetadata->name, implode(' / ', $callbacks)]);

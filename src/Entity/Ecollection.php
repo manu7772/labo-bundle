@@ -143,7 +143,7 @@ abstract class Ecollection extends Item implements EcollectionInterface
     ): bool
     {
         if($event) {
-            dump(vsprintf('Info %s line %d: triggered event %s', [__METHOD__, __LINE__, get_class($event)]), $event);
+            // dump(vsprintf('Info %s line %d: triggered event %s', [__METHOD__, __LINE__, get_class($event)]), $event);
         }
         $attributes = Classes::getPropertyAttributes($this, RelationOrder::class, true);
         if(empty($attributes)) throw new Exception(vsprintf('Error %s line %d: no field found for %s in entity %s!', [__METHOD__, __LINE__, RelationOrder::class, $this->getClassname()]));
@@ -184,7 +184,7 @@ abstract class Ecollection extends Item implements EcollectionInterface
     {
         // dd('sort ordered relations...', $manager);
         // $manager ??= $this->_appManaged;
-        dump(array_merge($this->getRelationOrder(), ['entity' => [$this->shortname, $this->name]]));
+        // dump(array_merge($this->getRelationOrder(), ['entity' => [$this->shortname, $this->name]]));
         if($force || !$this->_appManaged->isRelationOrderLoaded(false)) {
             $propertyAccessor = PropertyAccess::createPropertyAccessorBuilder()->enableExceptionOnInvalidIndex()->getPropertyAccessor();
             foreach($this->getRelationOrder() as $property => $values) {

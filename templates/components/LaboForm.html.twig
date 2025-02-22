@@ -1,5 +1,5 @@
 <div{{ attributes }}>
-    {{ dump(this) }}
+    {# {{ dump(this) }} #}
     <h3>{{ 'name.name'|trans({}, this.shortname)|ucfirst }} {{ this.entity.name|default('création...') }}</h3>
     <!-- component html -->
     {{ form_start(form) }}

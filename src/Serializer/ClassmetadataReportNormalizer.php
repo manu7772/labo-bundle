@@ -17,7 +17,7 @@ class ClassmetadataReportNormalizer implements NormalizerInterface
     public function normalize($classmetadataReport, ?string $format = null, array $context = []): array
     {
         $data = $this->normalizer->normalize($classmetadataReport, $format, $context);
-        dump($data);
+        // dump($data);
         return $data;
     }
 

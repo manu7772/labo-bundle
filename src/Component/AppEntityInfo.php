@@ -214,7 +214,7 @@ class AppEntityInfo implements AppEntityInfoInterface
             throw new Exception(vsprintf('Error on %s line %d: entity is not an instance of %s.', [__METHOD__, __LINE__, EcollectionInterface::class]));
         }
         $this->internals['RelationOrder'] = $loaded;
-        dump(vsprintf('Info on %s line %d: RelationOrder is set to %s.', [__METHOD__, __LINE__, json_encode($loaded)]));
+        // dump(vsprintf('Info on %s line %d: RelationOrder is set to %s.', [__METHOD__, __LINE__, json_encode($loaded)]));
     }
 
     public function isRelationOrderLoaded(
