@@ -18,4 +18,8 @@ interface AppEntityInfoInterface extends Serializable
     public function serialize(): ?string;
     public function unserialize(string $data): void;
 
+    // internal values
+    public function setRelationOrderLoaded(bool $loaded): void;
+    public function isRelationOrderLoaded(bool $default = false): bool;
+
 }

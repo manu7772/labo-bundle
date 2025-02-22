@@ -250,13 +250,13 @@ class LaboUserService extends AppEntityManager implements LaboUserServiceInterfa
     public function getMainSAdmin(): ?LaboUserInterface
     {
         $admin_email = $this->appService->getParam('main_sadmin');
-        return $this->findUser($admin_email);;
+        return $this->findUser($admin_email);
     }
 
     public function getMainAdmin(): ?LaboUserInterface
     {
         $admin_email = $this->appService->getParam('main_admin');
-        return $this->findUser($admin_email);;
+        return $this->findUser($admin_email);
     }
 
     /**
