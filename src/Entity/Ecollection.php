@@ -206,7 +206,7 @@ abstract class Ecollection extends Item implements EcollectionInterface
                             }
                         }
                     }
-                    if(!$rest->isEmpty()) {
+                    if(isset($rest) && !$rest->isEmpty()) {
                         foreach ($rest as $item) {
                             if(static::KEEP_ORDERED_INDEXES) {
                                 $property_elements->set($item->getEuid(), $item);
