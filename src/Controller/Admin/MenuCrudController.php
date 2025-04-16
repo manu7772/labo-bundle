@@ -68,6 +68,7 @@ class MenuCrudController extends BaseCrudController
                 yield AssociationField::new('owner', 'Propriétaire');
                 yield TextField::new('name', 'Nom');
                 yield TextField::new('title', 'Titre du menu');
+                yield TextField::new('linktitle', 'Titre de lien externe');
                 yield ArrayField::new('items', 'Éléments du menu');
                 yield ArrayField::new('relationOrderNames', 'Éléments order')->setPermission('ROLE_SUPER_ADMIN');
                 yield BooleanField::new('prefered', 'Menu principal');
@@ -81,6 +82,7 @@ class MenuCrudController extends BaseCrudController
             case Crud::PAGE_NEW:
                 yield TextField::new('name', 'Nom du menu')->setColumns(6);
                 yield TextField::new('title', 'Titre du menu')->setColumns(6);
+                yield TextField::new('linktitle', 'Titre de lien externe')->setColumns(6);
                 yield AssociationField::new('items', 'Éléments du menu')
                     ->setQueryBuilder(fn (QueryBuilder $qb): QueryBuilder => ItemRepository::getQB_orderedChoicesList($qb, Menu::class, 'items'))
                     ->setSortProperty('name')
@@ -109,6 +111,7 @@ class MenuCrudController extends BaseCrudController
                 yield FormField::addColumn('col-md-6');
                     yield TextField::new('name', 'Nom du menu');
                     yield TextField::new('title', 'Titre du menu');
+                    yield TextField::new('linktitle', 'Titre de lien externe');
                     yield AssociationField::new('items', 'Éléments du menu')
                         ->setQueryBuilder(function (QueryBuilder $qb) {
                             return ItemRepository::getQB_orderedChoicesList($qb, Menu::class, 'items', []);
