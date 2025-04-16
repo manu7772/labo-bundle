@@ -86,9 +86,6 @@
         "symfony/stopwatch": "7.2.*",
         "symfony/web-profiler-bundle": "7.2.*"
     },
-    "conflict": {
-        "symfony/flex": "<1.13"
-    },
     "minimum-stability": "stable",
     "config": {
         "allow-plugins": {
