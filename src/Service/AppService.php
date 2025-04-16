@@ -72,6 +72,7 @@ class AppService extends BaseService implements AppServiceInterface
     // protected string $project_dir;
     protected ?string $_route;
     protected mixed $_route_params;
+    public array $__src = [];
 
     public function __construct(
         public readonly RequestStack $requestStack,
@@ -86,6 +87,7 @@ class AppService extends BaseService implements AppServiceInterface
     ) {
         $this->container = $this->kernel->getContainer();
         // $this->project_dir = $this->kernel->getProjectDir();
+        $this->surveyRecursion(__METHOD__, 5);
         $this->initializeAppContext();
     }
 
@@ -123,6 +125,7 @@ class AppService extends BaseService implements AppServiceInterface
         int $invalidBehavior = ContainerInterface::NULL_ON_INVALID_REFERENCE
     ): ?object
     {
+        $this->surveyRecursion(__METHOD__);
         if($this->isDev()) {
             $invalidBehavior = ContainerInterface::EXCEPTION_ON_INVALID_REFERENCE;
         }
@@ -145,6 +148,7 @@ class AppService extends BaseService implements AppServiceInterface
         string|AppEntityInterface $objectOrClass
     ): ?ServiceInterface
     {
+        $this->surveyRecursion(__METHOD__);
         $serviceName = $this->getClassServiceName($objectOrClass);
         return $this->has($serviceName)
             ? $this->get($serviceName)
@@ -180,10 +184,12 @@ class AppService extends BaseService implements AppServiceInterface
         ?SessionInterface $session = null
     ): bool
     {
+        $this->surveyRecursion(__METHOD__);
         if($session instanceof SessionInterface && !($this->session instanceof SessionInterface)) {
             $this->session = $session;
         }
         if(!$this->hasAppContext(false)) {
+            $this->surveyRecursion(__METHOD__.'::line_'.__LINE__, 5);
             // Try find session
             $session ??= $this->getSession();
             if($session instanceof SessionInterface) {
@@ -208,6 +214,7 @@ class AppService extends BaseService implements AppServiceInterface
 
     public final function getAppContext(): ?AppContextInterface
     {
+        $this->surveyRecursion(__METHOD__);
         $this->initializeAppContext();
         return $this->appContext;
     }
@@ -216,6 +223,7 @@ class AppService extends BaseService implements AppServiceInterface
         bool $try_initialize = true
     ): bool
     {
+        $this->surveyRecursion(__METHOD__);
         if($try_initialize) $this->initializeAppContext();
         return isset($this->appContext) && $this->appContext->isFinalContext();
     }
@@ -243,6 +251,7 @@ class AppService extends BaseService implements AppServiceInterface
 
     public function getMainEntreprise(): ?Object
     {
+        $this->surveyRecursion(__METHOD__);
         return $this->get('App\\Service\\Interface\\EntrepriseServiceInterface')->getMainEntreprise();
     }
 
@@ -258,6 +267,7 @@ class AppService extends BaseService implements AppServiceInterface
         array $context = []
     ): array|string|int|float|bool|ArrayObject|null
     {
+        $this->surveyRecursion(__METHOD__);
         if($object instanceof Collection) $object = $object->toArray();
         if(is_array($object)) $object = array_values($object); // for React, can not be object, but array
         // $context[AbstractObjectNormalizer::ENABLE_MAX_DEPTH] = true;
@@ -270,6 +280,7 @@ class AppService extends BaseService implements AppServiceInterface
         array $context = []
     ): array|string|int|float|bool|ArrayObject|null
     {
+        $this->surveyRecursion(__METHOD__);
         if($object instanceof Collection) $object = $object->toArray();
         if(is_array($object)) $object = array_values($object); // for React, can not be object, but array
         // $context[AbstractObjectNormalizer::ENABLE_MAX_DEPTH] = true;
@@ -285,6 +296,7 @@ class AppService extends BaseService implements AppServiceInterface
         bool $endSeparator = false,
     ): string
     {
+        $this->surveyRecursion(__METHOD__);
         $project_dir = preg_replace('/\\'.DIRECTORY_SEPARATOR.'*$/', '', $this->kernel->getProjectDir());
         return $endSeparator ? $project_dir.DIRECTORY_SEPARATOR : $project_dir;
     }
@@ -294,6 +306,7 @@ class AppService extends BaseService implements AppServiceInterface
         bool $endSeparator = false,
     ): string
     {
+        $this->surveyRecursion(__METHOD__);
         $dir = $this->getProjectDir(true).ltrim(ltrim($path, DIRECTORY_SEPARATOR), DIRECTORY_SEPARATOR).DIRECTORY_SEPARATOR;
         return $endSeparator ? $dir : preg_replace('/\\'.DIRECTORY_SEPARATOR.'*$/', '', $dir);
     }
@@ -333,6 +346,7 @@ class AppService extends BaseService implements AppServiceInterface
      */
     public function getUser(): ?LaboUserInterface
     {
+        $this->surveyRecursion(__METHOD__);
         if(isset($this->appContext)) return $this->appContext->getUser();
         return $this->security->getUser();
     }
@@ -351,11 +365,13 @@ class AppService extends BaseService implements AppServiceInterface
 
     public function getMainSAdmin(): ?LaboUserInterface
     {
+        $this->surveyRecursion(__METHOD__);
         return $this->get(LaboUserServiceInterface::class)->getMainSAdmin();
     }
 
     public function getMainAdmin(): ?LaboUserInterface
     {
+        $this->surveyRecursion(__METHOD__);
         return $this->get(LaboUserServiceInterface::class)->getMainAdmin();
     }
 
@@ -380,6 +396,7 @@ class AppService extends BaseService implements AppServiceInterface
         mixed $subject = null,
     ): bool
     {
+        $this->surveyRecursion(__METHOD__);
         if($attributes instanceof LaboUserInterface) {
             $attributes->setRoleHierarchy($this->get(AppRoleHierarchyInterface::class));
             $attributes = $attributes->getHigherRole();
@@ -421,6 +438,7 @@ class AppService extends BaseService implements AppServiceInterface
         string $firewallName = 'none'
     ): bool
     {
+        $this->surveyRecursion(__METHOD__);
         if(empty($firewallName)) {
             $firewallName = 'none';
         }
@@ -449,6 +467,7 @@ class AppService extends BaseService implements AppServiceInterface
         string $firewallName = 'none',
     ): bool
     {
+        $this->surveyRecursion(__METHOD__);
         // return false;
         $user ??= $this->getUser();
         if(!($user instanceof LaboUserInterface)) {
@@ -486,7 +505,7 @@ class AppService extends BaseService implements AppServiceInterface
     }
 
     public function getDatetimeTimezone(
-        string $date = null
+        ?string $date = null
     ): DateTimeImmutable
     {
         $tz = $this->getCurrentTimezone(false);
@@ -508,6 +527,7 @@ class AppService extends BaseService implements AppServiceInterface
 
     public function getDarkmode(): bool
     {
+        $this->surveyRecursion(__METHOD__);
         return $this->appContext->getDarkmode();
     }
 
@@ -523,11 +543,13 @@ class AppService extends BaseService implements AppServiceInterface
 
     public function getCurrentRequest(): ?Request
     {
+        $this->surveyRecursion(__METHOD__);
         return $this->request ??= $this->requestStack?->getCurrentRequest() ?: null;
     }
 
     public function getSession(): ?SessionInterface
     {
+        $this->surveyRecursion(__METHOD__);
         return $this->session ??= static::getRequestSession($this->getCurrentRequest());
     }
 
@@ -540,11 +562,13 @@ class AppService extends BaseService implements AppServiceInterface
 
     public function getRequestAttribute(string $name, mixed $default = null): mixed
     {
+        $this->surveyRecursion(__METHOD__.'::'.$name);
         return $this->getCurrentRequest()?->attributes?->get($name, $default) ?? $default;
     }
 
     public function getRequestContext(): ?RequestContext
     {
+        $this->surveyRecursion(__METHOD__);
         /** @var RouterInterface $router */
         $router = $this->get('router');
         return $router instanceof RouterInterface
@@ -557,6 +581,7 @@ class AppService extends BaseService implements AppServiceInterface
         mixed $data,
     ): static
     {
+        $this->surveyRecursion(__METHOD__);
         $this->getSession()->set($name, $data);
         return $this;
     }
@@ -566,6 +591,7 @@ class AppService extends BaseService implements AppServiceInterface
         mixed $default,
     ): mixed
     {
+        $this->surveyRecursion(__METHOD__);
         $session = $this->getSession();
         return $session
             ? $session->get($name, $default)
@@ -649,6 +675,7 @@ class AppService extends BaseService implements AppServiceInterface
         bool $asMarkup = true,
     ): string|Markup
     {
+        $this->surveyRecursion(__METHOD__);
         $metas = [];
         // Turbo refresh
         $turbo_refresh = $this->getParam('turbo-refresh-scroll', null);
@@ -668,6 +695,7 @@ class AppService extends BaseService implements AppServiceInterface
      */
     public function isTurboFrameRequest(?Request $request = null): bool
     {
+        $this->surveyRecursion(__METHOD__);
         $request ??= $this->getCurrentRequest();
         return $request
             ? !empty($request->headers->get('Turbo-Frame'))
@@ -685,6 +713,7 @@ class AppService extends BaseService implements AppServiceInterface
         bool $prepareRequest = true,
     ): bool
     {
+        $this->surveyRecursion(__METHOD__);
         $request ??= $this->getCurrentRequest();
         if(empty($request)) return false;
         $isTurbo = $request->getMethod() !== 'GET' && TurboBundle::STREAM_FORMAT === $request->getPreferredFormat();
@@ -699,6 +728,7 @@ class AppService extends BaseService implements AppServiceInterface
         ?Request $request = null,
     ): bool
     {
+        $this->surveyRecursion(__METHOD__);
         $request ??= $this->getCurrentRequest();
         if(empty($request)) return false;
         return $request->headers->get('x-requested-with', null) === 'XMLHttpRequest';
@@ -711,11 +741,13 @@ class AppService extends BaseService implements AppServiceInterface
 
     public function getRoutes(): RouteCollection
     {
+        $this->surveyRecursion(__METHOD__);
         return $this->get('router')->getRouteCollection();
     }
     
     public function routeExists(string $route, bool|array $control_generation = false): bool
     {
+        $this->surveyRecursion(__METHOD__.'::'.$route);
         $exists = $this->getRoutes()->get($route) !== null;
         if($control_generation) {
             try {
@@ -733,6 +765,7 @@ class AppService extends BaseService implements AppServiceInterface
         mixed $param = null
     ): bool
     {
+        $this->surveyRecursion(__METHOD__.'::'.$route);
         // dump($this->getRoute(), $this->getRouteParams(), $param instanceof MenuInterface ? $param->getItems() : null);
         if($param instanceof WebpageInterface && $param->isPrefered() && $this->getRoute() == 'app_home') return true;
         if($route !== $this->getRoute()) return false;
@@ -755,11 +788,13 @@ class AppService extends BaseService implements AppServiceInterface
 
     public function getRoute(): string
     {
+        $this->surveyRecursion(__METHOD__);
         return $this->_route ??= $this->getCurrentRequest()?->attributes->get('_route');
     }
 
     public function getRouteParams(): mixed
     {
+        $this->surveyRecursion(__METHOD__);
         return $this->_route_params ??= $this->getCurrentRequest()?->attributes->get('_route_params');
     }
 
@@ -781,6 +816,7 @@ class AppService extends BaseService implements AppServiceInterface
         int $referenceType = Router::ABSOLUTE_PATH,
     ): ?string
     {
+        $this->surveyRecursion(__METHOD__.'::'.$route);
         /** @var RouterInterface */
         $router = $this->get('router');
         $_route = $this->getRoute();
@@ -833,6 +869,7 @@ class AppService extends BaseService implements AppServiceInterface
 
     public function getCache(): CacheServiceInterface
     {
+        $this->surveyRecursion(__METHOD__);
         return $this->get(CacheServiceInterface::class);
     }
 
@@ -843,6 +880,7 @@ class AppService extends BaseService implements AppServiceInterface
 
     public function getParameterBag(): ParameterBagInterface
     {
+        $this->surveyRecursion(__METHOD__);
         return $this->parameterBag;
     }
 
@@ -859,6 +897,7 @@ class AppService extends BaseService implements AppServiceInterface
         array|bool|string|int|float|UnitEnum|null $default = null,
     ): array|bool|string|int|float|UnitEnum|null
     {
+        $this->surveyRecursion(__METHOD__.'::'.$name);
         if($this->parameterBag->has($name)) {
             try {
                 return $this->parameterBag->get($name);
@@ -880,6 +919,7 @@ class AppService extends BaseService implements AppServiceInterface
         ?string $filter = null
     ): array|string
     {
+        $this->surveyRecursion(__METHOD__);
         if(!$this->hasAppContext(true)) throw new Exception(vsprintf('Error in %s line %d: context is not loaded!', [__METHOD__, __LINE__]));
         $params = $this->getFilteredParams($filter);
         $params = array_merge($params, $this->appContext->jsonSerialize());
@@ -892,6 +932,7 @@ class AppService extends BaseService implements AppServiceInterface
         ?string $filter = null
     ): array
     {
+        $this->surveyRecursion(__METHOD__);
         switch (true) {
             case is_string($filter) && !empty($filter):
                 $keys = $this->getFilterKeys($filter);
@@ -918,6 +959,7 @@ class AppService extends BaseService implements AppServiceInterface
 
     public function getParamsByRegex(string $regexp): array
     {
+        $this->surveyRecursion(__METHOD__.'::'.$regexp);
         return array_filter($this->parameterBag->all(), function($key) use ($regexp) {
             return preg_match($regexp, $key);
         }, ARRAY_FILTER_USE_KEY);
@@ -927,6 +969,7 @@ class AppService extends BaseService implements AppServiceInterface
         ?string $filter = null
     ): array|bool
     {
+        $this->surveyRecursion(__METHOD__.'::'.($filter ?? '__empty__'));
         if(empty($filter)) return true;
         $filters = [
             'public_app' => [
@@ -961,13 +1004,38 @@ class AppService extends BaseService implements AppServiceInterface
     // Notif types
     public function getNotifTypes(): array
     {
+        $this->surveyRecursion(__METHOD__);
         return $this->parameterBag->get('notif')['types'];
     }
 
     // Custom colors
     public function getCustomColors(): array
     {
+        $this->surveyRecursion(__METHOD__);
         return $this->parameterBag->get('custom_colors');
+    }
+
+
+    /**
+     * Survey recursion in some methods (DEV only)
+     * use: $this->surveyRecursion(__METHOD__.'::*somename*');
+     * 
+     * @param string $name
+     * @param int|null $max
+     * @return void
+     */
+    public function surveyRecursion(
+        string $name,
+        ?int $max = null
+    ): void {
+        if ($this->isDev()) {
+            $max ??= 500;
+            $this->__src[$name] ??= 0;
+            $this->__src[$name]++;
+            if ($this->__src[$name] > $max) {
+                throw new Exception(vsprintf('Error %s line %d: "%s" recursion limit %d reached!', [__METHOD__, __LINE__, $name, $max]));
+            }
+        }
     }
 
 }
