@@ -21,7 +21,7 @@ class ClassmetadataReportDenormalizer implements DenormalizerInterface
         // $data['appEntityManager'] = $this->appEntityManager;
         $report = $this->denormalizer->denormalize($data, $type, $format, $context);
         // $report = new ClassmetadataReport($this->appEntityManager, $data['classname']);
-        dump($report);
+        // dump($report);
         return $report;
     }
 

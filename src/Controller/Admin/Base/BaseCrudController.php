@@ -30,6 +30,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\QueryBuilder;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Assets;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Dashboard;
+use EasyCorp\Bundle\EasyAdminBundle\Contracts\Field\FieldInterface;
 use EasyCorp\Bundle\EasyAdminBundle\Event\AfterCrudActionEvent;
 use EasyCorp\Bundle\EasyAdminBundle\Event\AfterEntityPersistedEvent;
 use EasyCorp\Bundle\EasyAdminBundle\Event\BeforeCrudActionEvent;
@@ -37,13 +38,17 @@ use EasyCorp\Bundle\EasyAdminBundle\Event\BeforeEntityPersistedEvent;
 use EasyCorp\Bundle\EasyAdminBundle\Exception\ForbiddenActionException;
 use EasyCorp\Bundle\EasyAdminBundle\Exception\InsufficientEntityPermissionException;
 use EasyCorp\Bundle\EasyAdminBundle\Factory\EntityFactory;
+use EasyCorp\Bundle\EasyAdminBundle\Field\Field;
 use EasyCorp\Bundle\EasyAdminBundle\Security\Permission;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\Form\FormEvent;
 use Symfony\Component\Form\FormEvents;
 
 use Exception;
+use Iterator;
+use phpDocumentor\Reflection\Types\Iterable_;
 use ReflectionClass;
+use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Security\Core\Authorization\Voter\VoterInterface;
 use Symfony\Contracts\Translation\TranslatorInterface;
@@ -55,8 +60,12 @@ abstract class BaseCrudController extends AbstractCrudController
     public const VOTER = 'undefined';
     public const DEFAULT_SORT = ['id' => 'ASC'];
     public const THROW_EXCEPTION_WHEN_FORBIDDEN = true;
+    public const CUT_NAME_LENGTH = 24;
+
+    public readonly array $query_values;
 
     public function __construct(
+        protected RequestStack $requestStack,
         protected AppEntityManagerInterface $manager,
         protected LaboUserServiceInterface $userService,
         protected TranslatorInterface $translator,
@@ -70,7 +79,120 @@ abstract class BaseCrudController extends AbstractCrudController
         if($this->userService instanceof LaboUserServiceInterface) {
             $this->userService->addMeToSuperAdmin();
         }
+        $query = $this->requestStack->getMainRequest()?->query;
+        $this->query_values = $query ? $query->all() : [];
+        // dump($this->query_values);
     }
+
+    /**
+     * Get the current request/session context
+     */
+
+    public function getQueryValues(): array
+    {
+        return $this->query_values;
+    }
+
+    public function getQueryValue(
+        string $name,
+        mixed $default = null
+    ): mixed
+    {
+        return $this->query_values[$name] ?? $default;
+    }
+
+    /**
+     * Compile yield fields for the given page
+     */
+
+     public static function getFieldsAsIndexedArray(
+        iterable $yields
+     ): iterable
+     {
+        $fields = [];
+        $eaftindex = 0;
+        foreach ($yields as $field) {
+            $key = $field->getAsDto()->getProperty();
+            switch (true) {
+                case $key === 'ea_form_tab':
+                    $key .= '---'.$eaftindex++;
+                    break;
+                case array_key_exists($key, $fields):
+                    $key .= '---'.$eaftindex++;
+                    break;
+            }
+            $fields[$key] = $field;
+        }
+        return $fields;
+    }
+
+    protected function recomputeFields(
+        iterable $original_fields,
+        iterable $new_fields,
+        bool $combine = false
+    ): Iterator
+    {
+        $original_fields = $this->getFieldsAsIndexedArray($original_fields);
+        // list of all field names
+        $field_names = array_combine(array_keys($original_fields), array_keys($original_fields));
+        // Add new fields / except 'after' fields
+        foreach ($new_fields as $name => $field) {
+            if(!isset($field['after'])) $field_names[$name] = $name;
+        }
+        // Add 'after' fields
+        $keys_field_names = array_keys($field_names);
+        foreach ($new_fields as $name => $field) {
+            if(isset($field['after']) && in_array($field['after'], $field_names)) {
+                $key = array_search($field['after'], $keys_field_names) + 1;
+                // dd($field['after'], $key, $field_names);
+                $field_names = array_merge(
+                    array_slice($field_names, 0, $key, true),
+                    [$name => $name],
+                    array_slice($field_names, $key, null, true)
+                );
+            }
+            if(isset($field['before']) && in_array($field['before'], $field_names)) {
+                $key = array_search($field['before'], $keys_field_names);
+                // dd($field['after'], $key, $field_names);
+                $field_names = array_merge(
+                    array_slice($field_names, 0, $key, true),
+                    [$name => $name],
+                    array_slice($field_names, $key, null, true)
+                );
+            }
+        }
+        $newlist = [];
+        foreach ($field_names as $name) {
+            if(is_string($name)) {
+                $field = $new_fields[$name] ?? $combine;
+                if(!is_array($field)) {
+                    $field = ['field' => $field];
+                }
+                switch (true) {
+                    case $field['field'] === true && isset($original_fields[$name]) && $original_fields[$name] instanceof FieldInterface:
+                        if(is_callable($field['action'] ?? null)) {
+                            $field['action']($original_fields[$name]);
+                        }
+                        $newlist[$name] = $original_fields[$name];
+                        break;
+                    case $field['field'] instanceof FieldInterface:
+                        if(is_callable($field['action'] ?? null)) {
+                            $field['action']($field['field']);
+                        }
+                        $newlist[$name] = $field['field'];
+                        break;
+                    default:
+                        # Do not add original field
+                        break;
+                }
+            }
+        }
+        // dump($newlist);
+        foreach ($newlist as $name => $field) {
+            yield $name => $field;
+        }
+    }
+
 
     public function configureAssets(Assets $assets): Assets
     {
@@ -91,7 +213,10 @@ abstract class BaseCrudController extends AbstractCrudController
     {
         switch (true) {
             case is_string($data):
-                return $this->translator->trans($data, $parameters, $domain, $locale);
+                $trans = $this->translator->trans($data, $parameters, $domain, $locale);
+                return in_array($trans, ['names', 'name'])
+                    ? ucfirst($domain)
+                    : $trans;
                 break;
             case is_array($data):
                 return array_map(function($value) use ($parameters, $domain, $locale) { return $this->translate($value, $parameters, $domain, $locale); }, $data);
@@ -146,7 +271,7 @@ abstract class BaseCrudController extends AbstractCrudController
         $actions->update(Crud::PAGE_INDEX, Action::DETAIL, function(Action $action) use ($voter) {
             $action
                 ->setLabel(false)
-                ->setIcon('fa fa-eye')
+                ->setIcon('tabler:eye')
                 ->setHtmlAttributes(['title' => $this->translate('action.detail')])
                 ->displayIf(function (AppEntityInterface $entity) use ($voter) {
                     return $this->isGranted($voter::ACTION_READ, $entity);
@@ -158,7 +283,7 @@ abstract class BaseCrudController extends AbstractCrudController
         $actions->update(Crud::PAGE_INDEX, Action::NEW, function(Action $action) use ($voter) {
             $action
                 ->setLabel($this->translate('action.new'))
-                ->setIcon('fa fa-plus')
+                ->setIcon('tabler:plus')
                 ->displayIf(function (?AppEntityInterface $entity) use ($voter) {
                     return $this->isGranted($voter::ACTION_CREATE, $entity ?? static::ENTITY);
                 });
@@ -169,7 +294,7 @@ abstract class BaseCrudController extends AbstractCrudController
         $actions->update(Crud::PAGE_INDEX, Action::EDIT, function(Action $action) use ($voter) {
             $action
                 ->setLabel(false)
-                ->setIcon('fa fa-pencil')
+                ->setIcon('tabler:pencil')
                 ->setHtmlAttributes(['title' => $this->translate('action.edit')])
                 ->displayIf(function (AppEntityInterface $entity) use ($voter) {
                     return $this->isGranted($voter::ACTION_UPDATE, $entity);
@@ -181,7 +306,7 @@ abstract class BaseCrudController extends AbstractCrudController
         $actions->update(Crud::PAGE_INDEX, Action::DELETE, function(Action $action) use ($voter) {
             $action
                 ->setLabel(false)
-                ->setIcon('fa fa-trash text-muted')
+                ->setIcon('tabler:trash')
                 ->setHtmlAttributes(['title' => $this->translate('action.delete')])
                 ->displayIf(function (AppEntityInterface $entity) use ($voter) {
                     return $this->isGranted($voter::ACTION_DELETE, $entity);
@@ -199,7 +324,7 @@ abstract class BaseCrudController extends AbstractCrudController
         $actions->update(Crud::PAGE_DETAIL, Action::INDEX, function(Action $action) use ($voter) {
             $action
                 ->setLabel($this->translate('action.index'))
-                ->setIcon('fa fa-list')
+                ->setIcon('tabler:list')
                 ->setHtmlAttributes(['title' => $this->translate('action.index')])
                 ->displayIf(function (AppEntityInterface $entity) use ($voter) {
                     return $this->isGranted($voter::ACTION_LIST, $entity);
@@ -221,7 +346,7 @@ abstract class BaseCrudController extends AbstractCrudController
         // EDIT
         $actions->update(Crud::PAGE_DETAIL, Action::EDIT, function(Action $action) use ($voter) {
             $action
-                ->setIcon('fa fa-pencil')
+                ->setIcon('tabler:pencil')
                 ->setHtmlAttributes(['title' => 'Éditer'])
                 ->displayIf(function (AppEntityInterface $entity) use ($voter) {
                     return $this->isGranted($voter::ACTION_UPDATE, $entity);
@@ -238,7 +363,7 @@ abstract class BaseCrudController extends AbstractCrudController
         $actions->update(Crud::PAGE_EDIT, Action::INDEX, function(Action $action) use ($voter) {
             $action
                 ->setLabel('Liste')
-                ->setIcon('fa fa-list')
+                ->setIcon('tabler:list')
                 ->setHtmlAttributes(['title' => 'Retour à la liste'])
                 ->displayIf(function (AppEntityInterface $entity) use ($voter) {
                     return $this->isGranted($voter::ACTION_LIST, $entity);
@@ -255,7 +380,7 @@ abstract class BaseCrudController extends AbstractCrudController
         $actions->update(Crud::PAGE_NEW, Action::INDEX, function(Action $action) use ($voter) {
             $action
                 ->setLabel('Liste')
-                ->setIcon('fa fa-list')
+                ->setIcon('tabler:list')
                 ->setHtmlAttributes(['title' => 'Retour à la liste'])
                 ->displayIf(function (AppEntityInterface $entity) use ($voter) {
                     return $this->isGranted($voter::ACTION_LIST, $entity);
@@ -282,19 +407,39 @@ abstract class BaseCrudController extends AbstractCrudController
     public function configureCrud(Crud $crud): Crud
     {
         $crud->showEntityActionsInlined();
-        $shortname = Classes::getShortname(static::ENTITY, true);
+        // Entity name
+        $shortname = Classes::getShortname(static::ENTITY);
+        $sing_shortname = $this->translate('name', [], $shortname);
+        if($sing_shortname === 'name') $sing_shortname = ucfirst(Strings::singularize($shortname));
+        $plur_shortname = $this->translate('names', [], $shortname);
+        if($plur_shortname === 'names') $plur_shortname = ucfirst(Strings::pluralize($shortname));
+        // Configure Crud
         $crud
             ->setDefaultSort(static::DEFAULT_SORT)
             ->overrideTemplates([
                 'crud/field/id' => '@EasyAdmin/crud/field/id_with_icon.html.twig',
                 // 'crud/field/thumbnail' => '@EasyAdmin/crud/field/template.html.twig',
             ])
-            ->setEntityLabelInSingular(Strings::singularize($shortname))
-            ->setEntityLabelInPlural(Strings::pluralize($shortname))
+            ->setPageTitle('index', '<small>Liste des </small>%entity_label_plural%')
+            ->setPageTitle('detail', '%entity_label_singular%')
+            ->setPageTitle('edit', '<small>Modifier </small>%entity_label_singular%')
+            ->setPageTitle('new', '<small>Créer </small>%entity_label_singular%')
+            ->setTimezone($this->manager->getAppService()->getAppContext()->getTimezone()->getName())
+            // ->setEntityLabelInSingular(Strings::singularize($shortname))
+            // ->setEntityLabelInPlural(Strings::pluralize($shortname))
+            ->setEntityLabelInSingular(
+                fn (?AppEntityInterface $entity, ?string $pageName) => $entity ? '<small>'.$sing_shortname.' </small>'.Strings::cutAt($entity->__toString(), static::CUT_NAME_LENGTH, true) : $sing_shortname
+            )
+            ->setEntityLabelInPlural(
+                fn (?AppEntityInterface $entity, ?string $pageName) => $pageName && in_array($pageName, ['edit','detail']) ? '<small>'.$plur_shortname.' </small>'.Strings::cutAt($entity->__toString(), static::CUT_NAME_LENGTH, true) : $plur_shortname
+            )
             // ->hideNullValues()
             // ->setFormOptions([
             //     'attr' => ['class' => 'text-info']
             // ])
+            // ->renderSidebarMinimized()
+            ->renderContentMaximized()
+            ->setPaginatorPageSize(20)
             ;
         return $crud;
     }

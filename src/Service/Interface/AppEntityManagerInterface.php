@@ -37,7 +37,7 @@ interface AppEntityManagerInterface extends ServiceInterface
     // EM & REPO
     public function getEntityManager(): EntityManagerInterface;
     public function getUnitOfWork(): UnitOfWork;
-    public function getRepository(string $classname = null): CommonReposInterface;
+    public function getRepository(string $classname = null, string $field = null, bool $onlyCommonRepos = true): ?CommonReposInterface;
 
     // public function getEntityNamespaces(): array;
     public static function isAppEntity(string|object $classname): bool;
@@ -53,6 +53,7 @@ interface AppEntityManagerInterface extends ServiceInterface
     public function findEntityByUniqueValue(string $value): ?AppEntityInterface;
     public function findEntityByEuid(string $euid): ?AppEntityInterface;
 
+    public function getNewHydrateds(string|array|callable $filter = null): array;
     public function getScheduledForInsert(string|array|callable $filter = null): array;
     public function getScheduledForUpdate(string|array|callable $filter = null): array;
     public function getScheduledForDelete(string|array|callable $filter = null): array;

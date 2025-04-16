@@ -9,19 +9,17 @@ use Aequation\LaboBundle\Service\Tools\Emails;
 use Aequation\LaboBundle\Service\Interface\LaboUserServiceInterface;
 use Aequation\LaboBundle\Service\Interface\AppRoleHierarchyInterface;
 use Aequation\LaboBundle\Service\Interface\AppServiceInterface;
-
-use App\Entity\Category;
-
-use Symfony\Component\Security\Core\Exception\CustomUserMessageAccountStatusException;
+// Symfony
 use Doctrine\ORM\EntityManagerInterface;
-
-use DateTimeImmutable;
-use PharIo\Manifest\InvalidEmailException;
+use Symfony\Component\Security\Core\Exception\CustomUserMessageAccountStatusException;
 use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\DependencyInjection\Attribute\AsAlias;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Security\Core\Authorization\AccessDecisionManagerInterface;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
+use PharIo\Manifest\InvalidEmailException;
+// PHP
+use DateTimeImmutable;
 
 #[AsAlias(LaboUserServiceInterface::class, public: true)]
 class LaboUserService extends AppEntityManager implements LaboUserServiceInterface
@@ -252,13 +250,13 @@ class LaboUserService extends AppEntityManager implements LaboUserServiceInterfa
     public function getMainSAdmin(): ?LaboUserInterface
     {
         $admin_email = $this->appService->getParam('main_sadmin');
-        return $this->findUser($admin_email);;
+        return $this->findUser($admin_email);
     }
 
     public function getMainAdmin(): ?LaboUserInterface
     {
         $admin_email = $this->appService->getParam('main_admin');
-        return $this->findUser($admin_email);;
+        return $this->findUser($admin_email);
     }
 
     /**

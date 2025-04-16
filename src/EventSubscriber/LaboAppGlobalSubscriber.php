@@ -249,6 +249,7 @@ class LaboAppGlobalSubscriber implements EventSubscriberInterface
 
     protected function initAppContext(KernelEvent $event): void
     {
+        $this->appService->surveyRecursion(__METHOD__, 3);
         if(!$this->appService->hasAppContext()) {
             $request = $event->getRequest();
             if($session = $request->hasSession() ? $request->getSession() : null) {

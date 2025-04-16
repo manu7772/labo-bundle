@@ -117,7 +117,7 @@ class WebpageCrudController extends BaseCrudController
                     ->setSortProperty('name')
                     ->setFormTypeOptions(['by_reference' => false])
                     ->setColumns(4);
-                yield WebsectionsField::new('items', 'Sections de pages')
+                yield AssociationField::new('items', 'Sections de pages')
                     // ->autocomplete()
                     ->setQueryBuilder(fn (QueryBuilder $qb): QueryBuilder => EcollectionRepository::QB_collectionChoices($qb, Webpage::class, 'items'))
                     ->setSortProperty('sectiontype')
@@ -172,7 +172,7 @@ class WebpageCrudController extends BaseCrudController
                         // ->autocomplete()
                         ->setSortProperty('name')
                         ->setFormTypeOptions(['by_reference' => false]);
-                    yield WebsectionsField::new('items', 'Sections de pages')
+                    yield AssociationField::new('items', 'Sections de pages')
                         // ->autocomplete()
                         ->setQueryBuilder(fn (QueryBuilder $qb): QueryBuilder => EcollectionRepository::QB_collectionChoices($qb, Webpage::class, 'items'))
                         ->setSortProperty('sectiontype')

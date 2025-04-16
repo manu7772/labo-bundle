@@ -17,6 +17,8 @@ interface CommonReposInterface extends ServiceEntityRepositoryInterface
     public function hasField(string $name): bool;
     public function hasRelation(string $name): bool;
 
+    public function findAllEuids(?string $exclude_euid = null): array;
+
     // Collections utilities
     public function getCollectionChoices(string|HasOrderedInterface $classOrEntity, string $property): array;
     public static function getQB_orderedChoicesList(QueryBuilder $qb, string|HasOrderedInterface $classOrEntity, string $property): QueryBuilder;

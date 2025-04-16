@@ -4,6 +4,7 @@ namespace Aequation\LaboBundle\Component;
 use Aequation\LaboBundle\Component\Interface\AppEntityInfoInterface;
 use Aequation\LaboBundle\EventListener\Attribute\AppEvent;
 use Aequation\LaboBundle\Model\Interface\AppEntityInterface;
+use Aequation\LaboBundle\Model\Interface\EcollectionInterface;
 use Aequation\LaboBundle\Repository\Interface\CommonReposInterface;
 use Aequation\LaboBundle\Service\AppService;
 use Aequation\LaboBundle\Service\Interface\AppEntityManagerInterface;
@@ -70,7 +71,8 @@ class AppEntityInfo implements AppEntityInfoInterface
             $this->manager instanceof $serviceName;
         } catch (\Throwable $th) {
             //throw $th;
-            dd($this->entity, $serviceName, $th->getMessage());
+            throw new Exception(vsprintf('Error on %s line %d: %s', [__METHOD__, __LINE__, $th->getMessage()]));
+            // dd($this->entity, $serviceName, $th->getMessage());
         }
         return
             $this->entity instanceof AppEntityInterface
@@ -142,6 +144,7 @@ class AppEntityInfo implements AppEntityInfoInterface
                 break;
             case preg_match('/^set\w+/', $name):
                 if(empty($arguments)) throw new Exception(vsprintf('Error on %s line %d: setter "%s" needs at least one argument.', [__METHOD__, __LINE__, $name]));
+                // dump(vsprintf('Info on %s line %d: with name "%s", updated/created new value "%s" with following arguements.', [__METHOD__, __LINE__, $name, $internal_name]), $arguments);
                 $this->internals[$internal_name] = reset($arguments);
                 break;
             default:
@@ -201,6 +204,27 @@ class AppEntityInfo implements AppEntityInfoInterface
     {
         $data = json_decode($data, true);
         $this->__unserialize($data);
+    }
+
+    public function setRelationOrderLoaded(
+        bool $loaded
+    ): void
+    {
+        if(!($this->entity instanceof EcollectionInterface)) {
+            throw new Exception(vsprintf('Error on %s line %d: entity is not an instance of %s.', [__METHOD__, __LINE__, EcollectionInterface::class]));
+        }
+        $this->internals['RelationOrder'] = $loaded;
+        // dump(vsprintf('Info on %s line %d: RelationOrder is set to %s.', [__METHOD__, __LINE__, json_encode($loaded)]));
+    }
+
+    public function isRelationOrderLoaded(
+        bool $default = false
+    ): bool
+    {
+        if(!($this->entity instanceof EcollectionInterface)) {
+            throw new Exception(vsprintf('Error on %s line %d: entity is not an instance of %s.', [__METHOD__, __LINE__, EcollectionInterface::class]));
+        }
+        return isset($this->internals['RelationOrder']) ? $this->internals['RelationOrder'] : $default;
     }
 
 }

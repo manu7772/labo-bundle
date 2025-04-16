@@ -110,6 +110,7 @@ class TwigExtensions extends AbstractExtension implements GlobalsInterface
             new TwigFilter('classname', [Classes::class, 'getClassname']),
             new TwigFilter('shortname', [Classes::class, 'getShortname']),
             new TwigFilter('toHtmlAttributes', [HtmlDom::class, 'toHtmlAttributes'], ['is_safe' => ['html']]),
+            new TwigFilter('normalize', [$this->appService, 'getNormalized']),
         ];
     }
 
@@ -120,12 +121,8 @@ class TwigExtensions extends AbstractExtension implements GlobalsInterface
     public function getGlobals(): array
     {
         return [
-            // 'app' => $this->laboAppVariable,
-            // 'locale' => $this->kernel,
             'currentYear' => $this->getCurrentYear(),
-            // 'AppService' => $this->appService,
-            'Identity' => $this->appService->Identity(),
-            // 'AS' => $this->appService,
+            'Identity' => $this->appService->getMainEntreprise(),
         ];
     }
 

@@ -351,8 +351,9 @@ class AppEntityManager extends BaseService implements AppEntityManagerInterface
 
     public function getRepository(
         string $classname = null,
-        string $field = null // if field, find repository where is declared this $field
-    ): CommonReposInterface
+        string $field = null, // if field, find repository where is declared this $field
+        bool $onlyCommonRepos = true
+    ): ?CommonReposInterface
     {
         $origin_classname = $classname;
         $classname ??= static::ENTITY;
@@ -377,8 +378,8 @@ class AppEntityManager extends BaseService implements AppEntityManagerInterface
         /** @var CommonReposInterface */
         $repo = $this->em->getRepository($classname);
         // if(!empty($field)) dump($classname, $field, get_class($repo));
-        if(!($repo instanceof CommonReposInterface)) dd($this->__toString(), $origin_classname, $classname, $cmd, $cmd->name, $repo);
-        return $repo;
+        // if(!is_null($repo) && !($repo instanceof CommonReposInterface)) dd($this->__toString(), $origin_classname, $classname, $cmd, $cmd->name, $repo);
+        return $onlyCommonRepos && $repo instanceof CommonReposInterface ? $repo : null;
     }
 
     public function findEntityByUniqueValue(
@@ -505,6 +506,22 @@ class AppEntityManager extends BaseService implements AppEntityManagerInterface
             Classes::filterByInterface($interfaces, $this->getEntityNames(false, $allnamespaces)),
             fn ($class) => $this->entityExists($class, $allnamespaces, $onlyInstantiables)
         );
+    }
+
+    public function getNewHydrateds(
+        string|array|callable $filter = null
+    ): array
+    {
+        if(empty($filter)) return $this->hydrateds;
+        if(is_callable($filter)) {
+            return array_filter($this->hydrateds->toArray(), $filter);
+        }
+        $filter = (array)$filter;
+        return array_filter($this->hydrateds->toArray(), function($entity) use ($filter) {
+            foreach ($filter as $class) {
+                return is_a($entity, $class);
+            }
+        });
     }
 
     public function getScheduledForInsert(
@@ -1150,6 +1167,13 @@ class AppEntityManager extends BaseService implements AppEntityManagerInterface
                 }
             }
             if($persist) {
+                // Info
+                $io->info(vsprintf('%d entités à enregistrer...', [$this->hydrateds->count()]));
+                foreach ($this->hydrateds->toArray() as $entity) {
+                    $io->info(vsprintf('- %s "%s" sera enregistée', [$entity->getShortname(), $entity->__toString()]));
+                }
+                // dd('Enf of info.');
+
                 foreach ($this->hydrateds->toArray() as $entity) {
                     // $this->save($entity, $result);
                     $test = $this->save($entity, true);

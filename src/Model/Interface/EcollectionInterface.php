@@ -4,7 +4,7 @@ namespace Aequation\LaboBundle\Model\Interface;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 
-interface EcollectionInterface extends ItemInterface, HasOrderedInterface
+interface EcollectionInterface extends ItemInterface, HasRelationOrderInterface
 {
 
     public function setItems(array|Collection $items): static;

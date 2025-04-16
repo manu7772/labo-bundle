@@ -6,7 +6,7 @@ use Aequation\LaboBundle\Entity\Item;
 use Aequation\LaboBundle\Entity\Photo;
 use Aequation\LaboBundle\Entity\Uname;
 use Aequation\LaboBundle\Form\Type\PhotoType;
-use App\Entity\Category;
+use Aequation\LaboBundle\Model\Final\FinalCategoryInterface;
 use App\Entity\Menu;
 use App\Entity\Slider;
 use App\Entity\Webpage;
@@ -39,7 +39,7 @@ class WebpageType extends AbstractType
                 'multiple' => true,
             ])
             ->add('categorys', EntityType::class, [
-                'class' => Category::class,
+                'class' => FinalCategoryInterface::class,
                 'choice_label' => 'name',
                 'multiple' => true,
                 'required' => false,

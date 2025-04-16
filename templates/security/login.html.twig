@@ -4,17 +4,17 @@
 
 {% block body %}
 	{% if error %}
-	<div class="alert alert-danger">{{ error.messageKey|trans(error.messageData, 'security') }}</div>
+	<div{{ turbo_off() }} class="alert alert-danger">{{ error.messageKey|trans(error.messageData, 'security') }}</div>
 	{% endif %}
 
 	{% set app_logout = app.user ? url_if_exists('app_logout') : null %}
 	{% if app.user %}
-	<div class="mb-3 alert alert-info">
+	<div{{ turbo_off() }} class="mb-3 alert alert-info">
 		Vous êtes déjà connecté en tant que {{ app.user.userIdentifier|default('inconnu') }},
 		<a href="{{ app_logout }}" class="text-blue-600 hover:text-blue-900">{{ app_logout }}</a>
 	</div>
 	{% else %}
-	<form method="post" class="tailwind-form">
+	<form{{ turbo_enable(false) }} method="post" class="tailwind-form">
 		<div
 			class="form-group">
 			<input type="email" value="{{ last_username }}" name="email" id="inputEmail" class="form-widget" autocomplete="email" placeholder="{{ 'Email'|trans }}" required autofocus>

@@ -1,24 +1,64 @@
 {% extends "@AequationLabo/base_labo.html.twig" %}
+{% import "@AequationLabo/partials/_labo_prints.html.twig" as prints %}
 
 {% block title %}Labo Entity {{ meta_info.shortname }}{% endblock %}
 
-{% block title_h1 -%}{{ ux_icon('symfony', {height: '48px', width: '48px', class: 'text-success'}) }} LABO Entity {{ meta_info.shortname }}{%- endblock %}
+{% block title_h1 -%}{{ ux_icon('symfony', {height: '48px', width: '48px', class: 'text-success'}) }} LABO Entity <mark class="text-primary">{{ meta_info.shortname }}</mark>{%- endblock %}
 
 {% block right_content %}
+{# <pre>{{ dump(meta_infos|default(null)) }}</pre> #}
 {% if meta_info is not null %}
+<div class="mb-2">
+    <span><twig:ux:icon name="tabler:caret-left-filled" width="24px" /></span> <a href="{{ path('aequation_labo_entity_list') }}"{{ turbo_enable(false) }}>Liste des entités</a>
+</div>
+
+{% set real_repo = meta_info.appEntityManager.getRepository(meta_info.name, null, true) %}
+{% if real_repo %}
+    {% set items = real_repo.findAll() %}
+    <article class="pico-background-slate-800">
+        <header class="pico-background-slate-700">
+            <div class="mb-0" style="display: flex; justify-content: space-between;">
+                <div class="text-left">All data about {{ prints.classname(meta_info) }}</div>
+                <div class="text-right">{{ items|length }} entit{{ items|length > 1 ? 'ies' : 'y' }}</div>
+            </div>
+        </header>
+        <table>
+            <thead>
+                <tr>
+                    <th class="text-center">ID</th>
+                    <th>Entity name / shortname</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in items %}
+                <tr>
+                    <td class="text-center {{ item|instance(meta_info.name) ? 'text-muted' : 'text-danger' }}">
+                        {% if item.euid|default(null) is not null %}                            
+                            <a href="{{ path('aequation_labo_entity_detail', {euid: item.euid}) }}" title="Consulter cette entité">{{ item.id }}</a>
+                        {% else %}
+                            {{ item.id }}
+                        {% endif %}
+                    </td>
+                    <td>{{ item }}<br><i class="{{ item|instance(meta_info.name) ? 'text-muted' : 'text-danger' }}">{{ item.shortname }}</i></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </article>
+{% else %}
+{% endif %}
+
 <article class="pico-background-slate-800">
     <header class="pico-background-slate-700">
         <h4 class="mb-0">
-            {% set color = meta_info.isPhpRoot() ? 'indigo' : meta_info.isMappedSuperclass ? 'cyan' : 'green' %}
-            {{ (meta_info.hasErrors ? '<span class="pico-color-red-400" title="Entity is INVALID">' ~ icon(meta_info.name) ~ '</span>' : '<span class="pico-color-' ~ color ~ '-300" title="Entity is valid">' ~ icon(meta_info.name) ~ '</span>')|raw }} {{ meta_info.name }}
-            <a href="{{ path('aequation_labo_entity_show', {classname: meta_info.classname}) }}">{{ icon('tabler:info-square-rounded', {class: 'text-muted', width: '28px'}) }}</a>
+            {{ prints.classname(meta_info) }}
         </h4>
     </header>
     <table>
         <tbody>
-            <tr>
+            {# <tr>
                 <td colspan="100%">{{ dump(meta_info.data) }}</td>
-            </tr>
+            </tr> #}
             <tr><td>Root entity</td><td>{{ meta_info.rootEntityName }}</td></tr>
             <tr><td>Manager</td><td>{{ meta_info.manager|default('<span class="pico-color-red-400">unknown</span>')|raw }}</td></tr>
             <tr><td>Instantiable</td><td>{{ (meta_info.instantiable ? '<span class="pico-color-green-300">' ~ validIcon(true, '24px') ~ '</span>' : '<span class="pico-color-red-400">' ~ validIcon(false, '24px') ~ '</span>')|raw }}</td></tr>
@@ -39,7 +79,7 @@
             {% if meta_info.parentClasses|length %}
                 <ul class="mb-0 list-inside pl-0">
                     {% for parent in meta_info.parentClasses %}
-                    <li class="mb-0{{ parent.instantiable ? ' pico-color-azure-300' : ' pico-color-azure-500' }}"><a href="{{ path('aequation_labo_entity_show', {classname: parent.name}) }}" class="{{ parent.instantiable ? 'pico-color-azure-300' : 'pico-color-azure-500' }}">{{ parent.name }}</a>{{ parent.instantiable ? '<small class="text-muted"> [Instantiable]</small>' }}</li>
+                    <li class="mb-0">{{ prints.classname(meta_infos[parent.name], 22) }}</li>
                     {% endfor %}
                 </ul>
             {% endif %}
@@ -49,7 +89,7 @@
             {% if entity_parents|length %}
                 <ul class="mb-0 list-inside pl-0">
                     {% for parent in entity_parents %}
-                    <li class="mb-0{{ parent.instantiable ? ' pico-color-azure-300' : ' pico-color-azure-500' }}"><a href="{{ path('aequation_labo_entity_show', {classname: parent.name}) }}" class="{{ parent.instantiable ? 'pico-color-azure-300' : 'pico-color-azure-500' }}">{{ parent.name }}</a>{{ parent.instantiable ? '<small class="text-muted"> [Instantiable]</small>' }}</li>
+                    <li class="mb-0">{{ prints.classname(meta_infos[parent.name], 22) }}</li>
                     {% endfor %}
                 </ul>
             {% endif %}
@@ -59,7 +99,7 @@
             {% if entity_children|length %}
                 <ul class="mb-0 list-inside pl-0">
                     {% for child in entity_children %}
-                    <li class="mb-0{{ child.instantiable ? ' pico-color-azure-300' : ' pico-color-azure-500' }}"><a href="{{ path('aequation_labo_entity_show', {classname: child.name}) }}" class="{{ child.instantiable ? 'pico-color-azure-300' : 'pico-color-azure-500' }}">{{ child.name }}</a>{{ child.instantiable ? '<small class="text-muted"> [Instantiable]</small>' }}</li>
+                    <li class="mb-0">{{ prints.classname(meta_infos[child.name], 22) }}</li>
                     {% endfor %}
                 </ul>
             {% endif %}
@@ -75,17 +115,21 @@
             {% endif %}
             </td></tr>
             {% set repo_parents = meta_info.customRepositoryClassName is not null ? parent_classes(meta_info.customRepositoryClassName) : [] %}
-            <tr><td>Repository</td><td><span class="pico-color-{{ meta_info.customRepositoryClassName ? 'green-300' : 'red-400' }}">{{ (meta_info.customRepositoryClassName|default('AUCUN')) }}</span>
-                {% if repo_parents|length %}
-                <ul class="mb-0">
-                    {% for parent in repo_parents %}
-                    {% if parent.name matches '/^(?!Doctrine)/i' %}
-                    <li class="mb-0">{{ parent.name }}</li>
+            <tr>
+                <td>Repository</td>
+                <td>
+                    <span class="pico-color-{{ meta_info.customRepositoryClassName and classname(real_repo) == meta_info.customRepositoryClassName ? 'green-300' : 'red-400' }}">{{ (meta_info.customRepositoryClassName|default('AUCUN')) }}</span>
+                    {% if repo_parents|length %}
+                    <ul class="mb-0">
+                        {% for parent in repo_parents %}
+                        {% if parent.name matches '/^(?!Doctrine)/i' %}
+                        <li class="mb-0">{{ parent.name }}</li>
+                        {% endif %}
+                        {% endfor %}
+                    </ul>
                     {% endif %}
-                    {% endfor %}
-                </ul>
-                {% endif %}
-            </td></tr>
+                </td>
+            </tr>
             <tr>
                 <td>LifecycleCallbacks</td>
                 <td>
@@ -145,7 +189,7 @@
                     <li class="mb-0"><strong>{{ name }} {{ icon('tabler:arrow-right', {size: 18}) }} {{ mapp.mappedBy|default(false) ? ' <i><small class="pico-color-yellow-300">inverse</small></i>'|raw : ' <i><small class="pico-color-green-300">propriétaire</small></i>'|raw }}</strong>
                         <ul class="mb-0">
                             <li class="mb-0"><span class="pico-color-slate-500">Entity</span> {{ shortname(mapp) }}</li>
-                            <li class="mb-0"><span class="pico-color-slate-500">Target</span> {{ shortname(mapp.targetEntity) }}</li>
+                            <li class="mb-0"><span class="pico-color-slate-500">Target</span> {{ prints.classname(meta_infos[mapp.targetEntity], 18) }}</li>
                             {% if mapp.inversedBy|default(false) %}
                             <li class="mb-0"><span class="pico-color-slate-500">Mapped by</span> {{ mapp.inversedBy }}</li>
                             {% endif %}
