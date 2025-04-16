@@ -1029,7 +1029,7 @@ class AppService extends BaseService implements AppServiceInterface
         ?int $max = null
     ): void {
         if ($this->isDev()) {
-            $max ??= 500;
+            $max ??= 10000;
             $this->__src[$name] ??= 0;
             $this->__src[$name]++;
             if ($this->__src[$name] > $max) {

@@ -4,6 +4,8 @@ namespace Aequation\LaboBundle\Controller\Admin;
 use Aequation\LaboBundle\Security\Voter\MenuVoter;
 use Aequation\LaboBundle\Controller\Admin\Base\BaseCrudController;
 use Aequation\LaboBundle\Entity\Item;
+use Aequation\LaboBundle\Field\ThumbnailField;
+use Aequation\LaboBundle\Form\Type\PhotoType;
 use Aequation\LaboBundle\Repository\ItemRepository;
 use Aequation\LaboBundle\Service\Interface\LaboUserServiceInterface;
 use Aequation\LaboBundle\Service\Interface\MenuServiceInterface;
@@ -34,6 +36,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Translation\TranslatableMessage;
 use Doctrine\ORM\QueryBuilder;
 use EasyCorp\Bundle\EasyAdminBundle\Field\ArrayField;
+use EasyCorp\Bundle\EasyAdminBundle\Field\FormField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\TextareaField;
 use Symfony\Component\Form\Extension\Core\Type\TextareaType;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
@@ -69,6 +72,7 @@ class MenuCrudController extends BaseCrudController
                 yield ArrayField::new('relationOrderNames', 'Éléments order')->setPermission('ROLE_SUPER_ADMIN');
                 yield BooleanField::new('prefered', 'Menu principal');
                 yield CollectionField::new('categorys', 'Catégories');
+                yield ThumbnailField::new('photo', 'Photo')->setBasePath($this->getParameter('vich_dirs.item_photo'));
                 yield BooleanField::new('enabled', 'Activé');
                 yield BooleanField::new('softdeleted', 'Supprimé')->setPermission('ROLE_SUPER_ADMIN');
                 yield DateTimeField::new('createdAt', 'Création')->setFormat('dd/MM/Y - HH:mm')->setTimezone($current_tz);
@@ -94,43 +98,50 @@ class MenuCrudController extends BaseCrudController
                     ->setSortProperty('name')
                     ->setFormTypeOptions(['by_reference' => false])
                     ->setColumns(6);
-                yield AssociationField::new('owner', 'Propriétaire')->setColumns(6)->setPermission('ROLE_ADMIN')->setCrudController(UserCrudController::class);
+                yield TextField::new('photo', 'Photo')
+                    ->setFormType(PhotoType::class)
+                    ->setColumns(6);                yield AssociationField::new('owner', 'Propriétaire')->setColumns(6)->setPermission('ROLE_ADMIN')->setCrudController(UserCrudController::class);
                 yield BooleanField::new('enabled', 'Activé')->setColumns(6);
                 yield SlugField::new('slug')->setTargetFieldName('name')->setColumns(6);
                 yield BooleanField::new('softdeleted', 'Supprimé')->setPermission('ROLE_SUPER_ADMIN');
                 break;
             case Crud::PAGE_EDIT:
-                yield TextField::new('name', 'Nom du menu')->setColumns(6);
-                yield TextField::new('title', 'Titre du menu')->setColumns(6);
-                yield AssociationField::new('items', 'Éléments du menu')
-                    ->setQueryBuilder(function (QueryBuilder $qb) {
-                        return ItemRepository::getQB_orderedChoicesList($qb, Menu::class, 'items', []);
-                    })
-                    // ->autocomplete()
-                    ->setFormTypeOption('by_reference', false)
-                    ->setColumns(6);
-                yield AssociationField::new('webpage', 'Page web')
-                    ->setSortProperty('name')
-                    // ->autocomplete()
-                    // ->setFormTypeOptions(['by_reference' => false])
-                    ->setColumns(6);
-                yield AssociationField::new('categorys', 'Catégories')
-                    ->setQueryBuilder(static fn (QueryBuilder $qb): QueryBuilder => CategoryRepository::QB_CategoryChoices($qb, Menu::class))
-                    ->setSortProperty('name')
-                    // ->autocomplete()
-                    ->setFormTypeOptions(['by_reference' => false])
-                    ->setColumns(6);
-                yield AssociationField::new('owner', 'Propriétaire')->setColumns(6)->setPermission('ROLE_ADMIN')->setCrudController(UserCrudController::class);
-                yield BooleanField::new('prefered', 'Menu principal');
-                yield BooleanField::new('enabled', 'Activé');
-                yield BooleanField::new('softdeleted', 'Supprimé')->setPermission('ROLE_SUPER_ADMIN');
-                yield BooleanField::new('updateSlug')->setLabel('Mettre à jour le slug')->setColumns(6)->setHelp('Si vous cochez cette case, le slug sera mis à jour avec le nom du menu.<br><strong>Il n\'est pas recommandé de modifier le slug</strong> car cela change le lien URL du document.');
-                yield SlugField::new('slug')->setTargetFieldName('name')->setColumns(6);
+                yield FormField::addColumn('col-md-6');
+                    yield TextField::new('name', 'Nom du menu');
+                    yield TextField::new('title', 'Titre du menu');
+                    yield AssociationField::new('items', 'Éléments du menu')
+                        ->setQueryBuilder(function (QueryBuilder $qb) {
+                            return ItemRepository::getQB_orderedChoicesList($qb, Menu::class, 'items', []);
+                        })
+                        // ->autocomplete()
+                        ->setFormTypeOption('by_reference', false);
+                    yield AssociationField::new('webpage', 'Page web')
+                        ->setSortProperty('name');
+                        // ->autocomplete()
+                        // ->setFormTypeOptions(['by_reference' => false])
+                    yield BooleanField::new('prefered', 'Menu principal');
+                    yield BooleanField::new('enabled', 'Activé');
+                    yield BooleanField::new('softdeleted', 'Supprimé')->setPermission('ROLE_SUPER_ADMIN');
+                    
+                yield FormField::addColumn('col-md-6');
+                    yield AssociationField::new('categorys', 'Catégories')
+                        ->setQueryBuilder(static fn (QueryBuilder $qb): QueryBuilder => CategoryRepository::QB_CategoryChoices($qb, Menu::class))
+                        ->setSortProperty('name')
+                        // ->autocomplete()
+                        ->setFormTypeOptions(['by_reference' => false]);
+                    yield AssociationField::new('owner', 'Propriétaire')->setPermission('ROLE_ADMIN')->setCrudController(UserCrudController::class);
+                    yield TextField::new('photo', 'Photo')->setFormType(PhotoType::class);
+                    yield BooleanField::new('updateSlug')->setLabel('Mettre à jour le slug')->setHelp('Si vous cochez cette case, le slug sera mis à jour avec le nom du menu.<br><strong>Il n\'est pas recommandé de modifier le slug</strong> car cela change le lien URL du document.');
+                    yield SlugField::new('slug')->setTargetFieldName('name');
                 break;
             default:
                 yield IdField::new('id')->setPermission('ROLE_SUPER_ADMIN');
                 yield TextField::new('name', 'Nom');
                 yield TextField::new('slug');
+                yield ThumbnailField::new('photo', 'Photo')
+                    ->setBasePath($this->getParameter('vich_dirs.item_photo'))
+                    ->setTextAlign('center')
+                    ->setSortable(false);
                 yield AssociationField::new('webpage', 'Page web');
                 yield AssociationField::new('items', 'Éléments du menu')->setTextAlign('center');
                 yield BooleanField::new('prefered', 'Menu principal')->setTextAlign('center');
