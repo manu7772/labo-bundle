@@ -46,6 +46,9 @@ abstract class Item extends MappSuperClassEntity implements ItemInterface, Creat
     #[Serializer\Ignore]
     protected Collection $parents;
 
+    #[ORM\Column]
+    protected int $orderitem = 0;
+
     public function __construct()
     {
         parent::__construct();
@@ -62,6 +65,17 @@ abstract class Item extends MappSuperClassEntity implements ItemInterface, Creat
     public function __toString(): string
     {
         return empty($this->name) ? parent::__toString() : $this->name;
+    }
+
+    public function getOrderitem(): int
+    {
+        return $this->orderitem;
+    }
+
+    public function setOrderitem(int $orderitem): static
+    {
+        $this->orderitem = $orderitem;
+        return $this;
     }
 
     public function getName(): ?string

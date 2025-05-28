@@ -33,6 +33,7 @@ use Doctrine\ORM\QueryBuilder;
 use EasyCorp\Bundle\EasyAdminBundle\Field\ArrayField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\FormField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\ImageField;
+use EasyCorp\Bundle\EasyAdminBundle\Field\IntegerField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\RelationField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\TextareaField;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
@@ -67,6 +68,7 @@ class WebpageCrudController extends BaseCrudController
                     yield FormField::addPanel(label: 'Mise en page', icon: 'fa6-solid:file-lines');
                         yield BooleanField::new('prefered', 'Page principale');
                         yield TextField::new('title', 'Titre de la page');
+                        yield IntegerField::new('orderitem', 'Priorité')->setHelp('Ordre d\'affichage de la page dans les listes.');
                         yield TextareaField::new('linktitle', 'Titre de lien externe')->formatValue(fn ($value) => Strings::markup($value));
                         yield AssociationField::new('mainmenu', 'Menu intégré')->setCrudController(MenuCrudController::class);
                         yield TextField::new('twigfileName', 'Nom du modèle')->setPermission('ROLE_SUPER_ADMIN');
@@ -200,6 +202,7 @@ class WebpageCrudController extends BaseCrudController
                     yield BooleanField::new('enabled', 'Activée');
                     yield BooleanField::new('softdeleted', 'Supprimée')->setPermission('ROLE_SUPER_ADMIN');
                     yield AssociationField::new('owner', 'Propriétaire')->setColumns(6)->setPermission('ROLE_ADMIN')->setCrudController(UserCrudController::class);
+                    yield IntegerField::new('orderitem', 'Priorité')->setHelp('Ordre d\'affichage de la page dans les listes.')->setColumns(3);
                 break;
             default:
                 yield IdField::new('id')->setPermission('ROLE_SUPER_ADMIN');
@@ -216,6 +219,7 @@ class WebpageCrudController extends BaseCrudController
                 // yield WebsectionsField::new('items', 'Sections de pages')->setTextAlign('center');
                 // yield AssociationField::new('mainmenu', 'Menu intégré')->setTextAlign('center');
                 yield TextField::new('pdfUrlAccess', 'Vers.PDF')->setTextAlign('center')->setTemplatePath('@EasyAdmin/crud/field/pdf_link.html.twig');
+                yield IntegerField::new('orderitem', 'Ord.');
                 yield BooleanField::new('enabled', 'Activée')->setTextAlign('center');
                 yield AssociationField::new('owner', 'Propriétaire')->setCrudController(UserCrudController::class);
                 yield DateTimeField::new('createdAt', 'Création')->setFormat('dd/MM/Y - HH:mm')->setTimezone($current_tz);

@@ -37,6 +37,7 @@ use Symfony\Component\Translation\TranslatableMessage;
 use Doctrine\ORM\QueryBuilder;
 use EasyCorp\Bundle\EasyAdminBundle\Field\ArrayField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\FormField;
+use EasyCorp\Bundle\EasyAdminBundle\Field\IntegerField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\TextareaField;
 use Symfony\Component\Form\Extension\Core\Type\TextareaType;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
@@ -67,6 +68,7 @@ class MenuCrudController extends BaseCrudController
                 yield IdField::new('id');
                 yield AssociationField::new('owner', 'Propriétaire');
                 yield TextField::new('name', 'Nom');
+                yield IntegerField::new('orderitem', 'Priorité')->setHelp('Ordre d\'affichage de la page dans les listes.');
                 yield TextField::new('title', 'Titre du menu');
                 yield TextField::new('linktitle', 'Titre de lien externe');
                 yield ArrayField::new('items', 'Éléments du menu');
@@ -136,6 +138,7 @@ class MenuCrudController extends BaseCrudController
                     yield TextField::new('photo', 'Photo')->setFormType(PhotoType::class);
                     yield BooleanField::new('updateSlug')->setLabel('Mettre à jour le slug')->setHelp('Si vous cochez cette case, le slug sera mis à jour avec le nom du menu.<br><strong>Il n\'est pas recommandé de modifier le slug</strong> car cela change le lien URL du document.');
                     yield SlugField::new('slug')->setTargetFieldName('name');
+                    yield IntegerField::new('orderitem', 'Priorité')->setHelp('Ordre d\'affichage de la page dans les listes.')->setColumns(3);
                 break;
             default:
                 yield IdField::new('id')->setPermission('ROLE_SUPER_ADMIN');
@@ -147,6 +150,7 @@ class MenuCrudController extends BaseCrudController
                     ->setSortable(false);
                 yield AssociationField::new('webpage', 'Page web');
                 yield AssociationField::new('items', 'Éléments du menu')->setTextAlign('center');
+                yield IntegerField::new('orderitem', 'Ord.');
                 yield BooleanField::new('prefered', 'Menu principal')->setTextAlign('center');
                 yield BooleanField::new('enabled', 'Activé')->setTextAlign('center');
                 yield AssociationField::new('owner', 'Propriétaire');

@@ -39,6 +39,7 @@ abstract class Ecollection extends Item implements EcollectionInterface
     protected bool $isDirtyOrder = true;
 
     #[ORM\ManyToMany(targetEntity: Item::class, mappedBy: 'parents', cascade: ['persist'])]
+    #[ORM\OrderBy(['orderitem' => 'ASC', 'id' => 'ASC'])]
     #[RelationOrder()]
     // #[Serializer\Groups('detail')]
     #[Serializer\MaxDepth(1)]
