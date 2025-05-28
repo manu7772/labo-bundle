@@ -32,6 +32,7 @@ use EasyCorp\Bundle\EasyAdminBundle\Field\TextareaField;
 
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Doctrine\ORM\QueryBuilder;
+use EasyCorp\Bundle\EasyAdminBundle\Field\IntegerField;
 use EasyCorp\Bundle\EasyAdminBundle\Form\Type\FileUploadType;
 use Vich\UploaderBundle\Form\Type\VichImageType;
 
@@ -61,6 +62,7 @@ class WebsectionCrudController extends BaseCrudController
                 yield IdField::new('id');
                 yield AssociationField::new('owner', 'Propriétaire');
                 yield TextField::new('name', 'Nom');
+                yield IntegerField::new('orderitem', 'Priorité')->setHelp('Ordre d\'affichage de la page dans les listes.');
                 yield TextField::new('euid', 'Euid')->setPermission('ROLE_SUPER_ADMIN');
                 yield TextField::new('sectiontype', 'Type de section');
                 yield TextField::new('title', 'Titre de la section');
@@ -290,6 +292,7 @@ class WebsectionCrudController extends BaseCrudController
                 yield BooleanField::new('enabled', 'Activée');
                 yield BooleanField::new('softdeleted', 'Supprimée')->setPermission('ROLE_SUPER_ADMIN');
                 yield AssociationField::new('owner', 'Propriétaire')->setColumns(6)->setPermission('ROLE_ADMIN')->setCrudController(UserCrudController::class);
+                yield IntegerField::new('orderitem', 'Priorité')->setHelp('Ordre d\'affichage de la page dans les listes.')->setColumns(3);
                 break;
             default:
                 yield IdField::new('id')->setPermission('ROLE_SUPER_ADMIN');
@@ -307,6 +310,7 @@ class WebsectionCrudController extends BaseCrudController
                     ->setSortable(false);
                 // yield AssociationField::new('mainmenu', 'Menu intégré')->setTextAlign('center');
                 yield AssociationField::new('owner', 'Propriétaire')->setTextAlign('center');
+                yield IntegerField::new('orderitem', 'Ord.');
                 yield BooleanField::new('prefered', 'Section par défaut')->setTextAlign('center');
                 yield BooleanField::new('enabled', 'Activée')->setTextAlign('center');
                 // yield DateTimeField::new('createdAt', 'Création')->setFormat('dd/MM/Y - HH:mm')->setTimezone($current_tz);

@@ -70,6 +70,7 @@ class SlideCrudController extends BaseCrudController
                 yield IdField::new('id');
                 yield AssociationField::new('owner', 'Propriétaire');
                 yield TextField::new('name');
+                yield IntegerField::new('orderitem', 'Priorité')->setHelp('Ordre d\'affichage de la page dans les listes.');
                 yield TextField::new('slug');
                 yield TextField::new('slidetypeAsText', 'Type de diapositive');
                 yield TextField::new('filename');
@@ -228,6 +229,7 @@ class SlideCrudController extends BaseCrudController
                 yield BooleanField::new('enabled', 'Activé')->setColumns(6)->setHelp('Si cette diapositive n\'est pas activée, ell ne sera pas visible dans le diaporama qui la contient.');
                 yield BooleanField::new('softdeleted', 'Supprimé')->setPermission('ROLE_SUPER_ADMIN')->setColumns(6);
                 yield AssociationField::new('owner', 'Propriétaire')->setColumns(6)->setPermission('ROLE_ADMIN')->setCrudController(UserCrudController::class);
+                yield IntegerField::new('orderitem', 'Priorité')->setHelp('Ordre d\'affichage de la page dans les listes.')->setColumns(3);
                 break;
             default:
                 yield IdField::new('id')->setPermission('ROLE_SUPER_ADMIN');
@@ -240,6 +242,7 @@ class SlideCrudController extends BaseCrudController
                     ->setSortable(false);
                 // yield TextEditorField::new('content')->formatValue(fn ($value) => Strings::markup($value));
                 yield IntegerField::new('size')->setTextAlign('center')->formatValue(function ($value) { return intval($value/1024).'Ko'; });
+                yield IntegerField::new('orderitem', 'Ord.');
                 yield BooleanField::new('enabled', 'Activé')->setTextAlign('center');
                 yield AssociationField::new('owner', 'Propriétaire');
                 yield DateTimeField::new('createdAt')->setFormat('dd/MM/Y - HH:mm');
