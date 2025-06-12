@@ -3,9 +3,9 @@
 {% block title %}{{ title|default('SITE DE TEST')|trans }}{% endblock %}
 
 {% block body %}
-    <br>
+<div{{ turbo_off() }}>
     {% block outer_title_h1 %}
-    <h1>{% block title_h1 %}{{ title|default('Ceci est un site de test') }}{% endblock %}</h1>
+    <h1 class="mt-18">{% block title_h1 %}{{ title|default('Ceci est un site de test') }}{% endblock %}</h1>
     {% endblock %}
     {% block page_content %}
     <p>Vous devez entrer un mot de passe pour accéder au contenu</p>
@@ -20,4 +20,5 @@
         </form>
     </div>
     {% endblock %}
+</div>
 {% endblock %}
