@@ -71,6 +71,7 @@ class WebpageCrudController extends BaseCrudController
                         yield IntegerField::new('orderitem', 'Priorité')->setHelp('Ordre d\'affichage de la page dans les listes.');
                         yield TextareaField::new('linktitle', 'Titre de lien externe')->formatValue(fn ($value) => Strings::markup($value));
                         yield AssociationField::new('mainmenu', 'Menu intégré')->setCrudController(MenuCrudController::class);
+                        yield AssociationField::new('sosmenu', 'Menu SOS')->setCrudController(MenuCrudController::class);
                         yield TextField::new('twigfileName', 'Nom du modèle')->setPermission('ROLE_SUPER_ADMIN');
                         yield TextField::new('twigfile', 'Chemin du modèle')->setPermission('ROLE_SUPER_ADMIN');
                         yield TextField::new('content', 'Texte de la page')->renderAsHtml();
@@ -128,6 +129,7 @@ class WebpageCrudController extends BaseCrudController
                     ->setRequired(!$this->isGranted('ROLE_SUPER_ADMIN'));
                 yield AssociationField::new('slider', 'Diaporama')->setColumns(4);
                 yield AssociationField::new('mainmenu', 'Menu intégré')->setColumns(4);
+                yield AssociationField::new('sosmenu', 'Menu SOS')->setColumns(4);
                 yield TextareaField::new('linktitle', 'Titre de lien externe')
                     ->setHelp('Entrez ici le texte pour les liens qui dirigeront vers cette page web. Optionel : si non renseigné, le Titre de la page sera utilisé.')
                     ->setColumns(4);
@@ -181,6 +183,7 @@ class WebpageCrudController extends BaseCrudController
                         ->setFormTypeOptions(['by_reference' => false])
                         ->setRequired(!$this->isGranted('ROLE_SUPER_ADMIN'));
                     yield AssociationField::new('mainmenu', 'Menu intégré');
+                    yield AssociationField::new('sosmenu', 'Menu SOS');
                     yield TextareaField::new('linktitle', 'Titre de lien externe')
                         ->setHelp('Entrez ici le texte pour les liens qui dirigeront vers cette page web. Optionel : si non renseigné, le Titre de la page sera utilisé.');
                     yield TextEditorField::new('content', 'Contenu de la page')
@@ -218,6 +221,7 @@ class WebpageCrudController extends BaseCrudController
                 // yield TextField::new('content', 'Texte de la page')->formatValue(fn ($value) => Strings::markup($value))->setSortable(false);
                 // yield WebsectionsField::new('items', 'Sections de pages')->setTextAlign('center');
                 // yield AssociationField::new('mainmenu', 'Menu intégré')->setTextAlign('center');
+                // yield AssociationField::new('sosmenu', 'Menu SOS')->setTextAlign('center');
                 yield TextField::new('pdfUrlAccess', 'Vers.PDF')->setTextAlign('center')->setTemplatePath('@EasyAdmin/crud/field/pdf_link.html.twig');
                 yield IntegerField::new('orderitem', 'Ord.');
                 yield BooleanField::new('enabled', 'Activée')->setTextAlign('center');
