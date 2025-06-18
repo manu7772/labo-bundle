@@ -24,7 +24,7 @@ use Symfony\Component\HttpKernel\Event\KernelEvent;
 
 class LaboAppGlobalSubscriber implements EventSubscriberInterface
 {
-    public const DEFAULT_ERROR_TEMPLATE = 'exception/all.html.twig';
+    public const DEFAULT_ERROR_TEMPLATE = '@AequationLabo/exception/all.html.twig';
     public const TEST_PASSED_NAME = 'test_passed';
 
     protected AppService $appService;
@@ -73,22 +73,24 @@ class LaboAppGlobalSubscriber implements EventSubscriberInterface
 
     public function onExceptionEvent(ExceptionEvent $event): void
     {
+        dump($event);
+        dd($event->getThrowable());
         // Disable control
-        if(!$this->appService->isProd()) return;
+        // if(!$this->appService->isProd()) return;
         // DUMP ALL if LOCAL prod
-        $host = $event->getRequest()->getHost();
-        $validHosts = [
-            '127.0.0.1',
-            'localhost',
-        ];
-        if(in_array($host, $validHosts)) {
-            dump($event->getThrowable());
-            dd($event);
-        }
+        // $host = $event->getRequest()->getHost();
+        // $validHosts = [
+        //     '127.0.0.1',
+        //     'localhost',
+        // ];
+        // if(in_array($host, $validHosts)) {
+        //     dump($event->getThrowable());
+        //     dd($event);é
+        // }
 
-        if($event->getRequest()->query->get('debug', 0) === "1") {
-            return;
-        }
+        // if($event->getRequest()->query->get('debug', 0) === "1") {
+        //     return;
+        // }
         // Redirect to Exception Twig page
         /** @var Throwable */
         $exception = $event->getThrowable();
@@ -125,7 +127,7 @@ class LaboAppGlobalSubscriber implements EventSubscriberInterface
         string|int $statusCode
     ): string
     {
-        $name = 'exception/'.$statusCode.'.html.twig';
+        $name = '@AequationLabo/exception/'.$statusCode.'.html.twig';
         return $this->appService->getTwigLoader()->exists($name)
             ? $name
             : static::DEFAULT_ERROR_TEMPLATE;
@@ -212,7 +214,7 @@ class LaboAppGlobalSubscriber implements EventSubscriberInterface
 
     protected function isAvailableRouteFor(
         string $action,
-        string $route = null
+        ?string $route = null
     ): bool
     {
         $route ??= $this->appService->getRoute();

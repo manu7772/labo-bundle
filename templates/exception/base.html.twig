@@ -23,9 +23,9 @@
 				{% block redirect -%}
 				{% set previous_url = event.request.headers.get('referer')|default('') %}
 				{% if previous_url|length %}
-				<a href="{{ previous_url }}" class="btn btn-info px-9 theme-border-shadow-md theme-border-reverse">{{ 'previous'|trans }}</a>
+				<a href="{{ previous_url }}" class="btn btn-info px-9 theme-border-shadow-md theme-border-reverse">Retour à : {{ 'previous'|trans }}</a>
 				{% else %}
-				<a href="{{ url('app_home') }}" class="btn btn-info px-9 theme-border-shadow-md theme-border-reverse">{{ 'homepage'|trans }}</a>
+				<a href="{{ url('app_home') }}" class="btn btn-info px-9 theme-border-shadow-md theme-border-reverse">Retour à : {{ 'homepage'|trans }}</a>
 				{% endif %}
 				{%- endblock %}
 			</p>
@@ -39,16 +39,17 @@
 				<p class="text-middle-gray">DEV message</p>
 				<p>{{ exception.rawMessage|default(exception.message) }}</p>
 			</div>
-			<p><span class="text-middle-gray">Firewall:</span> {{ app.service.firewallName }}</p>
+			{# <p><span class="text-middle-gray">Firewall:</span> {{ app.service.firewallName }}</p> #}
 			<p><span class="text-middle-gray">Exception:</span> {{ exception_classname }}</p>
 			<p><span class="text-middle-gray">Status Code:</span> {{ exception.statusCode|default('unknown'|trans) }}</p>
 			<p><span class="text-middle-gray">File:</span> {{ exception.sourcePath|default(exception.file) }}</p>
 			<p><span class="text-middle-gray">Line:</span> {{ exception.line }}</p>
 			<p><span class="text-middle-gray">Code:</span> {{ exception.code }}</p>
 			<p><span class="text-middle-gray">This page:</span> {% block twigpage -%}{{ twigpage_name }}{%- endblock %}</p>
-			<div class="my-3">
+			<p><span class="text-red-800">Trace:<br></span> {{ exception.traceAsString|nl2br }}</p>
+			{# <div class="my-3">
 				<a href="?debug=1" class="btn btn-warning">Show debug</a>
-			</div>
+			</div> #}
 			{# {{ dump() }} #}
 			{# {{ dump(app.service.appParams) }} #}
 		</div>
