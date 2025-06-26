@@ -16,8 +16,8 @@ interface AppEntityManagerInterface extends ServiceInterface
 {
 
     public function getAppService(): AppServiceInterface;
-    public function getNew(string $classname = null, callable $postCreate = null, string $uname = null): AppEntityInterface|false;
-    public function getModel(string $classname = null, callable $postCreate = null, string|array|null $event = null): AppEntityInterface|false;
+    public function getNew(?string $classname = null, ?callable $postCreate = null, ?string $uname = null): AppEntityInterface|false;
+    public function getModel(?string $classname = null, ?callable $postCreate = null, string|array|null $event = null): AppEntityInterface|false;
     public function initEntity(AppEntityInterface $entity, ?callable $postCreate = null, string|array|null $event = null): AppEntityInterface;
     public function setManagerToEntity(AppEntityInterface $entity, string|array|null $event = null): AppEntityInterface;
     // public function getClone(AppEntityInterface $entity): AppEntityInterface;
@@ -37,7 +37,7 @@ interface AppEntityManagerInterface extends ServiceInterface
     // EM & REPO
     public function getEntityManager(): EntityManagerInterface;
     public function getUnitOfWork(): UnitOfWork;
-    public function getRepository(string $classname = null, string $field = null, bool $onlyCommonRepos = true): ?CommonReposInterface;
+    public function getRepository(?string $classname = null, ?string $field = null, bool $onlyCommonRepos = true): ?CommonReposInterface;
 
     // public function getEntityNamespaces(): array;
     public static function isAppEntity(string|object $classname): bool;
@@ -53,17 +53,17 @@ interface AppEntityManagerInterface extends ServiceInterface
     public function findEntityByUniqueValue(string $value): ?AppEntityInterface;
     public function findEntityByEuid(string $euid): ?AppEntityInterface;
 
-    public function getNewHydrateds(string|array|callable $filter = null): array;
-    public function getScheduledForInsert(string|array|callable $filter = null): array;
-    public function getScheduledForUpdate(string|array|callable $filter = null): array;
-    public function getScheduledForDelete(string|array|callable $filter = null): array;
+    public function getNewHydrateds(null|string|array|callable $filter = null): iterable;
+    public function getScheduledForInsert(null|string|array|callable $filter = null): array;
+    public function getScheduledForUpdate(null|string|array|callable $filter = null): array;
+    public function getScheduledForDelete(null|string|array|callable $filter = null): array;
     public function isManaged(AppEntityInterface $entity): bool;
 
     public static function getEntityServiceID(string|AppEntityInterface $objectOrClass): ?string;
     public function getEntityService(string|AppEntityInterface $objectOrClass): ?AppEntityManagerInterface;
     public function defineEntityOwner(OwnerInterface $entity, bool $replace = false): static;
-    public function getClassMetadata(string|AppEntityInterface $objectOrClass = null): ?ClassMetadata;
-    public function getEntityMetadataReport(string $classname = null): ClassmetadataReport;
+    public function getClassMetadata(null|string|AppEntityInterface $objectOrClass = null): ?ClassMetadata;
+    public function getEntityMetadataReport(?string $classname = null): ClassmetadataReport;
     // Events
     public function dispatchEvent(AppEntityInterface $entity, string|array $typeEvent, array $data = []): static;
 

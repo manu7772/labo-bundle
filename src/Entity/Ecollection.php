@@ -30,6 +30,9 @@ abstract class Ecollection extends Item implements EcollectionInterface
 {
     public const RELATION_FIELDNAME = 'items';
     public const KEEP_ORDERED_INDEXES = false;
+    public const ITEMS_ACCEPT = [
+        'pdfiles' => [Pdf::class],
+    ];
 
     #[ORM\Column]
     #[Serializer\Ignore]

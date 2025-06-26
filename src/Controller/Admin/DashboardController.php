@@ -30,6 +30,8 @@ use Aequation\LaboBundle\Service\Interface\LaboCategoryServiceInterface;
 use Aequation\LaboBundle\Service\Interface\LaboRelinkServiceInterface;
 use Aequation\LaboBundle\Service\Tools\Classes;
 use App\Entity\Advert;
+use App\Entity\Prixthese;
+use App\Security\Voter\PrixtheseVoter;
 use App\Entity\Category;
 use App\Entity\Addresslink;
 use App\Entity\Emailink;
@@ -179,6 +181,7 @@ class DashboardController extends AbstractDashboardController
         $color = 'text-info';
         $medias = [];
         $sub_medias = [];
+        if($this->isGranted(PrixtheseVoter::ADMIN_ACTION_LIST, Prixthese::class)) $medias['Prixthese'] = MenuItem::linkToCrud(label: 'Prix de thèses', icon: Prixthese::ICON, entityFqcn: Prixthese::class);
         if($this->isGranted(AdvertVoter::ADMIN_ACTION_LIST, Advert::class)) $medias['Advert'] = MenuItem::linkToCrud(label: 'Annonces', icon: Advert::ICON, entityFqcn: Advert::class);
         if($this->isGranted(SliderVoter::ADMIN_ACTION_LIST, Slider::class)) $medias['Slider'] = MenuItem::linkToCrud(label: 'Diaporamas', icon: Slider::ICON, entityFqcn: Slider::class);
         if($this->isGranted(SlideVoter::ADMIN_ACTION_LIST, Slide::class)) $medias['Slide'] = MenuItem::linkToCrud(label: 'Diapositives', icon: Slide::ICON, entityFqcn: Slide::class);

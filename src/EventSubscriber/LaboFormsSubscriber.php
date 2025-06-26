@@ -12,7 +12,7 @@ namespace Aequation\LaboBundle\EventSubscriber;
 
 use Aequation\LaboBundle\Model\Attribute\RelationOrder;
 use Aequation\LaboBundle\Model\Interface\AppEntityInterface;
-use Aequation\LaboBundle\Model\Interface\HasOrderedInterface;
+// use Aequation\LaboBundle\Model\Interface\HasOrderedInterface;
 use Aequation\LaboBundle\Service\Interface\AppEntityManagerInterface;
 use Aequation\LaboBundle\Service\Tools\Classes;
 
@@ -30,7 +30,7 @@ use Exception;
 class LaboFormsSubscriber implements EventSubscriberInterface
 {
 
-    const TEST = false;
+    // const TEST = false;
 
     public function __construct(
         protected AppEntityManagerInterface $appEntityManager,
@@ -60,21 +60,23 @@ class LaboFormsSubscriber implements EventSubscriberInterface
     {
         $entity = $event->getData();
         if($entity instanceof AppEntityInterface) {
-            if(static::TEST && $entity instanceof HasOrderedInterface && $this->appEntityManager->isDev()) {
-                dump(__METHOD__, $event->getForm(), $entity);
-            }
+            // if(static::TEST && $entity instanceof HasOrderedInterface && $this->appEntityManager->isDev()) {
+            //     dump(__METHOD__, $event->getForm(), $entity);
+            // }
             $this->appEntityManager->dispatchEvent($entity, FormEvents::PRE_SET_DATA, ['event' => $event]);
         }
     }
 
     public function postSetData(FormEvent $event): void
     {
-        $entity = $event->getForm()->getData();
+        /** @var Form $form */
+        $form = $event->getForm();
+        $entity = $form->getData();
         if($entity instanceof AppEntityInterface) {
-            if($entity instanceof HasOrderedInterface && static::TEST && $this->appEntityManager->isDev()) {
-                dump(__METHOD__, $event->getForm(), $entity);
-                // dump(__METHOD__, $event->getForm(), $event->getForm()->all()['items']->getConfig()->getAttribute('choice_list'));
-            }
+            // if($entity instanceof HasOrderedInterface && static::TEST && $this->appEntityManager->isDev()) {
+            //     dump(__METHOD__, $event->getForm(), $entity);
+            //     // dump(__METHOD__, $event->getForm(), $event->getForm()->all()['items']->getConfig()->getAttribute('choice_list'));
+            // }
             $this->appEntityManager->dispatchEvent($entity, FormEvents::POST_SET_DATA, ['event' => $event]);
         }
     }
@@ -85,61 +87,68 @@ class LaboFormsSubscriber implements EventSubscriberInterface
         $form = $event->getForm();
         $entity = $form->getData();
         if($entity instanceof AppEntityInterface) {
-            if(!$entity->__isAppManaged()) $this->appEntityManager->setManagerToEntity($entity);
-            if($entity instanceof HasOrderedInterface) {
-                $attributes = Classes::getPropertyAttributes($entity, RelationOrder::class);
-                if($this->appEntityManager->isDev() && empty($attributes)) throw new Exception(vsprintf('Error %s line %d: no field found for %s in entity %s!', [__METHOD__, __LINE__, RelationOrder::class, $entity->getClassname()]));
-                $form_fields = $form->all();
-                foreach ($attributes as $attr) {
-                    $attr = reset($attr);
-                    $names = $attr->property->name;
-                    $method = u('remove_'.$names)->camel()->__toString();
-                    if(array_key_exists($names, $form_fields) && !$form_fields[$names]->getConfig()->getOption('disabled')) {
-                        // Need to empty field's Collection to ensure reordering
-                        if(method_exists($entity, $method)) {
-                            $entity->$method();
-                        } else {
-                            // $method = 'remove'.ucfirst(preg_replace('/s$/', '', $names));
-                            throw new Exception(vsprintf('Error %s line %d: method %s() required for entity %s with %s attribute!', [__METHOD__, __LINE__, $method, $entity->getClassname(), RelationOrder::class]));
-                        }
-                    } else {
-                        // dd($entity);
-                    }
-                }
-                // if($event->getForm()->getData() instanceof AppEntityInterface) {
-                    if(static::TEST && $this->appEntityManager->isDev()) {
-                        dump(__METHOD__, $form, $entity->getShortname().' > '.$entity->__toString());
-                    }
-                    $this->appEntityManager->dispatchEvent($entity, FormEvents::PRE_SUBMIT, ['event' => $event]);
-                // }
-            }
+            // if(!$entity->__isAppManaged()) $this->appEntityManager->setManagerToEntity($entity);
+            // if($entity instanceof HasOrderedInterface) {
+            //     $attributes = Classes::getPropertyAttributes($entity, RelationOrder::class);
+            //     if($this->appEntityManager->isDev() && empty($attributes)) throw new Exception(vsprintf('Error %s line %d: no field found for %s in entity %s!', [__METHOD__, __LINE__, RelationOrder::class, $entity->getClassname()]));
+            //     $form_fields = $form->all();
+            //     foreach ($attributes as $attr) {
+            //         $attr = reset($attr);
+            //         $names = $attr->property->name;
+            //         $method = u('remove_'.$names)->camel()->__toString();
+            //         if(array_key_exists($names, $form_fields) && !$form_fields[$names]->getConfig()->getOption('disabled')) {
+            //             // Need to empty field's Collection to ensure reordering
+            //             if(method_exists($entity, $method)) {
+            //                 $entity->$method();
+            //             } else {
+            //                 // $method = 'remove'.ucfirst(preg_replace('/s$/', '', $names));
+            //                 throw new Exception(vsprintf('Error %s line %d: method %s() required for entity %s with %s attribute!', [__METHOD__, __LINE__, $method, $entity->getClassname(), RelationOrder::class]));
+            //             }
+            //         } else {
+            //             // dd($entity);
+            //         }
+            //     }
+            //     // if($event->getForm()->getData() instanceof AppEntityInterface) {
+            //         // if(static::TEST && $this->appEntityManager->isDev()) {
+            //         //     dump(__METHOD__, $form, $entity->getShortname().' > '.$entity->__toString());
+            //         // }
+            //         // }
+            // }
+            $this->appEntityManager->dispatchEvent($entity, FormEvents::PRE_SUBMIT, ['event' => $event]);
         }
     }
 
     public function submit(FormEvent $event): void
     {
-        $entity = $event->getForm()->getData();
+        /** @var Form $form */
+        $form = $event->getForm();
+        $entity = $form->getData();
+        // if(!in_array($form->getName(), ['photo'])) {
+        //     dd($form, $entity);
+        // }
         if($entity instanceof AppEntityInterface) {
-            if(!$entity->__isAppManaged()) $this->appEntityManager->setManagerToEntity($entity);
-            if($entity instanceof HasOrderedInterface) {
-                if(static::TEST && $this->appEntityManager->isDev()) {
-                    dump(__METHOD__, $event->getForm(), $entity->getShortname().' > '.$entity->__toString());
-                }
-            }
+            // if(!$entity->__isAppManaged()) $this->appEntityManager->setManagerToEntity($entity);
+            // if($entity instanceof HasOrderedInterface) {
+            //     if(static::TEST && $this->appEntityManager->isDev()) {
+            //         dump(__METHOD__, $event->getForm(), $entity->getShortname().' > '.$entity->__toString());
+            //     }
+            // }
             $this->appEntityManager->dispatchEvent($entity, FormEvents::SUBMIT, ['event' => $event]);
         }
     }
 
     public function postSubmit(FormEvent $event): void
     {
-        $entity = $event->getForm()->getData();
+        /** @var Form $form */
+        $form = $event->getForm();
+        $entity = $form->getData();
         if($entity instanceof AppEntityInterface) {
-            if(!$entity->__isAppManaged()) $this->appEntityManager->setManagerToEntity($entity);
-            if($entity instanceof HasOrderedInterface) {
-                if(static::TEST && $this->appEntityManager->isDev()) {
-                    dump(__METHOD__, $event->getForm(), $entity->getShortname().' > '.$entity->__toString());
-                }
-            }
+            // if(!$entity->__isAppManaged()) $this->appEntityManager->setManagerToEntity($entity);
+            // if($entity instanceof HasOrderedInterface) {
+            //     if(static::TEST && $this->appEntityManager->isDev()) {
+            //         dump(__METHOD__, $event->getForm(), $entity->getShortname().' > '.$entity->__toString());
+            //     }
+            // }
             $this->appEntityManager->dispatchEvent($entity, FormEvents::POST_SUBMIT, ['event' => $event]);
         }
     }

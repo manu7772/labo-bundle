@@ -83,7 +83,7 @@ class PdfCrudController extends BaseCrudController
                 // yield VichFileField::new('file')->setColumns(6);
                 yield TextField::new('file', 'Fichier PDF')
                     ->setColumns(3)
-                    ->setTemplatePath('')
+                    // ->setTemplatePath('')
                     ->setFormType(VichFileType::class)
                     ->setRequired(false)
                     ->setFormTypeOptions([
@@ -91,10 +91,10 @@ class PdfCrudController extends BaseCrudController
                         // 'accept' => 'application/pdf',
                     ]);
                 // Source: content
-                yield FormField::AddTab(label: 'Contenu source', icon: 'fa6-solid:pencil')->setHelp('Vous pouvez saisir le contenu du document.<br><strong>Si vous avez désigné un fichier PDF, tout ce contenu sera ignoré</strong>');
+                yield FormField::AddTab(label: 'Contenu source', icon: 'fa6-solid:pencil')->setHelp('Vous pouvez saisir le contenu du document PDF ici.<br><strong>Si vous avez désigné un fichier source PDF, tout ce contenu sera ignoré</strong>');
                 yield ChoiceField::new('paper', 'Format document')->setChoices(Pdf::getPaperChoices())->setColumns(6);
                 yield ChoiceField::new('orientation', 'Orientation document')->setFormTypeOption('expanded', true)->setChoices(Pdf::getOrientationChoices())->setColumns(6);
-                yield TextEditorField::new('content', 'Contenu du fichier PDF')->setColumns(12)->setHelp('Contenu du document : si vous avez désigné un fichier PDF, ce contenu sera ignoré');
+                yield TextEditorField::new('content', 'Contenu du fichier PDF')->setColumns(12)->setHelp('Contenu du document PDF : si vous avez désigné un fichier source PDF, ce contenu sera ignoré');
                 break;
             case Crud::PAGE_EDIT:
                 yield FormField::AddTab(label: 'Informations', icon: 'fa6-solid:info');
@@ -111,7 +111,7 @@ class PdfCrudController extends BaseCrudController
                         // yield VichFileField::new('file')->setColumns(6);
                         yield TextField::new('file', 'Fichier PDF')
                             ->setColumns(3)
-                            ->setTemplatePath('')
+                            // ->setTemplatePath('')
                             ->setFormType(VichFileType::class)
                             ->setRequired(false)
                             ->setFormTypeOptions([
@@ -122,10 +122,10 @@ class PdfCrudController extends BaseCrudController
                     default:
                         # document
                         // Source: content
-                        yield FormField::AddTab(label: 'Contenu source', icon: 'fa6-solid:pencil')->setHelp('Vous pouvez saisir le contenu du document.<br><strong>Si vous avez désigné un fichier PDF, tout ce contenu sera ignoré</strong>');
+                        yield FormField::AddTab(label: 'Contenu source', icon: 'fa6-solid:pencil')->setHelp('Vous pouvez saisir le contenu du document PDF ici.<br><strong>Si vous avez désigné un fichier source PDF, tout ce contenu sera ignoré</strong>');
                         yield ChoiceField::new('paper', 'Format document')->setChoices(Pdf::getPaperChoices())->setColumns(6)->setRequired(false);
                         yield ChoiceField::new('orientation', 'Orientation document')->setFormTypeOption('expanded', true)->setChoices(Pdf::getOrientationChoices())->setColumns(6)->setRequired(false);
-                        yield TextEditorField::new('content', 'Contenu du fichier PDF')->setColumns(12)->setHelp('Contenu du document : si vous avez désigné un fichier PDF, ce contenu sera ignoré');
+                        yield TextEditorField::new('content', 'Contenu du fichier PDF')->setColumns(12)->setHelp('Contenu du document PDF : si vous avez désigné un fichier source PDF, ce contenu sera ignoré');
                         break;
                 }
                 // yield TextField::new('name')->setColumns(6)->setRequired(true);
@@ -150,9 +150,10 @@ class PdfCrudController extends BaseCrudController
                 // yield TextField::new('filename', 'Nom du fichier');
                 yield TextField::new('sourcetypeName', 'Type')->setTextAlign('center');
                 yield TextField::new('filepathname', 'Consulter')->setTextAlign('center')->setTemplatePath('@EasyAdmin/crud/field/pdf_link.html.twig');
-                yield IntegerField::new('size')->setTextAlign('right')->formatValue(function ($value) { return intval($value/1024).'Ko'; });
-                yield AssociationField::new('owner', 'Propriétaire');
-                yield DateTimeField::new('createdAt', 'Date création')->setTextAlign('center')->setFormat('dd/MM/Y - HH:mm');
+                yield IntegerField::new('size')->setTextAlign('right')->formatValue(function ($value) { return intval($value/1024).'Ko'; })->setTextAlign('center');
+                yield AssociationField::new('owner', 'Propr.')->setTextAlign('center');
+                yield AssociationField::new('pdfowner', 'Attach.')->setTextAlign('center');
+                // yield DateTimeField::new('createdAt', 'Date création')->setTextAlign('center')->setFormat('dd/MM/Y - HH:mm');
                 break;
         }
     }

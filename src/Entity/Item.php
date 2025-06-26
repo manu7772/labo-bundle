@@ -40,11 +40,19 @@ abstract class Item extends MappSuperClassEntity implements ItemInterface, Creat
 
     #[ORM\Column(length: 255)]
     #[Serializer\Groups('index')]
+    #[Assert\NotBlank(message: 'Le nom ne peut pas être vide')]
     protected ?string $name = null;
 
     #[ORM\ManyToMany(targetEntity: Ecollection::class, inversedBy: 'items', fetch: 'EXTRA_LAZY')]
     #[Serializer\Ignore]
     protected Collection $parents;
+
+    /**
+     * @var Collection<int, Pdf>
+     */
+    #[ORM\OneToMany(targetEntity: Pdf::class, mappedBy: 'pdfowner', cascade: ['persist', 'remove'], orphanRemoval: true)]
+    #[Assert\Valid()]
+    private Collection $pdfiles;
 
     #[ORM\Column]
     protected int $orderitem = 0;
@@ -53,6 +61,7 @@ abstract class Item extends MappSuperClassEntity implements ItemInterface, Creat
     {
         parent::__construct();
         $this->parents = new ArrayCollection();
+        $this->pdfiles = new ArrayCollection();
     }
 
     public function __clone()
@@ -141,5 +150,34 @@ abstract class Item extends MappSuperClassEntity implements ItemInterface, Creat
         return $this;
     }
 
+    /**
+     * @return Collection<int, Pdf>
+     */
+    public function getPdfiles(): Collection
+    {
+        return $this->pdfiles;
+    }
+
+    public function addPdfile(Pdf $pdfile): static
+    {
+        if (!$this->pdfiles->contains($pdfile)) {
+            $this->pdfiles->add($pdfile);
+            $pdfile->setPdfowner($this);
+        }
+
+        return $this;
+    }
+
+    public function removePdfile(Pdf $pdfile): static
+    {
+        if ($this->pdfiles->removeElement($pdfile)) {
+            // set the owning side to null (unless already changed)
+            if ($pdfile->getPdfowner() === $this) {
+                $pdfile->setPdfowner(null);
+            }
+        }
+
+        return $this;
+    }
 
 }

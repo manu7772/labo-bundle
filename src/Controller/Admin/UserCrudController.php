@@ -47,7 +47,7 @@ class UserCrudController extends LaboUserCrudController
         /** @var LaboUserInterface $user */
         $user = $info['entity'];
         $timezone = $this->getParameter('timezone');
-        $current_tz = $timezone !== $user->getTimezone() ? $user->getTimezone() : $timezone;
+        $current_tz = $timezone !== $user->getTimezone() ?: $timezone;
         switch ($pageName) {
             case Crud::PAGE_DETAIL:
                 if(!$manager->isLoggable($user)) {

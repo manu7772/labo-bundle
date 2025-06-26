@@ -80,10 +80,13 @@ class Pdf extends Item implements PdfInterface
     #[ORM\Column(length: 32)]
     protected ?string $orientation = 'portrait';
 
+    #[ORM\ManyToOne(inversedBy: 'pdfiles')]
+    private ?Item $pdfowner = null;
+
 
     public function __toString(): string
     {
-        return $this->filename ?? parent::__toString();
+        return $this->name ?: $this->filename ?: parent::__toString();
     }
 
     public function isPdfExportable(): bool
@@ -138,11 +141,13 @@ class Pdf extends Item implements PdfInterface
         File $file
     ): static
     {
-        $this->file = $this->_service->getAppService()->get('Tool:Files')->getCopiedTmpFile($file);
-        if($this->file instanceof UploadedFile) {
-            if(!empty($this->getId())) $this->updateUpdatedAt();
-            if(empty($this->filename)) $this->setFilename($this->file->getClientOriginalName());
-            $this->updateName();
+        if($file = $file instanceof UploadedFile ? $file : $this->_service->getAppService()->get('Tool:Files')->getCopiedTmpFile($file)) {
+            $this->file = $file;
+            if($this->file instanceof UploadedFile) {
+                if(!empty($this->getUpdatedAt())) $this->updateUpdatedAt();
+                if(empty($this->filename)) $this->setFilename($this->file->getClientOriginalName());
+                $this->updateName();
+            }
         }
         return $this;
     }
@@ -182,13 +187,16 @@ class Pdf extends Item implements PdfInterface
     ): ?string
     {
         $date = null;
-        if($versioned === true) {
-            $date = $this->getUpdatedAt() ?? $this->getCreatedAt();
-        } elseif($versioned instanceof DateTimeInterface) {
+        if($versioned instanceof DateTimeInterface) {
             $date = $versioned;
+        } else if($versioned ) {
+            $date = $this->getUpdatedAt() ?? $this->getCreatedAt();
         }
-        return $this->filename.($date ? '_v'.$date->format('Ymd-His') : '').'.pdf';
-        // return $this->filename;
+        if($date) {
+            $filename = preg_replace('/((\.pdf)+)$/i', '', $this->filename);
+            return $filename.'_v'.$date->format('Ymd-His').'.pdf';
+        }
+        return $this->filename;
     }
 
     public function setFilename(?string $filename): static
@@ -285,6 +293,17 @@ class Pdf extends Item implements PdfInterface
     public static function getOrientationChoices(): array
     {
         return array_combine(static::ORIENTATIONS, static::ORIENTATIONS);
+    }
+
+    public function getPdfowner(): ?Item
+    {
+        return $this->pdfowner;
+    }
+
+    public function setPdfowner(?Item $pdfowner): static
+    {
+        $this->pdfowner = $pdfowner;
+        return $this;
     }
 
 }

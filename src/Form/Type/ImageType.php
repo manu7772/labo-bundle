@@ -32,17 +32,4 @@ class ImageType extends BaseAppType
         parent::buildForm($builder, $options);
     }
 
-    public function configureOptions(OptionsResolver $resolver): void
-    {
-        $resolver->setDefaults([
-            'data_class' => static::CLASSNAME,
-            // 'imagine_pattern' => 'tiny_q',
-            'attr' => [
-                'class' => $this->getFormClass(),
-                // 'data-action' => 'live#action',
-                // 'data-action-name' => 'prevent|save',
-            ],
-        ]);
-    }
-
 }

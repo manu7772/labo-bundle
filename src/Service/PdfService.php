@@ -79,7 +79,7 @@ class PdfService extends ItemService implements PdfServiceInterface
     ): string
     {
         $browserPath = $this->vichHelper->asset($pdf);
-        // dump($browserPath);
+        $browserPath = preg_replace('/((\.pdf)+)$/i', '.pdf', $browserPath);
         return $browserPath;
     }
 

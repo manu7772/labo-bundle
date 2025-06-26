@@ -157,7 +157,7 @@ class AppEntityManager extends BaseService implements AppEntityManagerInterface
     }
 
     public function getEntityShortname(
-        string|AppEntityInterface $objectOrClass = null
+        null|string|AppEntityInterface $objectOrClass = null
     ): string
     {
         $classname ??= static::ENTITY;
@@ -257,7 +257,7 @@ class AppEntityManager extends BaseService implements AppEntityManagerInterface
     }
 
     public function getEntityMetadataReport(
-        string $classname = null,
+        ?string $classname = null,
     ): ClassmetadataReport
     {
         $meta_infos = $this->getEntityMetadataReports();
@@ -350,8 +350,8 @@ class AppEntityManager extends BaseService implements AppEntityManagerInterface
     /****************************************************************************************************/
 
     public function getRepository(
-        string $classname = null,
-        string $field = null, // if field, find repository where is declared this $field
+        ?string $classname = null,
+        ?string $field = null, // if field, find repository where is declared this $field
         bool $onlyCommonRepos = true
     ): ?CommonReposInterface
     {
@@ -455,7 +455,7 @@ class AppEntityManager extends BaseService implements AppEntityManagerInterface
      * @return ClassMetadata|null
      */
     public function getClassMetadata(
-        string|AppEntityInterface $objectOrClass = null,
+        null|string|AppEntityInterface $objectOrClass = null,
     ): ?ClassMetadata
     {
         $classname = $objectOrClass instanceof AppEntityInterface ? $objectOrClass->getClassname() : $objectOrClass;
@@ -509,8 +509,8 @@ class AppEntityManager extends BaseService implements AppEntityManagerInterface
     }
 
     public function getNewHydrateds(
-        string|array|callable $filter = null
-    ): array
+        null|string|array|callable $filter = null
+    ): iterable
     {
         if(empty($filter)) return $this->hydrateds;
         if(is_callable($filter)) {
@@ -525,7 +525,7 @@ class AppEntityManager extends BaseService implements AppEntityManagerInterface
     }
 
     public function getScheduledForInsert(
-        string|array|callable $filter = null
+        null|string|array|callable $filter = null
     ): array
     {
         /** @var UnitOfWork */
@@ -544,7 +544,7 @@ class AppEntityManager extends BaseService implements AppEntityManagerInterface
     }
 
     public function getScheduledForUpdate(
-        string|array|callable $filter = null
+        null|string|array|callable $filter = null
     ): array
     {
         /** @var UnitOfWork */
@@ -563,7 +563,7 @@ class AppEntityManager extends BaseService implements AppEntityManagerInterface
     }
 
     public function getScheduledForDelete(
-        string|array|callable $filter = null
+        null|string|array|callable $filter = null
     ): array
     {
         /** @var UnitOfWork */
@@ -595,9 +595,9 @@ class AppEntityManager extends BaseService implements AppEntityManagerInterface
      * @return AppEntityInterface|false
      */
     public function getNew(
-        string $classname = null,
-        callable $postCreate = null,
-        string $uname = null
+        ?string $classname = null,
+        ?callable $postCreate = null,
+        ?string $uname = null
     ): AppEntityInterface|false
     {
         $classname ??= static::ENTITY;
@@ -617,9 +617,9 @@ class AppEntityManager extends BaseService implements AppEntityManagerInterface
     }
 
     public function getModel(
-        string $classname = null,
-        callable $postCreate = null,
-        string|array|null $event = null
+        ?string $classname = null,
+        ?callable $postCreate = null,
+        null|string|array $event = null
     ): AppEntityInterface|false
     {
         $model = $this->getNew($classname, $postCreate);
@@ -638,7 +638,7 @@ class AppEntityManager extends BaseService implements AppEntityManagerInterface
     public function initEntity(
         AppEntityInterface $entity,
         ?callable $postCreate = null,
-        string|array|null $event = null
+        null|string|array $event = null
     ): AppEntityInterface
     {
         if($this->isDev() && !$entity->_appManaged->isNew()) {
@@ -657,7 +657,7 @@ class AppEntityManager extends BaseService implements AppEntityManagerInterface
 
     public final function setManagerToEntity(
         AppEntityInterface $entity,
-        string|array|null $event = null
+        null|string|array $event = null
     ): AppEntityInterface
     {
         if(!$entity->__isAppManaged() || $entity->_isClone()) {
@@ -708,7 +708,7 @@ class AppEntityManager extends BaseService implements AppEntityManagerInterface
 
     protected final function executeAppEvent(
         AppEntityInterface $entity,
-        string $group = null,
+        ?string $group = null,
         array $data = [],
     ): static
     {
@@ -994,7 +994,7 @@ class AppEntityManager extends BaseService implements AppEntityManagerInterface
     public function hydrateEntity(
         AppEntityInterface|string $entity,
         array $data,
-        string $uname = null,
+        ?string $uname = null,
     ): AppEntityInterface|false
     {
         if(is_string($entity) && $this->entityExists($entity)) {
@@ -1092,7 +1092,7 @@ class AppEntityManager extends BaseService implements AppEntityManagerInterface
      * @return Opresult
      */
     public function loadEntities(
-        string $path = null,
+        ?string $path = null,
         bool $replace = false,
         bool $persist = true,
         array|string $classes = [],

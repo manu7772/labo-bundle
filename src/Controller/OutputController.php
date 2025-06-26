@@ -32,7 +32,10 @@ class OutputController extends AbstractController
         if($pdf instanceof PdfInterface && $pdf->getSourcetype() === 2) {
             if($path = $pdf->getFilepathname()) {
                 // dd($path, file_exists($path));
-                return $this->redirect($path, Response::HTTP_FOUND);
+                $redir = $this->redirect($path, Response::HTTP_FOUND);
+                $redir->headers->set('Content-Type', $pdf->getMime());
+                $redir->headers->set('Content-Disposition', $action.'; filename="' . $pdf->getFilename(true) . '"');
+                return $redir;
             }
         }
         $response->setContent($this->pdfService->outputDoc($pdf));
@@ -54,12 +57,13 @@ class OutputController extends AbstractController
         // Try by Webpage slug first
         /** @var ServiceEntityRepository */
         $repo = $this->appEm->getRepository(WebpageInterface::class);
-        $doc = $repo->findOneBySlug($pdf);
-        $doc ??= $this->appEm->findEntityByUniqueValue($pdf);
-        /** @var ServiceEntityRepository $repo */
-        $repo = $this->pdfService->getRepository();
-        $doc ??= $repo->find($pdf);
-        $doc ??= $repo->findOneBy(['slug' => $pdf]);
+        $doc = $repo->findOneBySlug($pdf) ?? $this->appEm->findEntityByUniqueValue($pdf);
+        if(!$doc) {
+            // Try find Pdf
+            /** @var ServiceEntityRepository $repo */
+            $repo = $this->pdfService->getRepository();
+            $doc = $repo->find($pdf) ?? $repo->findOneBy(['slug' => $pdf]);
+        }
         if($doc instanceof PdfizableInterface) {
             return $this->getOutputResponse($doc, $action);
         }

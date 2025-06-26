@@ -375,7 +375,9 @@ class Files extends BaseService
         File|string $file
     ): UploadedFile|false
     {
-        if($file instanceof UploadedFile) return $file;
+        if($file instanceof UploadedFile) {
+            return $file;
+        }
         if(is_string($file)) {
             $pdir = $this->getProjectDir($file, false);
             if(!$pdir) return false;
@@ -385,7 +387,7 @@ class Files extends BaseService
         $source = $file->getRealPath();
         $dest = $filesystem->tempnam(dir: $this->getTempDir(), prefix: pathinfo($file->getFilename(), PATHINFO_FILENAME).'_', suffix: '.'.pathinfo($file->getFilename(), PATHINFO_EXTENSION));
         // $dest = $this->getTempDir().DIRECTORY_SEPARATOR.$file->getFilename();
-        if(copy($source, $dest)) {
+        if($source && copy($source, $dest)) {
             $this->applyGrants($dest, true);
             $uf = new UploadedFile(path: $dest, originalName: $file->getFilename(), test: true);
             if($uf->isValid()) return $uf;

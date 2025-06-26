@@ -680,6 +680,7 @@ abstract class BaseCrudController extends AbstractCrudController
     public function createNewFormBuilder(EntityDto $entityDto, KeyValueStore $formOptions, AdminContext $context): FormBuilderInterface
     {
         $formBuilder = parent::createNewFormBuilder($entityDto, $formOptions, $context);
+        $formBuilder->setEmptyData($this->createEntity($entityDto->getFqcn(), false));
         $entity = $formBuilder->getData();
         if($entity instanceof AppEntityInterface) {
             $formBuilder->addEventSubscriber(new LaboFormsSubscriber($this->manager));
