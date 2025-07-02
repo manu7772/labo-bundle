@@ -4,6 +4,7 @@ namespace Aequation\LaboBundle\Controller\Admin;
 use Aequation\LaboBundle\Security\Voter\WebsectionVoter;
 use Aequation\LaboBundle\Controller\Admin\Base\BaseCrudController;
 use Aequation\LaboBundle\Field\ThumbnailField;
+use Aequation\LaboBundle\Form\Type\PdfType;
 use Aequation\LaboBundle\Service\Interface\LaboUserServiceInterface;
 use Aequation\LaboBundle\Service\Interface\WebsectionServiceInterface;
 use Aequation\LaboBundle\Service\Tools\Strings;
@@ -191,6 +192,8 @@ class WebsectionCrudController extends BaseCrudController
                             ->setColumns(6);
                         break;
                 }
+                yield CollectionField::new('pdfiles', 'Fichiers PDF')
+                    ->setEntryType(PdfType::class);
                 yield BooleanField::new('enabled', 'Activée');
                 yield BooleanField::new('softdeleted', 'Supprimée')->setPermission('ROLE_SUPER_ADMIN');
                 yield AssociationField::new('owner', 'Propriétaire')->setColumns(6)->setPermission('ROLE_ADMIN')->setCrudController(UserCrudController::class);
@@ -289,6 +292,8 @@ class WebsectionCrudController extends BaseCrudController
                             ->setColumns(6);
                         break;
                 }
+                yield CollectionField::new('pdfiles', 'Fichiers PDF')
+                    ->setEntryType(PdfType::class);
                 yield BooleanField::new('enabled', 'Activée');
                 yield BooleanField::new('softdeleted', 'Supprimée')->setPermission('ROLE_SUPER_ADMIN');
                 yield AssociationField::new('owner', 'Propriétaire')->setColumns(6)->setPermission('ROLE_ADMIN')->setCrudController(UserCrudController::class);
@@ -312,6 +317,7 @@ class WebsectionCrudController extends BaseCrudController
                 yield AssociationField::new('owner', 'Propriétaire')->setTextAlign('center');
                 yield IntegerField::new('orderitem', 'Ord.');
                 yield BooleanField::new('prefered', 'Section par défaut')->setTextAlign('center');
+                yield AssociationField::new('pdfiles', 'PDF')->setTextAlign('center')->setSortable(false);
                 yield BooleanField::new('enabled', 'Activée')->setTextAlign('center');
                 // yield DateTimeField::new('createdAt', 'Création')->setFormat('dd/MM/Y - HH:mm')->setTimezone($current_tz);
                 break;
