@@ -11,6 +11,7 @@ use Aequation\LaboBundle\Service\Interface\AppEntityManagerInterface;
 use Aequation\LaboBundle\Service\Tools\Classes;
 use Aequation\LaboBundle\Service\Tools\Encoders;
 use Aequation\LaboBundle\Service\Tools\Strings;
+use Doctrine\Common\Collections\Collection;
 // Symfony
 use EasyCorp\Bundle\EasyAdminBundle\Collection\EntityCollection;
 use Symfony\Contracts\Translation\TranslatorInterface;
@@ -67,6 +68,7 @@ class LaboTwigExtensions extends AbstractExtension
     {
         return [
             new TwigFilter('instance', [$this, 'isInstance']),
+            new TwigFilter('filter_active', [$this, 'filterActive']),
         ];
     }
 
@@ -256,6 +258,20 @@ class LaboTwigExtensions extends AbstractExtension
     {
         if(is_object($class)) $class = $class instanceof AppEntityInterface ? $class->getClassname() : get_class($class);
         return is_object($value) && $value instanceof $class;
+    }
+
+    public function filterActive(
+        iterable $list,
+    ): iterable
+    {
+        switch (true) {
+            case $list instanceof Collection:
+                return $list->filter(fn($item) => !($item instanceof EnabledInterface) || $item->isActive());
+                break;
+            default:
+                return array_filter($list, fn($item) => !($item instanceof EnabledInterface) || $item->isActive());
+                break;
+        }
     }
 
 }

@@ -68,6 +68,7 @@ class PdfCrudController extends BaseCrudController
                 // yield TextField::new('filename');
                 yield TextField::new('mime');
                 yield TextareaField::new('description');
+                yield BooleanField::new('enabled', 'Visible sur le site');
                 yield IntegerField::new('size')->formatValue(function ($value) { return intval($value/1024).'Ko'; });
                 yield DateTimeField::new('createdAt', 'Date création')->setFormat('dd/MM/Y - HH:mm');
                 break;
@@ -78,6 +79,7 @@ class PdfCrudController extends BaseCrudController
                 yield ChoiceField::new('sourcetype', 'Type de source')->setChoices(Pdf::getSourcetypeChoices())->setColumns(6)->setPermission('ROLE_SUPER_ADMIN');
                 yield AssociationField::new('owner', 'Propriétaire')->setColumns(6)->setPermission('ROLE_ADMIN')->setCrudController(UserCrudController::class);
                 yield TextareaField::new('description', 'Description du contenu du PDF')->setColumns(12);
+                yield BooleanField::new('enabled', 'Visible sur le site');
                 // Source: PDF file
                 yield FormField::AddTab(label: 'Fichier source', icon: 'fa6-solid:file-pdf')->setHelp('Vous pouvez choisir un fichier PDF');
                 // yield VichFileField::new('file')->setColumns(6);
@@ -103,6 +105,7 @@ class PdfCrudController extends BaseCrudController
                 yield ChoiceField::new('sourcetype', 'Type de source')->setChoices(Pdf::getSourcetypeChoices())->setColumns(6)->setPermission('ROLE_SUPER_ADMIN');
                 yield AssociationField::new('owner', 'Propriétaire')->setColumns(6)->setPermission('ROLE_ADMIN')->setCrudController(UserCrudController::class);
                 yield TextareaField::new('description', 'Description du contenu du PDF')->setColumns(12);
+                yield BooleanField::new('enabled', 'Visible sur le site');
                 switch ($info['entity']->getSourcetype()) {
                     case 2:
                         # file
@@ -151,6 +154,7 @@ class PdfCrudController extends BaseCrudController
                 yield TextField::new('sourcetypeName', 'Type')->setTextAlign('center');
                 yield TextField::new('filepathname', 'Consulter')->setTextAlign('center')->setTemplatePath('@EasyAdmin/crud/field/pdf_link.html.twig');
                 yield IntegerField::new('size')->setTextAlign('right')->formatValue(function ($value) { return intval($value/1024).'Ko'; })->setTextAlign('center');
+                yield BooleanField::new('enabled', 'Visible')->setTextAlign('center');
                 yield AssociationField::new('owner', 'Propr.')->setTextAlign('center');
                 yield AssociationField::new('pdfowner', 'Attach.')->setTextAlign('center');
                 // yield DateTimeField::new('createdAt', 'Date création')->setTextAlign('center')->setFormat('dd/MM/Y - HH:mm');

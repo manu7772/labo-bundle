@@ -56,7 +56,7 @@ class Pdf extends Item implements PdfInterface
 
     #[Vich\UploadableField(mapping: 'pdf', fileNameProperty: 'filename', size: 'size', mimeType: 'mime', originalName: 'originalname')]
     #[Assert\File(
-        maxSize: '12M',
+        maxSize: '32M',
         maxSizeMessage: 'Le fichier ne peut pas dépasser la taille de {{ limit }}{{ suffix }} : votre fichier fait {{ size }}{{ suffix }}',
         mimeTypes: ["application/pdf"],
         mimeTypesMessage: "Format invalide, vous devez indiquer un fichier PDF",
