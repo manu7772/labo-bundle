@@ -80,7 +80,8 @@ class MenuVoter extends BaseVoter
                             break;
                         case static::ACTION_DUPLICATE:
                         case static::ADMIN_ACTION_DUPLICATE:
-                            $vote = $this->isGranted('ROLE_EDITOR');
+                            $vote = false; // no duplicate on admin side
+                            // $vote = $this->isGranted('ROLE_EDITOR');
                             break;
                         case static::ACTION_UPDATE:
                         case static::ADMIN_ACTION_UPDATE:
