@@ -38,7 +38,7 @@ abstract class LaboCategory extends MappSuperClassEntity implements LaboCategory
     public const FA_ICON = "clipboard-list";
 
     #[Serializer\Ignore]
-    public readonly AppEntityManagerInterface|LaboCategoryServiceInterface $_service;
+    public readonly AppEntityManagerInterface $_service;
 
     #[ORM\Column(nullable: false)]
     #[Serializer\Groups('index')]
@@ -80,7 +80,9 @@ abstract class LaboCategory extends MappSuperClassEntity implements LaboCategory
     #[Serializer\Ignore]
     public function getTypeChoices(): array
     {
-        return $this->categoryTypeChoices ??= $this->_service->getCategoryTypeChoices(true);
+        /** @var LaboCategoryServiceInterface $service */
+        $service = $this->_service;
+        return $this->categoryTypeChoices ??= $service->getCategoryTypeChoices(true);
     }
 
     /**
@@ -145,7 +147,9 @@ abstract class LaboCategory extends MappSuperClassEntity implements LaboCategory
     public function setType(string $type): static
     {
         $availables = [];
-        foreach ($this->_service->getCategoryTypeChoices(false) as $classname => $values) {
+        /** @var LaboCategoryServiceInterface $service */
+        $service = $this->_service;
+        foreach ($service->getCategoryTypeChoices(false) as $classname => $values) {
             $availables[$classname] = Classes::getShortname($classname);
         }
         if(!array_key_exists($type, $availables)) {

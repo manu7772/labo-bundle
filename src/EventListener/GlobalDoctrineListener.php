@@ -100,9 +100,9 @@ class GlobalDoctrineListener
         if($entity instanceof LaboUserInterface) {
             $entity->setRoleHierarchy($this->roleHierarchy);
         }
-        if($entity instanceof HasOrderedInterface) {
-            $entity->loadedRelationOrder();
-        }
+        // if($entity instanceof HasOrderedInterface) {
+        //     $entity->loadedRelationOrder();
+        // }
     }
 
     public function prePersist(PrePersistEventArgs $event): void
@@ -454,28 +454,28 @@ class GlobalDoctrineListener
         }
 
         // Softdelete
-        foreach ($uow->getScheduledEntityDeletions() as $entity) {
-            if($entity instanceof EnabledInterface && !$entity->isSoftdeleted()) {
-                throw new Exception(vsprintf('Error line %d %s(): %s can not be deleted!', [__LINE__, __METHOD__, $entity::class]));
-                // if(!$entity->isSoftdeleted() || !$this->manager->isGranted('ROLE_SUPER_ADMIN')) {
-                    // $id = $entity->getId();
-                    // $classname = $entity->getClassname();
-                    // detach entity
-                    // $uow->detach($entity);
-                    // retrieve entity
-                    // $entity = $this->manager->getRepository($classname)->find($id);
-                    // $entity->setSoftdeleted(true);
-                    // $uow->scheduleForUpdate($entity);
-                    // $uow->recomputeSingleEntityChangeSet($this->em->getClassMetadata(get_class($entity)), $entity);
-                    // if($uow->isScheduledForDelete($entity)) {
-                    //     throw new Exception(vsprintf('Error line %d %s(): %s can not be deleted!', [__LINE__, __METHOD__, $entity::class]));
-                    // }
-                    // if(!$uow->isScheduledForUpdate($entity)) {
-                    //     throw new Exception(vsprintf('Error line %d %s(): %s can not be softdeleted!', [__LINE__, __METHOD__, $entity::class]));
-                    // }
-                // }
-            }
-        }
+        // foreach ($uow->getScheduledEntityDeletions() as $entity) {
+        //     if($entity instanceof EnabledInterface && !$entity->isSoftdeleted()) {
+        //         throw new Exception(vsprintf('Error line %d %s(): %s can not be deleted!', [__LINE__, __METHOD__, $entity::class]));
+        //         // if(!$entity->isSoftdeleted() || !$this->manager->isGranted('ROLE_SUPER_ADMIN')) {
+        //             // $id = $entity->getId();
+        //             // $classname = $entity->getClassname();
+        //             // detach entity
+        //             // $uow->detach($entity);
+        //             // retrieve entity
+        //             // $entity = $this->manager->getRepository($classname)->find($id);
+        //             // $entity->setSoftdeleted(true);
+        //             // $uow->scheduleForUpdate($entity);
+        //             // $uow->recomputeSingleEntityChangeSet($this->em->getClassMetadata(get_class($entity)), $entity);
+        //             // if($uow->isScheduledForDelete($entity)) {
+        //             //     throw new Exception(vsprintf('Error line %d %s(): %s can not be deleted!', [__LINE__, __METHOD__, $entity::class]));
+        //             // }
+        //             // if(!$uow->isScheduledForUpdate($entity)) {
+        //             //     throw new Exception(vsprintf('Error line %d %s(): %s can not be softdeleted!', [__LINE__, __METHOD__, $entity::class]));
+        //             // }
+        //         // }
+        //     }
+        // }
 
     }
 

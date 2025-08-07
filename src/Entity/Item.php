@@ -40,7 +40,7 @@ abstract class Item extends MappSuperClassEntity implements ItemInterface, Creat
 
     #[ORM\Column(length: 255)]
     #[Serializer\Groups('index')]
-    #[Assert\NotBlank(message: 'Le nom ne peut pas être vide')]
+    #[Assert\NotBlank(message: 'Vous devez renseigner un nom')]
     protected ?string $name = null;
 
     #[ORM\ManyToMany(targetEntity: Ecollection::class, inversedBy: 'items', fetch: 'EXTRA_LAZY')]
@@ -94,7 +94,7 @@ abstract class Item extends MappSuperClassEntity implements ItemInterface, Creat
 
     public function setName(string $name): static
     {
-        $this->name = trim($name);
+        $this->name = $name;
         return $this;
     }
 

@@ -17,6 +17,7 @@ trait Unamed
     #[ORM\OneToOne(cascade: ['persist'], orphanRemoval: true, fetch: 'LAZY')]
     #[ORM\JoinColumn(nullable: false)]
     #[Assert\Valid()]
+    // #[Assert\NotNull()]
     #[Serializer\Groups('detail')]
     #[Serializer\MaxDepth(1)]
     protected readonly Uname $uname;
@@ -44,7 +45,7 @@ trait Unamed
     }
 
     public function updateUname(
-        string $uname = null
+        ?string $uname = null
     ): static
     {
         if(!isset($this->uname) || $this->_isClone()) $this->uname = $this->_service->getNew(Uname::class);

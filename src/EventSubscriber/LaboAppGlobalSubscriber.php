@@ -47,7 +47,7 @@ class LaboAppGlobalSubscriber implements EventSubscriberInterface
     {
         return [
             KernelEvents::REQUEST => 'onRequest',
-            KernelEvents::EXCEPTION => 'onExceptionEvent',
+            // KernelEvents::EXCEPTION => 'onExceptionEvent',
             KernelEvents::CONTROLLER => 'onController',
             // KernelEvents::RESPONSE => 'onKernelResponse',
             // KernelEvents::FINISH_REQUEST => 'onFinishRequest',

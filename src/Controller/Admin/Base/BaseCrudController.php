@@ -63,6 +63,7 @@ abstract class BaseCrudController extends AbstractCrudController
     public const CUT_NAME_LENGTH = 24;
 
     public readonly array $query_values;
+    public readonly AppEntityManagerInterface $appEntityManager;
 
     public function __construct(
         protected RequestStack $requestStack,
@@ -70,6 +71,7 @@ abstract class BaseCrudController extends AbstractCrudController
         protected LaboUserServiceInterface $userService,
         protected TranslatorInterface $translator,
     ) {
+        $this->appEntityManager = $manager;
         $this->manager = $manager->getEntityService(static::ENTITY);
         if($manager->isDev()) {
             // [DEV] check entity class service
@@ -654,6 +656,7 @@ abstract class BaseCrudController extends AbstractCrudController
 
     public function persistEntity(EntityManagerInterface $entityManager, $entityInstance): void
     {
+        dump($entityInstance, $this->manager);
         $this->manager->save($entityInstance);
     }
 

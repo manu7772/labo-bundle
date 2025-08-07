@@ -64,7 +64,7 @@ abstract class LaboUser extends MappSuperClassEntity implements LaboUserInterfac
     ];
 
     #[Serializer\Ignore]
-    public readonly LaboUserService|AppEntityManagerInterface $_service;
+    public readonly AppEntityManagerInterface $_service;
 
     #[ORM\Column(length: 180, unique: true)]
     #[Assert\Email(message: 'L\'adresse {{ value }} est invalide')]
@@ -513,7 +513,10 @@ abstract class LaboUser extends MappSuperClassEntity implements LaboUserInterfac
         // Remove previous portrait
         // if($this->portrait && $this->portrait !== $portrait) $this->portrait->removeLinkedto();
         // $this->portrait = $portrait->setLinkedto($this);
-        $this->portrait = $portrait;
+        if(!empty($portrait->getFile())) {
+            $this->removePortrait();
+            $this->portrait = $portrait;
+        }
         return $this;
     }
 

@@ -14,6 +14,7 @@ use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\HttpFoundation\File\File;
 use Vich\UploaderBundle\Mapping\Annotation as Vich;
 use Symfony\Component\Serializer\Attribute as Serializer;
+use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: PhotoRepository::class)]
 #[ORM\HasLifecycleCallbacks]
@@ -24,6 +25,7 @@ class Photo extends Image implements PhotoInterface
 
     #[Vich\UploadableField(mapping: 'photo', fileNameProperty: 'filename', size: 'size', mimeType: 'mime', originalName: 'originalname', dimensions: 'dimensions')]
     #[Serializer\Ignore]
+    // #[Assert\NotNull()]
     protected ?File $file = null;
 
     // #[ORM\OneToOne(inversedBy: 'photo')]
