@@ -144,7 +144,6 @@ class AppEntityInfo implements AppEntityInfoInterface
                 break;
             case preg_match('/^set\w+/', $name):
                 if(empty($arguments)) throw new Exception(vsprintf('Error on %s line %d: setter "%s" needs at least one argument.', [__METHOD__, __LINE__, $name]));
-                // dump(vsprintf('Info on %s line %d: with name "%s", updated/created new value "%s" with following arguements.', [__METHOD__, __LINE__, $name, $internal_name]), $arguments);
                 $this->internals[$internal_name] = reset($arguments);
                 break;
             default:
@@ -214,7 +213,6 @@ class AppEntityInfo implements AppEntityInfoInterface
             throw new Exception(vsprintf('Error on %s line %d: entity is not an instance of %s.', [__METHOD__, __LINE__, EcollectionInterface::class]));
         }
         $this->internals['RelationOrder'] = $loaded;
-        // dump(vsprintf('Info on %s line %d: RelationOrder is set to %s.', [__METHOD__, __LINE__, json_encode($loaded)]));
     }
 
     public function isRelationOrderLoaded(

@@ -40,7 +40,6 @@ abstract class LaboEntityController extends AbstractController
         $this->meta_info = $this->manager->getEntityMetadataReport();
         // control constants
         if($this->env === 'dev') {
-            // dump($this->manager);
             if(!$this->appEntityManager->entityExists(static::CLASSNAME)) {
                 throw new Exception(vsprintf('Erreur %s ligne %d: entity %s not found!', [__METHOD__, __LINE__, static::CLASSNAME]));
             }

@@ -766,7 +766,6 @@ class AppService extends BaseService implements AppServiceInterface
     ): bool
     {
         $this->surveyRecursion(__METHOD__.'::'.$route);
-        // dump($this->getRoute(), $this->getRouteParams(), $param instanceof MenuInterface ? $param->getItems() : null);
         if($param instanceof WebpageInterface && $param->isPrefered() && $this->getRoute() == 'app_home') return true;
         if($route !== $this->getRoute()) return false;
         if(!empty($param)) {
@@ -820,9 +819,6 @@ class AppService extends BaseService implements AppServiceInterface
         /** @var RouterInterface */
         $router = $this->get('router');
         $_route = $this->getRoute();
-        // if(!$this->getRoutes()->get($route)) return null;
-
-        // ? : avoid if is same as current route / includes logic security
         if(preg_match('/^\?+/', $route)) {
             $route = preg_replace('/^\?+/', '', $route);
             switch (true) {
@@ -837,28 +833,12 @@ class AppService extends BaseService implements AppServiceInterface
                     break;
             }
         }
-        // // ! : avoid 
-        // if($testB = preg_match('/^\!+/', $route)) {
-        //     $route = preg_replace('/^\!+/', '', $route);
-        //     switch (true) {
-        //         case preg_match('/login/', $route):
-        //             if($this->getUser()) return null;
-        //             break;
-        //         case preg_match('/logout/', $route):
-        //             if(!$this->getUser()) return null;
-        //             break;
-        //         default:
-        //             if($route === $_route) return null;
-        //             break;
-        //     }
-        // }
         $url = null;
         try {
             $url = $router->generate(name: $route, parameters: $parameters, referenceType: $referenceType);
         } catch (\Throwable $th) {
             //throw $th;
         }
-        // dump($url);
         return $url;
     }
 

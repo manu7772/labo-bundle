@@ -93,7 +93,6 @@ class SlideCrudController extends BaseCrudController
             case 'slide_collection_in_slider':
                 // $slide = $this->createEntity(static::ENTITY, false);
                 // $info['entity']->addSlide($slide);
-                // dump($info['entity'], $slide);
                 yield FormField::addColumn('col-md-6');
                     yield TextField::new('name')->setRequired(true);
                     yield ChoiceField::new('classes', 'Styles')

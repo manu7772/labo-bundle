@@ -146,9 +146,6 @@ abstract class Ecollection extends Item implements EcollectionInterface
         $event = null
     ): bool
     {
-        if($event) {
-            // dump(vsprintf('Info %s line %d: triggered event %s', [__METHOD__, __LINE__, get_class($event)]), $event);
-        }
         $attributes = Classes::getPropertyAttributes($this, RelationOrder::class, true);
         if(empty($attributes)) throw new Exception(vsprintf('Error %s line %d: no field found for %s in entity %s!', [__METHOD__, __LINE__, RelationOrder::class, $this->getClassname()]));
         $old = $this->getRelationOrder();
@@ -186,9 +183,6 @@ abstract class Ecollection extends Item implements EcollectionInterface
         bool $force = false
     ): static
     {
-        // dd('sort ordered relations...', $manager);
-        // $manager ??= $this->_appManaged;
-        // dump(array_merge($this->getRelationOrder(), ['entity' => [$this->shortname, $this->name]]));
         if($force || !$this->_appManaged->isRelationOrderLoaded(false)) {
             $propertyAccessor = PropertyAccess::createPropertyAccessorBuilder()->enableExceptionOnInvalidIndex()->getPropertyAccessor();
             foreach($this->getRelationOrder() as $property => $values) {
@@ -284,14 +278,10 @@ abstract class Ecollection extends Item implements EcollectionInterface
     //     return $this;
     // }
 
-    public function changePosition(
-        Item $item,
-        string $position
-    ): bool
+    public function changePosition(Item $item, string $position): bool
     {
-        $this->getItems();
+        $this->getItems(false);
         if($this->items->contains($item)) {
-            $this->items->removeElement($item);
             switch ($position) {
                 case '-1':
                 case 'up':
@@ -299,20 +289,38 @@ abstract class Ecollection extends Item implements EcollectionInterface
                     break;
                 case '+1':
                 case 'down':
-                    # code...
+                    // $this->items->removeElement($item);
+                    // $items = $this->items->toArray();
+                    // $this->items->clear();
+                    // $cpt = 0;
+                    // $next = null;
+                    // foreach ($items as $it) {
+                    //     if($next) {
+                    //         $this->items->add($next);
+                    //         $next = null;
+                    //     }
+                    //     if($it === $item) {
+                    //         $next = $it;
+                    //     } else {
+                    //         $this->items->add($it);
+                    //     }
+                    //     $cpt++;
+                    // }
                     break;
                 case 'top':
+                    $this->items->removeElement($item);
                     $items = $this->items->toArray();
                     $this->items->clear();
                     $this->items->add($item);
                     foreach ($items as $it) {
-                        if(!$this->items->contains($it)) $this->items->add($it);
+                        if($it !== $item) $this->items->add($it);
                     }
-                    $changed = true;
+                    // $changed = true;
                     break;
                 case 'bottom':
+                    $this->items->removeElement($item);
                     $this->items->add($item);
-                    $changed = true;
+                    // $changed = true;
                     break;
             }
         } else {

@@ -31,24 +31,6 @@ final class LaboForm extends AbstractController
         private AppEntityManagerInterface $appEntityManager
     )
     {
-        // dump($this);
-        // if($this->entity instanceof AppEntityInterface) {
-        //     if(!empty($this->classname) && $this->classname !== $this->entity->getClassname()) {
-        //         // Entity and classname does not match!
-        //         throw new Exception(vsprintf('Error on %s line %d: entity of class %s does not match given classname %s!', [__METHOD__, __LINE__, $this->entity->getClassname(), $this->classname]));
-        //     }
-        //     $this->classname = $this->entity->getClassname();
-        // } else if(is_string($this->classname)) {
-        //     if(!$this->appEntityManager->entityExists($this->classname) && !is_a($this->classname, AppEntityInterface::class, true)) {
-        //         throw new Exception(vsprintf('Error on %s line %d: given classname %s should be instance of %s!', [__METHOD__, __LINE__, $this->classname, AppEntityInterface::class]));
-        //     }
-        //     $this->entity = $this->appEntityManager->getNew($this->classname);
-        // } else {
-        //     throw new Exception(vsprintf('Error on %s line %d: please give an object entity or a classname of entity!', [__METHOD__, __LINE__]));
-        // }
-        // // finally...
-        // $this->entityManager = $this->appEntityManager->getEntityService($this->classname);
-        // $this->meta_info = $this->entityManager->getEntityMetadataReport();
     }
 
     public function getEntity(): ?AppEntityInterface
@@ -63,7 +45,6 @@ final class LaboForm extends AbstractController
 
     public function instantiateForm(): FormInterface
     {
-        // dump($this->entity);
         return $this->createForm(WebpageType::class, $this->entity);
     }
 

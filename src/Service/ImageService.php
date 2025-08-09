@@ -32,7 +32,7 @@ class ImageService extends ItemService implements ImageServiceInterface
 
     public function getBrowserPath(
         ImageInterface $image,
-        string $filter = null,
+        ?string $filter = null,
         array $runtimeConfig = [],
         $resolver = null,
         $referenceType = UrlGeneratorInterface::ABSOLUTE_URL
@@ -42,7 +42,6 @@ class ImageService extends ItemService implements ImageServiceInterface
         if($filter) {
             $browserPath = $this->liipCache->getBrowserPath($browserPath, $filter, $runtimeConfig, $resolver, $referenceType);
         }
-        // dump($browserPath);
         return $browserPath;
     }
 

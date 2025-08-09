@@ -95,8 +95,8 @@ class Files extends BaseService
      * @return array
      */
     public function listFiles(
-        string $path = null,
-        array|Closure $filter = null,
+        ?string $path = null,
+        null|array|Closure $filter = null,
         int $depth = 1,
     ): array
     {
@@ -117,8 +117,8 @@ class Files extends BaseService
     }
 
     public function listDirs(
-        string $path = null,
-        array|Closure $filter = null,
+        ?string $path = null,
+        null|array|Closure $filter = null,
         int $depth = 1,
         bool|int $filter_depth = 0,
     ): array
@@ -144,8 +144,8 @@ class Files extends BaseService
     }
 
     public function list(
-        string $path = null,
-        array|Closure $filter = null,
+        ?string $path = null,
+        null|array|Closure $filter = null,
         int $depth = 1,
         bool|int $filter_depth = 0,
     ): array
@@ -184,7 +184,7 @@ class Files extends BaseService
     // }
 
     public function getParentDir(
-        string $path = null
+        ?string $path = null
     ): ?SplFileInfo
     {
         $path = $this->getProjectDir($path, false);
@@ -195,7 +195,7 @@ class Files extends BaseService
     }
 
     public function removePrefixSeparator(
-        string &$path = null
+        ?string &$path = null
     ): string
     {
         $path = is_string($path) ? preg_replace('/^\.?[\\/\\\\]+/', '', $path) : '';
@@ -210,7 +210,7 @@ class Files extends BaseService
      * @return string|false
      */
     public function getProjectDir(
-        string $path = null,
+        ?string $path = null,
         bool $create = true
     ): string|false
     {
@@ -219,7 +219,6 @@ class Files extends BaseService
         $fullpath = strlen((string)$path) > 0
             ? $projectDir.DIRECTORY_SEPARATOR.$this->truncateProjectDirName($path)
             : $projectDir;
-        // dump(vsprintf('%s : Project dir : %s with path "%s" : full path : "%s" (exists: %s)', [__METHOD__, $projectDir, $path, $fullpath, @is_dir($fullpath) ? 'true' : 'false']));
         if($create && !@is_dir($fullpath)) {
             // Check path and create if not found
             if(!$this->createPath($fullpath)) {
@@ -230,7 +229,7 @@ class Files extends BaseService
     }
 
     public function truncateProjectDirName(
-        string $path = null
+        ?string $path = null
     ): string
     {
         $projectDir = $this->getProjectDir();
@@ -291,11 +290,10 @@ class Files extends BaseService
     }
 
     public function createPath(
-        string $path = null
+        ?string $path = null
     ): string|false
     {
         $fullpath = $this->getProjectDir($path, false);
-        // dump($fullpath);
         if(!$fullpath) return false;
         if(!@is_dir($fullpath)) {
             // Not found: create
@@ -316,7 +314,7 @@ class Files extends BaseService
      */
     public function getFileContent(
         string $path,
-        string $filename = null
+        ?string $filename = null
     ): string|false
     {
         $projectDir = $this->getProjectDir($path, false);
@@ -448,7 +446,7 @@ class Files extends BaseService
     public function getUploadedFileFromUrl(
         string $url,
         string $prefix,
-        string $extension = null
+        ?string $extension = null
     ): UploadedFile
     {
         $filesystem = new Filesystem();
@@ -475,15 +473,12 @@ class Files extends BaseService
             $finder->exclude(['node_modules']);
             if(!empty($levels)) $finder->depth($levels);
             foreach ($finder as $file) {
-                // echo('<div>File '.$file->getPathname().'</div>');
                 $content = file_get_contents($file->getPathname());
                 preg_match('/namespace\s+([\\w\\\\]+);/i', $content, $namespace);
                 if(!empty($namespace) && count($namespace) > 1) {
-                    // echo('<pre>'); var_dump($namespace); echo('</pre>');
                     $namespace = $namespace[1];
                     preg_match('/(class|interface|trait)\\s+(\\w+)[\\s\\r\\n]/i', $content, $class);
                     if(!empty($class) && count($class) > 2) {
-                        // echo('<pre>'); var_dump($class); die('</pre>');Symfony\Component\Finder\Finder
                         $type = $class[1];
                         $classname = $namespace.'\\'.$class[2];
                         if($sort_results) {

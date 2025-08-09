@@ -49,7 +49,7 @@ class Uname extends MappSuperClassEntity implements UnameInterface
     }
 
     public function attributeEntity(
-        UnamedInterface $entity,
+        UnamedInterface&AppEntityInterface $entity,
         ?string $uname = null
     ): static
     {

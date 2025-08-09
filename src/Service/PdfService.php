@@ -56,7 +56,6 @@ class PdfService extends ItemService implements PdfServiceInterface
         $dompdf = $this->dompdfFactory->create($options);
         // --- Set options
         // $options = $dompdf->getOptions();
-        // dump($options);
         // $options->setChroot(['/public/assets', '/public/media']);
         // $options->set('isRemoteEnabled', true);
         // dd($options);

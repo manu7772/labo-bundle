@@ -82,7 +82,6 @@ class HtmlDom extends BaseService
                     break;
             }
         }
-        // dump($string);
         return $string;
     }
 

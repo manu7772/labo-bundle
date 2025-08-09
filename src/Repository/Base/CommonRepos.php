@@ -132,9 +132,6 @@ abstract class CommonRepos extends ServiceEntityRepository implements CommonRepo
         array $exclude_ids = [],
     ): QueryBuilder
     {
-        // if(is_string($classOrEntity) && !is_a($classOrEntity, HasOrderedInterface::class)) {
-        //     throw new Exception(vsprintf('Error %s line %d: entity %s is not interface of %s', [__METHOD__, __LINE__, $classOrEntity, HasOrderedInterface::class]));
-        // }
         $classes = $classOrEntity::ITEMS_ACCEPT[$property];
         // $qb ??= $this->createQueryBuilder(static::NAME);
         $alias = static::getAlias($qb);
@@ -160,7 +157,6 @@ abstract class CommonRepos extends ServiceEntityRepository implements CommonRepo
         //     ->setParameter('ids', $exclude_ids);
         // }
         static::__filter_Enabled($qb);
-        // dd($qb->getQuery()->getResult());
         return $qb;
     }
 
@@ -171,7 +167,6 @@ abstract class CommonRepos extends ServiceEntityRepository implements CommonRepo
     ): bool
     {
         $from = static::getFrom($qb);
-        // dump('Testing From: '.static::getFrom($qb).' (Alias: '.static::getAlias($qb).') => '.json_encode($classes));
         foreach ((array)$classes as $class) {
             if(!is_a($class, $from, true)) {
                 if($throwsException) {

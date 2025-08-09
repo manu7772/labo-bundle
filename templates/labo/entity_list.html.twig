@@ -6,7 +6,6 @@
 {% block title_h1 -%}{{ ux_icon('symfony', {height: '48px', width: '48px', class: 'text-success'}) }} LABO Entities metadata{%- endblock %}
 
 {% block right_content %}
-{# {{ dump(hierarchizeds) }} #}
 {% for meta_info in meta_infos %}
 <article>
     <div>
@@ -25,9 +24,6 @@
     {% if meta_info is not null %}
     <table>
         <tbody>
-            {# <tr>
-                <td colspan="100%">{{ dump(meta_info.model) }}</td>
-            </tr> #}
             <tr>
                 <td>Root entity</td>
                 <td>{{ prints.classname(meta_infos[meta_info.rootEntityName], 20, true) }}</td>
@@ -165,7 +161,6 @@
             <tr>
                 <td>LifecycleCallbacks</td>
                 <td>
-                    {# {{ dump(meta_info.lifecycleCallbacks) }} #}
                     {% if meta_info.lifecycleCallbacks|length %}
                     <ul class="mb-0 list-unstyled list-inside pl-0">
                         {% for name,lcc in meta_info.lifecycleCallbacks %}
@@ -254,7 +249,6 @@
                     </div>
                 </td>
             </tr>
-            {# <tr><td colspan="100%">{{ dump(meta_info) }}</tr></td> #}
         </tbody>
     </table>
     {% else %}

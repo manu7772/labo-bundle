@@ -74,8 +74,8 @@ class LaboAppGlobalSubscriber implements EventSubscriberInterface
     public function onExceptionEvent(ExceptionEvent $event): void
     {
         if(!$this->appService->isProd()) return;
-        dump($event);
-        dd($event->getThrowable());
+        // dump($event);
+        // dd($event->getThrowable());
         // Disable control
         // if(!$this->appService->isProd()) return;
         // DUMP ALL if LOCAL prod

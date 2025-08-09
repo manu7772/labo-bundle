@@ -61,7 +61,6 @@
     {%- endif -%}
     {% set old_choices = choices %}
     {%- set choices = choices|sort_collection(data) -%}
-    {# {{ dump(old_choices, choices) }} #}
     <select {{ block('widget_attributes') }}{% if multiple %} multiple="multiple"{% endif %}>
         {%- if placeholder is not none -%}
             <option value=""{% if required and value is empty %} selected="selected"{% endif %}>{{ placeholder != '' ? (translation_domain is same as(false) ? placeholder : placeholder|trans({}, translation_domain)) }}</option>

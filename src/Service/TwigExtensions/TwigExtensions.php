@@ -161,7 +161,6 @@ class TwigExtensions extends AbstractExtension implements GlobalsInterface
         }
         $icon = Icons::getIcon($icon, $attributes, true);
         if(is_array($icon)) {
-            // dump($icon);
             $icon = $this->iconRenderer->renderIcon($icon['icon'], $icon['attributes']);
         }
         return $icon;
@@ -189,7 +188,6 @@ class TwigExtensions extends AbstractExtension implements GlobalsInterface
     {
         $icon = Icons::getValidIcon($value, $attributes, $icon_true, $icon_false, true);
         if(is_array($icon)) {
-            // dump($icon);
             $icon = $this->iconRenderer->renderIcon($icon['icon'], $icon['attributes']);
         }
         return $icon;
@@ -297,7 +295,6 @@ class TwigExtensions extends AbstractExtension implements GlobalsInterface
             foreach ($data as $item) {
                 $sorted_data[$item->getId()] = $index--;
             }
-            // dump($sorted_data);
             uasort($choices, function($a, $b) use ($sorted_data) {
                 if(!array_key_exists($a->value, $sorted_data)) return 1;
                 if(!array_key_exists($b->value, $sorted_data)) return -1;

@@ -11,6 +11,7 @@ use Aequation\LaboBundle\Service\Interface\EcollectionServiceInterface;
 use App\Entity\Websection;
 use App\Entity\Webpage;
 use Aequation\LaboBundle\Model\Interface\WebpageInterface;
+use Aequation\LaboBundle\Model\Interface\WebsectionInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -129,21 +130,11 @@ class LaboWebpageController extends LaboEntityController
     ): Response
     {
         // return new Response(vsprintf('Move websection %s from webpage %s', [$websection->getId(), $webpage->getId()]));
-        // dd($webpage, $websection, $position, $request);
         $em = $this->manager->getEntityManager();
         $uow = $this->manager->getUnitOfWork();
+        /** @var Item $websection */
         if($webpage->changePosition($websection, $position)) {
-            // dump(
-            //     $position,
-            //     $webpage,
-            //     $websection,
-            //     $uow->isScheduledForUpdate($webpage),
-            //     $uow->isScheduledForUpdate($websection),
-            //     $uow->getEntityChangeSet($webpage),
-            //     $uow->getEntityChangeSet($websection),
-            // );
             $this->manager->flush();
-            // dd($webpage);
         }
         $route = $request->headers->get('referer');
         $route ??= $this->generateUrl('app_home');

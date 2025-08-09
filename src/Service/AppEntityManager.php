@@ -278,16 +278,8 @@ class AppEntityManager extends BaseService implements AppEntityManagerInterface
             },
             commentaire: 'All entities reports (meta infos)',
         );
-        // dd($reports);
         return $reports;
     }
-
-    // public function dumpReports(): void
-    // {
-    //     foreach ($this->computeEntityMetadataReports() as $test) {
-    //         dump(json_encode($test));
-    //     }
-    // }
 
     private function computeEntityMetadataReports(): array
     {
@@ -377,8 +369,6 @@ class AppEntityManager extends BaseService implements AppEntityManagerInterface
         }
         /** @var CommonReposInterface */
         $repo = $this->em->getRepository($classname);
-        // if(!empty($field)) dump($classname, $field, get_class($repo));
-        // if(!is_null($repo) && !($repo instanceof CommonReposInterface)) dd($this->__toString(), $origin_classname, $classname, $cmd, $cmd->name, $repo);
         return $onlyCommonRepos && $repo instanceof CommonReposInterface ? $repo : null;
     }
 
@@ -724,7 +714,6 @@ class AppEntityManager extends BaseService implements AppEntityManagerInterface
                     throw new Exception(vsprintf('Error %s line %d: can not define "%s" method in %s attribute without a risk of ininite loop!', [__METHOD__, __LINE__, __FUNCTION__, $event]));
                 }
                 if($reflAttr->isApplicable($entity, $group)) {
-                    // dump(vsprintf('Apply event %s method %s (group: %s) to SERVICE %s for %s "%s" on %s line %d', [$event, $method, json_encode($group), $entity->_service->__toString(), $entity->getClassname(), $entity->__toString() ?? "null", __METHOD__, __LINE__]));
                     $entity->_service->$method($entity, $data, $group);
                     $applyed = true;
                 }
@@ -736,7 +725,6 @@ class AppEntityManager extends BaseService implements AppEntityManagerInterface
                 /** @var AppEvent $reflAttr */
                 $method = $reflAttr->method->name;
                 if($reflAttr->isApplicable($entity, $group)) {
-                    // dump(vsprintf('Apply event %s method %s (group: %s) to ENTITY %s "%s" on %s line %d', [$event, $method, json_encode($group), $entity->getClassname(), $entity->__toString() ?? "null", __METHOD__, __LINE__]));
                     $entity->$method($entity->_service, $data, $group);
                     $applyed = true;
                 }
@@ -753,21 +741,6 @@ class AppEntityManager extends BaseService implements AppEntityManagerInterface
         $entity->_appManaged->clearAppEvents();
         return $this;
     }
-
-    // /**
-    //  * Test event
-    //  * @param AppEntityInterface $entity
-    //  * @param mixed $data
-    //  */
-    // #[AppEvent(groups: [AppEvent::PRE_SET_DATA])]
-    // public function testEvent(
-    //     AppEntityInterface $entity,
-    //     mixed $data = [],
-    //     $group = null,
-    // ): void
-    // {
-    //     if($this->isDev()) dump(vsprintf('Applying event %s of (%s) %s (line %d) on "%s" with data %s...', [$group, static::class, __METHOD__, __LINE__, $entity, json_encode($data)]));
-    // }
 
     /**
      * Set owner (current User) to OwnerInterface entity
@@ -828,11 +801,9 @@ class AppEntityManager extends BaseService implements AppEntityManagerInterface
                 // Before persit
                 $this->executeAppEvent($entity, AppEvent::beforePrePersist, []);
                 $this->em->persist($entity);
-                // dump('Is NEW : '.json_encode($isNew).' > Persisted "'.$entity.'" (id: '.json_encode($entity->getId()).')... : '.json_encode($this->isManaged($entity)));
             } else {
                 // Before update
                 $this->executeAppEvent($entity, AppEvent::beforePreUpdate, []);
-                // dump('Is NEW : '.json_encode($isNew).' > NOT Persisted "'.$entity.'" (id: '.json_encode($entity->getId()).')... : '.json_encode($this->isManaged($entity)));
             }
         } catch (Throwable $th) {
             if($opresultException instanceof Opresult) {

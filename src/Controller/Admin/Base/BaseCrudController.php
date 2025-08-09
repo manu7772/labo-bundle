@@ -83,7 +83,6 @@ abstract class BaseCrudController extends AbstractCrudController
         }
         $query = $this->requestStack->getMainRequest()?->query;
         $this->query_values = $query ? $query->all() : [];
-        // dump($this->query_values);
     }
 
     /**
@@ -189,7 +188,6 @@ abstract class BaseCrudController extends AbstractCrudController
                 }
             }
         }
-        // dump($newlist);
         foreach ($newlist as $name => $field) {
             yield $name => $field;
         }
@@ -486,7 +484,6 @@ abstract class BaseCrudController extends AbstractCrudController
         $context->getCrud()->getActionsConfig()->setPageName(Crud::PAGE_NEW);
         $this->container->get(EntityFactory::class)->processFields($context->getEntity(), FieldCollection::new($this->configureFields(Crud::PAGE_NEW)));
         $context->getCrud()->setFieldAssets($this->getFieldAssets($context->getEntity()->getFields()));
-        // dump($context, $request->query->all(), $context->getCrud(), $context->getCrud()->getActionsConfig());
         $this->container->get(EntityFactory::class)->processActions($context->getEntity(), $context->getCrud()->getActionsConfig());
 
         $newForm = $this->createNewForm($context->getEntity(), $context->getCrud()->getNewFormOptions(), $context);
@@ -567,7 +564,6 @@ abstract class BaseCrudController extends AbstractCrudController
             $RC = new ReflectionClass($info['classname']);
             $info['instantiable'] = $RC->isInstantiable();
         }
-        // dump($info);
         return $info;
     }
 
@@ -656,7 +652,6 @@ abstract class BaseCrudController extends AbstractCrudController
 
     public function persistEntity(EntityManagerInterface $entityManager, $entityInstance): void
     {
-        dump($entityInstance, $this->manager);
         $this->manager->save($entityInstance);
     }
 
