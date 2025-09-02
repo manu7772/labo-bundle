@@ -6,11 +6,13 @@ use Aequation\LaboBundle\Form\base\BaseAppType;
 use Aequation\LaboBundle\Model\Interface\ImageOwnerInterface;
 
 use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
+use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\Form\FormEvent;
 use Symfony\Component\Form\FormEvents;
 use Symfony\Component\OptionsResolver\OptionsResolver;
+use Symfony\Component\Validator\Constraints\Choice;
 use Vich\UploaderBundle\Form\Type\VichImageType;
 
 class ImageType extends BaseAppType
@@ -27,8 +29,14 @@ class ImageType extends BaseAppType
             ->add('file', VichImageType::class, [
                 'label' => false,
                 'allow_delete' => false,
-            ]
-        );
+            ])
+            ->add('imagefilter', ChoiceType::class, [
+                'label' => 'Format d\'affichage',
+                'required' => true,
+                'placeholder' => 'Choisissez un format d\'affichage par défaut',
+                'choices' => Image::LIIP_FILTERS,
+            ])
+        ;
         parent::buildForm($builder, $options);
     }
 

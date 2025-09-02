@@ -43,6 +43,20 @@ abstract class Image extends Item implements ImageInterface
     public const SERIALIZATION_PROPS = ['id','euid','name','file','filename','size','mime','classname','shortname'];
     public const DEFAULT_LIIP_FILTER = "photo_q";
     public const THUMBNAIL_LIIP_FILTER = 'miniature_q';
+    public const LIIP_FILTERS = [
+        // 'Aucun format prédéfini' => null,
+        'miniature (100x100)' => 'miniature',
+        'miniature_q (100x100 compressée)' => 'miniature_q',
+        'carre (300x300)' => 'carre',
+        'carre_q (300x300 compressée)' => 'carre_q',
+        'portrait (400x600)' => 'portrait',
+        'portrait_q (400x600 compressée)' => 'portrait_q',
+        'photo (800x600)' => 'photo',
+        'photo_q (800x600 compressée)' => 'photo_q',
+        'landscapemin (800x350)' => 'landscapemin',
+        'landscape (1280x900)' => 'landscape',
+    ];
+    
 
     // #[Assert\NotNull(message: 'Le nom de fichier ne peut être null')]
     #[ORM\Column(length: 255)]
@@ -69,6 +83,9 @@ abstract class Image extends Item implements ImageInterface
 
     #[ORM\Column(length: 255)]
     protected ?string $dimensions = null;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    protected ?string $imagefilter;
 
     #[ORM\Column(type: Types::TEXT, nullable: true)]
     protected ?string $description = null;
@@ -205,6 +222,17 @@ abstract class Image extends Item implements ImageInterface
         $this->dimensions = is_array($dimensions)
             ? implode('x',$dimensions)
             : (string)$dimensions;
+        return $this;
+    }
+
+    public function getImagefilter(): ?string
+    {
+        return $this->imagefilter ??= static::DEFAULT_LIIP_FILTER;
+    }
+
+    public function setImagefilter(?string $imagefilter): static
+    {
+        $this->imagefilter = $imagefilter;
         return $this;
     }
 

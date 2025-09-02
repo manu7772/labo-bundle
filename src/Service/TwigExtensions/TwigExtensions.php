@@ -102,6 +102,7 @@ class TwigExtensions extends AbstractExtension implements GlobalsInterface
             new TwigFilter('textToBr', [$this, 'textToBr']),
             new TwigFilter('ucfirst', [$this, 'getUcfirst']),
             new TwigFilter('slug', [Strings::class, 'getSlug']),
+            new TwigFilter('formateForWebpage', [Strings::class, 'formateForWebpage']),
             new TwigFilter('hasText', [Strings::class, 'hasText']),
             new TwigFilter('text2array', [Strings::class, 'text2array']),
             new TwigFilter('flashes_to_json', [$this, 'flashesToSJson']),

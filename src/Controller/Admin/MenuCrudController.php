@@ -1,47 +1,48 @@
 <?php
 namespace Aequation\LaboBundle\Controller\Admin;
 
-use Aequation\LaboBundle\Security\Voter\MenuVoter;
-use Aequation\LaboBundle\Controller\Admin\Base\BaseCrudController;
-use Aequation\LaboBundle\Entity\Item;
-use Aequation\LaboBundle\Field\ThumbnailField;
-use Aequation\LaboBundle\Form\Type\PhotoType;
-use Aequation\LaboBundle\Repository\ItemRepository;
-use Aequation\LaboBundle\Service\Interface\LaboUserServiceInterface;
-use Aequation\LaboBundle\Service\Interface\MenuServiceInterface;
-use Aequation\LaboBundle\Service\Tools\Classes;
-
-use App\Entity\Menu;
-use App\Repository\CategoryRepository;
-use App\Repository\WebpageRepository;
-use App\Repository\MenuRepository;
-
-use EasyCorp\Bundle\EasyAdminBundle\Config\Action;
-use EasyCorp\Bundle\EasyAdminBundle\Config\Actions;
-use EasyCorp\Bundle\EasyAdminBundle\Config\Crud;
-use EasyCorp\Bundle\EasyAdminBundle\Config\Filters;
-use EasyCorp\Bundle\EasyAdminBundle\Context\AdminContext;
-use EasyCorp\Bundle\EasyAdminBundle\Field\AssociationField;
-use EasyCorp\Bundle\EasyAdminBundle\Field\BooleanField;
-use EasyCorp\Bundle\EasyAdminBundle\Field\ChoiceField;
-use EasyCorp\Bundle\EasyAdminBundle\Field\CollectionField;
-use EasyCorp\Bundle\EasyAdminBundle\Field\DateTimeField;
-use EasyCorp\Bundle\EasyAdminBundle\Field\IdField;
-use EasyCorp\Bundle\EasyAdminBundle\Field\SlugField;
-use EasyCorp\Bundle\EasyAdminBundle\Field\TextEditorField;
-use EasyCorp\Bundle\EasyAdminBundle\Field\TextField;
-use EasyCorp\Bundle\EasyAdminBundle\Filter\TextFilter;
-use EasyCorp\Bundle\EasyAdminBundle\Router\AdminUrlGenerator;
-use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\Translation\TranslatableMessage;
-use Doctrine\ORM\QueryBuilder;
-use EasyCorp\Bundle\EasyAdminBundle\Field\ArrayField;
-use EasyCorp\Bundle\EasyAdminBundle\Field\FormField;
-use EasyCorp\Bundle\EasyAdminBundle\Field\IntegerField;
-use EasyCorp\Bundle\EasyAdminBundle\Field\TextareaField;
-use Symfony\Component\Form\Extension\Core\Type\TextareaType;
-use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Twig\Markup;
+use App\Entity\Menu;
+use Doctrine\ORM\QueryBuilder;
+use App\Repository\MenuRepository;
+use Aequation\LaboBundle\Entity\Item;
+use App\Repository\WebpageRepository;
+use App\Repository\CategoryRepository;
+use Aequation\LaboBundle\Form\Type\PhotoType;
+use Aequation\LaboBundle\Field\ThumbnailField;
+
+use Symfony\Component\HttpFoundation\Response;
+use Aequation\LaboBundle\Service\Tools\Classes;
+use Aequation\LaboBundle\Service\Tools\Strings;
+use EasyCorp\Bundle\EasyAdminBundle\Config\Crud;
+
+use Aequation\LaboBundle\Security\Voter\MenuVoter;
+use EasyCorp\Bundle\EasyAdminBundle\Config\Action;
+use EasyCorp\Bundle\EasyAdminBundle\Field\IdField;
+use Aequation\LaboBundle\Repository\ItemRepository;
+use EasyCorp\Bundle\EasyAdminBundle\Config\Actions;
+use EasyCorp\Bundle\EasyAdminBundle\Config\Filters;
+use EasyCorp\Bundle\EasyAdminBundle\Field\FormField;
+use EasyCorp\Bundle\EasyAdminBundle\Field\SlugField;
+use EasyCorp\Bundle\EasyAdminBundle\Field\TextField;
+use EasyCorp\Bundle\EasyAdminBundle\Field\ArrayField;
+use EasyCorp\Bundle\EasyAdminBundle\Field\ChoiceField;
+use EasyCorp\Bundle\EasyAdminBundle\Filter\TextFilter;
+use Symfony\Component\Translation\TranslatableMessage;
+use EasyCorp\Bundle\EasyAdminBundle\Field\BooleanField;
+use EasyCorp\Bundle\EasyAdminBundle\Field\IntegerField;
+use EasyCorp\Bundle\EasyAdminBundle\Field\DateTimeField;
+use EasyCorp\Bundle\EasyAdminBundle\Field\TextareaField;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
+use EasyCorp\Bundle\EasyAdminBundle\Context\AdminContext;
+use EasyCorp\Bundle\EasyAdminBundle\Field\CollectionField;
+use EasyCorp\Bundle\EasyAdminBundle\Field\TextEditorField;
+use EasyCorp\Bundle\EasyAdminBundle\Field\AssociationField;
+use Symfony\Component\Form\Extension\Core\Type\TextareaType;
+use EasyCorp\Bundle\EasyAdminBundle\Router\AdminUrlGenerator;
+use Aequation\LaboBundle\Service\Interface\MenuServiceInterface;
+use Aequation\LaboBundle\Controller\Admin\Base\BaseCrudController;
+use Aequation\LaboBundle\Service\Interface\LaboUserServiceInterface;
 
 #[IsGranted('ROLE_COLLABORATOR')]
 class MenuCrudController extends BaseCrudController
@@ -75,6 +76,7 @@ class MenuCrudController extends BaseCrudController
                 yield ArrayField::new('relationOrderNames', 'Éléments order')->setPermission('ROLE_SUPER_ADMIN');
                 yield BooleanField::new('prefered', 'Menu principal');
                 yield CollectionField::new('categorys', 'Catégories');
+                yield TextField::new('content', 'Texte de la page')->renderAsHtml();
                 yield ThumbnailField::new('photo', 'Photo')->setBasePath($this->getParameter('vich_dirs.item_photo'));
                 yield BooleanField::new('enabled', 'Activé');
                 yield BooleanField::new('softdeleted', 'Supprimé')->setPermission('ROLE_SUPER_ADMIN');
@@ -96,6 +98,8 @@ class MenuCrudController extends BaseCrudController
                     // ->autocomplete()
                     ->setFormTypeOptions(['by_reference' => false])
                     ->setColumns(6);
+                yield TextEditorField::new('content', 'Texte de la page')
+                    ->formatValue(fn ($value) => Strings::markup($value));
                 yield AssociationField::new('categorys', 'Catégories')
                     ->setQueryBuilder(static fn (QueryBuilder $qb): QueryBuilder => CategoryRepository::QB_CategoryChoices($qb, Menu::class))
                     // ->autocomplete()
@@ -122,6 +126,8 @@ class MenuCrudController extends BaseCrudController
                         ->setFormTypeOption('by_reference', false);
                     yield AssociationField::new('webpage', 'Page web')
                         ->setSortProperty('name');
+                    yield TextEditorField::new('content', 'Texte de la page')
+                        ->formatValue(fn ($value) => Strings::markup($value));
                         // ->autocomplete()
                         // ->setFormTypeOptions(['by_reference' => false])
                     yield BooleanField::new('prefered', 'Menu principal');
