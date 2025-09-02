@@ -217,12 +217,12 @@ class Strings extends BaseService
 		$replaces = [
 			// '/\n/' => '<br />',
 			'/<h1>(.*?)<\/h1>/' => '<h3>$1</h3>',
-			'/<pre>(.*?)<\/pre>/' => '<div class="text-sky-700 text-lg font-semibold">$1</div>',
-			'/<blockquote>(.*?)<\/blockquote>/' => '<div class="text-amber-700 text-lg font-semibold">$1</div>',
-			'/<u>(.*?)<\/u>/' => '<div class="underline">$1</div>',
-			'/<i>(.*?)<\/i>/' => '<span class="italic">$1</span>',
-			'/<em>(.*?)<\/em>/' => '<span class="italic">$1</span>',
-			'/<del>(.*?)<\/del>/' => '<span class="underline">$1</span>',
+			'/<pre>(.*?)<\/pre>/' => '<div class="!text-sky-700 text-lg font-semibold">$1</div>',
+			'/<blockquote>(.*?)<\/blockquote>/' => '<div class="!text-amber-700 text-lg font-semibold">$1</div>',
+			'/<u>(.*?)<\/u>/' => '<div class="!underline">$1</div>',
+			'/<i>(.*?)<\/i>/' => '<span class="!italic">$1</span>',
+			'/<em>(.*?)<\/em>/' => '<span class="!italic">$1</span>',
+			'/<del>(.*?)<\/del>/' => '<span class="!underline">$1</span>',
 		];
 		$text = preg_replace(array_keys($replaces), $replaces, $text);
 		return static::markup($text);
