@@ -139,7 +139,7 @@ class SlideCrudController extends BaseCrudController
                     ->escapeHtml(false)
                     ->setColumns(6)
                     ->setRequired(false);
-                yield TextEditorField::new('content','Texte')->setColumns(12)->formatValue(fn ($value) => Strings::markup($value));
+                yield TextEditorField::new('content','Texte')->setColumns(12)->setNumOfRows(20)->formatValue(fn ($value) => Strings::markup($value));
     
                 yield FormField::addTab('Contenu média')
                     ->setIcon('tabler:camera');
@@ -194,7 +194,7 @@ class SlideCrudController extends BaseCrudController
                     ->escapeHtml(false)
                     ->setColumns(6)
                     ->setRequired(false);
-                yield TextEditorField::new('content','Texte')->setColumns(12)->formatValue(fn ($value) => Strings::markup($value));
+                yield TextEditorField::new('content','Texte')->setColumns(12)->setNumOfRows(20)->formatValue(fn ($value) => Strings::markup($value));
 
                 yield FormField::addTab('Contenu média')
                     ->setIcon('tabler:camera');

@@ -1,29 +1,30 @@
 <?php
 namespace Aequation\LaboBundle\Controller\Admin;
 
-use Aequation\LaboBundle\Controller\Admin\Base\BaseCrudController;
-use Aequation\LaboBundle\Service\Interface\LaboArticleServiceInterface;
-use Aequation\LaboBundle\Model\Interface\LaboUserInterface;
 use Doctrine\ORM\QueryBuilder;
-use EasyCorp\Bundle\EasyAdminBundle\Collection\FieldCollection;
-use EasyCorp\Bundle\EasyAdminBundle\Collection\FilterCollection;
+use Aequation\LaboBundle\Service\Tools\Strings;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Crud;
-use EasyCorp\Bundle\EasyAdminBundle\Config\Filters;
 use EasyCorp\Bundle\EasyAdminBundle\Dto\EntityDto;
 use EasyCorp\Bundle\EasyAdminBundle\Dto\SearchDto;
-use EasyCorp\Bundle\EasyAdminBundle\Field\BooleanField;
-use EasyCorp\Bundle\EasyAdminBundle\Field\ChoiceField;
-use EasyCorp\Bundle\EasyAdminBundle\Field\DateTimeField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\IdField;
-use EasyCorp\Bundle\EasyAdminBundle\Field\IntegerField;
+use EasyCorp\Bundle\EasyAdminBundle\Config\Filters;
 use EasyCorp\Bundle\EasyAdminBundle\Field\SlugField;
-use EasyCorp\Bundle\EasyAdminBundle\Field\TextareaField;
-use EasyCorp\Bundle\EasyAdminBundle\Field\TextEditorField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\TextField;
-use EasyCorp\Bundle\EasyAdminBundle\Filter\ChoiceFilter;
-use EasyCorp\Bundle\EasyAdminBundle\Filter\DateTimeFilter;
+use EasyCorp\Bundle\EasyAdminBundle\Field\ChoiceField;
 use EasyCorp\Bundle\EasyAdminBundle\Filter\TextFilter;
+use EasyCorp\Bundle\EasyAdminBundle\Field\BooleanField;
+use EasyCorp\Bundle\EasyAdminBundle\Field\IntegerField;
+use EasyCorp\Bundle\EasyAdminBundle\Field\DateTimeField;
+use EasyCorp\Bundle\EasyAdminBundle\Field\TextareaField;
+use EasyCorp\Bundle\EasyAdminBundle\Filter\ChoiceFilter;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
+use EasyCorp\Bundle\EasyAdminBundle\Field\TextEditorField;
+use EasyCorp\Bundle\EasyAdminBundle\Filter\DateTimeFilter;
+use Aequation\LaboBundle\Model\Interface\LaboUserInterface;
+use EasyCorp\Bundle\EasyAdminBundle\Collection\FieldCollection;
+use EasyCorp\Bundle\EasyAdminBundle\Collection\FilterCollection;
+use Aequation\LaboBundle\Controller\Admin\Base\BaseCrudController;
+use Aequation\LaboBundle\Service\Interface\LaboArticleServiceInterface;
 
 #[IsGranted('ROLE_COLLABORATOR')]
 abstract class ArticleCrudController extends BaseCrudController
@@ -82,8 +83,10 @@ abstract class ArticleCrudController extends BaseCrudController
                 yield DateTimeField::new('end', 'Fin')->setColumns(6);
                 yield TextField::new('title', 'Titre');
                 yield TextEditorField::new('content', 'Texte')
+                    ->setNumOfRows(20)
                     ->setColumns(6)
-                    ->setHelp('Contenu texte');
+                    ->setHelp('Contenu texte')
+                    ->formatValue(fn ($value) => Strings::markup($value));
                 break;
             case Crud::PAGE_EDIT:
                 yield TextField::new('name', 'Nom')
@@ -94,8 +97,10 @@ abstract class ArticleCrudController extends BaseCrudController
                 yield DateTimeField::new('end', 'Fin')->setColumns(6);
                 yield TextField::new('title', 'Titre');
                 yield TextEditorField::new('content', 'Texte')
+                    ->setNumOfRows(20)
                     ->setColumns(6)
-                    ->setHelp('Contenu texte');
+                    ->setHelp('Contenu texte')
+                    ->formatValue(fn ($value) => Strings::markup($value));
                 break;
             default:
                 yield IdField::new('id')->setPermission('ROLE_SUPER_ADMIN');

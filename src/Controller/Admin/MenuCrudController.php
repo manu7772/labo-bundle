@@ -99,6 +99,7 @@ class MenuCrudController extends BaseCrudController
                     ->setFormTypeOptions(['by_reference' => false])
                     ->setColumns(6);
                 yield TextEditorField::new('content', 'Texte de la page')
+                    ->setNumOfRows(20)
                     ->formatValue(fn ($value) => Strings::markup($value));
                 yield AssociationField::new('categorys', 'Catégories')
                     ->setQueryBuilder(static fn (QueryBuilder $qb): QueryBuilder => CategoryRepository::QB_CategoryChoices($qb, Menu::class))
@@ -127,6 +128,7 @@ class MenuCrudController extends BaseCrudController
                     yield AssociationField::new('webpage', 'Page web')
                         ->setSortProperty('name');
                     yield TextEditorField::new('content', 'Texte de la page')
+                        ->setNumOfRows(20)
                         ->formatValue(fn ($value) => Strings::markup($value));
                         // ->autocomplete()
                         // ->setFormTypeOptions(['by_reference' => false])

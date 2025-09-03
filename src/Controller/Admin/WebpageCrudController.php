@@ -134,6 +134,7 @@ class WebpageCrudController extends BaseCrudController
                     ->setHelp('Entrez ici le texte pour les liens qui dirigeront vers cette page web. Optionel : si non renseigné, le Titre de la page sera utilisé.')
                     ->setColumns(4);
                 yield TextEditorField::new('content', 'Texte de la page')
+                    ->setNumOfRows(20)
                     ->formatValue(fn ($value) => Strings::markup($value))
                     ->setColumns(8)
                     ;
@@ -187,8 +188,52 @@ class WebpageCrudController extends BaseCrudController
                     yield TextareaField::new('linktitle', 'Titre de lien externe')
                         ->setHelp('Entrez ici le texte pour les liens qui dirigeront vers cette page web. Optionel : si non renseigné, le Titre de la page sera utilisé.');
                     yield TextEditorField::new('content', 'Contenu de la page')
-                        ->formatValue(fn ($value) => Strings::markup($value));
-
+                        ->setNumOfRows(20)
+                        ->formatValue(fn ($value) => Strings::markup($value))
+                        ->setNumOfRows(20)
+                        // ->setTrixEditorConfig([
+                        //     // 'blockAttributes' => [
+                        //     //     'default' => [
+                        //     //         'tagName' => 'div', 'className' => null,
+                        //     //     ],
+                        //     //     'heading1' => [
+                        //     //         'tagName' => 'h3', 'className' => null,
+                        //     //     ],
+                        //     //     'heading2' => [
+                        //     //         'tagName' => 'h4', 'className' => null,
+                        //     //     ],
+                        //     //     'heading3' => [
+                        //     //         'tagName' => 'h5', 'className' => null,
+                        //     //     ],
+                        //     //     'unstyled' => [
+                        //     //         'tagName' => 'div', 'className' => null,
+                        //     //     ],
+                        //     //     'quote' => [
+                        //     //         'tagName' => 'div',
+                        //     //         'className' => 'text-amber-700 text-lg font-semibold',
+                        //     //         'nestable' => true,
+                        //     //     ],
+                        //     //     'code' => [
+                        //     //         'tagName' => 'div',
+                        //     //         'className' => 'text-sky-700 text-lg font-semibold',
+                        //     //     ],
+                        //     // ],
+                        //     'toolbar' => [
+                        //         'button-group' => [
+                        //             'text-tools' => [
+                        //                 'bold' => [],
+                        //                 'italic' => [],
+                        //                 'underline' => [],
+                        //                 'strike' => [],
+                        //                 'link' => [],
+                        //             ],
+                        //             // 'block-tools' => [],
+                        //             // 'history-tools' => [],
+                        //         ],
+                        //     ],
+                        //     // 'css' => 'trix-content',
+                        // ])
+                        ;
                     yield FormField::addColumn('col-md-4');
                         yield BooleanField::new('pdfExportable', 'Exportable en PDF')->setHelp('Si activé, un lien vers une version document PDF de cette page sera disponible sur le site public en téléchargement.');
                         yield TextField::new('photo', 'Photo')->setFormType(PhotoType::class);

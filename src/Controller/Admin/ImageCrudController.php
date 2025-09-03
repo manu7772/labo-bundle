@@ -54,7 +54,7 @@ class ImageCrudController extends BaseCrudController
                 yield TextField::new('filename');
                 yield TextField::new('mime');
                 yield TextField::new('originalname');
-                yield TextEditorField::new('description');
+                yield TextEditorField::new('description')->setNumOfRows(20);
                 yield TextField::new('dimensions');
                 yield ImageField::new('filename', 'Photo')
                     ->setBasePath($this->getParameter($info['entity']->_shortname(type: 'snake')));
@@ -66,7 +66,7 @@ class ImageCrudController extends BaseCrudController
                 yield TextField::new('file')
                     ->setFormType(VichImageType::class)
                     ->setColumns(6);
-                yield TextEditorField::new('description')->setColumns(6);
+                yield TextEditorField::new('description')->setColumns(6)->setNumOfRows(20)->formatValue(fn ($value) => Strings::markup($value));
                 yield AssociationField::new('owner', 'Propriétaire')->setColumns(6)->setPermission('ROLE_ADMIN')->setCrudController(UserCrudController::class);
                 break;
             case Crud::PAGE_EDIT:
@@ -76,7 +76,7 @@ class ImageCrudController extends BaseCrudController
                     ->setColumns(6);
                 yield BooleanField::new('updateSlug')->setLabel('Mettre à jour le slug')->setColumns(6);
                 yield SlugField::new('slug')->setTargetFieldName('name')->setColumns(6);
-                yield TextEditorField::new('description')->setColumns(12);
+                yield TextEditorField::new('description')->setColumns(12)->setNumOfRows(20)->formatValue(fn ($value) => Strings::markup($value));
                 yield AssociationField::new('owner', 'Propriétaire')->setColumns(6)->setPermission('ROLE_ADMIN')->setCrudController(UserCrudController::class);
                 break;
             default:

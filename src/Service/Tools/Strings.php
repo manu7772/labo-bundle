@@ -214,18 +214,41 @@ class Strings extends BaseService
 
 	public static function formateForWebpage(string $text): Markup
 	{
+		// $replaces = [
+		// 	// '/\n/' => '<br />',
+		// 	'/<h1>(.*?)<\/h1>/' => '<h3>$1</h3>',
+		// 	'/<pre>(.*?)<\/pre>/' => '<div class="text-sky-700 text-lg font-semibold">$1</div>',
+		// 	'/<blockquote>(.*?)<\/blockquote>/' => '<div class="text-amber-700 text-lg font-semibold">$1</div>',
+		// 	'/<u>(.*?)<\/u>/' => '<div class="underline">$1</div>',
+		// 	'/<i>(.*?)<\/i>/' => '<span class="italic">$1</span>',
+		// 	'/<em>(.*?)<\/em>/' => '<span class="italic">$1</span>',
+		// 	'/<del>(.*?)<\/del>/' => '<span class="underline">$1</span>',
+		// 	'/<ul>(.*?)<\/ul>/' => '<ul class="list-disc pl-8">$1</ul>',
+		// 	'/<li>(.*?)<\/li>/' => '<li><div>$1</div></li>',
+		// ];
 		$replaces = [
 			// '/\n/' => '<br />',
-			'/<h1>(.*?)<\/h1>/' => '<h3>$1</h3>',
-			'/<pre>(.*?)<\/pre>/' => '<div class="!text-sky-700 text-lg font-semibold">$1</div>',
-			'/<blockquote>(.*?)<\/blockquote>/' => '<div class="!text-amber-700 text-lg font-semibold">$1</div>',
-			'/<u>(.*?)<\/u>/' => '<div class="!underline">$1</div>',
-			'/<i>(.*?)<\/i>/' => '<span class="!italic">$1</span>',
-			'/<em>(.*?)<\/em>/' => '<span class="!italic">$1</span>',
-			'/<del>(.*?)<\/del>/' => '<span class="!underline">$1</span>',
+			'/<h1>/' => '<h3>',
+			'/<\/h1>/' => '</h3>',
+			'/<pre>/' => '<div class="text-sky-700 text-lg font-semibold">',
+			'/<\/pre>/' => '</div>',
+			'/<blockquote>/' => '<div class="text-amber-700 text-lg font-semibold">',
+			'/<\/blockquote>/' => '</div>',
+			'/<u>/' => '<div class="underline">',
+			'/<\/u>/' => '</div>',
+			'/<i>/' => '<span class="italic">',
+			'/<\/i>/' => '</span>',
+			'/<em>/' => '<span class="italic">',
+			'/<\/em>/' => '</span>',
+			'/<del>/' => '<span class="underline">',
+			'/<\/del>/' => '</span>',
+			'/<ul>/' => '<ul class="list-disc pl-8">',
+			'/<\/ul>/' => '</ul>',
+			'/<li>/' => '<li><div>',
+			'/<\/li>/' => '</div></li>',
+			'/<br><a/' => '</br><a class="inline-block rounded-md bg-sky-600 hover:bg-sky-400 text-white my-2 px-4 py-2 !no-underline" target="_blank"',
 		];
-		$text = preg_replace(array_keys($replaces), $replaces, $text);
-		return static::markup($text);
+		return static::markup(preg_replace(array_keys($replaces), $replaces, $text));
 	}
 
     /** ***********************************************************************************

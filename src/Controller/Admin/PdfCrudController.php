@@ -5,6 +5,7 @@ use Aequation\LaboBundle\Entity\Pdf;
 use Aequation\LaboBundle\Field\EditorjsField;
 
 use Aequation\LaboBundle\Field\VichFileField;
+use Aequation\LaboBundle\Service\Tools\Strings;
 use Vich\UploaderBundle\Form\Type\VichFileType;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Crud;
 use Vich\UploaderBundle\Form\Type\VichImageType;
@@ -25,12 +26,12 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 use EasyCorp\Bundle\EasyAdminBundle\Filter\NumericFilter;
 use EasyCorp\Bundle\EasyAdminBundle\Field\TextEditorField;
 use EasyCorp\Bundle\EasyAdminBundle\Filter\DateTimeFilter;
+use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use EasyCorp\Bundle\EasyAdminBundle\Field\AssociationField;
 use EasyCorp\Bundle\EasyAdminBundle\Form\Type\FileUploadType;
 use Aequation\LaboBundle\Service\Interface\PdfServiceInterface;
 use Aequation\LaboBundle\Controller\Admin\Base\BaseCrudController;
 use Aequation\LaboBundle\Service\Interface\LaboUserServiceInterface;
-use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 
 #[IsGranted('ROLE_COLLABORATOR')]
 class PdfCrudController extends BaseCrudController
@@ -96,7 +97,11 @@ class PdfCrudController extends BaseCrudController
                 yield FormField::AddTab(label: 'Contenu source', icon: 'fa6-solid:pencil')->setHelp('Vous pouvez saisir le contenu du document PDF ici.<br><strong>Si vous avez désigné un fichier source PDF, tout ce contenu sera ignoré</strong>');
                 yield ChoiceField::new('paper', 'Format document')->setChoices(Pdf::getPaperChoices())->setColumns(6);
                 yield ChoiceField::new('orientation', 'Orientation document')->setFormTypeOption('expanded', true)->setChoices(Pdf::getOrientationChoices())->setColumns(6);
-                yield TextEditorField::new('content', 'Contenu du fichier PDF')->setColumns(12)->setHelp('Contenu du document PDF : si vous avez désigné un fichier source PDF, ce contenu sera ignoré');
+                yield TextEditorField::new('content', 'Contenu du fichier PDF')
+                    ->setColumns(12)
+                    ->setNumOfRows(20)
+                    ->setHelp('Contenu du document PDF : si vous avez désigné un fichier source PDF, ce contenu sera ignoré')
+                    ->formatValue(fn ($value) => Strings::markup($value));
                 break;
             case Crud::PAGE_EDIT:
                 yield FormField::AddTab(label: 'Informations', icon: 'fa6-solid:info');
@@ -128,7 +133,11 @@ class PdfCrudController extends BaseCrudController
                         yield FormField::AddTab(label: 'Contenu source', icon: 'fa6-solid:pencil')->setHelp('Vous pouvez saisir le contenu du document PDF ici.<br><strong>Si vous avez désigné un fichier source PDF, tout ce contenu sera ignoré</strong>');
                         yield ChoiceField::new('paper', 'Format document')->setChoices(Pdf::getPaperChoices())->setColumns(6)->setRequired(false);
                         yield ChoiceField::new('orientation', 'Orientation document')->setFormTypeOption('expanded', true)->setChoices(Pdf::getOrientationChoices())->setColumns(6)->setRequired(false);
-                        yield TextEditorField::new('content', 'Contenu du fichier PDF')->setColumns(12)->setHelp('Contenu du document PDF : si vous avez désigné un fichier source PDF, ce contenu sera ignoré');
+                        yield TextEditorField::new('content', 'Contenu du fichier PDF')
+                            ->setColumns(12)
+                            ->setNumOfRows(20)
+                            ->setHelp('Contenu du document PDF : si vous avez désigné un fichier source PDF, ce contenu sera ignoré')
+                            ->formatValue(fn ($value) => Strings::markup($value));
                         break;
                 }
                 // yield TextField::new('name')->setColumns(6)->setRequired(true);
@@ -142,7 +151,7 @@ class PdfCrudController extends BaseCrudController
                 //     ]);
                 // yield BooleanField::new('updateSlug')->setLabel('Mettre à jour le slug')->setColumns(6)->setHelp('Si vous cochez cette case, le slug sera mis à jour avec le nom du document.<br><strong>Il n\'est pas recommandé de modifier le slug</strong> car cela change le lien URL du document.');
                 // yield SlugField::new('slug')->setTargetFieldName('name')->setColumns(6);
-                // yield TextEditorField::new('content', 'Contenu du fichier PDF')->setColumns(12)->setHelp('Contenu du document : si vous avez désigné un fichier PDF, ce contenu sera ignoré');
+                // yield TextEditorField::new('content', 'Contenu du fichier PDF')->setColumns(12)->setNumOfRows(20)->setHelp('Contenu du document : si vous avez désigné un fichier PDF, ce contenu sera ignoré');
                 // yield TextareaField::new('description', 'Description du contenu du PDF')->setColumns(6);
                 // yield AssociationField::new('owner', 'Propriétaire')->setColumns(6)->setPermission('ROLE_ADMIN')->setCrudController(UserCrudController::class);
                 break;

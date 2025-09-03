@@ -67,7 +67,7 @@ class SliderCrudController extends BaseCrudController
                 yield TextField::new('slidertypeAsText', 'Type de diaporama');
                 yield TextField::new('title', 'Titre');
                 yield ArrayField::new('items', 'Diapositives');
-                yield TextEditorField::new('content', 'Texte')->formatValue(function ($value) { return Strings::markup($value); });
+                yield TextEditorField::new('content', 'Texte')->setNumOfRows(20)->formatValue(function ($value) { return Strings::markup($value); });
                 yield BooleanField::new('enabled', 'Activé');
                 yield BooleanField::new('softdeleted', 'Supprimé')->setPermission('ROLE_SUPER_ADMIN');
                 yield DateTimeField::new('createdAt', 'Création')->setFormat('dd/MM/Y - HH:mm')->setTimezone($current_tz);
@@ -87,7 +87,7 @@ class SliderCrudController extends BaseCrudController
                         ->setColumns(6)
                         ->setRequired(true)
                         ;
-                    yield TextEditorField::new('content', 'Texte de présentation')->setColumns(12);
+                    yield TextEditorField::new('content', 'Texte de présentation')->setNumOfRows(20)->setColumns(12);
                     // yield TextareaField::new('content', 'Texte')
                     //     ->setFormType(CKEditorType::class)
                     //     ->setFormTypeOptions(
@@ -150,7 +150,7 @@ class SliderCrudController extends BaseCrudController
                         ->setColumns(6)
                         ->setRequired(true)
                         ;
-                    yield TextEditorField::new('content', 'Texte de présentation')->setColumns(12);
+                    yield TextEditorField::new('content', 'Texte de présentation')->setNumOfRows(20)->setColumns(12);
                     yield FormField::addTab('Diapositives')
                         ->setIcon('fa6-solid:camera');
                     yield AssociationField::new('items', 'Diapositives')
