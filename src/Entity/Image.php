@@ -45,16 +45,14 @@ abstract class Image extends Item implements ImageInterface
     public const THUMBNAIL_LIIP_FILTER = 'miniature_q';
     public const LIIP_FILTERS = [
         // 'Aucun format prédéfini' => null,
-        'miniature (100x100)' => 'miniature',
-        'miniature_q (100x100 compressée)' => 'miniature_q',
-        'carre (300x300)' => 'carre',
-        'carre_q (300x300 compressée)' => 'carre_q',
-        'portrait (400x600)' => 'portrait',
-        'portrait_q (400x600 compressée)' => 'portrait_q',
-        'photo (800x600)' => 'photo',
-        'photo_q (800x600 compressée)' => 'photo_q',
-        'landscapemin (800x350)' => 'landscapemin',
-        'landscape (1280x900)' => 'landscape',
+        'photo horizontale (800x600)' => 'photo_h',
+        'photo verticale (600x800)' => 'photo_v',
+        'photo carrée (800x800)' => 'photo_q',
+        'photo carrée comp. (600x600)' => 'photo_reduced_600',
+        'grande photo (1000x1200)' => 'photo_fullscreen',
+        'paysage fin (800x200)' => 'landscapethin',
+        'paysage mini (800x350)' => 'landscapemin',
+        'paysage (1280x900)' => 'landscape',
     ];
     
 
