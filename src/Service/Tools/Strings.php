@@ -1,13 +1,15 @@
 <?php
 namespace Aequation\LaboBundle\Service\Tools;
 
+use Aequation\LaboBundle\Model\Attribute\CssClasses;
 use Aequation\LaboBundle\Service\Base\BaseService;
-use DateTime;
+// Symfony
 use Symfony\Component\String\Inflector\EnglishInflector;
 use Symfony\Component\String\Inflector\FrenchInflector;
 use Symfony\Component\String\Slugger\AsciiSlugger;
-// use Faker\Factory as Faker;
 use function Symfony\Component\String\u;
+// use Faker\Factory as Faker;
+use DateTime;
 use DOMDocument;
 use DOMDocumentType;
 use DOMElement;
@@ -25,7 +27,7 @@ class Strings extends BaseService
 
 	public static function markup(
 		?string $html,
-		string $charset = null
+		?string $charset = null
 	): Markup
 	{
 		return new Markup(
@@ -212,6 +214,24 @@ class Strings extends BaseService
 		return preg_split('/'.$spliter.'/', $text, -1, PREG_SPLIT_NO_EMPTY);
 	}
 
+    #[CssClasses(target: 'value')]
+    public static function getCssClasses(): array
+    {
+        $css = [
+			'pre' => "text-sky-700 text-lg font-semibold",
+			'blockquote' => "text-amber-700 text-lg font-semibold",
+			'u' => "underline",
+			'i' => "italic",
+			'em' => "italic",
+			'del' => "underline",
+			'ul' => "list-disc pl-8",
+			'li' => "",
+			'a' => "inline-block rounded-md bg-sky-600 hover:bg-sky-400 text-white my-2 px-4 py-2 !no-underline"
+		];
+		dd($css);
+		return $css;
+    }
+
 	public static function formateForWebpage(string $text): Markup
 	{
 		// $replaces = [
@@ -226,27 +246,28 @@ class Strings extends BaseService
 		// 	'/<ul>(.*?)<\/ul>/' => '<ul class="list-disc pl-8">$1</ul>',
 		// 	'/<li>(.*?)<\/li>/' => '<li><div>$1</div></li>',
 		// ];
+		$css = static::getCssClasses();
 		$replaces = [
 			// '/\n/' => '<br />',
 			'/<h1>/' => '<h3>',
 			'/<\/h1>/' => '</h3>',
-			'/<pre>/' => '<div class="text-sky-700 text-lg font-semibold">',
+			'/<pre>/' => '<div class="'.$css['pre'].'">',
 			'/<\/pre>/' => '</div>',
-			'/<blockquote>/' => '<div class="text-amber-700 text-lg font-semibold">',
+			'/<blockquote>/' => '<div class="'.$css['blockquote'].'">',
 			'/<\/blockquote>/' => '</div>',
-			'/<u>/' => '<div class="underline">',
+			'/<u>/' => '<div class="'.$css['u'].'">',
 			'/<\/u>/' => '</div>',
-			'/<i>/' => '<span class="italic">',
+			'/<i>/' => '<span class="'.$css['i'].'">',
 			'/<\/i>/' => '</span>',
-			'/<em>/' => '<span class="italic">',
+			'/<em>/' => '<span class="'.$css['em'].'">',
 			'/<\/em>/' => '</span>',
-			'/<del>/' => '<span class="underline">',
+			'/<del>/' => '<span class="'.$css['del'].'">',
 			'/<\/del>/' => '</span>',
-			'/<ul>/' => '<ul class="list-disc pl-8">',
+			'/<ul>/' => '<ul class="'.$css['ul'].'">',
 			'/<\/ul>/' => '</ul>',
-			'/<li>/' => '<li><div>',
+			'/<li>/' => '<li class="'.$css['li'].'"><div>',
 			'/<\/li>/' => '</div></li>',
-			'/<br><a/' => '</br><a class="inline-block rounded-md bg-sky-600 hover:bg-sky-400 text-white my-2 px-4 py-2 !no-underline" target="_blank"',
+			'/<br><a/' => '</br><a class="'.$css['a'].'" target="_blank"',
 		];
 		return static::markup(preg_replace(array_keys($replaces), $replaces, $text));
 	}
