@@ -228,7 +228,6 @@ class Strings extends BaseService
 			'li' => "",
 			'a' => "inline-block rounded-md bg-sky-600 hover:bg-sky-400 text-white my-2 px-4 py-2 !no-underline"
 		];
-		dd($css);
 		return $css;
     }
 
