@@ -233,18 +233,6 @@ class Strings extends BaseService
 
 	public static function formateForWebpage(string $text): Markup
 	{
-		// $replaces = [
-		// 	// '/\n/' => '<br />',
-		// 	'/<h1>(.*?)<\/h1>/' => '<h3>$1</h3>',
-		// 	'/<pre>(.*?)<\/pre>/' => '<div class="text-sky-700 text-lg font-semibold">$1</div>',
-		// 	'/<blockquote>(.*?)<\/blockquote>/' => '<div class="text-amber-700 text-lg font-semibold">$1</div>',
-		// 	'/<u>(.*?)<\/u>/' => '<div class="underline">$1</div>',
-		// 	'/<i>(.*?)<\/i>/' => '<span class="italic">$1</span>',
-		// 	'/<em>(.*?)<\/em>/' => '<span class="italic">$1</span>',
-		// 	'/<del>(.*?)<\/del>/' => '<span class="underline">$1</span>',
-		// 	'/<ul>(.*?)<\/ul>/' => '<ul class="list-disc pl-8">$1</ul>',
-		// 	'/<li>(.*?)<\/li>/' => '<li><div>$1</div></li>',
-		// ];
 		$css = static::getCssClasses();
 		$replaces = [
 			// '/\n/' => '<br />',
@@ -266,7 +254,10 @@ class Strings extends BaseService
 			'/<\/ul>/' => '</ul>',
 			'/<li>/' => '<li class="'.$css['li'].'"><div>',
 			'/<\/li>/' => '</div></li>',
-			'/<br><a/' => '</br><a class="'.$css['a'].'" target="_blank"',
+			// Twig components
+			'/&lt;twig:(.*?)&gt;/' => '<twig:$1>',
+			'/&lt;\/twig:(.*?)&gt;/' => '</twig:$1>',
+			// '/<br><a/' => '</br><a class="'.$css['a'].'" target="_blank"',
 		];
 		return static::markup(preg_replace(array_keys($replaces), $replaces, $text));
 	}
