@@ -1,24 +1,25 @@
 <?php
 namespace Aequation\LaboBundle\Entity;
 
-use Aequation\LaboBundle\Model\Trait\Slug;
-use Aequation\LaboBundle\Model\Attribute as EA;
-use Aequation\LaboBundle\Model\Attribute\RelationOrder;
-use Aequation\LaboBundle\Model\Attribute\Slugable;
-use Aequation\LaboBundle\Model\Final\FinalCategoryInterface;
-use Aequation\LaboBundle\Repository\LaboArticleRepository;
-use Aequation\LaboBundle\Model\Interface\LaboArticleInterface;
-use Aequation\LaboBundle\Service\Interface\LaboArticleServiceInterface;
-// Symfony
+use DateTimeInterface;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
-use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
-use Doctrine\Common\Collections\ArrayCollection;
+use Aequation\LaboBundle\Model\Trait\Slug;
 use Doctrine\Common\Collections\Collection;
-use Symfony\Component\Serializer\Attribute as Serializer;
+use Aequation\LaboBundle\Model\Attribute as EA;
+use Doctrine\Common\Collections\ArrayCollection;
+use Aequation\LaboBundle\Model\Attribute\Slugable;
+// Symfony
 use Vich\UploaderBundle\Mapping\Annotation as Vich;
+use Aequation\LaboBundle\Model\Attribute\HtmlContent;
+use Aequation\LaboBundle\Model\Attribute\RelationOrder;
+use Symfony\Component\Serializer\Attribute as Serializer;
+use Aequation\LaboBundle\Repository\LaboArticleRepository;
+use Aequation\LaboBundle\Model\Final\FinalCategoryInterface;
+use Aequation\LaboBundle\Model\Interface\LaboArticleInterface;
 // PHP
-use DateTimeInterface;
+use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
+use Aequation\LaboBundle\Service\Interface\LaboArticleServiceInterface;
 
 #[ORM\Entity(repositoryClass: LaboArticleRepository::class)]
 #[EA\ClassCustomService(LaboArticleServiceInterface::class)]
@@ -43,12 +44,14 @@ abstract class LaboArticle extends Item implements LaboArticleInterface
 
 
     #[ORM\Column(type: Types::TEXT, nullable: true)]
+    #[HtmlContent]
     protected ?string $title = null;
 
     #[ORM\Column(type: Types::STRING, nullable: false)]
     protected string $webpage;
 
     #[ORM\Column(type: Types::TEXT, nullable: false)]
+    #[HtmlContent]
     protected string $content;
 
     #[ORM\Column(type: Types::DATETIME_MUTABLE, nullable: true)]

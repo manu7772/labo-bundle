@@ -1,33 +1,34 @@
 <?php
 namespace Aequation\LaboBundle\Entity;
 
-use Aequation\LaboBundle\Component\AppEntityInfo;
-use Aequation\LaboBundle\EventListener\Attribute\AppEvent;
-use Aequation\LaboBundle\Model\Interface\CreatedInterface;
-use Aequation\LaboBundle\Model\Interface\ImageInterface;
-use Aequation\LaboBundle\Model\Interface\ImageOwnerInterface;
-use Aequation\LaboBundle\Repository\ImageRepository;
-use Aequation\LaboBundle\Model\Attribute as EA;
-use Aequation\LaboBundle\Model\Interface\AppEntityInterface;
-use Aequation\LaboBundle\Service\Interface\ImageServiceInterface;
-use Aequation\LaboBundle\Service\Tools\Files;
-use Aequation\LaboBundle\Service\Tools\HttpRequest;
-
-use Doctrine\ORM\Mapping as ORM;
-use Doctrine\DBAL\Types\Types;
-use Symfony\Component\HttpFoundation\File\File;
-use Symfony\Component\Validator\Constraints as Assert;
-use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
-use Symfony\Component\Serializer\Attribute as Serializer;
-use Vich\UploaderBundle\Mapping\Annotation as Vich;
-
 use Exception;
-use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
+use Doctrine\DBAL\Types\Types;
+use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Form\Form;
-use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\Form\FormEvent;
 use Symfony\Component\Form\FormEvents;
+use Aequation\LaboBundle\Service\Tools\Files;
+use Aequation\LaboBundle\Model\Attribute as EA;
+use Symfony\Component\HttpFoundation\File\File;
+use Symfony\Component\Form\FormBuilderInterface;
+use Aequation\LaboBundle\Component\AppEntityInfo;
+
 use Symfony\Component\Serializer\Attribute\Groups;
+use Aequation\LaboBundle\Service\Tools\HttpRequest;
+use Vich\UploaderBundle\Mapping\Annotation as Vich;
+use Aequation\LaboBundle\Repository\ImageRepository;
+use Aequation\LaboBundle\Model\Attribute\HtmlContent;
+use Symfony\Component\Validator\Constraints as Assert;
+use Aequation\LaboBundle\Model\Interface\ImageInterface;
+
+use Symfony\Component\Serializer\Attribute as Serializer;
+use Aequation\LaboBundle\EventListener\Attribute\AppEvent;
+use Aequation\LaboBundle\Model\Interface\CreatedInterface;
+use Aequation\LaboBundle\Model\Interface\AppEntityInterface;
+use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
+use Aequation\LaboBundle\Model\Interface\ImageOwnerInterface;
+use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
+use Aequation\LaboBundle\Service\Interface\ImageServiceInterface;
 
 #[ORM\Entity(repositoryClass: ImageRepository::class)]
 #[ORM\DiscriminatorColumn(name: "class_name", type: "string")]
@@ -86,6 +87,7 @@ abstract class Image extends Item implements ImageInterface
     protected ?string $imagefilter;
 
     #[ORM\Column(type: Types::TEXT, nullable: true)]
+    #[HtmlContent]
     protected ?string $description = null;
 
     protected bool $deleteImage = false;

@@ -30,6 +30,7 @@ use EasyCorp\Bundle\EasyAdminBundle\Field\TextField;
 use EasyCorp\Bundle\EasyAdminBundle\Filter\TextFilter;
 use EasyCorp\Bundle\EasyAdminBundle\Router\AdminUrlGenerator;
 use Doctrine\ORM\QueryBuilder;
+use EasyCorp\Bundle\EasyAdminBundle\Config\Asset;
 use EasyCorp\Bundle\EasyAdminBundle\Field\ArrayField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\FormField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\ImageField;
@@ -159,6 +160,7 @@ class WebpageCrudController extends BaseCrudController
                     yield SlugField::new('slug', 'Slug')->setTargetFieldName('name')->setColumns(3)->setHelp('Utilisez un nom simple et pas trop long. <strong>Il est préférable de ne jamais changer ce slug</strong> car il changera l\'URL de la page et cela réduit l\'efficacité du référencement du site.');
                     yield BooleanField::new('updateSlug')->setLabel('Mettre à jour le slug')->setColumns(2)->setHelp('Il est recommandé d\'éviter de changer le slug car il est indexé par les moteurs de recherche. Faites-le uniquement si le nom du slug n\'a plus aucun rapport avec le contenu de ce que vous êtes en train d\'éditer.');
                     yield ChoiceField::new('twigfile', 'Modèle de mise en page')
+                        ->setHelp('Choisissez le modèle de mise en page que vous souhaitez utiliser pour cette page web. Le modèle par défaut est généralement suffisant, mais vous pouvez en choisir un autre.')
                         ->setChoices(fn (Webpage $webpage): array => $webpage->getTwigfileChoices() ?: [])
                         ->escapeHtml(false)
                         ->setColumns(6)
@@ -191,6 +193,16 @@ class WebpageCrudController extends BaseCrudController
                         ->setNumOfRows(20)
                         ->formatValue(fn ($value) => Strings::markup($value))
                         ->setNumOfRows(20)
+                        ->setTrixEditorConfig([
+                            'blockAttributes' => [
+                                'default' => [
+                                    'tagName' => 'div',
+                                    'className' => null,
+                                    'parse' => false,
+                                ]
+                            ]
+                        ]);
+                        // ->addJsFiles()
                         // ->setTrixEditorConfig([
                         //     // 'blockAttributes' => [
                         //     //     'default' => [

@@ -1,45 +1,46 @@
 <?php
 namespace Aequation\LaboBundle\Entity;
 
-use Aequation\LaboBundle\Entity\MappSuperClassEntity;
-use Aequation\LaboBundle\Model\Interface\LaboUserInterface;
-use Aequation\LaboBundle\Model\Interface\ImageOwnerInterface;
-use Aequation\LaboBundle\Model\Trait\Enabled;
-use Aequation\LaboBundle\Model\Trait\Created;
-use Aequation\LaboBundle\Entity\Image;
-use Aequation\LaboBundle\Entity\Portrait;
-use Aequation\LaboBundle\EventListener\Attribute\AppEvent;
-use Aequation\LaboBundle\Model\Attribute\RelationOrder;
-use Aequation\LaboBundle\Model\Interface\UnamedInterface;
-use Aequation\LaboBundle\Model\Trait\Unamed;
-use Aequation\LaboBundle\Repository\LaboUserRepository;
-use Aequation\LaboBundle\Service\Interface\AppEntityManagerInterface;
-use Aequation\LaboBundle\Service\Interface\AppRoleHierarchyInterface;
-use Aequation\LaboBundle\Service\Tools\Encoders;
-use Aequation\LaboBundle\Service\LaboUserService;
-use Aequation\LaboBundle\Model\Attribute as EA;
-use Aequation\LaboBundle\Model\Final\FinalAddresslinkInterface;
-use Aequation\LaboBundle\Model\Final\FinalCategoryInterface;
-use Aequation\LaboBundle\Model\Final\FinalEmailinkInterface;
-use Aequation\LaboBundle\Model\Final\FinalPhonelinkInterface;
-use Aequation\LaboBundle\Model\Final\FinalUrlinkInterface;
-use Aequation\LaboBundle\Model\Interface\CreatedInterface;
-use Aequation\LaboBundle\Model\Interface\EnabledInterface;
-use Aequation\LaboBundle\Model\Interface\LaboRelinkInterface;
-// Symfony
-use Doctrine\ORM\Mapping as ORM;
-use Doctrine\Common\Collections\ArrayCollection;
-use Doctrine\Common\Collections\Collection;
-use Doctrine\DBAL\Types\Types;
-use Symfony\Component\Validator\Constraints as Assert;
-use Symfony\Component\Security\Core\Validator\Constraints as SecurityAssert;
-use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
-use Symfony\Component\Security\Core\User\EquatableInterface;
-use Symfony\Component\Security\Core\User\UserInterface;
-use Symfony\Component\Serializer\Attribute as Serializer;
-// PHP
 use DateInterval;
 use DateTimeImmutable;
+use Doctrine\DBAL\Types\Types;
+use Doctrine\ORM\Mapping as ORM;
+use Aequation\LaboBundle\Entity\Image;
+use Aequation\LaboBundle\Entity\Portrait;
+use Doctrine\Common\Collections\Collection;
+use Aequation\LaboBundle\Model\Trait\Unamed;
+use Aequation\LaboBundle\Model\Trait\Created;
+use Aequation\LaboBundle\Model\Trait\Enabled;
+use Aequation\LaboBundle\Model\Attribute as EA;
+use Aequation\LaboBundle\Service\Tools\Encoders;
+use Doctrine\Common\Collections\ArrayCollection;
+use Aequation\LaboBundle\Service\LaboUserService;
+use Aequation\LaboBundle\Entity\MappSuperClassEntity;
+use Aequation\LaboBundle\Model\Attribute\HtmlContent;
+use Symfony\Component\Validator\Constraints as Assert;
+use Aequation\LaboBundle\Model\Attribute\RelationOrder;
+use Aequation\LaboBundle\Repository\LaboUserRepository;
+use Symfony\Component\Security\Core\User\UserInterface;
+use Aequation\LaboBundle\Model\Interface\UnamedInterface;
+use Symfony\Component\Serializer\Attribute as Serializer;
+use Aequation\LaboBundle\EventListener\Attribute\AppEvent;
+use Aequation\LaboBundle\Model\Final\FinalUrlinkInterface;
+use Aequation\LaboBundle\Model\Interface\CreatedInterface;
+// Symfony
+use Aequation\LaboBundle\Model\Interface\EnabledInterface;
+use Aequation\LaboBundle\Model\Interface\LaboUserInterface;
+use Aequation\LaboBundle\Model\Final\FinalCategoryInterface;
+use Aequation\LaboBundle\Model\Final\FinalEmailinkInterface;
+use Symfony\Component\Security\Core\User\EquatableInterface;
+use Aequation\LaboBundle\Model\Final\FinalPhonelinkInterface;
+use Aequation\LaboBundle\Model\Interface\ImageOwnerInterface;
+use Aequation\LaboBundle\Model\Interface\LaboRelinkInterface;
+use Aequation\LaboBundle\Model\Final\FinalAddresslinkInterface;
+use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
+// PHP
+use Aequation\LaboBundle\Service\Interface\AppEntityManagerInterface;
+use Aequation\LaboBundle\Service\Interface\AppRoleHierarchyInterface;
+use Symfony\Component\Security\Core\Validator\Constraints as SecurityAssert;
 
 #[ORM\Entity(repositoryClass: LaboUserRepository::class)]
 // #[EA\ClassCustomService(LaboUserServiceInterface::class)]
@@ -125,6 +126,7 @@ abstract class LaboUser extends MappSuperClassEntity implements LaboUserInterfac
 
     #[ORM\Column(length: 255, nullable: true)]
     #[Serializer\Groups('index')]
+    #[HtmlContent]
     protected ?string $fonction = null;
 
     /**

@@ -1,27 +1,28 @@
 <?php
 namespace Aequation\LaboBundle\Entity;
 
-use Aequation\LaboBundle\Entity\MappSuperClassEntity;
-use Aequation\LaboBundle\Model\Interface\LaboCategoryInterface;
-use Aequation\LaboBundle\Model\Interface\CreatedInterface;
+use Exception;
+use Doctrine\ORM\Mapping as ORM;
+use Aequation\LaboBundle\Model\Trait\Slug;
+use Doctrine\ORM\Event\PreUpdateEventArgs;
+use Doctrine\ORM\Mapping\MappedSuperclass;
+use Doctrine\ORM\Event\PrePersistEventArgs;
+use Aequation\LaboBundle\Model\Trait\Unamed;
+use Aequation\LaboBundle\Model\Trait\Created;
 use Aequation\LaboBundle\Model\Attribute as EA;
+use Aequation\LaboBundle\Service\Tools\Classes;
+use Doctrine\ORM\Mapping\HasLifecycleCallbacks;
 use Aequation\LaboBundle\Model\Attribute\Slugable;
+use Aequation\LaboBundle\Entity\MappSuperClassEntity;
+use Aequation\LaboBundle\Model\Attribute\HtmlContent;
 use Aequation\LaboBundle\Model\Interface\SlugInterface;
 use Aequation\LaboBundle\Model\Interface\UnamedInterface;
-use Aequation\LaboBundle\Model\Trait\Created;
-use Aequation\LaboBundle\Model\Trait\Slug;
-use Aequation\LaboBundle\Model\Trait\Unamed;
+use Symfony\Component\Serializer\Attribute as Serializer;
+use Aequation\LaboBundle\Model\Interface\CreatedInterface;
+use Aequation\LaboBundle\Model\Interface\LaboCategoryInterface;
+use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Aequation\LaboBundle\Service\Interface\AppEntityManagerInterface;
 use Aequation\LaboBundle\Service\Interface\LaboCategoryServiceInterface;
-use Aequation\LaboBundle\Service\Tools\Classes;
-use Doctrine\ORM\Event\PrePersistEventArgs;
-use Doctrine\ORM\Event\PreUpdateEventArgs;
-use Doctrine\ORM\Mapping as ORM;
-use Doctrine\ORM\Mapping\HasLifecycleCallbacks;
-use Doctrine\ORM\Mapping\MappedSuperclass;
-use Exception;
-use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
-use Symfony\Component\Serializer\Attribute as Serializer;
 
 // #[EA\ClassCustomService(LaboCategoryServiceInterface::class)]
 #[MappedSuperclass]
@@ -52,6 +53,7 @@ abstract class LaboCategory extends MappSuperClassEntity implements LaboCategory
 
     #[ORM\Column(length: 64, nullable: true)]
     #[Serializer\Groups('detail')]
+    #[HtmlContent]
     protected ?string $description = null;
 
 

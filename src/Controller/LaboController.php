@@ -48,8 +48,8 @@ class LaboController extends CommonController
      */
     #[Route(path: '/css/{action?}/{data?}', name: 'css', methods: ["get","post"])]
     public function css(
-        string $action = null,
-        string $data = null,
+        ?string $action = null,
+        ?string $data = null,
         LaboBundleServiceInterface $laboService,
         CssDeclarationInterface $cssDeclaration,
         #[Autowire(service: 'tailwind.builder')]
@@ -208,7 +208,7 @@ class LaboController extends CommonController
 
     #[Route(path: '/documentation/{rubrique<\w+>?home}', name: 'documentation')]
     public function documentation(
-        string $rubrique = null,
+        ?string $rubrique = null,
     ): Response
     {
         $submenu = ['Documentation' => ['route' => 'aequation_labo_documentation', 'params' => ['rubrique' => 'home']]];

@@ -12,6 +12,7 @@ use Aequation\LaboBundle\Model\Interface\ImageInterface;
 use Aequation\LaboBundle\Model\Interface\OwnerInterface;
 use Aequation\LaboBundle\Model\Interface\UnamedInterface;
 use Aequation\LaboBundle\EventListener\Attribute\AppEvent;
+use Aequation\LaboBundle\Model\Attribute\HtmlContent;
 use Aequation\LaboBundle\Model\Final\FinalCategoryInterface;
 use Aequation\LaboBundle\Model\Final\FinalEntrepriseInterface;
 use Aequation\LaboBundle\Model\Interface\EnabledInterface;
@@ -23,6 +24,8 @@ use Aequation\LaboBundle\Model\Interface\LaboArticleInterface;
 use Aequation\LaboBundle\Service\Interface\PdfServiceInterface;
 use Aequation\LaboBundle\Service\Interface\AppEntityManagerInterface;
 use Aequation\LaboBundle\Service\Interface\AppRoleHierarchyInterface;
+use Aequation\LaboBundle\Service\Interface\CssDeclarationInterface;
+use Aequation\LaboBundle\Service\Tools\Classes;
 use Aequation\LaboBundle\Service\Tools\Encoders;
 // Symfony
 use Doctrine\ORM\Events;
@@ -58,6 +61,9 @@ use Exception;
 #[AsDoctrineListener(event: Events::postFlush)]
 class GlobalDoctrineListener
 {
+    public const ENTITY_ACTIONS = ['insertions', 'updates', 'deletions'];
+    protected array $scheduledEntities;
+
     public function __construct(
         private EntityManagerInterface $em,
         private SlugService $slugService,
@@ -65,7 +71,18 @@ class GlobalDoctrineListener
         private AppEntityManagerInterface $manager,
         private UserPasswordHasherInterface $userPasswordHasher,
         private ParameterBagInterface $parameterBag,
-    ) {}
+        private CssDeclarationInterface $cssDeclaration,
+    ) {
+        $this->resetScheduledEntities();
+    }
+
+    protected function resetScheduledEntities(): void
+    {
+        $this->scheduledEntities = [];
+        foreach (static::ENTITY_ACTIONS as $action) {
+            $this->scheduledEntities[$action] = new ArrayCollection();
+        }
+    }
 
     // public function onLoad(LifecycleEventArgs $event): void
     // {
@@ -159,12 +176,7 @@ class GlobalDoctrineListener
         /** @var AppEntityInterface */
         $entity = $event->getObject();
         $entity->_service->clearAppEvents(entity: $entity);
-        // Specificity entity
-        // switch (true) {
-        //     case $entity instanceof SiteparamsInterface:
-        //         $this->needRefresh ??= $entity->__getAppManaged()->manager;
-        //         break;
-        // }
+        $this->addScheduledEntity($entity, 'insertions');
     }
 
     public function preUpdate(PreUpdateEventArgs $event): void
@@ -285,12 +297,7 @@ class GlobalDoctrineListener
         /** @var AppEntityInterface */
         $entity = $event->getObject();
         $entity->_service->clearAppEvents(entity: $entity);
-        // Specificity entity
-        // switch (true) {
-        //     case $entity instanceof SiteparamsInterface:
-        //         $this->needRefresh ??= $entity->__getAppManaged()->manager;
-        //         break;
-        // }
+        $this->addScheduledEntity($entity, 'updates');
     }
 
     // public function preRemove(PreRemoveEventArgs $event): void
@@ -303,13 +310,7 @@ class GlobalDoctrineListener
     {
         /** @var AppEntityInterface */
         $entity = $event->getObject();
-        // $entity->_service->clearAppEvents(entity: $entity);
-        // Specificity entity
-        // switch (true) {
-        //     case $entity instanceof SiteparamsInterface:
-        //         $this->needRefresh ??= $entity->__getAppManaged()->manager;
-        //         break;
-        // }
+        $this->addScheduledEntity($entity, 'deletions');
     }
 
     public function onFlush(OnFlushEventArgs $args): void
@@ -481,7 +482,14 @@ class GlobalDoctrineListener
 
     public function postFlush(PostFlushEventArgs $args): void
     {
+        $uow = $this->em->getUnitOfWork();
         $this->slugService->resetControls();
+        foreach ($this->scheduledEntities as $action => $list) {
+            if($list->count() > 0) {
+                $this->cssDeclaration->registerHtmlContent($action, $list->toArray(), true);
+            }
+        }
+        $this->resetScheduledEntities();
     }
 
 
@@ -509,5 +517,24 @@ class GlobalDoctrineListener
     //     $metadata = $em->getClassMetadata($object::class);
     //     $uow->recomputeSingleEntityChangeSet($metadata, $object);
     // }
+
+    protected function addScheduledEntity(object $entity, string $type): void
+    {
+        if(!in_array($type, static::ENTITY_ACTIONS, true)) {
+            // Error
+            throw new Exception(vsprintf('Error line %d %s(): type %s is not valid!', [__LINE__, __METHOD__, $type]));
+        }
+        foreach ($this->scheduledEntities as $action => $list) {
+            if($action !== $type) {
+                if($list->contains($entity)) {
+                    // Error
+                    throw new Exception(vsprintf('Error line %d %s(): %s can not be scheduled for %s because already scheduled for %s!', [__LINE__, __METHOD__, $entity::class, $type, $action]));
+                }
+            } else if(!$list->contains($entity)) {
+                // Add to the correct list
+                $list->add($entity);
+            }
+        }
+    }
 
 }

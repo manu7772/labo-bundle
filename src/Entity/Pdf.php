@@ -1,6 +1,7 @@
 <?php
 namespace Aequation\LaboBundle\Entity;
 
+use DateTimeInterface;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Aequation\LaboBundle\Model\Trait\Slug;
@@ -11,6 +12,7 @@ use Aequation\LaboBundle\Model\Attribute\Slugable;
 use Aequation\LaboBundle\Repository\PdfRepository;
 use Aequation\LaboBundle\Service\Tools\HttpRequest;
 use Vich\UploaderBundle\Mapping\Annotation as Vich;
+use Aequation\LaboBundle\Model\Attribute\HtmlContent;
 use Aequation\LaboBundle\Model\Interface\PdfInterface;
 use Symfony\Component\Validator\Constraints as Assert;
 use Aequation\LaboBundle\Model\Interface\SlugInterface;
@@ -19,7 +21,6 @@ use Symfony\Component\Serializer\Attribute as Serializer;
 use Aequation\LaboBundle\Model\Interface\PdfizableInterface;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Aequation\LaboBundle\Service\Interface\PdfServiceInterface;
-use DateTimeInterface;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 
 #[ORM\Entity(repositoryClass: PdfRepository::class)]
@@ -45,9 +46,11 @@ class Pdf extends Item implements PdfInterface
     protected int $sourcetype = 0;
 
     #[ORM\Column(type: Types::TEXT, nullable: true)]
+    #[HtmlContent]
     protected ?string $description = null;
 
     #[ORM\Column(type: Types::TEXT, nullable: true)]
+    #[HtmlContent]
     protected ?string $content = null;
 
     // #[Assert\NotNull(message: 'Le nom de fichier ne peut être null')]
