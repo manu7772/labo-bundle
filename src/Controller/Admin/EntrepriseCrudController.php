@@ -1,8 +1,13 @@
 <?php
 namespace Aequation\LaboBundle\Controller\Admin;
 
+use App\Controller\Admin\AddresslinkCrudController;
+use App\Controller\Admin\PhonelinkCrudController;
+use App\Controller\Admin\EmailinkCrudController;
+
 use Aequation\LaboBundle\Security\Voter\EntrepriseVoter;
 use Aequation\LaboBundle\Controller\Admin\Base\BaseCrudController;
+use Aequation\LaboBundle\Field\CKEditorField;
 use Aequation\LaboBundle\Form\Type\PortraitType;
 use Aequation\LaboBundle\Repository\LaboCategoryRepository;
 
@@ -119,6 +124,13 @@ abstract class EntrepriseCrudController extends LaboUserCrudController
                     ->setSortProperty('firstname')
                     ->setFormTypeOptions(['by_reference' => false])
                     ;
+                yield FormField::AddTab(label: false, icon: 'tabler:address-book');
+                yield CollectionField::new('addresses', 'Adresses')->useEntryCrudForm(AddresslinkCrudController::class)->setColumns(12);
+                yield FormField::AddTab(label: false, icon: 'tabler:phone');
+                yield CollectionField::new('phones', 'Téléphones')->useEntryCrudForm(PhonelinkCrudController::class)->setColumns(12);
+                yield FormField::AddTab(label: false, icon: 'tabler:mail');
+                yield CollectionField::new('emails', 'Emails')->useEntryCrudForm(EmailinkCrudController::class)->setColumns(12);
+
                 yield TimezoneField::new('timezone', 'Fuseau horaire')->setColumns(4);
                 yield DateTimeField::new('expiresAt', 'Expiration')->setColumns(3)->setPermission('ROLE_ADMIN')->setTimezone($current_tz);
                 yield BooleanField::new('enabled', 'Active')->setColumns(3)->setPermission('ROLE_ADMIN');
@@ -140,10 +152,7 @@ abstract class EntrepriseCrudController extends LaboUserCrudController
                     ->setSortProperty('name')
                     ->setFormTypeOptions(['by_reference' => false])
                     ->setColumns(6);
-                yield TextField::new('portrait', 'Photo')
-                ->setFormType(PortraitType::class)
-                    // ->setFormTypeOption('allow_delete', false)
-                    ->setColumns(6);
+                // yield CKEditorField::new('description', 'Description')->setColumns(6);
                 yield TimezoneField::new('timezone', 'Fuseau horaire')->setColumns(4);
                 yield DateTimeField::new('expiresAt', 'Expiration')->setColumns(3)->setPermission('ROLE_ADMIN')->setTimezone($current_tz);
                 // yield DateTimeField::new('lastLogin')->setColumns(3)->setPermission('ROLE_SUPER_ADMIN')->setTimezone($current_tz);
@@ -151,8 +160,16 @@ abstract class EntrepriseCrudController extends LaboUserCrudController
                 // yield BooleanField::new('isVerified')->setColumns(3)->setHelp('Compte vérifié')->setPermission('ROLE_ADMIN');
                 // yield BooleanField::new('darkmode')->setColumns(3)->setHelp('Interface graphique en mode sombre')->setPermission('ROLE_SUPER_ADMIN');
                 yield BooleanField::new('softdeleted')->setFormTypeOption('attr', ['class' => 'border-danger text-bg-danger'])->setColumns(3)->setPermission('ROLE_SUPER_ADMIN');
-                yield FormField::AddTab(label: 'Coordonnées', icon: 'tabler:address-book')->setHelp('Tous les moyens de contact');
-                yield CollectionField::new('addresses', 'Adresses');
+                yield TextField::new('portrait', 'Photo')
+                    ->setFormType(PortraitType::class)
+                    // ->setFormTypeOption('allow_delete', false)
+                    ->setColumns(6);
+                yield FormField::AddTab(label: false, icon: 'tabler:address-book');
+                yield CollectionField::new('addresses', 'Adresses')->useEntryCrudForm(AddresslinkCrudController::class)->setColumns(12);
+                yield FormField::AddTab(label: false, icon: 'tabler:phone');
+                yield CollectionField::new('phones', 'Téléphones')->useEntryCrudForm(PhonelinkCrudController::class)->setColumns(12);
+                yield FormField::AddTab(label: false, icon: 'tabler:mail');
+                yield CollectionField::new('emails', 'Emails')->useEntryCrudForm(EmailinkCrudController::class)->setColumns(12);
                 // yield FormField::AddTab(label: 'Membres', icon: 'fa6-solid:users')->setHelp('Membres de l\'entreprise');
                 // yield AssociationField::new('members', 'Membres')
                 //     // ->autocomplete()

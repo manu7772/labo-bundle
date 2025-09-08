@@ -4,6 +4,7 @@ namespace Aequation\LaboBundle\Controller\Admin;
 use Aequation\LaboBundle\Security\Voter\SlideVoter;
 use Aequation\LaboBundle\Controller\Admin\Base\BaseCrudController;
 use Aequation\LaboBundle\Entity\LaboUser;
+use Aequation\LaboBundle\Field\CKEditorField;
 use Aequation\LaboBundle\Field\ThumbnailField;
 use Aequation\LaboBundle\Form\Type\OverlayType;
 use Aequation\LaboBundle\Service\Interface\SlideServiceInterface;
@@ -139,7 +140,7 @@ class SlideCrudController extends BaseCrudController
                     ->escapeHtml(false)
                     ->setColumns(6)
                     ->setRequired(false);
-                yield TextEditorField::new('content','Texte')->setColumns(12)->setNumOfRows(20)->formatValue(fn ($value) => Strings::markup($value));
+                yield CKEditorField::new('content','Texte')->setColumns(12)->formatValue(fn ($value) => Strings::markup($value));
     
                 yield FormField::addTab('Contenu média')
                     ->setIcon('tabler:camera');
@@ -194,7 +195,7 @@ class SlideCrudController extends BaseCrudController
                     ->escapeHtml(false)
                     ->setColumns(6)
                     ->setRequired(false);
-                yield TextEditorField::new('content','Texte')->setColumns(12)->setNumOfRows(20)->formatValue(fn ($value) => Strings::markup($value));
+                yield CKEditorField::new('content','Texte')->setColumns(12)->formatValue(fn ($value) => Strings::markup($value));
 
                 yield FormField::addTab('Contenu média')
                     ->setIcon('tabler:camera');

@@ -31,6 +31,7 @@ use EasyCorp\Bundle\EasyAdminBundle\Field\AssociationField;
 use EasyCorp\Bundle\EasyAdminBundle\Form\Type\FileUploadType;
 use Aequation\LaboBundle\Service\Interface\PdfServiceInterface;
 use Aequation\LaboBundle\Controller\Admin\Base\BaseCrudController;
+use Aequation\LaboBundle\Field\CKEditorField;
 use Aequation\LaboBundle\Service\Interface\LaboUserServiceInterface;
 
 #[IsGranted('ROLE_COLLABORATOR')]
@@ -97,9 +98,8 @@ class PdfCrudController extends BaseCrudController
                 yield FormField::AddTab(label: 'Contenu source', icon: 'fa6-solid:pencil')->setHelp('Vous pouvez saisir le contenu du document PDF ici.<br><strong>Si vous avez désigné un fichier source PDF, tout ce contenu sera ignoré</strong>');
                 yield ChoiceField::new('paper', 'Format document')->setChoices(Pdf::getPaperChoices())->setColumns(6);
                 yield ChoiceField::new('orientation', 'Orientation document')->setFormTypeOption('expanded', true)->setChoices(Pdf::getOrientationChoices())->setColumns(6);
-                yield TextEditorField::new('content', 'Contenu du fichier PDF')
+                yield CKEditorField::new('content', 'Contenu du fichier PDF')
                     ->setColumns(12)
-                    ->setNumOfRows(20)
                     ->setHelp('Contenu du document PDF : si vous avez désigné un fichier source PDF, ce contenu sera ignoré')
                     ->formatValue(fn ($value) => Strings::markup($value));
                 break;
@@ -133,9 +133,8 @@ class PdfCrudController extends BaseCrudController
                         yield FormField::AddTab(label: 'Contenu source', icon: 'fa6-solid:pencil')->setHelp('Vous pouvez saisir le contenu du document PDF ici.<br><strong>Si vous avez désigné un fichier source PDF, tout ce contenu sera ignoré</strong>');
                         yield ChoiceField::new('paper', 'Format document')->setChoices(Pdf::getPaperChoices())->setColumns(6)->setRequired(false);
                         yield ChoiceField::new('orientation', 'Orientation document')->setFormTypeOption('expanded', true)->setChoices(Pdf::getOrientationChoices())->setColumns(6)->setRequired(false);
-                        yield TextEditorField::new('content', 'Contenu du fichier PDF')
+                        yield CKEditorField::new('content', 'Contenu du fichier PDF')
                             ->setColumns(12)
-                            ->setNumOfRows(20)
                             ->setHelp('Contenu du document PDF : si vous avez désigné un fichier source PDF, ce contenu sera ignoré')
                             ->formatValue(fn ($value) => Strings::markup($value));
                         break;

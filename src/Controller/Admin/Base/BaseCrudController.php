@@ -438,6 +438,7 @@ abstract class BaseCrudController extends AbstractCrudController
             //     'attr' => ['class' => 'text-info']
             // ])
             // ->renderSidebarMinimized()
+            ->addFormTheme('@FOSCKEditor/Form/ckeditor_widget.html.twig')
             ->renderContentMaximized()
             ->setPaginatorPageSize(20)
             ;

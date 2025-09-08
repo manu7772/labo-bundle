@@ -4,6 +4,7 @@ namespace Aequation\LaboBundle\Controller\Admin;
 use Aequation\LaboBundle\Security\Voter\SliderVoter;
 use Aequation\LaboBundle\Controller\Admin\Base\BaseCrudController;
 use Aequation\LaboBundle\Entity\LaboUser;
+use Aequation\LaboBundle\Field\CKEditorField;
 use Aequation\LaboBundle\Model\Interface\AppEntityInterface;
 use Aequation\LaboBundle\Repository\EcollectionRepository;
 use Aequation\LaboBundle\Service\Interface\SliderServiceInterface;
@@ -87,7 +88,7 @@ class SliderCrudController extends BaseCrudController
                         ->setColumns(6)
                         ->setRequired(true)
                         ;
-                    yield TextEditorField::new('content', 'Texte de présentation')->setNumOfRows(20)->setColumns(12);
+                    yield CKEditorField::new('content', 'Texte de présentation')->setColumns(12)->formatValue(fn ($value) => Strings::markup($value));
                     // yield TextareaField::new('content', 'Texte')
                     //     ->setFormType(CKEditorType::class)
                     //     ->setFormTypeOptions(
@@ -150,7 +151,7 @@ class SliderCrudController extends BaseCrudController
                         ->setColumns(6)
                         ->setRequired(true)
                         ;
-                    yield TextEditorField::new('content', 'Texte de présentation')->setNumOfRows(20)->setColumns(12);
+                    yield CKEditorField::new('content', 'Texte de présentation')->setColumns(12)->formatValue(fn ($value) => Strings::markup($value));
                     yield FormField::addTab('Diapositives')
                         ->setIcon('fa6-solid:camera');
                     yield AssociationField::new('items', 'Diapositives')

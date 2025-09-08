@@ -335,20 +335,21 @@ class CssDeclaration extends BaseService implements CssDeclarationInterface
                                         $updatedTemplates++;
                                     }
                                 } else {
+                                    $initial_html = Strings::formateForWebpage($html['initial']);
                                     if($entity instanceof AppEntityInterface) {
                                         switch ($entity->getShortname()) {
                                             case 'Webpage':
-                                                $html[] = $this->twig->createTemplate(Strings::formateForWebpage($html['initial']), $filename)->render(['webpage' => $entity]);
+                                                $html[] = $this->twig->createTemplate($initial_html, $filename)->render(['webpage' => $entity]);
                                                 break;
                                             case 'Websection':
-                                                $html[] = $this->twig->createTemplate(Strings::formateForWebpage($html['initial']), $filename)->render(['websection' => $entity]);
+                                                $html[] = $this->twig->createTemplate($initial_html, $filename)->render(['websection' => $entity]);
                                                 break;
                                             default:
-                                                $html[] = Strings::formateForWebpage($html['initial']);
+                                                $html[] = $initial_html;
                                                 break;
                                         }
                                     } else {
-                                        $html[] = Strings::formateForWebpage($html['initial']);
+                                        $html[] = $initial_html;
                                     }
                                     $html = $html_head.implode($separator, array_unique($html));
                                     if(!$old) {
@@ -356,7 +357,7 @@ class CssDeclaration extends BaseService implements CssDeclarationInterface
                                         $this->tool_files->putFileContent($this->filepath, $filename, $html);
                                     } else if($old === $html) {
                                         // dump('No change for html content:'.PHP_EOL.'File: '.$filename);
-                                        continue;
+                                        break;
                                     } else {
                                         // dump('Update file for html content:'.PHP_EOL.'File: '.$filename);
                                         $this->tool_files->putFileContent($this->filepath, $filename, $html);

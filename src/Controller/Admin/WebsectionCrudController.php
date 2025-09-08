@@ -3,6 +3,7 @@ namespace Aequation\LaboBundle\Controller\Admin;
 
 use Aequation\LaboBundle\Security\Voter\WebsectionVoter;
 use Aequation\LaboBundle\Controller\Admin\Base\BaseCrudController;
+use Aequation\LaboBundle\Field\CKEditorField;
 use Aequation\LaboBundle\Field\ThumbnailField;
 use Aequation\LaboBundle\Form\Type\PdfType;
 use Aequation\LaboBundle\Service\Interface\LaboUserServiceInterface;
@@ -148,8 +149,7 @@ class WebsectionCrudController extends BaseCrudController
                         yield $content->setColumns(8);
                         break;
                     case $content === true:
-                        yield TextEditorField::new('content', 'Texte de la section')
-                            ->setNumOfRows(20)
+                        yield CKEditorField::new('content', 'Texte de la section')
                             ->formatValue(fn ($value) => Strings::markup($value))
                             ->setColumns(8);
                         break;
@@ -261,8 +261,7 @@ class WebsectionCrudController extends BaseCrudController
                         yield $content->setColumns(8);
                         break;
                     case $content === true:
-                        yield TextEditorField::new('content', 'Texte de la section')
-                            ->setNumOfRows(20)
+                        yield CKEditorField::new('content', 'Texte de la section')
                             ->formatValue(fn ($value) => Strings::markup($value))
                             ->setColumns(8);
                         break;

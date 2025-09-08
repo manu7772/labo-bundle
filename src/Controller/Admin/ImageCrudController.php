@@ -2,26 +2,27 @@
 namespace Aequation\LaboBundle\Controller\Admin;
 
 use Aequation\LaboBundle\Entity\Image;
-use Aequation\LaboBundle\Security\Voter\ImageVoter;
-
-use Aequation\LaboBundle\Controller\Admin\Base\BaseCrudController;
+use Aequation\LaboBundle\Field\CKEditorField;
 
 use EasyCorp\Bundle\EasyAdminBundle\Config\Crud;
-use EasyCorp\Bundle\EasyAdminBundle\Config\Filters;
-use EasyCorp\Bundle\EasyAdminBundle\Field\AssociationField;
-use EasyCorp\Bundle\EasyAdminBundle\Field\BooleanField;
-use EasyCorp\Bundle\EasyAdminBundle\Field\DateTimeField;
-use EasyCorp\Bundle\EasyAdminBundle\Field\IdField;
-use EasyCorp\Bundle\EasyAdminBundle\Field\ImageField;
-use EasyCorp\Bundle\EasyAdminBundle\Field\IntegerField;
-use EasyCorp\Bundle\EasyAdminBundle\Field\SlugField;
-use EasyCorp\Bundle\EasyAdminBundle\Field\TextEditorField;
-use EasyCorp\Bundle\EasyAdminBundle\Field\TextField;
-use EasyCorp\Bundle\EasyAdminBundle\Filter\DateTimeFilter;
-use EasyCorp\Bundle\EasyAdminBundle\Filter\NumericFilter;
-use EasyCorp\Bundle\EasyAdminBundle\Filter\TextFilter;
-use Symfony\Component\Security\Http\Attribute\IsGranted;
+
 use Vich\UploaderBundle\Form\Type\VichImageType;
+use EasyCorp\Bundle\EasyAdminBundle\Field\IdField;
+use Aequation\LaboBundle\Security\Voter\ImageVoter;
+use EasyCorp\Bundle\EasyAdminBundle\Config\Filters;
+use EasyCorp\Bundle\EasyAdminBundle\Field\SlugField;
+use EasyCorp\Bundle\EasyAdminBundle\Field\TextField;
+use EasyCorp\Bundle\EasyAdminBundle\Field\ImageField;
+use EasyCorp\Bundle\EasyAdminBundle\Filter\TextFilter;
+use EasyCorp\Bundle\EasyAdminBundle\Field\BooleanField;
+use EasyCorp\Bundle\EasyAdminBundle\Field\IntegerField;
+use EasyCorp\Bundle\EasyAdminBundle\Field\DateTimeField;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
+use EasyCorp\Bundle\EasyAdminBundle\Filter\NumericFilter;
+use EasyCorp\Bundle\EasyAdminBundle\Field\TextEditorField;
+use EasyCorp\Bundle\EasyAdminBundle\Filter\DateTimeFilter;
+use EasyCorp\Bundle\EasyAdminBundle\Field\AssociationField;
+use Aequation\LaboBundle\Controller\Admin\Base\BaseCrudController;
 
 #[IsGranted('ROLE_COLLABORATOR')]
 class ImageCrudController extends BaseCrudController
@@ -66,7 +67,7 @@ class ImageCrudController extends BaseCrudController
                 yield TextField::new('file')
                     ->setFormType(VichImageType::class)
                     ->setColumns(6);
-                yield TextEditorField::new('description')->setColumns(6)->setNumOfRows(20)->formatValue(fn ($value) => Strings::markup($value));
+                yield CKEditorField::new('description')->setColumns(6)->formatValue(fn ($value) => Strings::markup($value));
                 yield AssociationField::new('owner', 'Propriétaire')->setColumns(6)->setPermission('ROLE_ADMIN')->setCrudController(UserCrudController::class);
                 break;
             case Crud::PAGE_EDIT:
@@ -76,7 +77,7 @@ class ImageCrudController extends BaseCrudController
                     ->setColumns(6);
                 yield BooleanField::new('updateSlug')->setLabel('Mettre à jour le slug')->setColumns(6);
                 yield SlugField::new('slug')->setTargetFieldName('name')->setColumns(6);
-                yield TextEditorField::new('description')->setColumns(12)->setNumOfRows(20)->formatValue(fn ($value) => Strings::markup($value));
+                yield CKEditorField::new('description')->setColumns(12)->formatValue(fn ($value) => Strings::markup($value));
                 yield AssociationField::new('owner', 'Propriétaire')->setColumns(6)->setPermission('ROLE_ADMIN')->setCrudController(UserCrudController::class);
                 break;
             default:

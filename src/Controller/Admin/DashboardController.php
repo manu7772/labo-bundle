@@ -201,10 +201,10 @@ class DashboardController extends AbstractDashboardController
             }
         }
         $sub_medias = [];
-        if($this->isGranted(AddresslinkVoter::ADMIN_ACTION_LIST, Addresslink::class)) $sub_medias[$type] = MenuItem::linkToCrud(label: ucfirst($this->translate('names', [], Classes::getShortname(Addresslink::class))), icon: Addresslink::ICON, entityFqcn: Addresslink::class);
-        if($this->isGranted(PhonelinkVoter::ADMIN_ACTION_LIST, Phonelink::class)) $sub_medias[$type] = MenuItem::linkToCrud(label: ucfirst($this->translate('names', [], Classes::getShortname(Phonelink::class))), icon: Phonelink::ICON, entityFqcn: Phonelink::class);
-        if($this->isGranted(EmailinkVoter::ADMIN_ACTION_LIST, Emailink::class)) $sub_medias[$type] = MenuItem::linkToCrud(label: ucfirst($this->translate('names', [], Classes::getShortname(Emailink::class))), icon: Emailink::ICON, entityFqcn: Emailink::class);
-        if($this->isGranted(UrlinkVoter::ADMIN_ACTION_LIST, Urlink::class)) $sub_medias[$type] = MenuItem::linkToCrud(label: ucfirst($this->translate('names', [], Classes::getShortname(Urlink::class))), icon: Urlink::ICON, entityFqcn: Urlink::class);
+        if($this->isGranted(AddresslinkVoter::ADMIN_ACTION_LIST, Addresslink::class)) $sub_medias['Adresses'] = MenuItem::linkToCrud(label: ucfirst($this->translate('names', [], Classes::getShortname(Addresslink::class))), icon: Addresslink::ICON, entityFqcn: Addresslink::class);
+        if($this->isGranted(PhonelinkVoter::ADMIN_ACTION_LIST, Phonelink::class)) $sub_medias['Téléphones'] = MenuItem::linkToCrud(label: ucfirst($this->translate('names', [], Classes::getShortname(Phonelink::class))), icon: Phonelink::ICON, entityFqcn: Phonelink::class);
+        if($this->isGranted(EmailinkVoter::ADMIN_ACTION_LIST, Emailink::class)) $sub_medias['Emails'] = MenuItem::linkToCrud(label: ucfirst($this->translate('names', [], Classes::getShortname(Emailink::class))), icon: Emailink::ICON, entityFqcn: Emailink::class);
+        if($this->isGranted(UrlinkVoter::ADMIN_ACTION_LIST, Urlink::class)) $sub_medias['Liens'] = MenuItem::linkToCrud(label: ucfirst($this->translate('names', [], Classes::getShortname(Urlink::class))), icon: Urlink::ICON, entityFqcn: Urlink::class);
         if(count($sub_medias)) {
             $medias['Urlinks'] = MenuItem::subMenu(label: 'Contacts', icon: LaboRelink::ICON)->setSubItems($sub_medias);
         }

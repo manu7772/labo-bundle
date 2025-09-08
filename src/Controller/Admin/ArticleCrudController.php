@@ -2,6 +2,7 @@
 namespace Aequation\LaboBundle\Controller\Admin;
 
 use Doctrine\ORM\QueryBuilder;
+use Aequation\LaboBundle\Field\CKEditorField;
 use Aequation\LaboBundle\Service\Tools\Strings;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Crud;
 use EasyCorp\Bundle\EasyAdminBundle\Dto\EntityDto;
@@ -82,10 +83,8 @@ abstract class ArticleCrudController extends BaseCrudController
                 yield DateTimeField::new('start', 'Début')->setColumns(6);
                 yield DateTimeField::new('end', 'Fin')->setColumns(6);
                 yield TextField::new('title', 'Titre');
-                yield TextEditorField::new('content', 'Texte')
-                    ->setNumOfRows(20)
+                yield CKEditorField::new('content', 'Texte')
                     ->setColumns(6)
-                    ->setHelp('Contenu texte')
                     ->formatValue(fn ($value) => Strings::markup($value));
                 break;
             case Crud::PAGE_EDIT:
@@ -96,10 +95,8 @@ abstract class ArticleCrudController extends BaseCrudController
                 yield DateTimeField::new('start', 'Début')->setColumns(6);
                 yield DateTimeField::new('end', 'Fin')->setColumns(6);
                 yield TextField::new('title', 'Titre');
-                yield TextEditorField::new('content', 'Texte')
-                    ->setNumOfRows(20)
+                yield CKEditorField::new('content', 'Texte')
                     ->setColumns(6)
-                    ->setHelp('Contenu texte')
                     ->formatValue(fn ($value) => Strings::markup($value));
                 break;
             default:

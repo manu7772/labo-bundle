@@ -112,6 +112,7 @@ class TwigExtensions extends AbstractExtension implements GlobalsInterface
             new TwigFilter('shortname', [Classes::class, 'getShortname']),
             new TwigFilter('toHtmlAttributes', [HtmlDom::class, 'toHtmlAttributes'], ['is_safe' => ['html']]),
             new TwigFilter('normalize', [$this->appService, 'getNormalized']),
+            new TwigFilter('htmlentities', [$this, 'getHtmlentities']),
         ];
     }
 
@@ -303,6 +304,11 @@ class TwigExtensions extends AbstractExtension implements GlobalsInterface
             });
         }
         return $choices;
+    }
+
+    public function getHtmlentities(?string $string, bool $striptags = false, int $flags = ENT_QUOTES|ENT_SUBSTITUTE): Markup
+    {
+        return Strings::markup(empty($string) ? '' : htmlentities($striptags ? strip_tags($string) : $string, $flags));
     }
 
 

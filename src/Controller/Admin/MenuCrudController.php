@@ -8,14 +8,15 @@ use App\Repository\MenuRepository;
 use Aequation\LaboBundle\Entity\Item;
 use App\Repository\WebpageRepository;
 use App\Repository\CategoryRepository;
+use Aequation\LaboBundle\Field\CKEditorField;
 use Aequation\LaboBundle\Form\Type\PhotoType;
-use Aequation\LaboBundle\Field\ThumbnailField;
 
+use Aequation\LaboBundle\Field\ThumbnailField;
 use Symfony\Component\HttpFoundation\Response;
 use Aequation\LaboBundle\Service\Tools\Classes;
 use Aequation\LaboBundle\Service\Tools\Strings;
-use EasyCorp\Bundle\EasyAdminBundle\Config\Crud;
 
+use EasyCorp\Bundle\EasyAdminBundle\Config\Crud;
 use Aequation\LaboBundle\Security\Voter\MenuVoter;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Action;
 use EasyCorp\Bundle\EasyAdminBundle\Field\IdField;
@@ -98,8 +99,7 @@ class MenuCrudController extends BaseCrudController
                     // ->autocomplete()
                     ->setFormTypeOptions(['by_reference' => false])
                     ->setColumns(6);
-                yield TextEditorField::new('content', 'Texte de la page')
-                    ->setNumOfRows(20)
+                yield CKEditorField::new('content', 'Texte de la page')
                     ->formatValue(fn ($value) => Strings::markup($value));
                 yield AssociationField::new('categorys', 'Catégories')
                     ->setQueryBuilder(static fn (QueryBuilder $qb): QueryBuilder => CategoryRepository::QB_CategoryChoices($qb, Menu::class))
@@ -127,8 +127,7 @@ class MenuCrudController extends BaseCrudController
                         ->setFormTypeOption('by_reference', false);
                     yield AssociationField::new('webpage', 'Page web')
                         ->setSortProperty('name');
-                    yield TextEditorField::new('content', 'Texte de la page')
-                        ->setNumOfRows(20)
+                    yield CKEditorField::new('content', 'Texte de la page')
                         ->formatValue(fn ($value) => Strings::markup($value));
                         // ->autocomplete()
                         // ->setFormTypeOptions(['by_reference' => false])

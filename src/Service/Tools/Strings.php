@@ -231,35 +231,47 @@ class Strings extends BaseService
 		return $css;
     }
 
-	public static function formateForWebpage(string $text): Markup
+	public static function formateForWebpage(string $text, int $mode = 1): Markup
 	{
-		$css = static::getCssClasses();
-		$replaces = [
-			// '/\n/' => '<br />',
-			'/<h1>/' => '<h3>',
-			'/<\/h1>/' => '</h3>',
-			'/<pre>/' => '<div class="'.$css['pre'].'">',
-			'/<\/pre>/' => '</div>',
-			'/<blockquote>/' => '<div class="'.$css['blockquote'].'">',
-			'/<\/blockquote>/' => '</div>',
-			'/<u>/' => '<div class="'.$css['u'].'">',
-			'/<\/u>/' => '</div>',
-			'/<i>/' => '<span class="'.$css['i'].'">',
-			'/<\/i>/' => '</span>',
-			'/<em>/' => '<span class="'.$css['em'].'">',
-			'/<\/em>/' => '</span>',
-			'/<del>/' => '<span class="'.$css['del'].'">',
-			'/<\/del>/' => '</span>',
-			'/<ul>/' => '<ul class="'.$css['ul'].'">',
-			'/<\/ul>/' => '</ul>',
-			'/<li>/' => '<li class="'.$css['li'].'"><div>',
-			'/<\/li>/' => '</div></li>',
-			// Twig components
-			'/&lt;twig:(.*?)&gt;/' => '<twig:$1>',
-			'/&lt;\/twig:(.*?)&gt;/' => '</twig:$1>',
-			// '/<br><a/' => '</br><a class="'.$css['a'].'" target="_blank"',
-		];
-		return static::markup(preg_replace(array_keys($replaces), $replaces, $text));
+		switch ($mode) {
+			case 0:
+				// Raw HTML
+				$code = $text;
+				break;
+			case 1:
+				// CKEditorField
+				$code = preg_replace_callback('#(&lt;)(\/?twig:)(.*?)(&gt;)#', fn ($matches) => '<'.$matches[2].htmlspecialchars_decode($matches[3]).'>', $text);
+				break;
+			default:
+				// TextEditorField
+				$css = static::getCssClasses();
+				$replaces = [
+					'/<h1>/' => '<h3>',
+					'/<\/h1>/' => '</h3>',
+					'/<pre>/' => '<div class="'.$css['pre'].'">',
+					'/<\/pre>/' => '</div>',
+					'/<blockquote>/' => '<div class="'.$css['blockquote'].'">',
+					'/<\/blockquote>/' => '</div>',
+					'/<u>/' => '<div class="'.$css['u'].'">',
+					'/<\/u>/' => '</div>',
+					'/<i>/' => '<span class="'.$css['i'].'">',
+					'/<\/i>/' => '</span>',
+					'/<em>/' => '<span class="'.$css['em'].'">',
+					'/<\/em>/' => '</span>',
+					'/<del>/' => '<span class="'.$css['del'].'">',
+					'/<\/del>/' => '</span>',
+					'/<ul>/' => '<ul class="'.$css['ul'].'">',
+					'/<\/ul>/' => '</ul>',
+					'/<li>/' => '<li class="'.$css['li'].'"><div>',
+					'/<\/li>/' => '</div></li>',
+					// Twig components
+					'/&lt;twig:(.*?)&gt;/' => '<twig:$1>',
+					'/&lt;\/twig:(.*?)&gt;/' => '</twig:$1>',
+				];
+				$code = preg_replace(array_keys($replaces), $replaces, $text);
+				break;
+			}
+			return static::markup($code);
 	}
 
     /** ***********************************************************************************
