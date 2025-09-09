@@ -351,7 +351,7 @@ class AppContextTemp implements AppContextInterface
     protected function getComputedDarkmode(): bool
     {
         if($this->_user instanceof LaboUserInterface) return $this->_user->isDarkmode();
-        $default_darkmode = $this->appService->getParam('darkmode', true);
+        $default_darkmode = $this->appService->getParam('darkmode', false);
         return $this->session?->get('darkmode', $default_darkmode) ?: $default_darkmode;
     }
 
