@@ -50,18 +50,19 @@ abstract class Item extends MappSuperClassEntity implements ItemInterface, Creat
     /**
      * @var Collection<int, Pdf>
      */
-    #[ORM\OneToMany(targetEntity: Pdf::class, mappedBy: 'pdfowner', cascade: ['persist', 'remove'], orphanRemoval: true)]
+    #[ORM\OneToMany(targetEntity: Pdf::class, mappedBy: 'pdfowner', cascade: ['persist'])]
     #[Assert\Valid()]
-    private Collection $pdfiles;
+    protected Collection $pdfiles;
 
     #[ORM\Column]
-    protected int $orderitem = 0;
+    protected int $orderitem;
 
     public function __construct()
     {
         parent::__construct();
         $this->parents = new ArrayCollection();
         $this->pdfiles = new ArrayCollection();
+        $this->orderitem = 0;
     }
 
     public function __clone()
@@ -109,10 +110,12 @@ abstract class Item extends MappSuperClassEntity implements ItemInterface, Creat
         if(!$this->hasParent($parent)) {
             $this->parents->add($parent);
         }
-        if(!($parent->hasItem($this) || $parent->addItem($this))) {
-            // Failed to add parent
-            $this->removeParent($parent);
-            $parent->removeItem($this);
+        if(!$parent->hasItem($this)) {
+            if(!$parent->addItem($this)) {
+                // Failed to add parent
+                $this->removeParent($parent);
+                $parent->removeItem($this);
+            }
         }
         return $this;
     }

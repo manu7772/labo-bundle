@@ -612,15 +612,22 @@ class AppEntityManager extends BaseService implements AppEntityManagerInterface
         null|string|array $event = null
     ): AppEntityInterface|false
     {
-        $model = $this->getNew($classname, $postCreate);
-        if($model) {
-            $model->_setModel(); // IMPORTANT!!!
-            if(!empty($event)) {
-                $this->dispatchEvent($model, $event);
-            }
-            if(is_callable($postCreate)) {
-                $postCreate(entity: $model);
-            }    
+        // $model = $this->getNew($classname, $postCreate);
+        $classname ??= static::ENTITY;
+        if(!class_exists($classname) || !$this->entityExists($classname, false, true)) {
+            throw new Exception(vsprintf("Error %s line %d: %s entity does not exist or is not instantiable", [__METHOD__, __LINE__, $classname]));
+        }
+        /** @var AppEntityInterface $model */
+        $model = new $classname();
+        if(!($model instanceof AppEntityInterface)) return false;
+        $this->setManagerToEntity($model);
+
+        $model->_setModel(); // IMPORTANT!!!
+        if(!empty($event)) {
+            $this->dispatchEvent($model, $event);
+        }
+        if(is_callable($postCreate)) {
+            $postCreate(entity: $model);
         }
         return $model;
     }
@@ -821,6 +828,10 @@ class AppEntityManager extends BaseService implements AppEntityManagerInterface
         bool|Opresult $opresultException = true
     ): bool
     {
+        if($entity->_isModel()) {
+            dump('Try to save a model entity!', $entity);
+            throw new Exception(vsprintf("Error %s line %d: you can not insert a model entity (%s).", [__METHOD__, __LINE__, $entity::class]));
+        }
         // if(!$this->isManaged($entity)) {
             $this->persist($entity, $opresultException); // important!!! --> needed for updates too, to apply AppEvent::beforePreUpdate
         // }

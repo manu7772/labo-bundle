@@ -22,6 +22,8 @@ use Symfony\Component\Validator\Constraints as Assert;
 #[EA\ClassCustomService(PhotoServiceInterface::class)]
 class Photo extends Image implements PhotoInterface
 {
+    public const DEFAULT_LIIP_FILTER = "normal_x800";
+    public const THUMBNAIL_LIIP_FILTER = 'miniature_q';
 
     #[Vich\UploadableField(mapping: 'photo', fileNameProperty: 'filename', size: 'size', mimeType: 'mime', originalName: 'originalname', dimensions: 'dimensions')]
     #[Serializer\Ignore]

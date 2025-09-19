@@ -291,18 +291,19 @@ class TwigExtensions extends AbstractExtension implements GlobalsInterface
 
     public function sortCollection(array $choices, mixed $data): array
     {
-        if($data instanceof Collection && !$data->isEmpty()) {
-            $sorted_data = [];
-            $index = $data->count();
-            foreach ($data as $item) {
-                $sorted_data[$item->getId()] = $index--;
-            }
-            uasort($choices, function($a, $b) use ($sorted_data) {
-                if(!array_key_exists($a->value, $sorted_data)) return 1;
-                if(!array_key_exists($b->value, $sorted_data)) return -1;
-                return $sorted_data[$a->value] > $sorted_data[$b->value] ? -1 : 1;
-            });
-        }
+        // if($data instanceof Collection && !$data->isEmpty()) {
+        //     dd($choices, $data);
+        //     $sorted_data = [];
+        //     $index = $data->count();
+        //     foreach ($data as $item) {
+        //         $sorted_data[$item->getId()] = $index--;
+        //     }
+        //     uasort($choices, function($a, $b) use ($sorted_data) {
+        //         if(!array_key_exists($a->value, $sorted_data)) return 1;
+        //         if(!array_key_exists($b->value, $sorted_data)) return -1;
+        //         return $sorted_data[$a->value] > $sorted_data[$b->value] ? -1 : 1;
+        //     });
+        // }
         return $choices;
     }
 

@@ -22,6 +22,7 @@ class ImageType extends BaseAppType
 
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
+        $class = $builder->getDataClass();
         $builder
             ->add('name', TextType::class, [
                 'label' => 'nom',
@@ -34,7 +35,8 @@ class ImageType extends BaseAppType
                 'label' => 'Format d\'affichage',
                 'required' => true,
                 'placeholder' => 'Choisissez un format d\'affichage par défaut',
-                'choices' => Image::LIIP_FILTERS,
+                'choices' => $class::getLiipFilterChoices(),
+                'choice_translation_domain' => 'messages',
             ])
         ;
         parent::buildForm($builder, $options);

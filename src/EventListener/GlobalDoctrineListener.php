@@ -43,6 +43,7 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Persistence\Event\LifecycleEventArgs;
 use Doctrine\Bundle\DoctrineBundle\Attribute\AsDoctrineListener;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\ORM\Event\PreFlushEventArgs;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 // PHP
@@ -57,6 +58,7 @@ use Exception;
 #[AsDoctrineListener(event: Events::postUpdate)]
 // #[AsDoctrineListener(event: Events::preRemove)]
 #[AsDoctrineListener(event: Events::postRemove)]
+#[AsDoctrineListener(event: Events::preFlush)]
 #[AsDoctrineListener(event: Events::onFlush)]
 #[AsDoctrineListener(event: Events::postFlush)]
 class GlobalDoctrineListener
@@ -313,6 +315,13 @@ class GlobalDoctrineListener
         $this->addScheduledEntity($entity, 'deletions');
     }
 
+    public function preFlush(PreFlushEventArgs $args): void
+    {
+        /** @var UnitOfWork */
+        // $uow = $this->em->getUnitOfWork();
+        // dump($args, $uow->getScheduledEntityInsertions());
+    }
+
     public function onFlush(OnFlushEventArgs $args): void
     {
         /** @var UnitOfWork */
@@ -322,6 +331,11 @@ class GlobalDoctrineListener
         // $resetSlugsControls = false;
         // Persist
         foreach ($uow->getScheduledEntityInsertions() as $entity) {
+            if($entity->_isModel()) {
+                continue;
+                // dump('Try to save a model entity!', $entity);
+                // throw new Exception(vsprintf("Error %s line %d: you can not insert a model entity (%s).", [__METHOD__, __LINE__, $entity::class]));
+            }
             switch (true) {
                 case $entity instanceof SlugInterface:
                     if($this->slugService->computeUniqueSlug($entity)) {

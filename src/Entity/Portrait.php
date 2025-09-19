@@ -24,9 +24,17 @@ class Portrait extends Image implements PortraitInterface
 
     public const ICON = "tabler:user-square-rounded";
     public const FA_ICON = "camera";
-
-    #[Serializer\Ignore]
-    public readonly PortraitServiceInterface|AppEntityManagerInterface $_service;
+    public const DEFAULT_LIIP_FILTER = "photo_reduced_600";
+    public const THUMBNAIL_LIIP_FILTER = 'miniature_q';
+    public const LIIP_FILTERS = [
+        // 'Aucun format prédéfini' => null,
+        'normal_x300',
+        'normal_x800',
+        'photo_h',
+        'photo_v',
+        'photo_q',
+        'photo_reduced_600',
+    ];
 
     #[Vich\UploadableField(mapping: 'portrait', fileNameProperty: 'filename', size: 'size', mimeType: 'mime', originalName: 'originalname', dimensions: 'dimensions')]
     #[Serializer\Ignore]

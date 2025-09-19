@@ -34,6 +34,7 @@ use EasyCorp\Bundle\EasyAdminBundle\Field\TextareaField;
 
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Doctrine\ORM\QueryBuilder;
+use EasyCorp\Bundle\EasyAdminBundle\Field\ArrayField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\IntegerField;
 use EasyCorp\Bundle\EasyAdminBundle\Form\Type\FileUploadType;
 use Vich\UploaderBundle\Form\Type\VichImageType;
@@ -62,19 +63,21 @@ class WebsectionCrudController extends BaseCrudController
         switch ($pageName) {
             case Crud::PAGE_DETAIL:
                 yield IdField::new('id');
-                yield AssociationField::new('owner', 'Propriétaire');
+                yield AssociationField::new('owner', 'Propriétaire')->setCrudController(UserCrudController::class);
                 yield TextField::new('name', 'Nom');
                 yield IntegerField::new('orderitem', 'Priorité')->setHelp('Ordre d\'affichage de la page dans les listes.');
-                yield TextField::new('euid', 'Euid')->setPermission('ROLE_SUPER_ADMIN');
+                yield TextField::new('euid', 'Euid')->setPermission('ROLE_SUPER_ADMIN')->setHelp('Identifiant unique de la section')->setCssClass('sadmin-label');
                 yield TextField::new('sectiontype', 'Type de section');
                 yield TextField::new('title', 'Titre de la section');
                 yield AssociationField::new('mainmenu', 'Menu intégré');
+                yield AssociationField::new('parents', 'Parents')->setCrudController(EcollectionCrudController::class);
                 yield TextField::new('twigfileName', 'Nom du modèle');
-                yield TextField::new('twigfile', 'Chemin du modèle')->setPermission('ROLE_SUPER_ADMIN');
+                yield TextField::new('twigfile', 'Chemin du modèle')->setPermission('ROLE_SUPER_ADMIN')->setHelp('Chemin relatif vers le fichier Twig')->setCssClass('sadmin-label');
                 yield TextField::new('content', 'Texte de la section')->renderAsHtml();
                 yield TextareaField::new('content', 'Texte compilé')->formatValue(function ($value) use ($info) {
                     return $info['entity']->dumpContent();
-                })->setColumns(12)->setPermission('ROLE_SUPER_ADMIN');
+                })->setColumns(12)->setPermission('ROLE_SUPER_ADMIN')->setHelp('Texte compilé avec les variables twig. Utile pour le débogage.')->setCssClass('sadmin-label');
+                yield ArrayField::new('pdfiles', 'Fichiers PDF');
                 // SLIDER
                 $slider = $info['entity']->getTwigfileMetadata()->getEasyadminField('slider', $pageName);
                 switch (true) {
@@ -99,10 +102,10 @@ class WebsectionCrudController extends BaseCrudController
                         break;
                 }
                 yield CollectionField::new('categorys');
-                yield TextareaField::new('relationOrderDetails', '[Rel.order info]')->setPermission('ROLE_SUPER_ADMIN');
+                yield TextareaField::new('relationOrderDetails', 'Rel.order info')->setPermission('ROLE_SUPER_ADMIN')->setCssClass('sadmin-label');
                 yield BooleanField::new('prefered', 'Section par défaut');
                 yield BooleanField::new('enabled', 'Activée');
-                yield BooleanField::new('softdeleted', 'Supprimée')->setPermission('ROLE_SUPER_ADMIN');
+                yield BooleanField::new('softdeleted', 'Supprimée')->setPermission('ROLE_SUPER_ADMIN')->setCssClass('sadmin-label');
                 yield DateTimeField::new('createdAt', 'Création')->setFormat('dd/MM/Y - HH:mm')->setTimezone($current_tz);
                 yield DateTimeField::new('updatedAt', 'Modification')->setFormat('dd/MM/Y - HH:mm')->setTimezone($current_tz);
                 break;
@@ -115,25 +118,16 @@ class WebsectionCrudController extends BaseCrudController
                     ->escapeHtml(false)
                     ->setFormTypeOption('by_reference', false)
                     ->setHelp('Choisissez un modèle de mise en page pour cette section. Cela définira le rendu dans la page web, et également le type de section (banner, section classique, footer, etc.).')
-                    ->setColumns(12);
+                    ->setColumns(6);
                 // yield ChoiceField::new('sectiontype', 'Type de section')
                 //     ->setChoices(static fn (Websection $websection): array => $websection->getTwigfileMetadata()->getSectiontypeChoices() ?: [])
                 //     ->setColumns(4);
-                yield AssociationField::new('categorys','Catégories')->setQueryBuilder(static fn (QueryBuilder $qb): QueryBuilder => CategoryRepository::QB_CategoryChoices($qb, Websection::class))
-                    // ->autocomplete()
-                    ->setSortProperty('name')
-                    ->setFormTypeOptions(['by_reference' => false])
-                    ->setColumns(6);
-                yield BooleanField::new('prefered', 'Section par défaut')
-                    ->setHelp('Cette section sera affectée automatiquement lors de la création d\'une nouvelle page web')
-                    ->setColumns(6);
-                // cumputed form fields
                 // TITLE
                 $title = $info['entity']->getTwigfileMetadata()->getEasyadminField('title', $pageName);
                 switch (true) {
                     case $title instanceof FieldInterface:
                         /** @var FieldTrait $title */
-                        yield $title->setColumns(6);
+                        yield $title->setColumns(5);
                         break;
                     case $title === true:
                         yield TextField::new('title', 'Titre de la section')
@@ -141,17 +135,26 @@ class WebsectionCrudController extends BaseCrudController
                             ->setRequired(false);
                         break;
                 }
+                yield AssociationField::new('categorys','Catégories')->setQueryBuilder(static fn (QueryBuilder $qb): QueryBuilder => CategoryRepository::QB_CategoryChoices($qb, Websection::class))
+                    // ->autocomplete()
+                    ->setSortProperty('name')
+                    ->setFormTypeOptions(['by_reference' => false])
+                    ->setColumns(4);
+                yield BooleanField::new('prefered', 'Section par défaut')
+                    ->setHelp('Cette section sera affectée automatiquement lors de la création d\'une nouvelle page web')
+                    ->setColumns(3);
+                // cumputed form fields
                 // CONTENT
                 $content = $info['entity']->getTwigfileMetadata()->getEasyadminField('content', $pageName);
                 switch (true) {
                     case $content instanceof FieldInterface:
                         /** @var FieldTrait $content */
-                        yield $content->setColumns(8);
+                        yield $content->setColumns(12);
                         break;
                     case $content === true:
                         yield CKEditorField::new('content', 'Texte de la section')
                             ->formatValue(fn ($value) => Strings::markup($value))
-                            ->setColumns(8);
+                            ->setColumns(12);
                         break;
                 }
                 // MAINMENU
@@ -258,12 +261,12 @@ class WebsectionCrudController extends BaseCrudController
                 switch (true) {
                     case $content instanceof FieldInterface:
                         /** @var FieldTrait $content */
-                        yield $content->setColumns(8);
+                        yield $content->setColumns(12);
                         break;
                     case $content === true:
                         yield CKEditorField::new('content', 'Texte de la section')
                             ->formatValue(fn ($value) => Strings::markup($value))
-                            ->setColumns(8);
+                            ->setColumns(12);
                         break;
                 }
                 // MAINMENU

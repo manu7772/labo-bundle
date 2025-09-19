@@ -25,6 +25,10 @@ class PdfType extends BaseAppType
                 'label' => 'Fichier PDF',
                 'required' => true,
             ])
+            ->add('photo', PhotoType::class, [
+                'label' => 'Vignette',
+                'required' => false,
+            ])
         ;
 
     }

@@ -2,9 +2,11 @@
 namespace Aequation\LaboBundle\Controller\Admin;
 
 use Aequation\LaboBundle\Entity\Pdf;
-use Aequation\LaboBundle\Field\EditorjsField;
+use Aequation\LaboBundle\Field\CKEditorField;
 
 use Aequation\LaboBundle\Field\VichFileField;
+use Aequation\LaboBundle\Form\Type\PhotoType;
+use Aequation\LaboBundle\Field\ThumbnailField;
 use Aequation\LaboBundle\Service\Tools\Strings;
 use Vich\UploaderBundle\Form\Type\VichFileType;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Crud;
@@ -31,7 +33,6 @@ use EasyCorp\Bundle\EasyAdminBundle\Field\AssociationField;
 use EasyCorp\Bundle\EasyAdminBundle\Form\Type\FileUploadType;
 use Aequation\LaboBundle\Service\Interface\PdfServiceInterface;
 use Aequation\LaboBundle\Controller\Admin\Base\BaseCrudController;
-use Aequation\LaboBundle\Field\CKEditorField;
 use Aequation\LaboBundle\Service\Interface\LaboUserServiceInterface;
 
 #[IsGranted('ROLE_COLLABORATOR')]
@@ -75,7 +76,7 @@ class PdfCrudController extends BaseCrudController
                 yield DateTimeField::new('createdAt', 'Date création')->setFormat('dd/MM/Y - HH:mm');
                 break;
             case Crud::PAGE_NEW:
-                yield FormField::AddTab(label: 'Informations', icon: 'fa6-solid:info');
+                yield FormField::addTab(label: 'Informations', icon: 'fa6-solid:info');
                 yield TextField::new('name')->setColumns(6)->setRequired(true);
                 yield SlugField::new('slug')->setTargetFieldName('name')->setColumns(6);
                 yield ChoiceField::new('sourcetype', 'Type de source')->setChoices(Pdf::getSourcetypeChoices())->setColumns(6)->setPermission('ROLE_SUPER_ADMIN');
@@ -83,7 +84,7 @@ class PdfCrudController extends BaseCrudController
                 yield TextareaField::new('description', 'Description du contenu du PDF')->setColumns(12);
                 yield BooleanField::new('enabled', 'Visible sur le site');
                 // Source: PDF file
-                yield FormField::AddTab(label: 'Fichier source', icon: 'fa6-solid:file-pdf')->setHelp('Vous pouvez choisir un fichier PDF');
+                yield FormField::addTab(label: 'Fichier source', icon: 'fa6-solid:file-pdf')->setHelp('Vous pouvez choisir un fichier PDF');
                 // yield VichFileField::new('file')->setColumns(6);
                 yield TextField::new('file', 'Fichier PDF')
                     ->setColumns(3)
@@ -95,16 +96,20 @@ class PdfCrudController extends BaseCrudController
                         // 'accept' => 'application/pdf',
                     ]);
                 // Source: content
-                yield FormField::AddTab(label: 'Contenu source', icon: 'fa6-solid:pencil')->setHelp('Vous pouvez saisir le contenu du document PDF ici.<br><strong>Si vous avez désigné un fichier source PDF, tout ce contenu sera ignoré</strong>');
+                yield FormField::addTab(label: 'Contenu source', icon: 'fa6-solid:pencil')->setHelp('Vous pouvez saisir le contenu du document PDF ici.<br><strong>Si vous avez désigné un fichier source PDF, tout ce contenu sera ignoré</strong>');
                 yield ChoiceField::new('paper', 'Format document')->setChoices(Pdf::getPaperChoices())->setColumns(6);
                 yield ChoiceField::new('orientation', 'Orientation document')->setFormTypeOption('expanded', true)->setChoices(Pdf::getOrientationChoices())->setColumns(6);
                 yield CKEditorField::new('content', 'Contenu du fichier PDF')
                     ->setColumns(12)
                     ->setHelp('Contenu du document PDF : si vous avez désigné un fichier source PDF, ce contenu sera ignoré')
                     ->formatValue(fn ($value) => Strings::markup($value));
+                yield FormField::addTab(label: 'Vignette', icon: 'fa7-regular:image')->setHelp('Choisissez une image pour illustrer le document PDF (optionnel)');
+                yield TextField::new('photo', 'Photo')
+                    ->setFormType(PhotoType::class)
+                    ->setColumns(6);
                 break;
             case Crud::PAGE_EDIT:
-                yield FormField::AddTab(label: 'Informations', icon: 'fa6-solid:info');
+                yield FormField::addTab(label: 'Informations', icon: 'fa6-solid:info');
                 yield TextField::new('name')->setColumns(6)->setRequired(true);
                 yield SlugField::new('slug')->setTargetFieldName('name')->setColumns(6);
                 yield ChoiceField::new('sourcetype', 'Type de source')->setChoices(Pdf::getSourcetypeChoices())->setColumns(6)->setPermission('ROLE_SUPER_ADMIN');
@@ -115,7 +120,7 @@ class PdfCrudController extends BaseCrudController
                     case 2:
                         # file
                         // Source: PDF file
-                        yield FormField::AddTab(label: 'Fichier source', icon: 'fa6-solid:file-pdf')->setHelp('Vous pouvez choisir un fichier PDF');
+                        yield FormField::addTab(label: 'Fichier source', icon: 'fa6-solid:file-pdf')->setHelp('Vous pouvez choisir un fichier PDF');
                         // yield VichFileField::new('file')->setColumns(6);
                         yield TextField::new('file', 'Fichier PDF')
                             ->setColumns(3)
@@ -130,7 +135,7 @@ class PdfCrudController extends BaseCrudController
                     default:
                         # document
                         // Source: content
-                        yield FormField::AddTab(label: 'Contenu source', icon: 'fa6-solid:pencil')->setHelp('Vous pouvez saisir le contenu du document PDF ici.<br><strong>Si vous avez désigné un fichier source PDF, tout ce contenu sera ignoré</strong>');
+                        yield FormField::addTab(label: 'Contenu source', icon: 'fa6-solid:pencil')->setHelp('Vous pouvez saisir le contenu du document PDF ici.<br><strong>Si vous avez désigné un fichier source PDF, tout ce contenu sera ignoré</strong>');
                         yield ChoiceField::new('paper', 'Format document')->setChoices(Pdf::getPaperChoices())->setColumns(6)->setRequired(false);
                         yield ChoiceField::new('orientation', 'Orientation document')->setFormTypeOption('expanded', true)->setChoices(Pdf::getOrientationChoices())->setColumns(6)->setRequired(false);
                         yield CKEditorField::new('content', 'Contenu du fichier PDF')
@@ -153,12 +158,20 @@ class PdfCrudController extends BaseCrudController
                 // yield TextEditorField::new('content', 'Contenu du fichier PDF')->setColumns(12)->setNumOfRows(20)->setHelp('Contenu du document : si vous avez désigné un fichier PDF, ce contenu sera ignoré');
                 // yield TextareaField::new('description', 'Description du contenu du PDF')->setColumns(6);
                 // yield AssociationField::new('owner', 'Propriétaire')->setColumns(6)->setPermission('ROLE_ADMIN')->setCrudController(UserCrudController::class);
+                yield FormField::addTab(label: 'Vignette', icon: 'fa7-regular:image')->setHelp('Choisissez une image pour illustrer le document PDF (optionnel)');
+                yield TextField::new('photo', 'Photo')
+                    ->setFormType(PhotoType::class)
+                    ->setColumns(6);
                 break;
             default:
                 yield IdField::new('id')->setPermission('ROLE_SUPER_ADMIN');
                 yield TextField::new('name', 'Nom du document');
                 // yield TextField::new('slug');
                 // yield TextField::new('filename', 'Nom du fichier');
+                yield ThumbnailField::new('photo', 'Photo')
+                    ->setBasePath($this->getParameter('vich_dirs.item_photo'))
+                    ->setTextAlign('center')
+                    ->setSortable(false);
                 yield TextField::new('sourcetypeName', 'Type')->setTextAlign('center');
                 yield TextField::new('filepathname', 'Consulter')->setTextAlign('center')->setTemplatePath('@EasyAdmin/crud/field/pdf_link.html.twig');
                 yield IntegerField::new('size')->setTextAlign('right')->formatValue(function ($value) { return intval($value/1024).'Ko'; })->setTextAlign('center');

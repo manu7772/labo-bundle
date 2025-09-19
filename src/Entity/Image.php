@@ -42,18 +42,21 @@ abstract class Image extends Item implements ImageInterface
     public const ICON = 'tabler:photo';
     public const FA_ICON = 'camera';
     public const SERIALIZATION_PROPS = ['id','euid','name','file','filename','size','mime','classname','shortname'];
-    public const DEFAULT_LIIP_FILTER = "photo_q";
+    public const DEFAULT_LIIP_FILTER = "normal_x800";
     public const THUMBNAIL_LIIP_FILTER = 'miniature_q';
     public const LIIP_FILTERS = [
         // 'Aucun format prédéfini' => null,
-        'photo horizontale (800x600)' => 'photo_h',
-        'photo verticale (600x800)' => 'photo_v',
-        'photo carrée (800x800)' => 'photo_q',
-        'photo carrée comp. (600x600)' => 'photo_reduced_600',
-        'grande photo (1000x1200)' => 'photo_fullscreen',
-        'paysage fin (800x200)' => 'landscapethin',
-        'paysage mini (800x350)' => 'landscapemin',
-        'paysage (1280x900)' => 'landscape',
+        'normal_x300',
+        'normal_x800',
+        'normal_x1200',
+        'photo_h',
+        'photo_v',
+        'photo_q',
+        'photo_reduced_600',
+        'photo_fullscreen',
+        'landscapethin',
+        'landscapemin',
+        'landscape',
     ];
     
 
@@ -96,7 +99,12 @@ abstract class Image extends Item implements ImageInterface
     public function __toString(): string
     {
         return $this->name ?? $this->filename ?? parent::__toString();
-    }    
+    }
+
+    public static function getLiipFilterChoices(): array
+    {
+        return array_combine(array_map(fn($v) => 'liip_names.'.$v, static::LIIP_FILTERS), static::LIIP_FILTERS);
+    }
 
     /**
      * If manually uploading a file (i.e. not using Symfony Form) ensure an instance

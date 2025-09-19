@@ -102,7 +102,10 @@ class SlugService extends BaseService
         if($entity->isUpdateSlug()) {
             $slugAttr = $this->getSlugableAttribute($classname);
             $base = $propertyAccessor->getValue($entity, $slugAttr->property->name);
-            if(empty($base)) throw new Exception(vsprintf("Error %s line %d: could not update slug for %s with an empty value %s.", [__METHOD__, __LINE__, $entity::class, json_encode($base)]));
+            if(empty($base)) {
+                dump($entity->_isModel(), $entity);
+                throw new Exception(vsprintf("Error %s line %d: could not update slug for %s (named %s) with an empty value %s.", [__METHOD__, __LINE__, $entity::class, $entity, json_encode($base)]));
+            }
             $addon = 1;
             $entity->setSlug($this->getSlugFromString($base));
             while ($this->slugExists($entity)) {

@@ -18,6 +18,8 @@ use Symfony\Component\Validator\Constraints as Assert;
 use Aequation\LaboBundle\Model\Interface\SlugInterface;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\Serializer\Attribute as Serializer;
+use Aequation\LaboBundle\EventListener\Attribute\AppEvent;
+use Aequation\LaboBundle\Model\Interface\ImageOwnerInterface;
 use Aequation\LaboBundle\Model\Interface\PdfizableInterface;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Aequation\LaboBundle\Service\Interface\PdfServiceInterface;
@@ -30,7 +32,7 @@ use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 #[EA\ClassCustomService(PdfServiceInterface::class)]
 #[Vich\Uploadable]
 #[Slugable('name')]
-class Pdf extends Item implements PdfInterface
+class Pdf extends Item implements PdfInterface, ImageOwnerInterface
 {
 
     use Slug;
@@ -83,13 +85,27 @@ class Pdf extends Item implements PdfInterface
     #[ORM\Column(length: 32)]
     protected ?string $orientation = 'portrait';
 
+    #[ORM\Column]
+    protected bool $selection = false;
+
     #[ORM\ManyToOne(inversedBy: 'pdfiles')]
     private ?Item $pdfowner = null;
+
+    #[ORM\OneToOne(cascade: ['persist', 'remove'], orphanRemoval: true)]
+    #[Assert\Valid()]
+    #[Serializer\Ignore]
+    protected ?Photo $photo = null;
 
 
     public function __toString(): string
     {
         return $this->name ?: $this->filename ?: parent::__toString();
+    }
+
+    public function __clone()
+    {
+        parent::__clone();
+        $this->photo = null;
     }
 
     public function isPdfExportable(): bool
@@ -298,6 +314,17 @@ class Pdf extends Item implements PdfInterface
         return array_combine(static::ORIENTATIONS, static::ORIENTATIONS);
     }
 
+    public function isSelection(): bool
+    {
+        return $this->selection;
+    }
+
+    public function setSelection(bool $selection): static
+    {
+        $this->selection = $selection;
+        return $this;
+    }
+
     public function getPdfowner(): ?Item
     {
         return $this->pdfowner;
@@ -306,6 +333,58 @@ class Pdf extends Item implements PdfInterface
     public function setPdfowner(?Item $pdfowner): static
     {
         $this->pdfowner = $pdfowner;
+        return $this;
+    }
+
+
+    /**********************************************************************************************
+     * PHOTO
+     **********************************************************************************************/
+
+    public function removeOwnedImage(Image $photo): static
+    {
+        return $this->photo === $photo
+            ? $this->removePhoto()
+            : $this;
+    }
+
+    #[Serializer\MaxDepth(1)]
+    public function getFirstImage(): ?Image
+    {
+        return $this->photo;
+    }
+
+    #[Serializer\MaxDepth(1)]
+    public function getPhoto(): ?Photo
+    {
+        return $this->photo;
+    }
+
+    public function setPhoto(Photo $photo): static
+    {
+        if(!empty($photo->getFile())) {
+            $this->removePhoto();
+            $this->photo = $photo;
+        }
+        return $this;
+    }
+
+    public function removePhoto(): static
+    {
+        // if($this->photo instanceof Photo) {
+        //     $photo = $this->photo;
+            $this->photo = null;
+        //     $photo->removeLinkedto();
+        // }
+        return $this;
+    }
+
+    #[AppEvent(groups: [AppEvent::POST_SUBMIT])]
+    public function onDeleteFirstImage(): static
+    {
+        if($this->photo instanceof Image && $this->photo->isDeleteImage()) {
+            $this->removePhoto();
+        }
         return $this;
     }
 

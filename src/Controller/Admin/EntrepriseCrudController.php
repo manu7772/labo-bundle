@@ -30,6 +30,7 @@ use EasyCorp\Bundle\EasyAdminBundle\Field\IdField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\ImageField;
 use EasyCorp\Bundle\EasyAdminBundle\Filter\ArrayFilter;
 use EasyCorp\Bundle\EasyAdminBundle\Filter\TextFilter;
+use Symfony\Component\Form\FormInterface;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Component\Translation\TranslatableMessage;
 use Symfony\Contracts\Translation\TranslatorInterface;
@@ -124,11 +125,11 @@ abstract class EntrepriseCrudController extends LaboUserCrudController
                     ->setSortProperty('firstname')
                     ->setFormTypeOptions(['by_reference' => false])
                     ;
-                yield FormField::AddTab(label: false, icon: 'tabler:address-book');
+                yield FormField::addTab(label: false, icon: 'tabler:address-book');
                 yield CollectionField::new('addresses', 'Adresses')->useEntryCrudForm(AddresslinkCrudController::class)->setColumns(12);
-                yield FormField::AddTab(label: false, icon: 'tabler:phone');
-                yield CollectionField::new('phones', 'Téléphones')->useEntryCrudForm(PhonelinkCrudController::class)->setColumns(12);
-                yield FormField::AddTab(label: false, icon: 'tabler:mail');
+                yield FormField::addTab(label: false, icon: 'tabler:phone');
+                yield CollectionField::new('phones', 'Téléphones')->useEntryCrudForm(PhonelinkCrudController::class)->setColumns(12)->setEmptyData(fn (FormInterface $form) => $this->appEntityManager->getNew(PhonelinkCrudController::ENTITY));
+                yield FormField::addTab(label: false, icon: 'tabler:mail');
                 yield CollectionField::new('emails', 'Emails')->useEntryCrudForm(EmailinkCrudController::class)->setColumns(12);
 
                 yield TimezoneField::new('timezone', 'Fuseau horaire')->setColumns(4);
@@ -139,11 +140,11 @@ abstract class EntrepriseCrudController extends LaboUserCrudController
                 yield BooleanField::new('softdeleted')->setFormTypeOption('attr', ['class' => 'border-danger text-bg-danger'])->setColumns(3)->setPermission('ROLE_SUPER_ADMIN');
                 break;
             case Crud::PAGE_EDIT:
-                yield FormField::AddTab(label: 'Sécurité', icon: 'tabler:lock-filled');
+                yield FormField::addTab(label: 'Sécurité', icon: 'tabler:lock-filled');
                 yield EmailField::new('email')->setColumns($this->isGranted('ROLE_ADMIN') ? 4 : 6)->setHelp('Le mail doit être unique : l\'enregistrement sera rejeté si une autre personne utilise le mail sur le même site.');
                 // yield TextField::new('plainPassword', 'Mot de passe', 'Nouveau mot de passe')->setColumns($this->isGranted('ROLE_ADMIN') ? 4 : 6)->setHelp('<strong class="text-danger">ATTENTION</strong> : ne remplissez ce champ QUE SI vous souhaitez changer votre mot de passe. <strong>Dans ce cas, pensez à bien le noter !</strong>');
                 // yield ChoiceField::new('roles')->setChoices(function(?Entreprise $entreprise): array { return $entreprise->getRolesChoices($this->getUser()); })->setColumns(4)->allowMultipleChoices(true)->setHelp('Les roles déterminent les niveaux d\'accès à l\'administration du site.')->setPermission('ROLE_SUPER_ADMIN')->renderAsBadges();
-                yield FormField::AddTab(label: 'Autres informations', icon: 'tabler:building-factory-2')->setHelp('Informations supplémentaires');
+                yield FormField::addTab(label: 'Autres informations', icon: 'tabler:building-factory-2')->setHelp('Informations supplémentaires');
                 yield TextField::new('firstname', 'Nom')->setColumns(6);
                 // yield TextField::new('lastname', 'Prénom')->setColumns(6);
                 yield TextField::new('fonction', 'Secteur activité')->setColumns(6);
@@ -164,13 +165,13 @@ abstract class EntrepriseCrudController extends LaboUserCrudController
                     ->setFormType(PortraitType::class)
                     // ->setFormTypeOption('allow_delete', false)
                     ->setColumns(6);
-                yield FormField::AddTab(label: false, icon: 'tabler:address-book');
+                yield FormField::addTab(label: false, icon: 'tabler:address-book');
                 yield CollectionField::new('addresses', 'Adresses')->useEntryCrudForm(AddresslinkCrudController::class)->setColumns(12);
-                yield FormField::AddTab(label: false, icon: 'tabler:phone');
-                yield CollectionField::new('phones', 'Téléphones')->useEntryCrudForm(PhonelinkCrudController::class)->setColumns(12);
-                yield FormField::AddTab(label: false, icon: 'tabler:mail');
+                yield FormField::addTab(label: false, icon: 'tabler:phone');
+                yield CollectionField::new('phones', 'Téléphones')->useEntryCrudForm(PhonelinkCrudController::class)->setColumns(12)->setEmptyData(fn (FormInterface $form) => $this->appEntityManager->getNew(PhonelinkCrudController::ENTITY));
+                yield FormField::addTab(label: false, icon: 'tabler:mail');
                 yield CollectionField::new('emails', 'Emails')->useEntryCrudForm(EmailinkCrudController::class)->setColumns(12);
-                // yield FormField::AddTab(label: 'Membres', icon: 'fa6-solid:users')->setHelp('Membres de l\'entreprise');
+                // yield FormField::addTab(label: 'Membres', icon: 'fa6-solid:users')->setHelp('Membres de l\'entreprise');
                 // yield AssociationField::new('members', 'Membres')
                 //     // ->autocomplete()
                 //     ->setSortProperty('firstname')
