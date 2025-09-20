@@ -675,14 +675,14 @@ class AppService extends BaseService implements AppServiceInterface
         bool $asMarkup = true,
     ): string|Markup
     {
-        $this->surveyRecursion(__METHOD__);
         $metas = [];
         // Turbo refresh
-        $turbo_refresh = $this->getParam('turbo-refresh-scroll', null);
-        if(!empty($turbo_refresh)) {
-            $metas[] = '<meta name="turbo-refresh-scroll" content="'.$turbo_refresh.'">';
-        }
-        $html = implode(PHP_EOL, $metas) ?? '';
+        // $turbo_refresh = $this->getParam('turbo-refresh-scroll', null);
+        // if(!empty($turbo_refresh)) {
+        //     $metas[] = '<meta name="turbo-refresh-scroll" content="'.$turbo_refresh.'">';
+        // }
+        // $metas[] = '<meta name="turbo-refresh-method" content="morph">';
+        $html = implode(PHP_EOL, $metas);
         return $asMarkup
             ? Strings::markup(html: $html)
             : $html;
@@ -695,7 +695,6 @@ class AppService extends BaseService implements AppServiceInterface
      */
     public function isTurboFrameRequest(?Request $request = null): bool
     {
-        $this->surveyRecursion(__METHOD__);
         $request ??= $this->getCurrentRequest();
         return $request
             ? !empty($request->headers->get('Turbo-Frame'))
@@ -713,7 +712,6 @@ class AppService extends BaseService implements AppServiceInterface
         bool $prepareRequest = true,
     ): bool
     {
-        $this->surveyRecursion(__METHOD__);
         $request ??= $this->getCurrentRequest();
         if(empty($request)) return false;
         $isTurbo = $request->getMethod() !== 'GET' && TurboBundle::STREAM_FORMAT === $request->getPreferredFormat();
@@ -728,7 +726,6 @@ class AppService extends BaseService implements AppServiceInterface
         ?Request $request = null,
     ): bool
     {
-        $this->surveyRecursion(__METHOD__);
         $request ??= $this->getCurrentRequest();
         if(empty($request)) return false;
         return $request->headers->get('x-requested-with', null) === 'XMLHttpRequest';
