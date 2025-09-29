@@ -43,11 +43,8 @@ class UserCrudController extends LaboUserCrudController
         /** @var LaboUserServiceInterface */
         $manager = $this->manager;
         $this->checkGrants($pageName);
-        $info = $this->getContextInfo();
         /** @var LaboUserInterface $user */
-        $user = $info['entity'];
-        $timezone = $this->getParameter('timezone');
-        $current_tz = $timezone !== $user->getTimezone() ?: $timezone;
+        $user = $this->getLaboContext()->getInstance();
         switch ($pageName) {
             case Crud::PAGE_DETAIL:
                 if(!$manager->isLoggable($user)) {
@@ -82,15 +79,15 @@ class UserCrudController extends LaboUserCrudController
                     ->setBasePath($this->getParameter('vich_dirs.user_portrait'));
                 yield CollectionField::new('categorys', 'Catégories');
                 yield TextField::new('timezone');
-                yield DateTimeField::new('createdAt')->setFormat('dd/MM/Y - HH:mm:ss')->setTimezone($current_tz);
-                if($timezone !== $user->getTimezone()) yield DateTimeField::new('createdAt')->setFormat('dd/MM/Y - HH:mm:ss')->setCssClass('text-bg-primary')->setTimezone($user->getTimezone());
-                yield DateTimeField::new('updatedAt')->setFormat('dd/MM/Y - HH:mm:ss')->setTimezone($current_tz);
-                if($timezone !== $user->getTimezone() && $user->getUpdatedAt()) yield DateTimeField::new('updatedAt')->setFormat('dd/MM/Y - HH:mm:ss')->setCssClass('text-bg-primary')->setTimezone($user->getTimezone());
-                yield DateTimeField::new('lastLogin', 'Dern.log')->setFormat('dd/MM/Y - HH:mm:ss')->setTimezone($current_tz);
-                if($timezone !== $user->getTimezone() && $user->getLastLogin()) yield DateTimeField::new('lastLogin', 'Dern.log')->setFormat('dd/MM/Y - HH:mm:ss')->setCssClass('text-bg-primary')->setTimezone($user->getTimezone());
+                yield DateTimeField::new('createdAt')->setFormat('dd/MM/Y - HH:mm:ss')->setTimezone($this->getLaboContext()->getTimezone());
+                if($this->getParameter('timezone') !== $user->getTimezone()) yield DateTimeField::new('createdAt')->setFormat('dd/MM/Y - HH:mm:ss')->setCssClass('text-bg-primary')->setTimezone($user->getTimezone());
+                yield DateTimeField::new('updatedAt')->setFormat('dd/MM/Y - HH:mm:ss')->setTimezone($this->getLaboContext()->getTimezone());
+                if($this->getParameter('timezone') !== $user->getTimezone() && $user->getUpdatedAt()) yield DateTimeField::new('updatedAt')->setFormat('dd/MM/Y - HH:mm:ss')->setCssClass('text-bg-primary')->setTimezone($user->getTimezone());
+                yield DateTimeField::new('lastLogin', 'Dern.log')->setFormat('dd/MM/Y - HH:mm:ss')->setTimezone($this->getLaboContext()->getTimezone());
+                if($this->getParameter('timezone') !== $user->getTimezone() && $user->getLastLogin()) yield DateTimeField::new('lastLogin', 'Dern.log')->setFormat('dd/MM/Y - HH:mm:ss')->setCssClass('text-bg-primary')->setTimezone($user->getTimezone());
                 if($user->getExpiresAt()) {
-                    yield DateTimeField::new('expiresAt', 'Expiration')->setFormat('dd/MM/Y - HH:mm:ss')->setTimezone($current_tz);
-                    if($timezone !== $user->getTimezone()) yield DateTimeField::new('expiresAt', 'Expiration')->setFormat('dd/MM/Y - HH:mm:ss')->setCssClass('text-bg-primary')->setTimezone($user->getTimezone());
+                    yield DateTimeField::new('expiresAt', 'Expiration')->setFormat('dd/MM/Y - HH:mm:ss')->setTimezone($this->getLaboContext()->getTimezone());
+                    if($this->getParameter('timezone') !== $user->getTimezone()) yield DateTimeField::new('expiresAt', 'Expiration')->setFormat('dd/MM/Y - HH:mm:ss')->setCssClass('text-bg-primary')->setTimezone($user->getTimezone());
                 }
                 yield BooleanField::new('darkmode')->setHelp('Interface graphique en mode sombre');
                 break;
@@ -103,7 +100,7 @@ class UserCrudController extends LaboUserCrudController
                     /** @var LaboUserInterface $user */
                     return $user->getRolesChoices($this->getUser());
                 })->setColumns(4)->allowMultipleChoices(true)->setHelp('Les roles déterminent les niveaux d\'accès à l\'administration du site.')->setPermission('ROLE_ADMIN');
-                yield DateTimeField::new('expiresAt', 'Expiration')->setColumns(3)->setPermission('ROLE_ADMIN')->setTimezone($current_tz);
+                yield DateTimeField::new('expiresAt', 'Expiration')->setColumns(3)->setPermission('ROLE_ADMIN')->setTimezone($this->getLaboContext()->getTimezone());
                 yield BooleanField::new('enabled', 'Activé')->setColumns(2)->setPermission('ROLE_ADMIN');
                 yield BooleanField::new('isVerified', 'Vérifié')->setColumns(2)->setHelp('Compte vérifié')->setPermission('ROLE_ADMIN');
                 yield BooleanField::new('darkmode')->setColumns(2)->setHelp('Interface graphique en mode sombre');
@@ -141,8 +138,8 @@ class UserCrudController extends LaboUserCrudController
                 yield EmailField::new('email')->setColumns($this->isGranted('ROLE_ADMIN') ? 4 : 6)->setHelp('Le mail doit être unique : l\'enregistrement sera rejeté si une autre personne utilise le mail sur le même site.');
                 yield TextField::new('plainPassword', 'Mot de passe', 'Nouveau mot de passe')->setColumns($this->isGranted('ROLE_ADMIN') ? 4 : 6)->setHelp('<strong class="text-danger">ATTENTION</strong> : ne remplissez ce champ QUE SI vous souhaitez changer votre mot de passe. <strong>Dans ce cas, pensez à bien le noter !</strong>');
                 yield ChoiceField::new('roles')->setChoices(function(?User $user): array { return $user->getRolesChoices($this->getUser()); })->setColumns(4)->allowMultipleChoices(true)->setHelp('Les roles déterminent les niveaux d\'accès à l\'administration du site.')->setPermission('ROLE_ADMIN')->renderAsBadges();
-                yield DateTimeField::new('expiresAt', 'Expiration')->setColumns(3)->setPermission('ROLE_ADMIN')->setTimezone($current_tz);
-                yield DateTimeField::new('lastLogin', 'Dern.log')->setColumns(3)->setPermission('ROLE_SUPER_ADMIN')->setTimezone($current_tz);
+                yield DateTimeField::new('expiresAt', 'Expiration')->setColumns(3)->setPermission('ROLE_ADMIN')->setTimezone($this->getLaboContext()->getTimezone());
+                yield DateTimeField::new('lastLogin', 'Dern.log')->setColumns(3)->setPermission('ROLE_SUPER_ADMIN')->setTimezone($this->getLaboContext()->getTimezone());
                 yield BooleanField::new('enabled', 'Activé')->setColumns(2)->setPermission('ROLE_ADMIN');
                 yield BooleanField::new('isVerified', 'Vérifié')->setColumns(2)->setHelp('Compte vérifié')->setPermission('ROLE_ADMIN');
                 yield BooleanField::new('softdeleted', 'Supprimé')->setFormTypeOption('attr', ['class' => 'border-danger text-bg-danger'])->setColumns(2)->setPermission('ROLE_SUPER_ADMIN');
@@ -179,7 +176,7 @@ class UserCrudController extends LaboUserCrudController
                     ->setTextAlign('center')
                     ->setSortable(false);
                 yield TextField::new('higherRole', 'Statut')->setTextAlign('center')->setCssClass('text-muted italic')->formatValue(fn ($value) => $this->translate($value));
-                // yield DateTimeField::new('createdAt')->setFormat('dd/MM/Y - HH:mm')->setTimezone($current_tz);
+                // yield DateTimeField::new('createdAt')->setFormat('dd/MM/Y - HH:mm')->setTimezone($this->getLaboContext()->getTimezone());
                 // yield BooleanField::new('darkmode')->setTextAlign('center');
                 yield AssociationField::new('entreprises', 'Entreprises')->setTextAlign('center');
                 // yield BooleanField::new('mainentreprise', 'Membre asso')->setTextAlign('center')->setPermission('ROLE_ADMIN');
@@ -187,7 +184,7 @@ class UserCrudController extends LaboUserCrudController
                 yield BooleanField::new('isVerified', 'Vérifié')->setTextAlign('center');
                 yield BooleanField::new('softdeleted', 'Supprimé')->setTextAlign('center')->setPermission('ROLE_SUPER_ADMIN');
                 // yield TimezoneField::new('timezone')->setTextAlign('center');
-                yield DateTimeField::new('lastLogin', 'Dern.log')->setFormat('dd/MM/YY HH:mm')->setTimezone($current_tz);
+                yield DateTimeField::new('lastLogin', 'Dern.log')->setFormat('dd/MM/YY HH:mm')->setTimezone($this->getLaboContext()->getTimezone());
                 break;
         }
     }

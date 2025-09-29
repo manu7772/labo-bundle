@@ -61,11 +61,6 @@ class SlideCrudController extends BaseCrudController
     public function configureFields(string $pageName): iterable
     {
         $this->checkGrants($pageName);
-        $info = $this->getContextInfo();
-        /** @var User $user */
-        $user = $this->getUser();
-        $timezone = $this->getParameter('timezone');
-        $current_tz = $timezone !== $user->getTimezone() ? $user->getTimezone() : $timezone;
         switch ($pageName) {
             case Crud::PAGE_DETAIL:
                 yield IdField::new('id');
@@ -81,19 +76,19 @@ class SlideCrudController extends BaseCrudController
                 yield TextField::new('dimensions');
                 yield ThumbnailField::new('_self', 'Image')
                     ->setBasePath($this->getParameter('vich_dirs.slider_slides'));
-                yield CollectionField::new('slidebases', 'Images additionnelles (max. '.$info['entity']->getMaxSlidebases().')')
+                yield CollectionField::new('slidebases', 'Images additionnelles (max. '.$this->getLaboContext()->getInstance()->getMaxSlidebases().')')
                     ->setEntryType(SlidebaseType::class);
-                yield IntegerField::new('size')->formatValue(function ($value) { return intval($value/1024).'Ko'; });
+                yield IntegerField::new('size')->formatValue(fn ($value) => intval($value/1024).'Ko');
                 yield BooleanField::new('enabled', 'Activée');
                 yield BooleanField::new('softdeleted', 'Supprimée')->setPermission('ROLE_SUPER_ADMIN');
-                yield DateTimeField::new('createdAt', 'Création')->setFormat('dd/MM/Y - HH:mm')->setTimezone($current_tz);
-                yield DateTimeField::new('updatedAt', 'Modification')->setFormat('dd/MM/Y - HH:mm')->setTimezone($current_tz);
-                yield TextEditorField::new('overlays', 'Textes')->formatValue(function ($value) { return Encoders::getPrintr($value, 5, true); });
+                yield DateTimeField::new('createdAt', 'Création')->setFormat('dd/MM/Y - HH:mm')->setTimezone($this->getLaboContext()->getTimezone());
+                yield DateTimeField::new('updatedAt', 'Modification')->setFormat('dd/MM/Y - HH:mm')->setTimezone($this->getLaboContext()->getTimezone());
+                yield TextEditorField::new('overlays', 'Textes')->formatValue(fn ($value) => Encoders::getPrintr($value, 5, true));
                 break;
                 
             case 'slide_collection_in_slider':
                 // $slide = $this->createEntity(static::ENTITY, false);
-                // $info['entity']->addSlide($slide);
+                // $this->getLaboContext()->getInstance()->addSlide($slide);
                 yield FormField::addColumn('col-md-6');
                     yield TextField::new('name')->setRequired(true);
                     yield ChoiceField::new('classes', 'Styles')
@@ -112,7 +107,7 @@ class SlideCrudController extends BaseCrudController
                     yield TextField::new('file', 'Image')
                         ->setRequired(true)
                         ->setFormType(VichImageType::class);
-                    yield CollectionField::new('slidebases', 'Images additionnelles (max. '.$info['entity']->getMaxSlidebases().')')
+                    yield CollectionField::new('slidebases', 'Images additionnelles (max. '.$this->getLaboContext()->getInstance()->getMaxSlidebases().')')
                         ->allowAdd(true)
                         ->allowDelete()
                         ->setEntryType(SlidebaseType::class)
@@ -121,9 +116,9 @@ class SlideCrudController extends BaseCrudController
                     // yield AssociationField::new('owner', 'Propriétaire')->setColumns(6)->setPermission('ROLE_ADMIN')->setCrudController(UserCrudController::class);
                 break;
             case Crud::PAGE_NEW:
-                $allowAdd = $info['entity']->canAddSlidebases();
-                $hasSbases = $info['entity']->hasSlidebasesOption();
-                $hasOverlays = $info['entity']->hasOverlaysOption();
+                $allowAdd = $this->getLaboContext()->getInstance()->canAddSlidebases();
+                $hasSbases = $this->getLaboContext()->getInstance()->hasSlidebasesOption();
+                $hasOverlays = $this->getLaboContext()->getInstance()->hasOverlaysOption();
 
                 yield FormField::addTab('Informations')
                     ->setIcon('tabler:info-circle');
@@ -136,7 +131,7 @@ class SlideCrudController extends BaseCrudController
                     ->setColumns(12);
                 yield TextField::new('title', 'Titre de la slide')->setColumns(6)->setRequired(false);
                 yield ChoiceField::new('slidetype', 'Type de diaporama')
-                    ->setChoices($info['entity']->getSlidetypeChoices(true))
+                    ->setChoices($this->getLaboContext()->getInstance()->getSlidetypeChoices(true))
                     ->escapeHtml(false)
                     ->setColumns(6)
                     ->setRequired(false);
@@ -159,7 +154,7 @@ class SlideCrudController extends BaseCrudController
                         ->setColumns(6);
                 }
                 if($hasSbases) {
-                    yield CollectionField::new('slidebases', 'Images additionnelles (max. '.$info['entity']->getMaxSlidebases().')')
+                    yield CollectionField::new('slidebases', 'Images additionnelles (max. '.$this->getLaboContext()->getInstance()->getMaxSlidebases().')')
                         ->allowAdd($allowAdd)
                         ->allowDelete()
                         ->setEntryType(SlidebaseType::class)
@@ -176,9 +171,9 @@ class SlideCrudController extends BaseCrudController
                 yield AssociationField::new('owner', 'Propriétaire')->setColumns(6)->setPermission('ROLE_ADMIN')->setCrudController(UserCrudController::class);
                 break;
             case Crud::PAGE_EDIT:
-                $allowAdd = $info['entity']->canAddSlidebases();
-                $hasSbases = $info['entity']->hasSlidebasesOption();
-                $hasOverlays = $info['entity']->hasOverlaysOption();
+                $allowAdd = $this->getLaboContext()->getInstance()->canAddSlidebases();
+                $hasSbases = $this->getLaboContext()->getInstance()->hasSlidebasesOption();
+                $hasOverlays = $this->getLaboContext()->getInstance()->hasOverlaysOption();
 
                 yield FormField::addTab('Informations')
                     ->setIcon('tabler:info-circle');
@@ -191,7 +186,7 @@ class SlideCrudController extends BaseCrudController
                     ->setColumns(12);
                 yield TextField::new('title', 'Titre de la slide')->setColumns(6)->setRequired(false);
                 yield ChoiceField::new('slidetype', 'Type de diaporama')
-                    ->setChoices($info['entity']->getSlidetypeChoices(true))
+                    ->setChoices($this->getLaboContext()->getInstance()->getSlidetypeChoices(true))
                     ->escapeHtml(false)
                     ->setColumns(6)
                     ->setRequired(false);
@@ -214,7 +209,7 @@ class SlideCrudController extends BaseCrudController
                         ->setColumns(6);
                 }
                 if($hasSbases) {
-                    yield CollectionField::new('slidebases', 'Images additionnelles (max. '.$info['entity']->getMaxSlidebases().')')
+                    yield CollectionField::new('slidebases', 'Images additionnelles (max. '.$this->getLaboContext()->getInstance()->getMaxSlidebases().')')
                         ->allowAdd($allowAdd)
                         ->allowDelete()
                         ->setEntryType(SlidebaseType::class)

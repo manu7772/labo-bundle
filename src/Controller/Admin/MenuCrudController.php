@@ -60,11 +60,6 @@ class MenuCrudController extends BaseCrudController
     public function configureFields(string $pageName): iterable
     {
         $this->checkGrants($pageName);
-        $info = $this->getContextInfo();
-        /** @var User $user */
-        $user = $this->getUser();
-        $timezone = $this->getParameter('timezone');
-        $current_tz = $timezone !== $user->getTimezone() ? $user->getTimezone() : $timezone;
         switch ($pageName) {
             case Crud::PAGE_DETAIL:
                 yield IdField::new('id');
@@ -81,8 +76,8 @@ class MenuCrudController extends BaseCrudController
                 yield ThumbnailField::new('photo', 'Photo')->setBasePath($this->getParameter('vich_dirs.item_photo'));
                 yield BooleanField::new('enabled', 'Activé');
                 yield BooleanField::new('softdeleted', 'Supprimé')->setPermission('ROLE_SUPER_ADMIN');
-                yield DateTimeField::new('createdAt', 'Création')->setFormat('dd/MM/Y - HH:mm')->setTimezone($current_tz);
-                yield DateTimeField::new('updatedAt', 'Modification')->setFormat('dd/MM/Y - HH:mm')->setTimezone($current_tz);
+                yield DateTimeField::new('createdAt', 'Création')->setFormat('dd/MM/Y - HH:mm')->setTimezone($this->getLaboContext()->getTimezone());
+                yield DateTimeField::new('updatedAt', 'Modification')->setFormat('dd/MM/Y - HH:mm')->setTimezone($this->getLaboContext()->getTimezone());
                 break;
             case Crud::PAGE_NEW:
                 yield TextField::new('name', 'Nom du menu')->setColumns(6);
@@ -161,7 +156,7 @@ class MenuCrudController extends BaseCrudController
                 yield BooleanField::new('prefered', 'Menu principal')->setTextAlign('center');
                 yield BooleanField::new('enabled', 'Activé')->setTextAlign('center');
                 yield AssociationField::new('owner', 'Propriétaire');
-                yield DateTimeField::new('createdAt', 'Création')->setFormat('dd/MM/Y - HH:mm')->setTimezone($current_tz)->setTextAlign('right');
+                yield DateTimeField::new('createdAt', 'Création')->setFormat('dd/MM/Y - HH:mm')->setTimezone($this->getLaboContext()->getTimezone())->setTextAlign('right');
                 break;
         }
     }

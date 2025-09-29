@@ -41,7 +41,6 @@ class SiteparamsCrudController extends BaseCrudController
         // /** @var SiteparamsServiceInterface $manager */
         // $manager = $this->manager;
         $this->checkGrants($pageName);
-        $info = $this->getContextInfo();
         switch ($pageName) {
             case Crud::PAGE_DETAIL:
                 yield IdField::new('id');
@@ -49,7 +48,7 @@ class SiteparamsCrudController extends BaseCrudController
                 yield TextField::new('typevalue', 'Type');
                 yield BooleanField::new('dispatch');
                 yield TextareaField::new('oneStringLineParam', 'Valeur')->formatValue(function ($value) use ($info) {
-                    return $info['entity']->dumpParam();
+                    return $this->getLaboContext()->getInstance()->dumpParam();
                 });
                 // yield TextareaField::new('paramvalue', 'Valeur brute')->setPermission('ROLE_SUPER_ADMIN');
                 break;
@@ -85,8 +84,8 @@ class SiteparamsCrudController extends BaseCrudController
                     ->setDisabled(!$this->isGranted('ROLE_SUPER_ADMIN'))
                     ->setColumns(4)
                     ;
-                if($info['entity']->getTypevalue() === 'array') yield BooleanField::new('dispatch')->setColumns(3)->setHelp('Décompose le nom du paramètre (uniquement pour les paramètres de type array).');
-                switch ($info['entity']->getTypevalue()) {
+                if($this->getLaboContext()->getInstance()->getTypevalue() === 'array') yield BooleanField::new('dispatch')->setColumns(3)->setHelp('Décompose le nom du paramètre (uniquement pour les paramètres de type array).');
+                switch ($this->getLaboContext()->getInstance()->getTypevalue()) {
                     case 'boolean':
                         yield BooleanField::new('formvalue', 'On/Off')
                             ->setFormTypeOptions(['by_reference' => false])

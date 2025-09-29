@@ -41,6 +41,7 @@ abstract class Image extends Item implements ImageInterface
 
     public const ICON = 'tabler:photo';
     public const FA_ICON = 'camera';
+    public const MAPPING = 'photo';
     public const SERIALIZATION_PROPS = ['id','euid','name','file','filename','size','mime','classname','shortname'];
     public const DEFAULT_LIIP_FILTER = "normal_x800";
     public const THUMBNAIL_LIIP_FILTER = 'miniature_q';
@@ -64,7 +65,7 @@ abstract class Image extends Item implements ImageInterface
     #[ORM\Column(length: 255)]
     protected ?string $filename = null;
 
-    #[Vich\UploadableField(mapping: 'photo', fileNameProperty: 'filename', size: 'size', mimeType: 'mime', originalName: 'originalname', dimensions: 'dimensions')]
+    #[Vich\UploadableField(mapping: self::MAPPING, fileNameProperty: 'filename', size: 'size', mimeType: 'mime', originalName: 'originalname', dimensions: 'dimensions')]
     #[Assert\File(
         maxSize: '12M',
         maxSizeMessage: 'Le fichier ne peut pas dépasser la taille de {{ limit }}{{ suffix }} : votre fichier fait {{ size }}{{ suffix }}',

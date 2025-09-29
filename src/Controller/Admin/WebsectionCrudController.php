@@ -1,43 +1,44 @@
 <?php
 namespace Aequation\LaboBundle\Controller\Admin;
 
-use Aequation\LaboBundle\Security\Voter\WebsectionVoter;
-use Aequation\LaboBundle\Controller\Admin\Base\BaseCrudController;
-use Aequation\LaboBundle\Field\CKEditorField;
-use Aequation\LaboBundle\Field\ThumbnailField;
+use App\Entity\Websection;
+use Doctrine\ORM\QueryBuilder;
+use App\Repository\CategoryRepository;
 use Aequation\LaboBundle\Form\Type\PdfType;
+use Aequation\LaboBundle\Field\CKEditorField;
+use Aequation\LaboBundle\Form\Type\PhotoType;
+use Aequation\LaboBundle\Field\ThumbnailField;
+use Aequation\LaboBundle\Service\Tools\Strings;
+use EasyCorp\Bundle\EasyAdminBundle\Config\Crud;
+use Vich\UploaderBundle\Form\Type\VichImageType;
+
+use EasyCorp\Bundle\EasyAdminBundle\Field\IdField;
+use EasyCorp\Bundle\EasyAdminBundle\Config\Filters;
+
+use EasyCorp\Bundle\EasyAdminBundle\Field\FormField;
+use EasyCorp\Bundle\EasyAdminBundle\Field\SlugField;
+use EasyCorp\Bundle\EasyAdminBundle\Field\TextField;
+use EasyCorp\Bundle\EasyAdminBundle\Field\ArrayField;
+use EasyCorp\Bundle\EasyAdminBundle\Field\ImageField;
+use EasyCorp\Bundle\EasyAdminBundle\Field\ChoiceField;
+use EasyCorp\Bundle\EasyAdminBundle\Filter\TextFilter;
+use EasyCorp\Bundle\EasyAdminBundle\Field\BooleanField;
+use EasyCorp\Bundle\EasyAdminBundle\Field\IntegerField;
+use Aequation\LaboBundle\Security\Voter\WebsectionVoter;
+use EasyCorp\Bundle\EasyAdminBundle\Field\DateTimeField;
+use EasyCorp\Bundle\EasyAdminBundle\Field\TextareaField;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
+use EasyCorp\Bundle\EasyAdminBundle\Field\CodeEditorField;
+use EasyCorp\Bundle\EasyAdminBundle\Field\CollectionField;
+use EasyCorp\Bundle\EasyAdminBundle\Field\TextEditorField;
+
+use Aequation\LaboBundle\Model\Interface\LaboUserInterface;
+use EasyCorp\Bundle\EasyAdminBundle\Field\AssociationField;
+use EasyCorp\Bundle\EasyAdminBundle\Form\Type\FileUploadType;
+use Aequation\LaboBundle\Controller\Admin\Base\BaseCrudController;
+use EasyCorp\Bundle\EasyAdminBundle\Contracts\Field\FieldInterface;
 use Aequation\LaboBundle\Service\Interface\LaboUserServiceInterface;
 use Aequation\LaboBundle\Service\Interface\WebsectionServiceInterface;
-use Aequation\LaboBundle\Service\Tools\Strings;
-use Aequation\LaboBundle\Form\Type\PhotoType;
-use Aequation\LaboBundle\Model\Interface\LaboUserInterface;
-
-use App\Entity\Websection;
-use App\Repository\CategoryRepository;
-
-use EasyCorp\Bundle\EasyAdminBundle\Config\Crud;
-use EasyCorp\Bundle\EasyAdminBundle\Config\Filters;
-use EasyCorp\Bundle\EasyAdminBundle\Field\AssociationField;
-use EasyCorp\Bundle\EasyAdminBundle\Field\BooleanField;
-use EasyCorp\Bundle\EasyAdminBundle\Field\ChoiceField;
-use EasyCorp\Bundle\EasyAdminBundle\Field\CollectionField;
-use EasyCorp\Bundle\EasyAdminBundle\Field\DateTimeField;
-use EasyCorp\Bundle\EasyAdminBundle\Field\IdField;
-use EasyCorp\Bundle\EasyAdminBundle\Field\SlugField;
-use EasyCorp\Bundle\EasyAdminBundle\Field\TextEditorField;
-use EasyCorp\Bundle\EasyAdminBundle\Field\TextField;
-use EasyCorp\Bundle\EasyAdminBundle\Filter\TextFilter;
-use EasyCorp\Bundle\EasyAdminBundle\Contracts\Field\FieldInterface;
-use EasyCorp\Bundle\EasyAdminBundle\Field\CodeEditorField;
-use EasyCorp\Bundle\EasyAdminBundle\Field\ImageField;
-use EasyCorp\Bundle\EasyAdminBundle\Field\TextareaField;
-
-use Symfony\Component\Security\Http\Attribute\IsGranted;
-use Doctrine\ORM\QueryBuilder;
-use EasyCorp\Bundle\EasyAdminBundle\Field\ArrayField;
-use EasyCorp\Bundle\EasyAdminBundle\Field\IntegerField;
-use EasyCorp\Bundle\EasyAdminBundle\Form\Type\FileUploadType;
-use Vich\UploaderBundle\Form\Type\VichImageType;
 
 #[IsGranted('ROLE_COLLABORATOR')]
 class WebsectionCrudController extends BaseCrudController
@@ -55,59 +56,59 @@ class WebsectionCrudController extends BaseCrudController
     public function configureFields(string $pageName): iterable
     {
         $this->checkGrants($pageName);
-        $info = $this->getContextInfo();
-        /** @var LaboUserInterface $user */
-        $user = $this->getUser();
-        $timezone = $this->getParameter('timezone');
-        $current_tz = $timezone !== $user->getTimezone() ? $user->getTimezone() : $timezone;
         switch ($pageName) {
             case Crud::PAGE_DETAIL:
-                yield IdField::new('id');
-                yield AssociationField::new('owner', 'Propriétaire')->setCrudController(UserCrudController::class);
-                yield TextField::new('name', 'Nom');
-                yield IntegerField::new('orderitem', 'Priorité')->setHelp('Ordre d\'affichage de la page dans les listes.');
-                yield TextField::new('euid', 'Euid')->setPermission('ROLE_SUPER_ADMIN')->setHelp('Identifiant unique de la section')->setCssClass('sadmin-label');
-                yield TextField::new('sectiontype', 'Type de section');
-                yield TextField::new('title', 'Titre de la section');
-                yield AssociationField::new('mainmenu', 'Menu intégré');
-                yield AssociationField::new('parents', 'Parents')->setCrudController(EcollectionCrudController::class);
-                yield TextField::new('twigfileName', 'Nom du modèle');
-                yield TextField::new('twigfile', 'Chemin du modèle')->setPermission('ROLE_SUPER_ADMIN')->setHelp('Chemin relatif vers le fichier Twig')->setCssClass('sadmin-label');
-                yield TextField::new('content', 'Texte de la section')->renderAsHtml();
-                yield TextareaField::new('content', 'Texte compilé')->formatValue(function ($value) use ($info) {
-                    return $info['entity']->dumpContent();
-                })->setColumns(12)->setPermission('ROLE_SUPER_ADMIN')->setHelp('Texte compilé avec les variables twig. Utile pour le débogage.')->setCssClass('sadmin-label');
-                yield ArrayField::new('pdfiles', 'Fichiers PDF');
-                // SLIDER
-                $slider = $info['entity']->getTwigfileMetadata()->getEasyadminField('slider', $pageName);
-                switch (true) {
-                    case $slider instanceof FieldInterface:
-                        /** @var FieldTrait $slider */
-                        yield $slider;
-                        break;
-                    case $slider === true:
-                        yield AssociationField::new('slider', 'Diaporama');
-                        break;
-                }
-                // PHOTO
-                $photo = $info['entity']->getTwigfileMetadata()->getEasyadminField('photo', $pageName);
-                switch (true) {
-                    case $photo instanceof FieldInterface:
-                        /** @var FieldTrait $photo */
-                        yield $photo;
-                        break;
-                    case $photo === true:
-                        yield ThumbnailField::new('photo', 'Photo')
-                            ->setBasePath($this->getParameter('vich_dirs.item_photo'));
-                        break;
-                }
-                yield CollectionField::new('categorys');
-                yield TextareaField::new('relationOrderDetails', 'Rel.order info')->setPermission('ROLE_SUPER_ADMIN')->setCssClass('sadmin-label');
-                yield BooleanField::new('prefered', 'Section par défaut');
-                yield BooleanField::new('enabled', 'Activée');
-                yield BooleanField::new('softdeleted', 'Supprimée')->setPermission('ROLE_SUPER_ADMIN')->setCssClass('sadmin-label');
-                yield DateTimeField::new('createdAt', 'Création')->setFormat('dd/MM/Y - HH:mm')->setTimezone($current_tz);
-                yield DateTimeField::new('updatedAt', 'Modification')->setFormat('dd/MM/Y - HH:mm')->setTimezone($current_tz);
+                yield FormField::addTab(label: 'Websection', icon: $this->getLaboContext()->getInstance()::ICON);
+                    yield IdField::new('id');
+                    yield AssociationField::new('owner', 'Propriétaire')->setCrudController(UserCrudController::class);
+                    yield TextField::new('name', 'Nom');
+                    yield IntegerField::new('orderitem', 'Priorité')->setHelp('Ordre d\'affichage de la page dans les listes.');
+                    yield TextField::new('sectiontype', 'Type de section');
+                    yield TextField::new('title', 'Titre de la section');
+                    yield AssociationField::new('mainmenu', 'Menu intégré');
+                    yield AssociationField::new('parents', 'Parents')->setCrudController(EcollectionCrudController::class);
+                    yield TextField::new('twigfileName', 'Nom du modèle');
+                    yield TextField::new('content', 'Texte de la section')->renderAsHtml();
+                    yield ArrayField::new('pdfiles', 'Fichiers PDF');
+                    // SLIDER
+                    $slider = $this->getLaboContext()->getInstance()->getTwigfileMetadata()->getEasyadminField('slider', $pageName);
+                    switch (true) {
+                        case $slider instanceof FieldInterface:
+                            /** @var FieldTrait $slider */
+                            yield $slider;
+                            break;
+                        case $slider === true:
+                            yield AssociationField::new('slider', 'Diaporama');
+                            break;
+                    }
+                    // PHOTO
+                    $photo = $this->getLaboContext()->getInstance()->getTwigfileMetadata()->getEasyadminField('photo', $pageName);
+                    switch (true) {
+                        case $photo instanceof FieldInterface:
+                            /** @var FieldTrait $photo */
+                            yield $photo;
+                            break;
+                        case $photo === true:
+                            yield ThumbnailField::new('photo', 'Photo')
+                                ->setBasePath($this->getParameter('vich_dirs.item_photo'));
+                            break;
+                    }
+                    yield CollectionField::new('categorys');
+                    yield BooleanField::new('prefered', 'Section par défaut');
+                    yield BooleanField::new('enabled', 'Activée');
+                    yield DateTimeField::new('createdAt', 'Création')->setFormat('dd/MM/Y - HH:mm')->setTimezone($this->getLaboContext()->getTimezone());
+                    yield DateTimeField::new('updatedAt', 'Modification')->setFormat('dd/MM/Y - HH:mm')->setTimezone($this->getLaboContext()->getTimezone());
+
+                yield FormField::addTab(label: 'Super admin', icon: 'tabler:lock-filled')->setPermission('ROLE_SUPER_ADMIN');
+                    yield TextField::new('euid', 'Euid')->setPermission('ROLE_SUPER_ADMIN')->setHelp('Identifiant unique de la section');
+                    yield TextField::new('twigfile', 'Chemin du modèle')->setPermission('ROLE_SUPER_ADMIN')->setHelp('Chemin relatif vers le fichier Twig');
+                    yield TextareaField::new('content', 'Texte compilé')
+                        ->formatValue(fn ($value) => $this->getLaboContext()->getInstance()->dumpContent())
+                        ->setColumns(12)->setPermission('ROLE_SUPER_ADMIN')
+                        ->setHelp('Texte compilé avec les variables twig. Utile pour le débogage.')
+                        ;
+                    yield TextareaField::new('relationOrderDetails', 'Rel.order info')->setPermission('ROLE_SUPER_ADMIN');
+                    yield BooleanField::new('softdeleted', 'Supprimée')->setPermission('ROLE_SUPER_ADMIN');
                 break;
             case Crud::PAGE_NEW:
                 yield TextField::new('name', 'Nom de la section')
@@ -123,7 +124,7 @@ class WebsectionCrudController extends BaseCrudController
                 //     ->setChoices(static fn (Websection $websection): array => $websection->getTwigfileMetadata()->getSectiontypeChoices() ?: [])
                 //     ->setColumns(4);
                 // TITLE
-                $title = $info['entity']->getTwigfileMetadata()->getEasyadminField('title', $pageName);
+                $title = $this->getLaboContext()->getInstance()->getTwigfileMetadata()->getEasyadminField('title', $pageName);
                 switch (true) {
                     case $title instanceof FieldInterface:
                         /** @var FieldTrait $title */
@@ -145,7 +146,7 @@ class WebsectionCrudController extends BaseCrudController
                     ->setColumns(3);
                 // cumputed form fields
                 // CONTENT
-                $content = $info['entity']->getTwigfileMetadata()->getEasyadminField('content', $pageName);
+                $content = $this->getLaboContext()->getInstance()->getTwigfileMetadata()->getEasyadminField('content', $pageName);
                 switch (true) {
                     case $content instanceof FieldInterface:
                         /** @var FieldTrait $content */
@@ -158,7 +159,7 @@ class WebsectionCrudController extends BaseCrudController
                         break;
                 }
                 // MAINMENU
-                $mainmenu = $info['entity']->getTwigfileMetadata()->getEasyadminField('mainmenu', $pageName);
+                $mainmenu = $this->getLaboContext()->getInstance()->getTwigfileMetadata()->getEasyadminField('mainmenu', $pageName);
                 switch (true) {
                     case $mainmenu instanceof FieldInterface:
                         /** @var FieldTrait $mainmenu */
@@ -170,7 +171,7 @@ class WebsectionCrudController extends BaseCrudController
                         break;
                 }
                 // PHOTO
-                $photo = $info['entity']->getTwigfileMetadata()->getEasyadminField('photo', $pageName);
+                $photo = $this->getLaboContext()->getInstance()->getTwigfileMetadata()->getEasyadminField('photo', $pageName);
                 switch (true) {
                     case $photo instanceof FieldInterface:
                         /** @var FieldTrait $photo */
@@ -183,7 +184,7 @@ class WebsectionCrudController extends BaseCrudController
                         break;
                 }
                 // SLIDER
-                $slider = $info['entity']->getTwigfileMetadata()->getEasyadminField('slider', $pageName);
+                $slider = $this->getLaboContext()->getInstance()->getTwigfileMetadata()->getEasyadminField('slider', $pageName);
                 switch (true) {
                     case $slider instanceof FieldInterface:
                         /** @var FieldTrait $slider */
@@ -205,7 +206,7 @@ class WebsectionCrudController extends BaseCrudController
                 yield TextField::new('name', 'Nom de la section')
                     ->setHelp('Utilisez un nom simple et pas trop long. <strong>Ce nom est uniquement utilisé pour l\'administration et n\'est pas affiché dans le contenu la page web</strong>.')
                     ->setColumns(6);
-                $twigfile = $info['entity']->getTwigfileMetadata()->getEasyadminField('twigfile', $pageName);
+                $twigfile = $this->getLaboContext()->getInstance()->getTwigfileMetadata()->getEasyadminField('twigfile', $pageName);
                 switch (true) {
                     case $twigfile instanceof FieldInterface:
                         /** @var FieldTrait $twigfile */
@@ -224,7 +225,7 @@ class WebsectionCrudController extends BaseCrudController
                 //     ->setColumns(4);
                 // cumputed form fields
                 // TITLE
-                $title = $info['entity']->getTwigfileMetadata()->getEasyadminField('title', $pageName);
+                $title = $this->getLaboContext()->getInstance()->getTwigfileMetadata()->getEasyadminField('title', $pageName);
                 switch (true) {
                     case $title instanceof FieldInterface:
                         /** @var FieldTrait $title */
@@ -243,7 +244,7 @@ class WebsectionCrudController extends BaseCrudController
                     ->setFormTypeOptions(['by_reference' => false])
                     ->setColumns(4);
                 // PHOTO
-                $photo = $info['entity']->getTwigfileMetadata()->getEasyadminField('photo', $pageName);
+                $photo = $this->getLaboContext()->getInstance()->getTwigfileMetadata()->getEasyadminField('photo', $pageName);
                 switch (true) {
                     case $photo instanceof FieldInterface:
                         /** @var FieldTrait $photo */
@@ -257,7 +258,7 @@ class WebsectionCrudController extends BaseCrudController
                         break;
                 }
                 // CONTENT
-                $content = $info['entity']->getTwigfileMetadata()->getEasyadminField('content', $pageName);
+                $content = $this->getLaboContext()->getInstance()->getTwigfileMetadata()->getEasyadminField('content', $pageName);
                 switch (true) {
                     case $content instanceof FieldInterface:
                         /** @var FieldTrait $content */
@@ -270,7 +271,7 @@ class WebsectionCrudController extends BaseCrudController
                         break;
                 }
                 // MAINMENU
-                $mainmenu = $info['entity']->getTwigfileMetadata()->getEasyadminField('mainmenu', $pageName);
+                $mainmenu = $this->getLaboContext()->getInstance()->getTwigfileMetadata()->getEasyadminField('mainmenu', $pageName);
                 switch (true) {
                     case $mainmenu instanceof FieldInterface:
                         /** @var FieldTrait $mainmenu */
@@ -282,7 +283,7 @@ class WebsectionCrudController extends BaseCrudController
                         break;
                 }
                 // SLIDER
-                $slider = $info['entity']->getTwigfileMetadata()->getEasyadminField('slider', $pageName);
+                $slider = $this->getLaboContext()->getInstance()->getTwigfileMetadata()->getEasyadminField('slider', $pageName);
                 switch (true) {
                     case $slider instanceof FieldInterface:
                         /** @var FieldTrait $slider */
@@ -302,26 +303,26 @@ class WebsectionCrudController extends BaseCrudController
                 yield IntegerField::new('orderitem', 'Priorité')->setHelp('Ordre d\'affichage de la page dans les listes.')->setColumns(3);
                 break;
             default:
-                yield IdField::new('id')->setPermission('ROLE_SUPER_ADMIN');
-                yield TextField::new('name', 'Nom');
+                // yield IdField::new('id')->setPermission('ROLE_SUPER_ADMIN');
                 yield ThumbnailField::new('photo', 'Photo')
                     ->setBasePath($this->getParameter('vich_dirs.item_photo'))
                     ->setTextAlign('center')
                     ->setSortable(false);
+                yield TextField::new('name', 'Nom');
                 yield TextField::new('sectiontype', 'Type de section')->setTextAlign('center');
                 // yield TextField::new('title', 'Titre');
                 yield TextField::new('twigfileName', 'Modèle')->setTextAlign('center');
-                yield TextEditorField::new('content', 'Texte de la section')
-                    ->formatValue(fn ($value) => Strings::markup($value))
-                    ->setTextAlign('center')
-                    ->setSortable(false);
+                // yield TextEditorField::new('content', 'Texte de la section')
+                //     ->formatValue(fn ($value) => Strings::markup($value))
+                //     ->setTextAlign('center')
+                //     ->setSortable(false);
                 // yield AssociationField::new('mainmenu', 'Menu intégré')->setTextAlign('center');
-                yield AssociationField::new('owner', 'Propriétaire')->setTextAlign('center');
-                yield IntegerField::new('orderitem', 'Ord.');
+                // yield AssociationField::new('owner', 'Propriétaire')->setTextAlign('center');
+                // yield IntegerField::new('orderitem', 'Ord.');
                 yield BooleanField::new('prefered', 'Section par défaut')->setTextAlign('center');
-                yield AssociationField::new('pdfiles', 'PDF')->setTextAlign('center')->setSortable(false);
+                // yield AssociationField::new('pdfiles', 'PDF')->setTextAlign('center')->setSortable(false);
                 yield BooleanField::new('enabled', 'Activée')->setTextAlign('center');
-                // yield DateTimeField::new('createdAt', 'Création')->setFormat('dd/MM/Y - HH:mm')->setTimezone($current_tz);
+                // yield DateTimeField::new('createdAt', 'Création')->setFormat('dd/MM/Y - HH:mm')->setTimezone($this->getLaboContext()->getTimezone());
                 break;
         }
     }

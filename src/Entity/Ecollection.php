@@ -71,9 +71,6 @@ abstract class Ecollection extends Item implements EcollectionInterface
     public function setItems(array|Collection $items): static
     {
         $this->removeItems();
-        if($items instanceof Collection) {
-            $items = $items->toArray();
-        }
         foreach($items as $item) {
             $this->addItem($item);
         }
@@ -83,13 +80,20 @@ abstract class Ecollection extends Item implements EcollectionInterface
     #[Serializer\Ignore]
     public function addItem(ItemInterface $item): bool
     {
+        if($this->_isModel() || $item->_isModel()) {
+            // Cannot add parent to model
+            return false;
+        }
         if($this->isAcceptsItemForEcollection($item, 'items')) {
             if (!$this->hasItem($item)) $this->items->add($item);
             if(!$item->hasParent($this)) $item->addParent($this);
+            dump('Adding "'.$item.'" to '.$this->__toString().' (id:'.spl_object_id($this).')...', $item);
         } else {
             // not acceptable
             $this->removeItem($item);
+            return $this->hasItem($item);
         }
+        dump("Item $item ".($this->hasItem($item) ? '' : 'NOT ')."added to ".$this->__toString().' (id:'.spl_object_id($this).')');
         return $this->hasItem($item);
     }
 

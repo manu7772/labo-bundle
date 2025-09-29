@@ -1,57 +1,60 @@
 <?php
 namespace Aequation\LaboBundle\Controller\Admin\Base;
 
-use Aequation\LaboBundle\Component\Opresult;
-use Aequation\LaboBundle\EventListener\Attribute\AppEvent;
-use Aequation\LaboBundle\EventSubscriber\LaboFormsSubscriber;
-use Aequation\LaboBundle\Model\Interface\AppEntityInterface;
-use Aequation\LaboBundle\Model\Interface\EnabledInterface;
-use Aequation\LaboBundle\Security\Voter\Interface\AppVoterInterface;
-use Aequation\LaboBundle\Service\AppService;
-use Aequation\LaboBundle\Service\Interface\AppEntityManagerInterface;
-use Aequation\LaboBundle\Service\Interface\LaboUserServiceInterface;
-use Aequation\LaboBundle\Service\Tools\Classes;
-use Aequation\LaboBundle\Service\Tools\Strings;
-
-use App\Service\AppEntityManager;
 use DateTime;
-use EasyCorp\Bundle\EasyAdminBundle\Controller\AbstractCrudController;
-use EasyCorp\Bundle\EasyAdminBundle\Collection\FieldCollection;
-use EasyCorp\Bundle\EasyAdminBundle\Collection\FilterCollection;
-use EasyCorp\Bundle\EasyAdminBundle\Config\Action;
-use EasyCorp\Bundle\EasyAdminBundle\Config\Actions;
-use EasyCorp\Bundle\EasyAdminBundle\Config\Crud;
-use EasyCorp\Bundle\EasyAdminBundle\Dto\SearchDto;
-use EasyCorp\Bundle\EasyAdminBundle\Config\KeyValueStore;
-use EasyCorp\Bundle\EasyAdminBundle\Context\AdminContext;
-use EasyCorp\Bundle\EasyAdminBundle\Dto\EntityDto;
-
-use Doctrine\ORM\EntityManagerInterface;
+use Iterator;
+use Exception;
+use ReflectionClass;
 use Doctrine\ORM\QueryBuilder;
-use EasyCorp\Bundle\EasyAdminBundle\Config\Assets;
-use EasyCorp\Bundle\EasyAdminBundle\Config\Dashboard;
-use EasyCorp\Bundle\EasyAdminBundle\Contracts\Field\FieldInterface;
-use EasyCorp\Bundle\EasyAdminBundle\Event\AfterCrudActionEvent;
-use EasyCorp\Bundle\EasyAdminBundle\Event\AfterEntityPersistedEvent;
-use EasyCorp\Bundle\EasyAdminBundle\Event\BeforeCrudActionEvent;
-use EasyCorp\Bundle\EasyAdminBundle\Event\BeforeEntityPersistedEvent;
-use EasyCorp\Bundle\EasyAdminBundle\Exception\ForbiddenActionException;
-use EasyCorp\Bundle\EasyAdminBundle\Exception\InsufficientEntityPermissionException;
-use EasyCorp\Bundle\EasyAdminBundle\Factory\EntityFactory;
-use EasyCorp\Bundle\EasyAdminBundle\Field\Field;
-use EasyCorp\Bundle\EasyAdminBundle\Security\Permission;
-use Symfony\Component\Form\FormBuilderInterface;
+use App\Service\AppEntityManager;
 use Symfony\Component\Form\FormEvent;
 use Symfony\Component\Form\FormEvents;
-
-use Exception;
-use Iterator;
+use Doctrine\ORM\EntityManagerInterface;
+use Aequation\LaboBundle\Component\Opresult;
+use Aequation\LaboBundle\Service\AppService;
 use phpDocumentor\Reflection\Types\Iterable_;
-use ReflectionClass;
-use Symfony\Component\HttpFoundation\RequestStack;
+
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\Security\Core\Authorization\Voter\VoterInterface;
+use Aequation\LaboBundle\Service\Tools\Classes;
+use Aequation\LaboBundle\Service\Tools\Strings;
+use EasyCorp\Bundle\EasyAdminBundle\Config\Crud;
+use EasyCorp\Bundle\EasyAdminBundle\Field\Field;
+use Symfony\Component\Form\FormBuilderInterface;
+use EasyCorp\Bundle\EasyAdminBundle\Config\Action;
+use EasyCorp\Bundle\EasyAdminBundle\Config\Assets;
+use EasyCorp\Bundle\EasyAdminBundle\Dto\EntityDto;
+use EasyCorp\Bundle\EasyAdminBundle\Dto\SearchDto;
+use Symfony\Component\HttpFoundation\RequestStack;
+use EasyCorp\Bundle\EasyAdminBundle\Config\Actions;
+
+use Aequation\LaboBundle\Component\LaboAdminContext;
+use EasyCorp\Bundle\EasyAdminBundle\Config\Dashboard;
 use Symfony\Contracts\Translation\TranslatorInterface;
+use EasyCorp\Bundle\EasyAdminBundle\Security\Permission;
+use EasyCorp\Bundle\EasyAdminBundle\Config\KeyValueStore;
+use EasyCorp\Bundle\EasyAdminBundle\Context\AdminContext;
+use Aequation\LaboBundle\EventListener\Attribute\AppEvent;
+use Aequation\LaboBundle\Model\Interface\EnabledInterface;
+use EasyCorp\Bundle\EasyAdminBundle\Factory\EntityFactory;
+use Aequation\LaboBundle\Model\Interface\AppEntityInterface;
+use Aequation\LaboBundle\EventSubscriber\LaboFormsSubscriber;
+use EasyCorp\Bundle\EasyAdminBundle\Collection\FieldCollection;
+use EasyCorp\Bundle\EasyAdminBundle\Event\AfterCrudActionEvent;
+use EasyCorp\Bundle\EasyAdminBundle\Collection\FilterCollection;
+use EasyCorp\Bundle\EasyAdminBundle\Event\BeforeCrudActionEvent;
+use EasyCorp\Bundle\EasyAdminBundle\Contracts\Field\FieldInterface;
+use Aequation\LaboBundle\Security\Voter\Interface\AppVoterInterface;
+
+use Aequation\LaboBundle\Service\Interface\LaboUserServiceInterface;
+use EasyCorp\Bundle\EasyAdminBundle\Event\AfterEntityPersistedEvent;
+use Aequation\LaboBundle\Service\Interface\AppEntityManagerInterface;
+use EasyCorp\Bundle\EasyAdminBundle\Event\BeforeEntityPersistedEvent;
+use EasyCorp\Bundle\EasyAdminBundle\Controller\AbstractCrudController;
+use Aequation\LaboBundle\Component\Interface\LaboAdminContextInterface;
+use EasyCorp\Bundle\EasyAdminBundle\Exception\ForbiddenActionException;
+use Symfony\Component\Security\Core\Authorization\Voter\VoterInterface;
+use EasyCorp\Bundle\EasyAdminBundle\Contracts\Context\AdminContextInterface;
+use EasyCorp\Bundle\EasyAdminBundle\Exception\InsufficientEntityPermissionException;
 
 abstract class BaseCrudController extends AbstractCrudController
 {
@@ -64,6 +67,7 @@ abstract class BaseCrudController extends AbstractCrudController
 
     public readonly array $query_values;
     public readonly AppEntityManagerInterface $appEntityManager;
+    public readonly LaboAdminContextInterface $laboAdminContext;
 
     public function __construct(
         protected RequestStack $requestStack,
@@ -269,51 +273,47 @@ abstract class BaseCrudController extends AbstractCrudController
 
         // DETAIL
         $actions->add(Crud::PAGE_INDEX, Action::DETAIL);
-        $actions->update(Crud::PAGE_INDEX, Action::DETAIL, function(Action $action) use ($voter) {
-            $action
+        $actions->update(
+            Crud::PAGE_INDEX,
+            Action::DETAIL,
+            fn (Action $action) => $action
                 ->setLabel(false)
                 ->setIcon('tabler:eye')
                 ->setHtmlAttributes(['title' => $this->translate('action.detail')])
-                ->displayIf(function (AppEntityInterface $entity) use ($voter) {
-                    return $this->isGranted($voter::ACTION_READ, $entity);
-                });
-            return $action;
-        });
+                ->displayIf(fn (AppEntityInterface $entity) => $this->isGranted($voter::ACTION_READ, $entity))
+        );
 
         // NEW
-        $actions->update(Crud::PAGE_INDEX, Action::NEW, function(Action $action) use ($voter) {
-            $action
+        $actions->update(
+            Crud::PAGE_INDEX,
+            Action::NEW,
+            fn (Action $action) => $action
                 ->setLabel($this->translate('action.new'))
                 ->setIcon('tabler:plus')
-                ->displayIf(function (?AppEntityInterface $entity) use ($voter) {
-                    return $this->isGranted($voter::ACTION_CREATE, $entity ?? static::ENTITY);
-                });
-            return $action;
-        });
+                ->displayIf(fn (?AppEntityInterface $entity) => $this->isGranted($voter::ACTION_CREATE, $entity ?? static::ENTITY))
+        );
 
         // EDIT
-        $actions->update(Crud::PAGE_INDEX, Action::EDIT, function(Action $action) use ($voter) {
-            $action
+        $actions->update(
+            Crud::PAGE_INDEX,
+            Action::EDIT,
+            fn (Action $action) => $action
                 ->setLabel(false)
                 ->setIcon('tabler:pencil')
                 ->setHtmlAttributes(['title' => $this->translate('action.edit')])
-                ->displayIf(function (AppEntityInterface $entity) use ($voter) {
-                    return $this->isGranted($voter::ACTION_UPDATE, $entity);
-                });
-            return $action;
-        });
+                ->displayIf(fn (AppEntityInterface $entity) => $this->isGranted($voter::ACTION_UPDATE, $entity))
+        );
 
         // DELETE
-        $actions->update(Crud::PAGE_INDEX, Action::DELETE, function(Action $action) use ($voter) {
-            $action
+        $actions->update(
+            Crud::PAGE_INDEX,
+            Action::DELETE,
+            fn (Action $action) => $action
                 ->setLabel(false)
                 ->setIcon('tabler:trash')
                 ->setHtmlAttributes(['title' => $this->translate('action.delete')])
-                ->displayIf(function (AppEntityInterface $entity) use ($voter) {
-                    return $this->isGranted($voter::ACTION_DELETE, $entity);
-                });
-            return $action;
-        });
+                ->displayIf(fn (AppEntityInterface $entity) => $this->isGranted($voter::ACTION_DELETE, $entity))
+        );
 
         $actions->reorder(Crud::PAGE_INDEX, [Action::DELETE, Action::EDIT, Action::DETAIL]);
 
@@ -543,38 +543,48 @@ abstract class BaseCrudController extends AbstractCrudController
         return $class;
     }
 
-    protected function getContextInfo(): array
+    protected function getLaboContext(): ?LaboAdminContextInterface
     {
-        $info = [
-            'user' => null,
-            'entityDto' => null,
-            'classname' => null,
-            'entity' => null,
-        ];
-        $context = $this->getContext();
-        if($context) {
-            $info['user']       = $context->getUser() ?? $this->getUser();
-            $info['entityDto']  = $context->getEntity();
-            $info['classname']  = $info['entityDto'] instanceof EntityDto ? $info['entityDto']->getFqcn() : null;
-            $info['entity']     = $info['entityDto'] instanceof EntityDto ? $info['entityDto']->getInstance() : null;
-            if(empty($info['entity'])) {
-                // $info['entity'] = $this->createEntity(entityFqcn: $info['classname'], checkGrant: false);
-                $info['entity'] = $this->manager instanceof AppEntityManagerInterface
-                    ? $this->manager->getModel()
-                    : new $info['classname'];
-            }
-            $RC = new ReflectionClass($info['classname']);
-            $info['instantiable'] = $RC->isInstantiable();
-        }
-        return $info;
+        return $this->laboAdminContext ??= new LaboAdminContext($this, $this->getContext());
     }
+
+    // protected function getContextInfo(): array
+    // {
+    //     trigger_deprecation(
+    //         'aequation\labo-bundle',
+    //         '2.0.0',
+    //         'This method '.__METHOD__.' is deprecated. Use LaboAdminContext you can get from $this->getLaboContext() instead.',
+    //         __METHOD__,
+    //     );
+    //     $info = [
+    //         'user' => null,
+    //         'entityDto' => null,
+    //         'classname' => null,
+    //         'entity' => null,
+    //     ];
+    //     $context = $this->getContext();
+    //     if($context) {
+    //         $info['user']       = $context->getUser() ?? $this->getUser();
+    //         $info['entityDto']  = $context->getEntity();
+    //         $info['classname']  = $context->getEntity()->getFqcn();
+    //         $this->getLaboContext()->getInstance()     = $context->getEntity()->getInstance() ?? $info['classname'];
+    //         // if(empty($this->getLaboContext()->getInstance())) {
+    //         //     // $this->getLaboContext()->getInstance() = $this->createEntity(entityFqcn: $info['classname'], checkGrant: false);
+    //         //     $this->getLaboContext()->getInstance() = $this->manager instanceof AppEntityManagerInterface
+    //         //         ? $this->manager->getModel()
+    //         //         : new $info['classname'];
+    //         // }
+    //         $RC = new ReflectionClass($info['classname']);
+    //         $info['instantiable'] = $RC->isInstantiable();
+    //     }
+    //     return $info;
+    // }
 
     public function createIndexQueryBuilder(SearchDto $searchDto, EntityDto $entityDto, FieldCollection $fields, FilterCollection $filters): QueryBuilder
     {
-        $info = $this->getContextInfo();
         $queryBuilder = parent::createIndexQueryBuilder($searchDto, $entityDto, $fields, $filters);
 
-        if(!$this->isGranted('ROLE_SUPER_ADMIN') && $info['entity'] instanceof EnabledInterface) {
+        if(!$this->isGranted('ROLE_SUPER_ADMIN') && is_a($this->getLaboContext()->getInstance(), EnabledInterface::class, true)) {
             $queryBuilder->andWhere('entity.softdeleted = false');
         }
         return $queryBuilder;
@@ -592,37 +602,36 @@ abstract class BaseCrudController extends AbstractCrudController
     {
         if(!is_bool($make_exception)) $make_exception = static::THROW_EXCEPTION_WHEN_FORBIDDEN;
         $opresult = new Opresult();
-        $info = $this->getContextInfo();
         $voter = $this->getEntityVoter();
-        if($info['instantiable'] && is_a($voter, VoterInterface::class, true)) {
+        if($this->getLaboContext()->isInstantiable() && is_a($voter, VoterInterface::class, true)) {
             switch ($pageName) {
                 case Crud::PAGE_DETAIL:
-                    if(!$this->isGranted(attribute: $voter::ACTION_READ, subject: $info['entity'])) {
-                        $message = vsprintf('Vous n\'êtes pas autorisé consulter cet élément %s.', [$info['entity']?->__toString() ?? $info['entityDto']->getFqcn()]);
+                    if(!$this->isGranted(attribute: $voter::ACTION_READ, subject: $this->getLaboContext()->getInstanceOrClass())) {
+                        $message = vsprintf('Vous n\'êtes pas autorisé consulter cet élément %s.', [$this->getLaboContext()->getInstance()?->__toString() ?? $this->getLaboContext()->getEntity()->getFqcn()]);
                         if($make_exception) throw new Exception(message: $message, code: 403);
                         $this->addFlash('danger', $message);
                         $opresult->addDanger($message);
                     }
                     break;
                 case Crud::PAGE_NEW:
-                    if(!$this->isGranted(attribute: $voter::ACTION_CREATE, subject: $info['entity'])) {
-                        $message = vsprintf('Vous n\'êtes pas autorisé à réaliser cette création (%s).', [$info['entityDto']->getFqcn()]);
+                    if(!$this->isGranted(attribute: $voter::ACTION_CREATE, subject: $this->getLaboContext()->getInstanceOrClass())) {
+                        $message = vsprintf('Vous n\'êtes pas autorisé à réaliser cette création (%s).', [$this->getLaboContext()->getEntity()->getFqcn()]);
                         if($make_exception) throw new Exception(message: $message, code: 403);
                         $this->addFlash('danger', $message);
                         $opresult->addDanger($message);
                     }
                     break;
                 case Crud::PAGE_EDIT:
-                    if(!$this->isGranted(attribute: $voter::ACTION_UPDATE, subject: $info['entity'])) {
-                        $message = vsprintf('Vous n\'êtes pas autorisé à réaliser cette modification de %s.', [$info['entity']?->__toString() ?? $info['entityDto']->getFqcn()]);
+                    if(!$this->isGranted(attribute: $voter::ACTION_UPDATE, subject: $this->getLaboContext()->getInstanceOrClass())) {
+                        $message = vsprintf('Vous n\'êtes pas autorisé à réaliser cette modification de %s.', [$this->getLaboContext()->getInstance()?->__toString() ?? $this->getLaboContext()->getEntity()->getFqcn()]);
                         if($make_exception) throw new Exception(message: $message, code: 403);
                         $this->addFlash('danger', $message);
                         $opresult->addDanger($message);
                     }
                     break;
                 default:
-                if(!$this->isGranted(attribute: $voter::ACTION_LIST, subject: $info['entity'])) {
-                    $message = vsprintf('Vous n\'êtes pas autorisé à réaliser cette opération "%s" sur l\'entité %s.', [$pageName, $info['entityDto']->getFqcn()]);
+                if(!$this->isGranted(attribute: $voter::ACTION_LIST, subject: $this->getLaboContext()->getInstanceOrClass())) {
+                    $message = vsprintf('Vous n\'êtes pas autorisé à réaliser cette opération "%s" sur l\'entité %s.', [$pageName, $this->getLaboContext()->getEntity()->getFqcn()]);
                     if($make_exception) throw new Exception(message: $message, code: 403);
                     $this->addFlash('danger', $message);
                     $opresult->addDanger($message);
@@ -680,7 +689,7 @@ abstract class BaseCrudController extends AbstractCrudController
     public function createNewFormBuilder(EntityDto $entityDto, KeyValueStore $formOptions, AdminContext $context): FormBuilderInterface
     {
         $formBuilder = parent::createNewFormBuilder($entityDto, $formOptions, $context);
-        $formBuilder->setEmptyData($this->createEntity($entityDto->getFqcn(), false));
+        // $formBuilder->setEmptyData($this->createEntity($entityDto->getFqcn(), false));
         $entity = $formBuilder->getData();
         if($entity instanceof AppEntityInterface) {
             $formBuilder->addEventSubscriber(new LaboFormsSubscriber($this->manager));

@@ -55,7 +55,6 @@ class PdfCrudController extends BaseCrudController
     public function configureFields(string $pageName): iterable
     {
         $this->checkGrants($pageName);
-        $info = $this->getContextInfo();
         switch ($pageName) {
             case Crud::PAGE_DETAIL:
                 yield IdField::new('id');
@@ -116,7 +115,7 @@ class PdfCrudController extends BaseCrudController
                 yield AssociationField::new('owner', 'Propriétaire')->setColumns(6)->setPermission('ROLE_ADMIN')->setCrudController(UserCrudController::class);
                 yield TextareaField::new('description', 'Description du contenu du PDF')->setColumns(12);
                 yield BooleanField::new('enabled', 'Visible sur le site');
-                switch ($info['entity']->getSourcetype()) {
+                switch ($this->getLaboContext()->getInstance()->getSourcetype()) {
                     case 2:
                         # file
                         // Source: PDF file

@@ -59,11 +59,7 @@ class WebpageCrudController extends BaseCrudController
     public function configureFields(string $pageName): iterable
     {
         $this->checkGrants($pageName);
-        // $info = $this->getContextInfo();
         /** @var LaboUserInterface $user */
-        $user = $this->getUser();
-        $timezone = $this->getParameter('timezone');
-        $current_tz = $timezone !== $user->getTimezone() ? $user->getTimezone() : $timezone;
         switch ($pageName) {
             case Crud::PAGE_DETAIL:
                 
@@ -78,13 +74,13 @@ class WebpageCrudController extends BaseCrudController
                         yield TextField::new('linktitle', 'Titre de lien externe')->formatValue(fn ($value) => Strings::markup($value));
                         yield AssociationField::new('mainmenu', 'Menu intégré')->setCrudController(MenuCrudController::class);
                         yield AssociationField::new('sosmenu', 'Menu SOS')->setCrudController(MenuCrudController::class);
-                        yield TextField::new('twigfileName', 'Nom du modèle')->setPermission('ROLE_SUPER_ADMIN');
-                        yield TextField::new('twigfile', 'Chemin du modèle')->setPermission('ROLE_SUPER_ADMIN');
                         yield TextField::new('content', 'Texte de la page')->renderAsHtml();
-                        yield ThumbnailField::new('photo', 'Photo')->setBasePath($this->getParameter('vich_dirs.item_photo'));
-                        yield TextField::new('pdfUrlAccess', 'Version PDF')->setTemplatePath('@EasyAdmin/crud/field/pdf_link.html.twig');
                 
                 yield FormField::addColumn('col-md-12 col-lg-5');
+
+                    yield FormField::addPanel(label: 'Photo / Pdf', icon: 'tabler:photo');
+                        yield ThumbnailField::new('photo', 'Photo')->setBasePath($this->getParameter('vich_dirs.item_photo'));
+                        yield TextField::new('pdfUrlAccess', 'Version PDF')->setTemplatePath('@EasyAdmin/crud/field/pdf_link.html.twig');
 
                     yield FormField::addPanel(label: 'Médias associés', icon: 'fa6-solid:link');
                         yield AssociationField::new('slider', 'Diaporama')->setCrudController(SliderCrudController::class);
@@ -95,15 +91,13 @@ class WebpageCrudController extends BaseCrudController
                         yield TextField::new('name', 'Nom');
                         yield TextField::new('slug', 'Slug');
                         yield TextField::new('euid', 'Id Unique');
-                        yield DateTimeField::new('createdAt', 'Création')->setFormat('dd/MM/Y - HH:mm')->setTimezone($current_tz);
-                        yield DateTimeField::new('updatedAt', 'Modification')->setFormat('dd/MM/Y - HH:mm')->setTimezone($current_tz);
+                        yield DateTimeField::new('createdAt', 'Création')->setFormat('dd/MM/Y - HH:mm')->setTimezone($this->getLaboContext()->getTimezone());
+                        yield DateTimeField::new('updatedAt', 'Modification')->setFormat('dd/MM/Y - HH:mm')->setTimezone($this->getLaboContext()->getTimezone());
 
                     yield FormField::addPanel(label: 'Sécurité', icon: 'fa6-solid:lock');
                         yield AssociationField::new('owner', 'Propriétaire')->setCrudController(UserCrudController::class);
                         yield IdField::new('id');
                         yield BooleanField::new('enabled', 'Activée');
-                        yield BooleanField::new('softdeleted', 'Supprimée')->setPermission('ROLE_SUPER_ADMIN');
-                        yield TextareaField::new('relationOrderDetails', '[Rel.order info]')->setPermission('ROLE_SUPER_ADMIN');
 
                 yield FormField::addTab(label: 'Sections', icon: 'tabler:lock-filled')->setHelp('Liste des sections associées à cette page web. Vous pouvez modifier l\'ordre des sections en allant dans la section "Sections" du menu latéral.');
 
@@ -111,6 +105,12 @@ class WebpageCrudController extends BaseCrudController
                         ->setUseJavascript(true)
                         ->setHelp('Vous pouvez modifier ici l\'ordre des sections de la page web.')
                         ->setLabel(false);
+
+                yield FormField::addTab(label: 'Super admin', icon: 'tabler:lock-filled')->setPermission('ROLE_SUPER_ADMIN');
+                    yield TextField::new('twigfileName', 'Nom du modèle')->setPermission('ROLE_SUPER_ADMIN');
+                    yield TextField::new('twigfile', 'Chemin du modèle')->setPermission('ROLE_SUPER_ADMIN');
+                    yield BooleanField::new('softdeleted', 'Supprimée')->setPermission('ROLE_SUPER_ADMIN');
+                    yield TextareaField::new('relationOrderDetails', '[Rel.order info]')->setPermission('ROLE_SUPER_ADMIN');
 
                     break;
             case Crud::PAGE_NEW:
@@ -253,7 +253,7 @@ class WebpageCrudController extends BaseCrudController
                 yield IntegerField::new('orderitem', 'Ord.');
                 yield BooleanField::new('enabled', 'Activée')->setTextAlign('center');
                 // yield AssociationField::new('owner', 'Propriétaire')->setCrudController(UserCrudController::class);
-                // yield DateTimeField::new('createdAt', 'Création')->setFormat('dd/MM/Y - HH:mm')->setTimezone($current_tz);
+                // yield DateTimeField::new('createdAt', 'Création')->setFormat('dd/MM/Y - HH:mm')->setTimezone($this->getLaboContext()->getTimezone());
                 break;
         }
     }

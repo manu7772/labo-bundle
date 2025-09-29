@@ -63,8 +63,7 @@ abstract class MappSuperClassEntity implements AppEntityInterface
     #[Serializer\Ignore]
     public function __toString(): string
     {
-        $id = $this->_appManaged->isNew() ? '' : '@'.$this->getId();
-        return $this->getShortname().$id;
+        return $this->getId().'@'.$this->getShortname();
     }
 
     public function __serialize(): array

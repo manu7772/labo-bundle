@@ -26,24 +26,24 @@ trait AppEntity
     // public const SERIALIZATION_PROPS = ['euid','classname','shortname'];
 
     #[ORM\Column(length: 255, updatable: false, nullable: false)]
-    #[Assert\NotNull()]
+    #[Assert\NotNull(message: 'Le euid ne peut pas être nul')]
     #[Serializer\Groups('index')]
     protected readonly string $euid;
 
     #[ORM\Column(updatable: false, nullable: false)]
-    #[Assert\NotNull()]
+    #[Assert\NotNull(message: 'Le classname ne peut pas être nul')]
     #[Serializer\Groups('index')]
     protected readonly string $classname;
 
     #[ORM\Column(length: 32, updatable: false, nullable: false)]
-    #[Assert\NotNull()]
+    #[Assert\NotNull(message: 'Le shortname ne peut pas être nul')]
     #[Serializer\Groups('index')]
     protected readonly string $shortname;
 
     #[Serializer\Ignore]
-    protected bool $_isClone = false;
+    private bool $_isClone = false;
     #[Serializer\Ignore]
-    protected readonly bool $_isModel;
+    private bool $_isModel = false;
 
     #[Serializer\Ignore]
     public readonly AppEntityInfoInterface $_appManaged;
@@ -62,6 +62,8 @@ trait AppEntity
         foreach ($construct_methods as $method) {
             $this->$method();
         }
+        // dump('Constructed '.spl_object_id($this).' '.$this->__toString().'... (model: '.($this->_isModel() ? 'yes' : 'no').')');
+        // dump(debug_backtrace());
     }
 
     // #[AppEvent(groups: AppEvent::onCreate)]
@@ -85,12 +87,14 @@ trait AppEntity
 
     public function _isModel(): bool
     {
-        return isset($this->_isModel) ? $this->_isModel : false;
+        return $this->_isModel;
     }
 
     public function _setModel(): static
     {
         $this->_isModel = true;
+        // dump('Set model '.spl_object_id($this).' '.$this->__toString().'... (model: '.($this->_isModel() ? 'yes' : 'no').')');
+        // dump($this);
         return $this;
     }
 

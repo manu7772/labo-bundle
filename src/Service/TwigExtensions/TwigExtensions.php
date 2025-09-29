@@ -1,6 +1,8 @@
 <?php
 namespace Aequation\LaboBundle\Service\TwigExtensions;
 
+use Aequation\LaboBundle\Entity\Image;
+use Aequation\LaboBundle\Model\Interface\ImageInterface;
 use Aequation\LaboBundle\Service\Interface\LaboAppVariableInterface;
 use Aequation\LaboBundle\Service\AppService;
 use Aequation\LaboBundle\Service\Interface\AppEntityManagerInterface;
@@ -24,6 +26,7 @@ use Twig\TwigFunction;
 use Twig\Markup;
 
 use DateTime;
+use EasyCorp\Bundle\EasyAdminBundle\Dto\EntityDto;
 use Stringable;
 
 /**
@@ -113,6 +116,7 @@ class TwigExtensions extends AbstractExtension implements GlobalsInterface
             new TwigFilter('toHtmlAttributes', [HtmlDom::class, 'toHtmlAttributes'], ['is_safe' => ['html']]),
             new TwigFilter('normalize', [$this->appService, 'getNormalized']),
             new TwigFilter('htmlentities', [$this, 'getHtmlentities']),
+            new TwigFilter('isImageEntity', [$this, 'isImageEntity']),
         ];
     }
 
@@ -310,6 +314,17 @@ class TwigExtensions extends AbstractExtension implements GlobalsInterface
     public function getHtmlentities(?string $string, bool $striptags = false, int $flags = ENT_QUOTES|ENT_SUBSTITUTE): Markup
     {
         return Strings::markup(empty($string) ? '' : htmlentities($striptags ? strip_tags($string) : $string, $flags));
+    }
+
+    public function isImageEntity(mixed $entity): bool
+    {
+        if(is_object($entity)) {
+            if($entity instanceof EntityDto) {
+                $entity = $entity->getInstance();
+            }
+            return $entity instanceof ImageInterface;
+        }
+        return false;
     }
 
 

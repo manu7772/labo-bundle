@@ -109,10 +109,11 @@ class GlobalDoctrineListener
 
     public function postLoad(PostLoadEventArgs $event): void
     {
-        /** @var AppEntityInterface */
         $entity = $event->getObject();
-        // Add Entity manager
-        $this->manager->setManagerToEntity($entity);
+        if($entity instanceof AppEntityInterface && !isset($entity->_service)) {
+            // Add Entity manager
+            $this->manager->setManagerToEntity($entity);
+        }
         // /** @var AppEntityManagerInterface */
         $entity->_service->dispatchEvent($entity, AppEvent::onLoad, ['event' => $event]);
         // Specificity entity
@@ -126,8 +127,11 @@ class GlobalDoctrineListener
 
     public function prePersist(PrePersistEventArgs $event): void
     {
-        /** @var AppEntityInterface */
         $entity = $event->getObject();
+        if($entity instanceof AppEntityInterface && !isset($entity->_service)) {
+            // Add Entity manager
+            $this->manager->setManagerToEntity($entity);
+        }
         // $entity->_service->dispatchEvent($entity, Events::prePersist);
 
         if($entity instanceof ImageInterface) {
@@ -184,8 +188,11 @@ class GlobalDoctrineListener
     public function preUpdate(PreUpdateEventArgs $event): void
     {
         $entity_update = false;
-        /** @var AppEntityInterface */
         $entity = $event->getObject();
+        if($entity instanceof AppEntityInterface && !isset($entity->_service)) {
+            // Add Entity manager
+            $this->manager->setManagerToEntity($entity);
+        }
         // $entity->_service->dispatchEvent($entity, Events::preUpdate);
 
         if($entity instanceof LaboArticleInterface) {

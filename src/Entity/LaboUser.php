@@ -248,7 +248,7 @@ abstract class LaboUser extends MappSuperClassEntity implements LaboUserInterfac
     {
         $name = trim(str_replace(["\n", "\r"], '', $this->firstname.' '.$this->lastname));
         if(empty($name)) $name = $this->email;
-        return $name;
+        return (string) $name;
     }
 
     public function setRoleHierarchy(AppRoleHierarchyInterface $roleHierarchy): void

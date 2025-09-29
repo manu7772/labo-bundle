@@ -50,6 +50,7 @@ abstract class LaboRelink extends Item implements LaboRelinkInterface
         'Adresse' => 'ADDRESS',
         'Email' => 'EMAIL',
         'Téléphone' => 'PHONE',
+        'Vidéo' => 'VIDEO',
     ];
     public const RELINK_TYPE = null;
 

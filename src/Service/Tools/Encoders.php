@@ -24,7 +24,7 @@ class Encoders extends BaseService
 
     public static function generatePassword(
         int $length = 12,
-        string $chars = null
+        ?string $chars = null
     ): string
     {
         return ByteString::fromRandom($length, $chars)->toString();
@@ -73,6 +73,15 @@ class Encoders extends BaseService
         
     }
 
+
+    /*************************************************************************************
+     * IS URL (HTTP(S))
+     *************************************************************************************/
+
+    public static function isUrl(string $url): bool
+    {
+        return filter_var($url, FILTER_VALIDATE_URL) !== false;
+    }
 
     /*************************************************************************************
      * VARIABLES

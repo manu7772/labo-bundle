@@ -54,11 +54,8 @@ abstract class EntrepriseCrudController extends LaboUserCrudController
     public function configureFields(string $pageName): iterable
     {
         $this->checkGrants($pageName);
-        $info = $this->getContextInfo();
         /** @var Entreprise $entreprise */
-        $entreprise = $info['entity'];
-        $timezone = $this->getParameter('timezone');
-        $current_tz = $timezone !== $entreprise->getTimezone() ? $entreprise->getTimezone() : $timezone;
+        $entreprise = $this->getLaboContext()->getInstance();
         switch ($pageName) {
             case Crud::PAGE_DETAIL:
                 yield FormField::addPanel(label: 'Sécurité', icon: 'tabler:lock-filled');
@@ -83,15 +80,15 @@ abstract class EntrepriseCrudController extends LaboUserCrudController
                     ->setBasePath($this->getParameter('vich_dirs.user_portrait'));
                 yield CollectionField::new('categorys', 'Catégories');
                 yield TextField::new('timezone', 'Fuseau horaire');
-                yield DateTimeField::new('createdAt', 'Création')->setFormat('dd/MM/Y - HH:mm:ss')->setTimezone($current_tz);
-                if($timezone !== $entreprise->getTimezone()) yield DateTimeField::new('createdAt', 'Création')->setFormat('dd/MM/Y - HH:mm:ss')->setCssClass('text-bg-primary')->setTimezone($entreprise->getTimezone());
-                yield DateTimeField::new('updatedAt', 'Modification')->setFormat('dd/MM/Y - HH:mm:ss')->setTimezone($current_tz);
-                if($timezone !== $entreprise->getTimezone() && $entreprise->getUpdatedAt()) yield DateTimeField::new('updatedAt', 'Modification')->setFormat('dd/MM/Y - HH:mm:ss')->setCssClass('text-bg-primary')->setTimezone($entreprise->getTimezone());
-                // yield DateTimeField::new('lastLogin')->setFormat('dd/MM/Y - HH:mm:ss')->setTimezone($current_tz)->setPermission('ROLE_SUPER_ADMIN');
-                // if($timezone !== $entreprise->getTimezone() && $entreprise->getLastLogin()) yield DateTimeField::new('lastLogin')->setFormat('dd/MM/Y - HH:mm:ss')->setCssClass('text-bg-primary')->setTimezone($entreprise->getTimezone())->setPermission('ROLE_SUPER_ADMIN');
+                yield DateTimeField::new('createdAt', 'Création')->setFormat('dd/MM/Y - HH:mm:ss')->setTimezone($this->getLaboContext()->getTimezone());
+                if($this->getParameter('timezone') !== $entreprise->getTimezone()) yield DateTimeField::new('createdAt', 'Création')->setFormat('dd/MM/Y - HH:mm:ss')->setCssClass('text-bg-primary')->setTimezone($entreprise->getTimezone());
+                yield DateTimeField::new('updatedAt', 'Modification')->setFormat('dd/MM/Y - HH:mm:ss')->setTimezone($this->getLaboContext()->getTimezone());
+                if($this->getParameter('timezone') !== $entreprise->getTimezone() && $entreprise->getUpdatedAt()) yield DateTimeField::new('updatedAt', 'Modification')->setFormat('dd/MM/Y - HH:mm:ss')->setCssClass('text-bg-primary')->setTimezone($entreprise->getTimezone());
+                // yield DateTimeField::new('lastLogin')->setFormat('dd/MM/Y - HH:mm:ss')->setTimezone($this->getLaboContext()->getTimezone())->setPermission('ROLE_SUPER_ADMIN');
+                // if($this->getParameter('timezone') !== $entreprise->getTimezone() && $entreprise->getLastLogin()) yield DateTimeField::new('lastLogin')->setFormat('dd/MM/Y - HH:mm:ss')->setCssClass('text-bg-primary')->setTimezone($entreprise->getTimezone())->setPermission('ROLE_SUPER_ADMIN');
                 if($entreprise->getExpiresAt()) {
-                    yield DateTimeField::new('expiresAt', 'Expiration')->setFormat('dd/MM/Y - HH:mm:ss')->setTimezone($current_tz);
-                    if($timezone !== $entreprise->getTimezone()) yield DateTimeField::new('expiresAt', 'Expiration')->setFormat('dd/MM/Y - HH:mm:ss')->setCssClass('text-bg-primary')->setTimezone($entreprise->getTimezone());
+                    yield DateTimeField::new('expiresAt', 'Expiration')->setFormat('dd/MM/Y - HH:mm:ss')->setTimezone($this->getLaboContext()->getTimezone());
+                    if($this->getParameter('timezone') !== $entreprise->getTimezone()) yield DateTimeField::new('expiresAt', 'Expiration')->setFormat('dd/MM/Y - HH:mm:ss')->setCssClass('text-bg-primary')->setTimezone($entreprise->getTimezone());
                 }
                 // yield BooleanField::new('darkmode')->setPermission('ROLE_SUPER_ADMIN');
                 yield BooleanField::new('enabled', 'Active');
@@ -126,14 +123,22 @@ abstract class EntrepriseCrudController extends LaboUserCrudController
                     ->setFormTypeOptions(['by_reference' => false])
                     ;
                 yield FormField::addTab(label: false, icon: 'tabler:address-book');
-                yield CollectionField::new('addresses', 'Adresses')->useEntryCrudForm(AddresslinkCrudController::class)->setColumns(12);
+                yield CollectionField::new('addresses', 'Adresses')
+                    ->useEntryCrudForm(AddresslinkCrudController::class)
+                    ->setColumns(12)
+                    ;
                 yield FormField::addTab(label: false, icon: 'tabler:phone');
-                yield CollectionField::new('phones', 'Téléphones')->useEntryCrudForm(PhonelinkCrudController::class)->setColumns(12)->setEmptyData(fn (FormInterface $form) => $this->appEntityManager->getNew(PhonelinkCrudController::ENTITY));
+                yield CollectionField::new('phones', 'Téléphones')
+                    ->useEntryCrudForm(PhonelinkCrudController::class)
+                    ->setColumns(12)
+                    ;
                 yield FormField::addTab(label: false, icon: 'tabler:mail');
-                yield CollectionField::new('emails', 'Emails')->useEntryCrudForm(EmailinkCrudController::class)->setColumns(12);
-
+                yield CollectionField::new('emails', 'Emails')
+                    ->useEntryCrudForm(EmailinkCrudController::class)
+                    ->setColumns(12)
+                    ;
                 yield TimezoneField::new('timezone', 'Fuseau horaire')->setColumns(4);
-                yield DateTimeField::new('expiresAt', 'Expiration')->setColumns(3)->setPermission('ROLE_ADMIN')->setTimezone($current_tz);
+                yield DateTimeField::new('expiresAt', 'Expiration')->setColumns(3)->setPermission('ROLE_ADMIN')->setTimezone($this->getLaboContext()->getTimezone());
                 yield BooleanField::new('enabled', 'Active')->setColumns(3)->setPermission('ROLE_ADMIN');
                 // yield BooleanField::new('isVerified')->setColumns(3)->setHelp('Compte vérifié')->setPermission('ROLE_ADMIN');
                 // yield BooleanField::new('darkmode')->setColumns(3)->setHelp('Interface graphique en mode sombre')->setPermission('ROLE_SUPER_ADMIN');
@@ -155,8 +160,8 @@ abstract class EntrepriseCrudController extends LaboUserCrudController
                     ->setColumns(6);
                 // yield CKEditorField::new('description', 'Description')->setColumns(6);
                 yield TimezoneField::new('timezone', 'Fuseau horaire')->setColumns(4);
-                yield DateTimeField::new('expiresAt', 'Expiration')->setColumns(3)->setPermission('ROLE_ADMIN')->setTimezone($current_tz);
-                // yield DateTimeField::new('lastLogin')->setColumns(3)->setPermission('ROLE_SUPER_ADMIN')->setTimezone($current_tz);
+                yield DateTimeField::new('expiresAt', 'Expiration')->setColumns(3)->setPermission('ROLE_ADMIN')->setTimezone($this->getLaboContext()->getTimezone());
+                // yield DateTimeField::new('lastLogin')->setColumns(3)->setPermission('ROLE_SUPER_ADMIN')->setTimezone($this->getLaboContext()->getTimezone());
                 yield BooleanField::new('enabled', 'Active')->setColumns(3)->setPermission('ROLE_ADMIN');
                 // yield BooleanField::new('isVerified')->setColumns(3)->setHelp('Compte vérifié')->setPermission('ROLE_ADMIN');
                 // yield BooleanField::new('darkmode')->setColumns(3)->setHelp('Interface graphique en mode sombre')->setPermission('ROLE_SUPER_ADMIN');
@@ -166,11 +171,23 @@ abstract class EntrepriseCrudController extends LaboUserCrudController
                     // ->setFormTypeOption('allow_delete', false)
                     ->setColumns(6);
                 yield FormField::addTab(label: false, icon: 'tabler:address-book');
-                yield CollectionField::new('addresses', 'Adresses')->useEntryCrudForm(AddresslinkCrudController::class)->setColumns(12);
+                yield CollectionField::new('addresses', 'Adresses')
+                    ->useEntryCrudForm(AddresslinkCrudController::class)
+                    ->setColumns(12)
+                    // ->setEmptyData(fn (FormInterface $form) => $this->appEntityManager->getNew(AddresslinkCrudController::ENTITY))
+                    ;
                 yield FormField::addTab(label: false, icon: 'tabler:phone');
-                yield CollectionField::new('phones', 'Téléphones')->useEntryCrudForm(PhonelinkCrudController::class)->setColumns(12)->setEmptyData(fn (FormInterface $form) => $this->appEntityManager->getNew(PhonelinkCrudController::ENTITY));
+                yield CollectionField::new('phones', 'Téléphones')
+                    ->useEntryCrudForm(PhonelinkCrudController::class)
+                    ->setColumns(12)
+                    // ->setEmptyData(fn (FormInterface $form) => $this->appEntityManager->getNew(PhonelinkCrudController::ENTITY))
+                    ;
                 yield FormField::addTab(label: false, icon: 'tabler:mail');
-                yield CollectionField::new('emails', 'Emails')->useEntryCrudForm(EmailinkCrudController::class)->setColumns(12);
+                yield CollectionField::new('emails', 'Emails')
+                    ->useEntryCrudForm(EmailinkCrudController::class)
+                    ->setColumns(12)
+                    // ->setEmptyData(fn (FormInterface $form) => $this->appEntityManager->getNew(EmailinkCrudController::ENTITY))
+                    ;
                 // yield FormField::addTab(label: 'Membres', icon: 'fa6-solid:users')->setHelp('Membres de l\'entreprise');
                 // yield AssociationField::new('members', 'Membres')
                 //     // ->autocomplete()
@@ -187,13 +204,13 @@ abstract class EntrepriseCrudController extends LaboUserCrudController
                     ->setTextAlign('center')
                     ->setSortable(false);
                 // yield TextField::new('higherRole')->setTextAlign('center')->formatValue(fn ($value) => '<small class="text-muted"><i>'.$this->translate($value).'</i></small>');
-                // yield DateTimeField::new('createdAt', 'Création')->setFormat('dd/MM/Y - HH:mm')->setTimezone($current_tz);
+                // yield DateTimeField::new('createdAt', 'Création')->setFormat('dd/MM/Y - HH:mm')->setTimezone($this->getLaboContext()->getTimezone());
                 // yield BooleanField::new('darkmode')->setTextAlign('center');
                 // yield BooleanField::new('enabled', 'Active')->setTextAlign('center')->setPermission('ROLE_ADMIN');
                 // yield BooleanField::new('isVerified')->setTextAlign('center');
                 // yield BooleanField::new('softdeleted')->setTextAlign('center')->setPermission('ROLE_SUPER_ADMIN');
                 // yield TimezoneField::new('timezone', 'Fuseau horaire')->setTextAlign('center');
-                // yield DateTimeField::new('lastLogin')->setFormat('dd/MM/YY HH:mm')->setTimezone($current_tz)->setPermission('ROLE_SUPER_ADMIN');
+                // yield DateTimeField::new('lastLogin')->setFormat('dd/MM/YY HH:mm')->setTimezone($this->getLaboContext()->getTimezone())->setPermission('ROLE_SUPER_ADMIN');
                 break;
         }
     }

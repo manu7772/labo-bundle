@@ -19,7 +19,11 @@ use Aequation\LaboBundle\Service\Interface\AppServiceInterface;
 use Aequation\LaboBundle\Service\Tools\Classes;
 use Aequation\LaboBundle\Service\Tools\Encoders;
 use Aequation\LaboBundle\Service\Tools\HttpRequest;
-
+// Symfony
+use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\ORM\Mapping\ClassMetadata;
+use Doctrine\Persistence\Event\LifecycleEventArgs;
+use Doctrine\ORM\UnitOfWork;
 use Symfony\Component\Security\Core\Authorization\AccessDecisionManagerInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use Symfony\Component\DependencyInjection\Attribute\AsAlias;
@@ -29,11 +33,7 @@ use Symfony\Component\Validator\ConstraintViolationList;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Contracts\Cache\ItemInterface;
-use Doctrine\ORM\EntityManagerInterface;
-use Doctrine\ORM\Mapping\ClassMetadata;
-use Doctrine\Persistence\Event\LifecycleEventArgs;
-use Doctrine\ORM\UnitOfWork;
-
+// PHP
 use Closure;
 use DateTime;
 use DateTimeImmutable;
@@ -620,15 +620,15 @@ class AppEntityManager extends BaseService implements AppEntityManagerInterface
         /** @var AppEntityInterface $model */
         $model = new $classname();
         if(!($model instanceof AppEntityInterface)) return false;
-        $this->setManagerToEntity($model);
+        // $this->setManagerToEntity($model);
 
         $model->_setModel(); // IMPORTANT!!!
-        if(!empty($event)) {
-            $this->dispatchEvent($model, $event);
-        }
-        if(is_callable($postCreate)) {
-            $postCreate(entity: $model);
-        }
+        // if(!empty($event)) {
+        //     $this->dispatchEvent($model, $event);
+        // }
+        // if(is_callable($postCreate)) {
+        //     $postCreate(entity: $model);
+        // }
         return $model;
     }
 
@@ -801,6 +801,9 @@ class AppEntityManager extends BaseService implements AppEntityManagerInterface
         bool|Opresult $opresultException = true
     ): bool
     {
+        if($entity->_isModel()) {
+            throw new Exception(vsprintf("Error %s line %d: you can not insert a model entity (%s).", [__METHOD__, __LINE__, $entity::class]));
+        }
         $this->checkPersistable($entity);
         $isNew = $entity->_appManaged->isNew();
         try {
@@ -828,10 +831,6 @@ class AppEntityManager extends BaseService implements AppEntityManagerInterface
         bool|Opresult $opresultException = true
     ): bool
     {
-        if($entity->_isModel()) {
-            dump('Try to save a model entity!', $entity);
-            throw new Exception(vsprintf("Error %s line %d: you can not insert a model entity (%s).", [__METHOD__, __LINE__, $entity::class]));
-        }
         // if(!$this->isManaged($entity)) {
             $this->persist($entity, $opresultException); // important!!! --> needed for updates too, to apply AppEvent::beforePreUpdate
         // }

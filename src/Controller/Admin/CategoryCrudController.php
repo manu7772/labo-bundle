@@ -44,12 +44,8 @@ abstract class CategoryCrudController extends BaseCrudController
         $manager = $this->manager;
         /** @var BaseCrudController $this */
         $this->checkGrants($pageName);
-        $info = $this->getContextInfo();
         /** @var LaboUserInterface $user */
         $user = $this->getUser();
-        $timezone = $this->getParameter('timezone');
-        $current_tz = $timezone !== $user->getTimezone() ? $user->getTimezone() : $timezone;
-        // $info = $this->getContextInfo();
         switch ($pageName) {
             case Crud::PAGE_DETAIL:
                 yield IdField::new('id')->setPermission('ROLE_SUPER_ADMIN');
@@ -58,10 +54,10 @@ abstract class CategoryCrudController extends BaseCrudController
                 yield TextField::new('description', 'Information');
                 yield TextField::new('longTypeAsHtml', 'Classe d\'entité')->renderAsHtml(true);
                 yield TextField::new('timezone');
-                yield DateTimeField::new('createdAt')->setFormat('dd/MM/Y - HH:mm:ss')->setTimezone($current_tz);
-                if($timezone !== $user->getTimezone()) yield DateTimeField::new('createdAt')->setFormat('dd/MM/Y - HH:mm:ss')->setCssClass('text-bg-primary')->setTimezone($user->getTimezone());
-                yield DateTimeField::new('updatedAt')->setFormat('dd/MM/Y - HH:mm:ss')->setTimezone($current_tz);
-                if($timezone !== $user->getTimezone() && $user->getUpdatedAt()) yield DateTimeField::new('updatedAt')->setFormat('dd/MM/Y - HH:mm:ss')->setCssClass('text-bg-primary')->setTimezone($user->getTimezone());
+                yield DateTimeField::new('createdAt')->setFormat('dd/MM/Y - HH:mm:ss')->setTimezone($$this->getLaboContext()->getTimezone());
+                if($this->getParameter('timezone') !== $user->getTimezone()) yield DateTimeField::new('createdAt')->setFormat('dd/MM/Y - HH:mm:ss')->setCssClass('text-bg-primary')->setTimezone($user->getTimezone());
+                yield DateTimeField::new('updatedAt')->setFormat('dd/MM/Y - HH:mm:ss')->setTimezone($this->getLaboContext()->getTimezone());
+                if($this->getParameter('timezone') !== $user->getTimezone() && $user->getUpdatedAt()) yield DateTimeField::new('updatedAt')->setFormat('dd/MM/Y - HH:mm:ss')->setCssClass('text-bg-primary')->setTimezone($user->getTimezone());
                 break;
             case Crud::PAGE_NEW:
                 yield TextField::new('name', 'Nom')
