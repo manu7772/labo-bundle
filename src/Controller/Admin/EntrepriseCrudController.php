@@ -1,39 +1,45 @@
 <?php
 namespace Aequation\LaboBundle\Controller\Admin;
 
-use App\Controller\Admin\AddresslinkCrudController;
-use App\Controller\Admin\PhonelinkCrudController;
-use App\Controller\Admin\EmailinkCrudController;
-
-use Aequation\LaboBundle\Security\Voter\EntrepriseVoter;
-use Aequation\LaboBundle\Controller\Admin\Base\BaseCrudController;
-use Aequation\LaboBundle\Field\CKEditorField;
-use Aequation\LaboBundle\Form\Type\PortraitType;
-use Aequation\LaboBundle\Repository\LaboCategoryRepository;
-
+use App\Entity\Urlink;
+use App\Entity\Emailink;
+use App\Entity\Phonelink;
+use App\Entity\Videolink;
 use App\Entity\Entreprise;
-use App\Service\Interface\EntrepriseServiceInterface;
+
+use App\Entity\Addresslink;
 use Doctrine\ORM\QueryBuilder;
-use EasyCorp\Bundle\EasyAdminBundle\Config\Crud;
-use EasyCorp\Bundle\EasyAdminBundle\Config\Filters;
-use EasyCorp\Bundle\EasyAdminBundle\Field\TextField;
-use EasyCorp\Bundle\EasyAdminBundle\Field\TimezoneField;
-use EasyCorp\Bundle\EasyAdminBundle\Field\ArrayField;
-use EasyCorp\Bundle\EasyAdminBundle\Field\AssociationField;
-use EasyCorp\Bundle\EasyAdminBundle\Field\BooleanField;
-use EasyCorp\Bundle\EasyAdminBundle\Field\ChoiceField;
-use EasyCorp\Bundle\EasyAdminBundle\Field\CollectionField;
-use EasyCorp\Bundle\EasyAdminBundle\Field\DateTimeField;
-use EasyCorp\Bundle\EasyAdminBundle\Field\EmailField;
-use EasyCorp\Bundle\EasyAdminBundle\Field\FormField;
-use EasyCorp\Bundle\EasyAdminBundle\Field\IdField;
-use EasyCorp\Bundle\EasyAdminBundle\Field\ImageField;
-use EasyCorp\Bundle\EasyAdminBundle\Filter\ArrayFilter;
-use EasyCorp\Bundle\EasyAdminBundle\Filter\TextFilter;
 use Symfony\Component\Form\FormInterface;
-use Symfony\Component\Security\Http\Attribute\IsGranted;
+use Aequation\LaboBundle\Field\CKEditorField;
+use Aequation\LaboBundle\Service\Tools\Classes;
+use Aequation\LaboBundle\Form\Type\PortraitType;
+use App\Controller\Admin\UrlinkCrudController;
+use App\Controller\Admin\VideolinkCrudController;
+use Aequation\LaboBundle\Model\Interface\LaboRelinkInterface;
+use App\Controller\Admin\EmailinkCrudController;
+use EasyCorp\Bundle\EasyAdminBundle\Config\Crud;
+
+use App\Controller\Admin\PhonelinkCrudController;
+use EasyCorp\Bundle\EasyAdminBundle\Field\IdField;
+use App\Controller\Admin\AddresslinkCrudController;
+use EasyCorp\Bundle\EasyAdminBundle\Config\Filters;
+use EasyCorp\Bundle\EasyAdminBundle\Field\FormField;
+use EasyCorp\Bundle\EasyAdminBundle\Field\TextField;
+use EasyCorp\Bundle\EasyAdminBundle\Field\ArrayField;
+use EasyCorp\Bundle\EasyAdminBundle\Field\EmailField;
+use EasyCorp\Bundle\EasyAdminBundle\Field\ImageField;
+use EasyCorp\Bundle\EasyAdminBundle\Field\ChoiceField;
+use EasyCorp\Bundle\EasyAdminBundle\Filter\TextFilter;
 use Symfony\Component\Translation\TranslatableMessage;
 use Symfony\Contracts\Translation\TranslatorInterface;
+use EasyCorp\Bundle\EasyAdminBundle\Field\BooleanField;
+use EasyCorp\Bundle\EasyAdminBundle\Filter\ArrayFilter;
+use EasyCorp\Bundle\EasyAdminBundle\Field\DateTimeField;
+use EasyCorp\Bundle\EasyAdminBundle\Field\TimezoneField;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
+use EasyCorp\Bundle\EasyAdminBundle\Field\CollectionField;
+use Aequation\LaboBundle\Repository\LaboCategoryRepository;
+use EasyCorp\Bundle\EasyAdminBundle\Field\AssociationField;
 
 #[IsGranted('ROLE_COLLABORATOR')]
 abstract class EntrepriseCrudController extends LaboUserCrudController
@@ -101,67 +107,20 @@ abstract class EntrepriseCrudController extends LaboUserCrudController
                 yield CollectionField::new('phones', 'Téléphones');
                 break;
             case Crud::PAGE_NEW:
-                yield FormField::addPanel(label: 'Sécurité', icon: 'tabler:lock-filled');
-                yield EmailField::new('email')->setColumns($this->isGranted('ROLE_ADMIN') ? 4 : 6)->setHelp('Le mail doit être unique : l\'enregistrement sera rejeté si une autre personne utilise le mail sur le même site.');
-                yield TextField::new('plainPassword', 'Mot de passe')->setRequired(true)->setColumns($this->isGranted('ROLE_ADMIN') ? 4 : 6)->setHelp('Utilisez des lettres, des signes et des chiffres, et au moins 12 caractères.');
-                // yield ChoiceField::new('roles')->setChoices(function(?Entreprise $entreprise): array { return $entreprise->getRolesChoices($this->getUser()); })->setColumns(4)->allowMultipleChoices(true)->setHelp('Les roles déterminent les niveaux d\'accès à l\'administration du site.')->setPermission('ROLE_SUPER_ADMIN');
-                yield FormField::addPanel(label: 'Autres informations', icon: 'entreprise')->setHelp('Informations supplémentaires');
-                yield TextField::new('firstname', 'Nom')->setColumns(6);
-                // yield TextField::new('lastname', 'Prénom')->setColumns(6);
-                yield TextField::new('fonction', 'Secteur activité')->setColumns(6);
-                yield AssociationField::new('categorys', 'Catégories')->setQueryBuilder(static fn (QueryBuilder $qb): QueryBuilder => LaboCategoryRepository::QB_CategoryChoices($qb, Entreprise::class))
-                    // ->autocomplete()
-                    ->setSortProperty('name')
-                    ->setFormTypeOptions(['by_reference' => false])
-                    ->setColumns(6);
-                yield TextField::new('portrait', 'Photo')
-                    ->setFormType(PortraitType::class)
-                    ->setColumns(6);
-                yield AssociationField::new('members', 'Membres')
-                    // ->autocomplete()
-                    ->setSortProperty('firstname')
-                    ->setFormTypeOptions(['by_reference' => false])
-                    ;
-                yield FormField::addTab(label: false, icon: 'tabler:address-book');
-                yield CollectionField::new('addresses', 'Adresses')
-                    ->useEntryCrudForm(AddresslinkCrudController::class)
-                    ->setColumns(12)
-                    ;
-                yield FormField::addTab(label: false, icon: 'tabler:phone');
-                yield CollectionField::new('phones', 'Téléphones')
-                    ->useEntryCrudForm(PhonelinkCrudController::class)
-                    ->setColumns(12)
-                    ;
-                yield FormField::addTab(label: false, icon: 'tabler:mail');
-                yield CollectionField::new('emails', 'Emails')
-                    ->useEntryCrudForm(EmailinkCrudController::class)
-                    ->setColumns(12)
-                    ;
-                yield TimezoneField::new('timezone', 'Fuseau horaire')->setColumns(4);
-                yield DateTimeField::new('expiresAt', 'Expiration')->setColumns(3)->setPermission('ROLE_ADMIN')->setTimezone($this->getLaboContext()->getTimezone());
-                yield BooleanField::new('enabled', 'Active')->setColumns(3)->setPermission('ROLE_ADMIN');
-                // yield BooleanField::new('isVerified')->setColumns(3)->setHelp('Compte vérifié')->setPermission('ROLE_ADMIN');
-                // yield BooleanField::new('darkmode')->setColumns(3)->setHelp('Interface graphique en mode sombre')->setPermission('ROLE_SUPER_ADMIN');
-                yield BooleanField::new('softdeleted')->setFormTypeOption('attr', ['class' => 'border-danger text-bg-danger'])->setColumns(3)->setPermission('ROLE_SUPER_ADMIN');
-                break;
             case Crud::PAGE_EDIT:
-                yield FormField::addTab(label: 'Sécurité', icon: 'tabler:lock-filled');
-                yield EmailField::new('email')->setColumns($this->isGranted('ROLE_ADMIN') ? 4 : 6)->setHelp('Le mail doit être unique : l\'enregistrement sera rejeté si une autre personne utilise le mail sur le même site.');
-                // yield TextField::new('plainPassword', 'Mot de passe', 'Nouveau mot de passe')->setColumns($this->isGranted('ROLE_ADMIN') ? 4 : 6)->setHelp('<strong class="text-danger">ATTENTION</strong> : ne remplissez ce champ QUE SI vous souhaitez changer votre mot de passe. <strong>Dans ce cas, pensez à bien le noter !</strong>');
-                // yield ChoiceField::new('roles')->setChoices(function(?Entreprise $entreprise): array { return $entreprise->getRolesChoices($this->getUser()); })->setColumns(4)->allowMultipleChoices(true)->setHelp('Les roles déterminent les niveaux d\'accès à l\'administration du site.')->setPermission('ROLE_SUPER_ADMIN')->renderAsBadges();
-                yield FormField::addTab(label: 'Autres informations', icon: 'tabler:building-factory-2')->setHelp('Informations supplémentaires');
+                yield FormField::addTab(label: $this->translate('name', domain: Classes::getShortname(Entreprise::class)), icon: Entreprise::ICON);
+                yield EmailField::new('email')->setColumns(6)->setHelp('Le mail doit être unique : l\'enregistrement sera rejeté si une autre personne utilise le mail sur le même site.');
                 yield TextField::new('firstname', 'Nom')->setColumns(6);
                 // yield TextField::new('lastname', 'Prénom')->setColumns(6);
                 yield TextField::new('fonction', 'Secteur activité')->setColumns(6);
-                yield AssociationField::new('categorys', 'Catégories')->setQueryBuilder(static fn (QueryBuilder $qb): QueryBuilder => LaboCategoryRepository::QB_CategoryChoices($qb, Entreprise::class))
-                    // ->autocomplete()
-                    ->setSortProperty('name')
-                    ->setFormTypeOptions(['by_reference' => false])
-                    ->setColumns(6);
+                // yield AssociationField::new('categorys', 'Catégories')->setQueryBuilder(static fn (QueryBuilder $qb): QueryBuilder => LaboCategoryRepository::QB_CategoryChoices($qb, Entreprise::class))
+                //     // ->autocomplete()
+                //     ->setSortProperty('name')
+                //     ->setFormTypeOptions(['by_reference' => false])
+                //     ->setColumns(6);
                 // yield CKEditorField::new('description', 'Description')->setColumns(6);
-                yield TimezoneField::new('timezone', 'Fuseau horaire')->setColumns(4);
-                yield DateTimeField::new('expiresAt', 'Expiration')->setColumns(3)->setPermission('ROLE_ADMIN')->setTimezone($this->getLaboContext()->getTimezone());
-                // yield DateTimeField::new('lastLogin')->setColumns(3)->setPermission('ROLE_SUPER_ADMIN')->setTimezone($this->getLaboContext()->getTimezone());
+                // yield TimezoneField::new('timezone', 'Fuseau horaire')->setColumns(4);
+                // yield DateTimeField::new('expiresAt', 'Expiration')->setColumns(3)->setPermission('ROLE_ADMIN')->setTimezone($this->getLaboContext()->getTimezone());
                 yield BooleanField::new('enabled', 'Active')->setColumns(3)->setPermission('ROLE_ADMIN');
                 // yield BooleanField::new('isVerified')->setColumns(3)->setHelp('Compte vérifié')->setPermission('ROLE_ADMIN');
                 // yield BooleanField::new('darkmode')->setColumns(3)->setHelp('Interface graphique en mode sombre')->setPermission('ROLE_SUPER_ADMIN');
@@ -170,29 +129,52 @@ abstract class EntrepriseCrudController extends LaboUserCrudController
                     ->setFormType(PortraitType::class)
                     // ->setFormTypeOption('allow_delete', false)
                     ->setColumns(6);
-                yield FormField::addTab(label: false, icon: 'tabler:address-book');
+                yield FormField::addTab(label: false, icon: Addresslink::ICON);
                 yield CollectionField::new('addresses', 'Adresses')
                     ->useEntryCrudForm(AddresslinkCrudController::class)
+                    ->setEntryToStringMethod(fn (?LaboRelinkInterface $entity) => $entity ? (empty($entity->getName()) ? $entity->getLinktitle() : $entity->getName()) : '---')
                     ->setColumns(12)
+                    ->setEntryIsComplex(true)
+                    ->setFormTypeOption('by_reference', false)
+
                     // ->setEmptyData(fn (FormInterface $form) => $this->appEntityManager->getNew(AddresslinkCrudController::ENTITY))
                     ;
-                yield FormField::addTab(label: false, icon: 'tabler:phone');
+                yield FormField::addTab(label: false, icon: Phonelink::ICON);
                 yield CollectionField::new('phones', 'Téléphones')
                     ->useEntryCrudForm(PhonelinkCrudController::class)
+                    ->setEntryToStringMethod(fn (?LaboRelinkInterface $entity) => $entity ? (empty($entity->getName()) ? $entity->getLinktitle() : $entity->getName()) : '---')
                     ->setColumns(12)
+                    ->setEntryIsComplex(true)
+                    ->setFormTypeOption('by_reference', false)
                     // ->setEmptyData(fn (FormInterface $form) => $this->appEntityManager->getNew(PhonelinkCrudController::ENTITY))
                     ;
-                yield FormField::addTab(label: false, icon: 'tabler:mail');
+                yield FormField::addTab(label: false, icon: Emailink::ICON);
                 yield CollectionField::new('emails', 'Emails')
                     ->useEntryCrudForm(EmailinkCrudController::class)
+                    ->setEntryToStringMethod(fn (?LaboRelinkInterface $entity) => $entity ? (empty($entity->getName()) ? $entity->getLinktitle() : $entity->getName()) : '---')
                     ->setColumns(12)
+                    ->setEntryIsComplex(true)
+                    ->setFormTypeOption('by_reference', false)
                     // ->setEmptyData(fn (FormInterface $form) => $this->appEntityManager->getNew(EmailinkCrudController::ENTITY))
                     ;
-                // yield FormField::addTab(label: 'Membres', icon: 'fa6-solid:users')->setHelp('Membres de l\'entreprise');
-                // yield AssociationField::new('members', 'Membres')
-                //     // ->autocomplete()
-                //     ->setSortProperty('firstname')
-                //     ->setFormTypeOptions(['by_reference' => false]);
+                yield FormField::addTab(label: false, icon: Urlink::ICON);
+                yield CollectionField::new('relinks', 'Urls')
+                    ->useEntryCrudForm(UrlinkCrudController::class)
+                    ->setEntryToStringMethod(fn (?LaboRelinkInterface $entity) => $entity ? (empty($entity->getName()) ? $entity->getLinktitle() : $entity->getName()) : '---')
+                    ->setColumns(12)
+                    ->setEntryIsComplex(true)
+                    ->setFormTypeOption('by_reference', false)
+                    // ->setEmptyData(fn (FormInterface $form) => $this->appEntityManager->getNew(UrlinkCrudController::ENTITY))
+                    ;
+                yield FormField::addTab(label: false, icon: Videolink::ICON);
+                yield CollectionField::new('videolinks', 'Vidéos')
+                    ->useEntryCrudForm(VideolinkCrudController::class)
+                    ->setEntryToStringMethod(fn (?LaboRelinkInterface $entity) => $entity ? (empty($entity->getName()) ? $entity->getLinktitle() : $entity->getName()) : '---')
+                    ->setColumns(12)
+                    ->setEntryIsComplex(true)
+                    ->setFormTypeOption('by_reference', false)
+                    // ->setEmptyData(fn (FormInterface $form) => $this->appEntityManager->getNew(VideolinkCrudController::ENTITY))
+                    ;
                 break;
             default:
                 yield IdField::new('id')->setPermission('ROLE_SUPER_ADMIN');

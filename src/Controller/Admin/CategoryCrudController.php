@@ -1,6 +1,9 @@
 <?php
 namespace Aequation\LaboBundle\Controller\Admin;
 
+use App\Entity\Category;
+use App\Security\Voter\CategoryVoter;
+
 use Aequation\LaboBundle\Controller\Admin\Base\BaseCrudController;
 use Aequation\LaboBundle\Service\Interface\LaboCategoryServiceInterface;
 use Aequation\LaboBundle\Model\Interface\LaboUserInterface;
@@ -24,6 +27,8 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 #[IsGranted('ROLE_COLLABORATOR')]
 abstract class CategoryCrudController extends BaseCrudController
 {
+    public const ENTITY = Category::class;
+    public const VOTER = CategoryVoter::class;
 
     public function configureFilters(Filters $filters): Filters
     {

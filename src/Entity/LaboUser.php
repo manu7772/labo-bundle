@@ -36,6 +36,7 @@ use Aequation\LaboBundle\Model\Final\FinalPhonelinkInterface;
 use Aequation\LaboBundle\Model\Interface\ImageOwnerInterface;
 use Aequation\LaboBundle\Model\Interface\LaboRelinkInterface;
 use Aequation\LaboBundle\Model\Final\FinalAddresslinkInterface;
+use Aequation\LaboBundle\Model\Final\FinalVideolinkInterface;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 // PHP
 use Aequation\LaboBundle\Service\Interface\AppEntityManagerInterface;
@@ -166,6 +167,13 @@ abstract class LaboUser extends MappSuperClassEntity implements LaboUserInterfac
     #[Serializer\MaxDepth(1)]
     protected Collection $phones;
 
+    #[ORM\ManyToMany(targetEntity: FinalVideolinkInterface::class, cascade: ['persist', 'remove'], orphanRemoval: true)]
+    #[RelationOrder()]
+    #[Assert\Valid()]
+    #[Serializer\Groups('detail')]
+    #[Serializer\MaxDepth(1)]
+    protected Collection $videolinks;
+
     public function __construct()
     {
         parent::__construct();
@@ -174,6 +182,7 @@ abstract class LaboUser extends MappSuperClassEntity implements LaboUserInterfac
         $this->addresses = new ArrayCollection();
         $this->emails = new ArrayCollection();
         $this->phones = new ArrayCollection();
+        $this->videolinks = new ArrayCollection();
     }
 
     public function isEqualTo(UserInterface $user): bool
@@ -296,7 +305,7 @@ abstract class LaboUser extends MappSuperClassEntity implements LaboUserInterfac
     }
 
     #[Serializer\Ignore]
-    public function getRolesChoices(UserInterface $user = null): array
+    public function getRolesChoices(?UserInterface $user = null): array
     {
         return $this->roleHierarchy->getRolesChoices($user ?? $this);
     }
@@ -356,7 +365,7 @@ abstract class LaboUser extends MappSuperClassEntity implements LaboUserInterfac
 
     public function autoGeneratePassword(
         int $length = 32,
-        string $chars = null,
+        ?string $chars = null,
         bool $replace = true
     ): static
     {
@@ -594,10 +603,11 @@ abstract class LaboUser extends MappSuperClassEntity implements LaboUserInterfac
     ): ?LaboRelinkInterface
     {
         $propertys = [
+            'relinks' => FinalUrlinkInterface::class,
             'addresses' => FinalAddresslinkInterface::class,
             'emails' => FinalEmailinkInterface::class,
             'phones' => FinalPhonelinkInterface::class,
-            'relinks' => FinalUrlinkInterface::class,
+            'videos' => FinalVideolinkInterface::class,
         ];
         $property = array_search($class, $propertys);
         $notHasPrefered = !method_exists($class, 'isPrefered');
@@ -718,6 +728,38 @@ abstract class LaboUser extends MappSuperClassEntity implements LaboUserInterfac
         return $this;
     }
 
+    public function getMainUrlink(
+        bool $anyway = true
+    ): ?FinalUrlinkInterface
+    {
+        return $this->getMainLaboRelink(FinalUrlinkInterface::class, $anyway);
+    }
+
+    public function getMainVideolink(
+        bool $anyway = true
+    ): ?FinalVideolinkInterface
+    {
+        return $this->getMainLaboRelink(FinalVideolinkInterface::class, $anyway);
+    }
+
+    public function getVideolinks(): Collection
+    {
+        return $this->videolinks;
+    }
+
+    public function addVideolink(FinalVideolinkInterface $videolink): static
+    {
+        if (!$this->videolinks->contains($videolink)) {
+            $this->videolinks->add($videolink);
+        }
+        return $this;
+    }
+
+    public function removeVideolink(FinalVideolinkInterface $videolink): static
+    {
+        $this->videolinks->removeElement($videolink);
+        return $this;
+    }
 
 
 }

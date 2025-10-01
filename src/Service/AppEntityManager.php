@@ -875,7 +875,7 @@ class AppEntityManager extends BaseService implements AppEntityManagerInterface
             if($opresultException instanceof Opresult) {
                 $opresultException->addDanger(vsprintf('La suppression de %s %s a échoué', [$entity->getClassname(), $entity->__toString()]));
             } else if($opresultException) {
-                throw new Exception(vsprintf("La suppression a échoué ! Veuiller recommencer l'opération, s.v.p.%s", [PHP_EOL.$th->__toString()]));
+                // throw new Exception(vsprintf("La suppression a échoué ! Veuiller recommencer l'opération, s.v.p.%s", [PHP_EOL.$th->__toString()]));
             }
             return false;
         }

@@ -186,7 +186,7 @@ class Video
                 'label' => 'YouTube',
                 'template' => '<iframe width="560" height="315" src="https://www.youtube.com/embed/{{ video.videoid }}" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>',
                 'url_template' => 'https://www.youtube.com/watch?v={{ video.videoid }}',
-                'title' => fn (string $id) => explode('</title>', explode('<title>', file_get_contents("https://www.youtube.com/watch?v={$id}"))[1])[0],
+                'title' => fn (string $id) => html_entity_decode(explode('</title>', explode('<title>', file_get_contents("https://www.youtube.com/watch?v={$id}"))[1])[0]),
                 'thumbnail' => fn (string $id, string $quality = 'hqdefault') => "https://img.youtube.com/vi/{$id}/{$quality}.jpg",
                 'test' => function (string $url): bool|string {
                     preg_match('/(?:youtube(?:-nocookie)?\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/ ]{11})/i', $url, $match);

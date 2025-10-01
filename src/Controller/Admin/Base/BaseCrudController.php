@@ -1,6 +1,9 @@
 <?php
 namespace Aequation\LaboBundle\Controller\Admin\Base;
 
+use App\Entity\Websection;
+use App\Entity\Category;
+
 use DateTime;
 use Iterator;
 use Exception;
@@ -29,6 +32,7 @@ use EasyCorp\Bundle\EasyAdminBundle\Config\Actions;
 
 use Aequation\LaboBundle\Component\LaboAdminContext;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Dashboard;
+use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Contracts\Translation\TranslatorInterface;
 use EasyCorp\Bundle\EasyAdminBundle\Security\Permission;
 use EasyCorp\Bundle\EasyAdminBundle\Config\KeyValueStore;
@@ -38,13 +42,15 @@ use Aequation\LaboBundle\Model\Interface\EnabledInterface;
 use EasyCorp\Bundle\EasyAdminBundle\Factory\EntityFactory;
 use Aequation\LaboBundle\Model\Interface\AppEntityInterface;
 use Aequation\LaboBundle\EventSubscriber\LaboFormsSubscriber;
+use EasyCorp\Bundle\EasyAdminBundle\Router\AdminUrlGeneratorInterface;
+use EasyCorp\Bundle\EasyAdminBundle\Router\AdminUrlGenerator;
 use EasyCorp\Bundle\EasyAdminBundle\Collection\FieldCollection;
 use EasyCorp\Bundle\EasyAdminBundle\Event\AfterCrudActionEvent;
 use EasyCorp\Bundle\EasyAdminBundle\Collection\FilterCollection;
 use EasyCorp\Bundle\EasyAdminBundle\Event\BeforeCrudActionEvent;
+
 use EasyCorp\Bundle\EasyAdminBundle\Contracts\Field\FieldInterface;
 use Aequation\LaboBundle\Security\Voter\Interface\AppVoterInterface;
-
 use Aequation\LaboBundle\Service\Interface\LaboUserServiceInterface;
 use EasyCorp\Bundle\EasyAdminBundle\Event\AfterEntityPersistedEvent;
 use Aequation\LaboBundle\Service\Interface\AppEntityManagerInterface;
@@ -63,7 +69,10 @@ abstract class BaseCrudController extends AbstractCrudController
     public const VOTER = 'undefined';
     public const DEFAULT_SORT = ['id' => 'ASC'];
     public const THROW_EXCEPTION_WHEN_FORBIDDEN = true;
-    public const CUT_NAME_LENGTH = 24;
+    public const CUT_NAME_LENGTH = 48;
+
+    public const SAVE_AND_DETAIL = 'saveAndDetail';
+
 
     public readonly array $query_values;
     public readonly AppEntityManagerInterface $appEntityManager;
@@ -245,6 +254,13 @@ abstract class BaseCrudController extends AbstractCrudController
     ): Actions
     {
         $voter = static::getEntityVoter();
+        $type = $this->getQueryValue('type');
+        $typename = $type ? $type : '';
+        $test = $this->translate('name', [], $type ?? '');
+        if($test !== 'name') {
+            $typename = $test;
+        }
+        $typename = !empty($typename) ? ' '.$typename : null;
 
         /*******************************************************************************************/
         /* ADDED ACTIONS
@@ -288,9 +304,11 @@ abstract class BaseCrudController extends AbstractCrudController
             Crud::PAGE_INDEX,
             Action::NEW,
             fn (Action $action) => $action
-                ->setLabel($this->translate('action.new'))
+                ->setLabel($this->translate('action.new').$typename)
                 ->setIcon('tabler:plus')
                 ->displayIf(fn (?AppEntityInterface $entity) => $this->isGranted($voter::ACTION_CREATE, $entity ?? static::ENTITY))
+                ->displayAsForm()
+                ->linkToRoute('easyadmin_'.strtolower(Classes::getShortname(static::ENTITY)).'_new', $this->getQueryValues())
         );
 
         // EDIT
@@ -302,6 +320,7 @@ abstract class BaseCrudController extends AbstractCrudController
                 ->setIcon('tabler:pencil')
                 ->setHtmlAttributes(['title' => $this->translate('action.edit')])
                 ->displayIf(fn (AppEntityInterface $entity) => $this->isGranted($voter::ACTION_UPDATE, $entity))
+                // ->linkToRoute('easyadmin_'.strtolower(Classes::getShortname(static::ENTITY)).'_edit', fn (AppEntityInterface $entity) => array_merge($this->getQueryValues(), ['entityId' => $entity->getId()]))
         );
 
         // DELETE
@@ -313,6 +332,7 @@ abstract class BaseCrudController extends AbstractCrudController
                 ->setIcon('tabler:trash')
                 ->setHtmlAttributes(['title' => $this->translate('action.delete')])
                 ->displayIf(fn (AppEntityInterface $entity) => $this->isGranted($voter::ACTION_DELETE, $entity))
+                // ->linkToRoute('easyadmin_'.strtolower(Classes::getShortname(static::ENTITY)).'_delete', fn (AppEntityInterface $entity) => array_merge($this->getQueryValues(), ['entityId' => $entity->getId()]))
         );
 
         $actions->reorder(Crud::PAGE_INDEX, [Action::DELETE, Action::EDIT, Action::DETAIL]);
@@ -323,36 +343,31 @@ abstract class BaseCrudController extends AbstractCrudController
 
         // INDEX
         $actions->update(Crud::PAGE_DETAIL, Action::INDEX, function(Action $action) use ($voter) {
-            $action
+            return $action
                 ->setLabel($this->translate('action.index'))
                 ->setIcon('tabler:list')
                 ->setHtmlAttributes(['title' => $this->translate('action.index')])
-                ->displayIf(function (AppEntityInterface $entity) use ($voter) {
-                    return $this->isGranted($voter::ACTION_LIST, $entity);
-                });
-            return $action;
+                ->displayIf(fn (AppEntityInterface $entity) => $this->isGranted($voter::ACTION_LIST, $entity))
+                ->linkToRoute('easyadmin_'.strtolower(Classes::getShortname(static::ENTITY)).'_index', fn (AppEntityInterface $entity) => array_merge($this->getQueryValues(), $this->getAddedParameters($entity)))
+                ;
         });
 
         // DELETE
         $actions->update(Crud::PAGE_DETAIL, Action::DELETE, function(Action $action) use ($voter) {
-            $action
+            return $action
                 // ->setCssClass('btn-danger')
                 ->setHtmlAttributes(['title' => 'Supprimer'])
-                ->displayIf(function (AppEntityInterface $entity) use ($voter) {
-                    return $this->isGranted($voter::ACTION_DELETE, $entity);
-                });
-            return $action;
+                ->displayIf(fn (AppEntityInterface $entity) => $this->isGranted($voter::ACTION_DELETE, $entity))
+                ;
         });
 
         // EDIT
         $actions->update(Crud::PAGE_DETAIL, Action::EDIT, function(Action $action) use ($voter) {
-            $action
+            return $action
                 ->setIcon('tabler:pencil')
                 ->setHtmlAttributes(['title' => 'Éditer'])
-                ->displayIf(function (AppEntityInterface $entity) use ($voter) {
-                    return $this->isGranted($voter::ACTION_UPDATE, $entity);
-                });
-            return $action;
+                ->displayIf(fn (AppEntityInterface $entity) => $this->isGranted($voter::ACTION_UPDATE, $entity))
+                ;
         });
 
         /*******************************************************************************************/
@@ -361,16 +376,14 @@ abstract class BaseCrudController extends AbstractCrudController
 
         // INDEX
         $actions->add(Crud::PAGE_EDIT, Action::INDEX);
-        $actions->update(Crud::PAGE_EDIT, Action::INDEX, function(Action $action) use ($voter) {
+        $actions->update(Crud::PAGE_EDIT, Action::INDEX, fn (Action $action) =>
             $action
                 ->setLabel('Liste')
                 ->setIcon('tabler:list')
                 ->setHtmlAttributes(['title' => 'Retour à la liste'])
-                ->displayIf(function (AppEntityInterface $entity) use ($voter) {
-                    return $this->isGranted($voter::ACTION_LIST, $entity);
-                });
-            return $action;
-        });
+                ->displayIf(fn (AppEntityInterface $entity) => $this->isGranted($voter::ACTION_LIST, $entity))
+                ->linkToRoute('easyadmin_'.strtolower(Classes::getShortname(static::ENTITY)).'_index', fn (AppEntityInterface $entity) => array_merge($this->getQueryValues(), $this->getAddedParameters($entity)))
+        );
 
         /*******************************************************************************************/
         /* NEW
@@ -378,18 +391,16 @@ abstract class BaseCrudController extends AbstractCrudController
 
         // INDEX
         $actions->add(Crud::PAGE_NEW, Action::INDEX);
-        $actions->update(Crud::PAGE_NEW, Action::INDEX, function(Action $action) use ($voter) {
+        $actions->update(Crud::PAGE_NEW, Action::INDEX, fn (Action $action) =>
             $action
                 ->setLabel('Liste')
                 ->setIcon('tabler:list')
                 ->setHtmlAttributes(['title' => 'Retour à la liste'])
-                ->displayIf(function (AppEntityInterface $entity) use ($voter) {
-                    return $this->isGranted($voter::ACTION_LIST, $entity);
-                });
-            return $action;
-        });
+                ->displayIf(fn (AppEntityInterface $entity) => $this->isGranted($voter::ACTION_LIST, $entity))
+                ->linkToRoute('easyadmin_'.strtolower(Classes::getShortname(static::ENTITY)).'_index', fn (AppEntityInterface $entity) => array_merge($this->getQueryValues(), $this->getAddedParameters($entity)))
+        );
 
-
+        // Add new actions
         $actions
             ->add(Crud::PAGE_INDEX, $action_lnks['duplicate'])
             ->add(Crud::PAGE_DETAIL, $action_lnks['duplicate'])
@@ -414,6 +425,9 @@ abstract class BaseCrudController extends AbstractCrudController
         if($sing_shortname === 'name') $sing_shortname = ucfirst(Strings::singularize($shortname));
         $plur_shortname = $this->translate('names', [], $shortname);
         if($plur_shortname === 'names') $plur_shortname = ucfirst(Strings::pluralize($shortname));
+        // Query parameters
+        // dump($this->query_values);
+        $type = $this->getQueryValue('type');
         // Configure Crud
         $crud
             ->setDefaultSort(static::DEFAULT_SORT)
@@ -421,10 +435,10 @@ abstract class BaseCrudController extends AbstractCrudController
                 'crud/field/id' => '@EasyAdmin/crud/field/id_with_icon.html.twig',
                 // 'crud/field/thumbnail' => '@EasyAdmin/crud/field/template.html.twig',
             ])
-            ->setPageTitle('index', '<small>Liste des </small>%entity_label_plural%')
-            ->setPageTitle('detail', '%entity_label_singular%')
-            ->setPageTitle('edit', '<small>Modifier </small>%entity_label_singular%')
-            ->setPageTitle('new', '<small>Créer </small>%entity_label_singular%')
+            ->setPageTitle('index', '<small>Liste des </small>%entity_label_plural%'.($type ? '<small> de type <strong>'.$type.'</strong></small>' : ''))
+            ->setPageTitle('detail', '%entity_label_singular%'.($type ? '<small> de type <strong>'.$type.'</strong></small>' : ''))
+            ->setPageTitle('edit', '<small>Modifier </small>%entity_label_singular%'.($type ? '<small> de type <strong>'.$type.'</strong></small>' : ''))
+            ->setPageTitle('new', '<small>Créer </small>%entity_label_singular%'.($type ? '<small> de type <strong>'.$type.'</strong></small>' : ''))
             ->setTimezone($this->manager->getAppService()->getAppContext()->getTimezone()->getName())
             // ->setEntityLabelInSingular(Strings::singularize($shortname))
             // ->setEntityLabelInPlural(Strings::pluralize($shortname))
@@ -527,6 +541,76 @@ abstract class BaseCrudController extends AbstractCrudController
         }
 
         return $responseParameters;
+    }
+
+    protected function compileAddedParameters(object $context): array
+    {
+        $dto = null;
+        $entity = null;
+        switch (true) {
+            case $context instanceof AdminContextInterface:
+                $dto = $context->getEntity();
+                $entity = $dto->getInstance();
+                break;
+            case $context instanceof EntityDto:
+                $dto = $context;
+                $entity = $dto->getInstance();
+                $context = null;
+                break;
+            case $context instanceof AppEntityInterface:
+                $entity = $context;
+                $dto = null;
+                $context = null;
+                break;
+            default:
+                throw new Exception(vsprintf('Error %s line %d: context must be instance of %s, %s or %s!', [__METHOD__, __LINE__, AdminContextInterface::class, EntityDto::class, AppEntityInterface::class]));
+        }
+        return [
+            'dto' => $dto,
+            'entity' => $entity,
+            'context' => $context,
+        ];
+    }
+
+    protected function getAddedParameters(object $context): array
+    {
+        /** @see https://www.php.net/manual/fr/function.extract.php */
+        extract($this->compileAddedParameters($context), EXTR_OVERWRITE);
+        $params = [];
+        switch (true) {
+            case ($entity instanceof Websection):
+                $params['type'] = $entity->getSectiontype();
+                break;
+            case ($entity instanceof Category):
+                $params['type'] = $entity->getType();
+                break;
+            default:
+                # code...
+                break;
+        }
+        return $params;
+    }
+
+    protected function getRedirectResponseAfterSave(AdminContext $context, string $action): RedirectResponse
+    {
+        $submitButtonName = $context->getRequest()->request->all()['ea']['newForm']['btn'] ?? null;
+        /** @var AdminUrlGeneratorInterface $adminUrlGenerator */
+        $adminUrlGenerator = $this->container->get(AdminUrlGenerator::class);
+        $url = match ($submitButtonName) {
+            Action::SAVE_AND_CONTINUE => $adminUrlGenerator
+            ->setAction(Action::EDIT)
+            ->setEntityId($context->getEntity()->getPrimaryKeyValue())
+                ->generateUrl(),
+            static::SAVE_AND_DETAIL => $adminUrlGenerator
+                ->setAction(Action::DETAIL)
+                ->setEntityId($context->getEntity()->getPrimaryKeyValue())
+                ->generateUrl(),
+            Action::SAVE_AND_RETURN => $adminUrlGenerator->setAction(Action::INDEX)->setAll($this->getAddedParameters($context))->generateUrl(),
+            Action::SAVE_AND_ADD_ANOTHER => $adminUrlGenerator->setAction(Action::NEW)->generateUrl(),
+            default => $this->generateUrl($context->getDashboardRouteName()),
+        };
+        // dd($context, $this->getAddedParameters($context), $submitButtonName, $action, $adminUrlGenerator);
+        return $this->redirect($url);
     }
 
     public static function getEntityFqcn(): string
@@ -650,7 +734,7 @@ abstract class BaseCrudController extends AbstractCrudController
         bool $checkGrant = true,
     ): ?AppEntityInterface
     {
-        if($checkGrant) $this->checkGrants(Crud::PAGE_NEW);
+        // if($checkGrant) $this->checkGrants(Crud::PAGE_NEW);
         $RC = new ReflectionClass($entityFqcn);
         if($RC->isInstantiable()) {
             $entity = $this->manager instanceof AppEntityManagerInterface

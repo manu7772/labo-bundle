@@ -64,7 +64,7 @@ use Aequation\LaboBundle\Model\Interface\LaboUserInterface;
 use EasyCorp\Bundle\EasyAdminBundle\Attribute\AdminDashboard;
 use EasyCorp\Bundle\EasyAdminBundle\Router\AdminUrlGenerator;
 use Aequation\LaboBundle\Service\Interface\AppEntityManagerInterface;
-use Aequation\LaboBundle\Service\Interface\LaboRelinkServiceInterface;
+use Aequation\LaboBundle\Service\Interface\WebsectionServiceInterface;
 use Symfony\Component\Security\Http\Authentication\AuthenticationUtils;
 use Aequation\LaboBundle\Service\Interface\LaboCategoryServiceInterface;
 use EasyCorp\Bundle\EasyAdminBundle\Controller\AbstractDashboardController;
@@ -181,7 +181,19 @@ class DashboardController extends AbstractDashboardController
         $color = 'text-primary-emphasis';
         $webmanage = [];
         if($this->isGranted(WebpageVoter::ADMIN_ACTION_LIST, Webpage::class)) $webmanage['Webpage'] = MenuItem::linkToCrud(label: 'Pages web', icon: Webpage::ICON, entityFqcn: Webpage::class);
-        if($this->isGranted(WebsectionVoter::ADMIN_ACTION_LIST, Websection::class)) $webmanage['Websection'] = MenuItem::linkToCrud(label: 'Sections web', icon: Websection::ICON, entityFqcn: Websection::class);
+        $sub_sections = [];
+        if($this->isGranted(WebsectionVoter::ADMIN_ACTION_LIST, Websection::class)) {
+            /** @var WebsectionServiceInterface */
+            $entService = $this->manager->getEntityService(Websection::class);
+            $sectionTypes = $entService->getSectiontypes();
+            foreach ($sectionTypes as $type) {
+                $url = $this->generateUrl('easyadmin_websection_index', ['type' => $type]);
+                $sub_sections[$type] = MenuItem::linkToUrl(label: 'Type '.ucfirst($type), icon: null, url: $url);
+            }
+            if(count($sub_sections)) {
+                $webmanage['Websection'] = MenuItem::subMenu(label: 'Sections', icon: Websection::ICON)->setSubItems($sub_sections);
+            }
+        }
         if($this->isGranted(MenuVoter::ADMIN_ACTION_LIST, Menu::class)) $webmanage['Menu'] = MenuItem::linkToCrud(label: 'Menus', icon: Menu::ICON, entityFqcn: Menu::class);
         if(count($webmanage)) {
             yield MenuItem::section('Contenu du site')->setCssClass($color);
@@ -206,7 +218,7 @@ class DashboardController extends AbstractDashboardController
                 $name = $this->translator->trans('names', [], Classes::getShortname($type));
                 if($name === 'names') $name = Classes::getShortname($type);
                 $url = $this->generateUrl('easyadmin_category_index', ['type' => Classes::getShortname($type)]);
-                $sub_medias[$type] = MenuItem::linkToUrl(label: 'Type '.ucfirst($this->translate('names', [], Classes::getShortname($type))), icon: Category::ICON, url: $url);
+                $sub_medias[$type] = MenuItem::linkToUrl(label: 'Type '.ucfirst($name), icon: Category::ICON, url: $url);
             }
             if(count($sub_medias)) {
                 $medias['Category'] = MenuItem::subMenu(label: 'Categories', icon: Category::ICON)->setSubItems($sub_medias);
