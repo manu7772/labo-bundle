@@ -1,12 +1,13 @@
 <?php
 namespace Aequation\LaboBundle\DependencyInjection;
 
+use Symfony\Component\Config\FileLocator;
 use Aequation\LaboBundle\AequationLaboBundle;
 use Symfony\Component\AssetMapper\AssetMapperInterface;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Extension\Extension;
+use Symfony\Component\Config\Definition\ConfigurationInterface;
 use Symfony\Component\DependencyInjection\Loader\YamlFileLoader;
-use Symfony\Component\Config\FileLocator;
 
 class AequationLaboExtension extends Extension
 {
@@ -31,7 +32,7 @@ class AequationLaboExtension extends Extension
 
     }
 
-    public function getConfiguration(array $config, ContainerBuilder $container)
+    public function getConfiguration(array $config, ContainerBuilder $container): ?ConfigurationInterface
     {
         return new Configuration($config, $container);
     }

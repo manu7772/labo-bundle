@@ -1,14 +1,17 @@
 <?php
+
 namespace Aequation\LaboBundle\Field;
 
-use Symfony\Component\Form\Extension\Core\Type\CollectionType;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Asset;
-use EasyCorp\Bundle\EasyAdminBundle\Field\FieldTrait;
 use EasyCorp\Bundle\EasyAdminBundle\Contracts\Field\FieldInterface;
-use EasyCorp\Bundle\EasyAdminBundle\Field\CollectionField;
-use FOS\CKEditorBundle\Form\Type\CKEditorType;
+use Symfony\Component\Form\Extension\Core\Type\CollectionType;
+use Symfony\Contracts\Translation\TranslatableInterface;
+use EasyCorp\Bundle\EasyAdminBundle\Field\FieldTrait;
 
-class MultitextsField implements FieldInterface
+/**
+ * @author Javier Eguiluz <javier.eguiluz@gmail.com>
+ */
+final class MultitextsField implements FieldInterface
 {
     use FieldTrait;
 

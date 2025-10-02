@@ -42,7 +42,7 @@ interface AppVoterInterface extends VoterInterface
     public const MAIN_ACTION_SENDMAIL       = 'main_action_sendmail';
 
     public static function getDefaultFirewall(): string;
-    public static function getActions(string $firewall = null): array;
+    public static function getActions(?string $firewall = null): array;
     public static function getFirewalls(): array;
     // Added actions
     public static function getAddedActions(): array;

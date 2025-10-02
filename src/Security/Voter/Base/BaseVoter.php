@@ -18,6 +18,7 @@ use Symfony\Component\Security\Core\Authorization\Voter\VoterInterface;
 
 use Exception;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
+use Symfony\Component\Security\Core\Authorization\Voter\Vote;
 
 abstract class BaseVoter extends Voter implements VoterInterface, AppVoterInterface
 {
@@ -74,7 +75,8 @@ abstract class BaseVoter extends Voter implements VoterInterface, AppVoterInterf
     protected function voteOnAttribute(
         string $attribute,
         mixed $subject,
-        TokenInterface $token
+        TokenInterface $token,
+        ?Vote $vote = null
     ): bool
     {
         $vote = HttpRequest::isCli();

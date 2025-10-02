@@ -1,16 +1,17 @@
 <?php
 namespace Aequation\LaboBundle\Security\Voter;
 
-use Aequation\LaboBundle\Model\Final\FinalEntrepriseInterface;
-use Aequation\LaboBundle\Model\Final\FinalUserInterface;
 use Aequation\LaboBundle\Security\Voter\Base\BaseVoter;
+use Aequation\LaboBundle\Model\Final\FinalUserInterface;
 use Aequation\LaboBundle\Model\Interface\LaboUserInterface;
-use Aequation\LaboBundle\Service\Interface\EntrepriseServiceInterface;
-use Aequation\LaboBundle\Security\Voter\Interface\EntrepriseVoterInterface;
+use Symfony\Component\DependencyInjection\Attribute\AsAlias;
+use Symfony\Component\Security\Core\Authorization\Voter\Vote;
+use Aequation\LaboBundle\Model\Final\FinalEntrepriseInterface;
 use Aequation\LaboBundle\Service\Interface\AppServiceInterface;
 
+use Aequation\LaboBundle\Service\Interface\EntrepriseServiceInterface;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
-use Symfony\Component\DependencyInjection\Attribute\AsAlias;
+use Aequation\LaboBundle\Security\Voter\Interface\EntrepriseVoterInterface;
 
 #[AsAlias(EntrepriseVoterInterface::class, public: true)]
 class EntrepriseVoter extends BaseVoter
@@ -28,10 +29,11 @@ class EntrepriseVoter extends BaseVoter
     protected function voteOnAttribute(
         string $attribute,
         mixed $subject,
-        TokenInterface $token
+        TokenInterface $token,
+        ?Vote $vote = null
     ): bool
     {
-        $vote = parent::voteOnAttribute($attribute, $subject, $token);
+        $vote = parent::voteOnAttribute($attribute, $subject, $token, $vote);
         if(!$vote) return false;
         /** @var LaboUserInterface */
         $user = $token->getUser();

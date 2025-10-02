@@ -51,6 +51,7 @@ use EasyCorp\Bundle\EasyAdminBundle\Form\Type\FileUploadType;
 use EasyCorp\Bundle\EasyAdminBundle\Collection\FieldCollection;
 use EasyCorp\Bundle\EasyAdminBundle\Collection\FilterCollection;
 use Aequation\LaboBundle\Controller\Admin\Base\BaseCrudController;
+use Aequation\LaboBundle\Field\MultitextsField;
 use EasyCorp\Bundle\EasyAdminBundle\Contracts\Field\FieldInterface;
 use Aequation\LaboBundle\Service\Interface\LaboUserServiceInterface;
 use Aequation\LaboBundle\Service\Interface\AppEntityManagerInterface;
@@ -287,27 +288,35 @@ class WebsectionCrudController extends BaseCrudController
                         ->setFormTypeOption('by_reference', false)
                         // ->setEmptyData(fn (FormInterface $form) => $this->appEntityManager->getNew(VideolinkCrudController::ENTITY))
                         ;
-                    yield CollectionField::new('test','Tests')
-                        ->allowAdd(true)
-                        ->allowDelete(true)
-                        ->showEntryLabel(false)
-                        ->setFormTypeOptions(
-                            [
-                                'mapped' => false,
-                                'entry_type' => ChoiceType::class,
-                                'entry_options' => [
-                                    'required' => true,
-                                    'choices' => [
-                                        'Nashville' => 'nashville',
-                                        'Paris'     => 'paris',
-                                        'Berlin'    => 'berlin',
-                                        'London'    => 'london',
-                                    ],
-                                ],
-                                'allow_add' => true,
-                                'allow_delete' => true,
-                            ]
-                        )
+                    // yield CollectionField::new('test','Tests')
+                    //     ->allowAdd(true)
+                    //     ->allowDelete(true)
+                    //     ->showEntryLabel(false)
+                    //     ->setFormTypeOptions(
+                    //         [
+                    //             'mapped' => false,
+                    //             'entry_type' => ChoiceType::class,
+                    //             'entry_options' => [
+                    //                 'required' => true,
+                    //                 'choices' => [
+                    //                     'Nashville' => 'nashville',
+                    //                     'Paris'     => 'paris',
+                    //                     'Berlin'    => 'berlin',
+                    //                     'London'    => 'london',
+                    //                 ],
+                    //             ],
+                    //             'allow_add' => true,
+                    //             'allow_delete' => true,
+                    //         ]
+                    //     )
+                    //     ->setColumns(12)
+                    //     ;
+                    yield MultitextsField::new('multitexts','MULTI Textes de la section ['.$this->getLaboContext()->getInstance()->getSectiontype().']')
+                        ->setFormTypeOptions([
+                            'mapped' => false,
+                            'by_reference' => false,
+                        ])
+                        // ->renderExpanded(true)
                         ->setColumns(12)
                         ;
                     yield CollectionField::new('texts','Textes de la section ['.$this->getLaboContext()->getInstance()->getSectiontype().']')
