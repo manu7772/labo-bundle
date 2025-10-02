@@ -116,9 +116,9 @@ abstract class Item extends MappSuperClassEntity implements ItemInterface, Creat
             $this->parents->add($parent);
         }
         if(!$parent->hasItem($this)) {
-            dump('***** Adding parent "'.$parent.'" to '.$this->__toString().'...');
+            // dump('***** Adding parent "'.$parent.'" to '.$this->__toString().'...');
             if(!$parent->addItem($this)) {
-                dump('***** Failed to add parent "'.$parent.'" to '.$this->__toString().'...');
+                // dump('***** Failed to add parent "'.$parent.'" to '.$this->__toString().'...');
                 // Failed to add parent
                 $this->removeParent($parent);
                 $parent->removeItem($this);

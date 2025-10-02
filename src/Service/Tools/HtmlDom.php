@@ -77,7 +77,7 @@ class HtmlDom extends BaseService
                     $string .= ' '.$name.'="'.$values.'"';
                     break;
                 default:
-                    dd($name, $values);
+                    // dd($name, $values);
                     $string .= ' '.$name.'="'.$values.'"';
                     break;
             }
