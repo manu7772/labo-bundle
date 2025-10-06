@@ -2,59 +2,96 @@
 namespace Aequation\LaboBundle\Service\Tools;
 
 use InvalidArgumentException;
+use Stringable;
 
-class Video
+class Video implements Stringable
 {
     public const AUTO_VIDEO_TYPE = '__auto__';
 
     public string $video_type;
     public string $video_id;
+    public string $video_url;
     public array $data;
-    public string $url;
 
-    // public static function new(string $idOrUrl, ?string $type = null): self
-    // {
-    //     $types = static::getTypes(false);
-    //     $url = Encoders::isUrl($idOrUrl) ? $idOrUrl : null;
-    //     if(in_array($type, $types, true)) {
-    //         // Type is specified
-    //         $instance = new self();
-    //         $instance->setVideoType($type);
-    //         $instance->setVideoId(Encoders::isUrl($idOrUrl) ? $instance->testUrl($idOrUrl) : $idOrUrl);
-    //         // $instance->setUrl($idOrUrl);
-    //     } else {
-    //         // Type is not specified, try to find it with the URL
-    //         if(!Encoders::isUrl($idOrUrl)) {
-    //             // throw new InvalidArgumentException(vsprintf('Error %s line %d: when video type is not specified, a URL must be provided (got %s).', [__FILE__, __LINE__, json_encode($idOrUrl)]));
-    //             $instance = new self();
-    //             $instance->setVideoId($idOrUrl);
-    //         }
-    //         foreach (static::getVideoTypeDescriptions(false) as $type => $data) {
-    //             if($video_id = $data['test']($idOrUrl)) {
-    //                 $instance = new self();
-    //                 $instance->setVideoType($type);
-    //                 $instance->setVideoId($video_id);
-    //                 if($instance->isEnabled()) {
-    //                     break;
-    //                 }
-    //                 // if not enabled, try next type
-    //             }
-    //         }
-    //     }
-    //     return $instance ?? new self();
-    // }
+    public function __construct(
+        ?string $video_id_or_rl = null,
+        ?string $video_type = null
+    )
+    {
+        $this->reset();
+        if(!empty($video_id_or_rl)) {
+            $this->setUrlOrId($video_id_or_rl);
+        }
+        if(!empty($video_type) && $video_type !== static::AUTO_VIDEO_TYPE) {
+            $this->setVideoType($video_type);
+        }
+    }
+
+    public function __toString(): string
+    {
+        $string = (string) $this->getVideoUrl();
+        return empty($string) ? '--- undefined video '.spl_object_id($this).' ---' : $string;
+    }
+
+    public function __debugInfo(): array
+    {
+        return $this->getData();
+    }
+
+    public function getData(): array
+    {
+        return [
+            '_toString' => (string) $this,
+            'video_type' => $this->video_type ?? null,
+            'video_id' => $this->video_id ?? null,
+            'video_url' => $this->video_url ?? $this->getVideoUrl(),
+            'data' => $this->data ?? null,
+            'is_valid' => $this->isValid(),
+            'is_enabled' => $this->isEnabled(),
+            'url' => $this->getUrl(),
+            'label' => $this->getLabel(),
+            'template' => $this->getTemplate(),
+            'title' => $this->getTitle(),
+            'thumbnail' => $this->getThumbnail(),
+        ];
+    }
 
     public function isValid(): bool
     {
         return !empty($this->video_type) && !empty($this->video_id) && $this->isEnabled();
     }
 
-    public function setUrlOrId(string $idOrUrl): static
+    public function reset(): static
     {
-        if(!$this->testUrl($idOrUrl)) {
-            $this->setVideoId($idOrUrl);
-        }
+        $this->video_type = static::AUTO_VIDEO_TYPE;
+        unset($this->video_id);
+        unset($this->video_url);
+        unset($this->data);
         return $this;
+    }
+
+    public function setUrlOrId(string $idOrUrl): bool
+    {
+        return Encoders::isUrl($idOrUrl)
+            ? $this->testAndAddUrl($idOrUrl)
+            : $this->setVideoId($idOrUrl);
+    }
+
+    public function setVideoUrl(string $url): bool
+    {
+        if(!Encoders::isUrl($url)) {
+            throw new InvalidArgumentException(vsprintf('Error %s line %d: video URL must be a valid URL (got %s).', [__FILE__, __LINE__, json_encode($url)]));
+        }
+        if(!$this->testAndAddUrl($url)) {
+            $this->reset();
+            // throw new InvalidArgumentException(vsprintf('Error %s line %d: video URL is not valid or not supported (got %s).', [__FILE__, __LINE__, json_encode($url)]));
+        }
+        return $this->isValid();
+    }
+
+    public function getVideoUrl(): ?string
+    {
+        return $this->video_url ?? $this->getUrl();
     }
 
     public function setVideoType(string $type): static
@@ -62,8 +99,8 @@ class Video
         if($type === static::AUTO_VIDEO_TYPE) {
             return $this;
         }
-        $this->data = static::getVideoTypeDescriptions(false, $type);
         $this->video_type = $type;
+        $this->data = static::getVideoTypeDescriptions(false, $this->video_type);
         return $this;
     }
 
@@ -77,13 +114,17 @@ class Video
         return $this->data['label'] ?? null;
     }
 
-    public function setVideoId(string $video_id): static
+    public function setVideoId(string $video_id): bool
     {
-        if(!is_string($video_id) || empty($video_id) || Encoders::isUrl($video_id)) {
+        if(!is_string($video_id) || empty($video_id)) {
             throw new InvalidArgumentException(vsprintf('Error %s line %d: video ID cannot be empty or a URL (got %s).', [__FILE__, __LINE__, json_encode($video_id)]));
         }
-        $this->video_id = $video_id;
-        return $this;
+        if(Encoders::isUrl($video_id)) {
+            $this->setVideoUrl($video_id);
+        } else {
+            $this->video_id = $this->testIdvalid($video_id) ? $video_id : null;
+        }
+        return !empty($this->video_id);
     }
 
     public function getVideoId(): ?string
@@ -112,31 +153,9 @@ class Video
         return $this->getDataEnabled();
     }
 
-    // public function setUrl(?string $url = null): static
-    // {
-    //     if(empty($url)) {
-    //         if(empty($this->getDataUrlTemplate())) {
-    //             throw new InvalidArgumentException(vsprintf('Error %s line %d: cannot generate URL, no URL template defined for this video type %s.', [__FILE__, __LINE__, json_encode($this->video_type ?? null)]));
-    //         }
-    //         $this->url = str_replace('{{ video.videoid }}', $this->video_id, $this->getDataUrlTemplate());
-    //         return $this;
-    //     }
-    //     if(!Encoders::isUrl($url)) {
-    //         throw new InvalidArgumentException(vsprintf('Error %s line %d: URL must be a valid URL (got %s).', [__FILE__, __LINE__, json_encode($url)]));
-    //     }
-    //     $this->url = $url;
-    //     return $this;
-    // }
-
-    // public function getDefaultUrl(): ?string
-    // {
-    //     return !empty($this->getDataUrlTemplate()) ? str_replace('{{ video.videoid }}', $this->video_id, $this->getDataUrlTemplate()) : null;
-    // }
-
     public function getUrl(): ?string
     {
-        return str_replace('{{ video.videoid }}', $this->video_id, $this->getDataUrlTemplate());
-        // return $this->url ?? null;
+        return !empty($this->video_url) ? str_replace('{{ video.videoid }}', $this->video_url, $this->getDataUrlTemplate()) : null;
     }
 
     public function getLabel(): ?string
@@ -151,7 +170,8 @@ class Video
 
     public function getTitle(): ?string
     {
-        return is_callable($this->getDataTitle()) ? $this->getDataTitle()($this->video_id) : $this->getDataTitle();
+        $title = is_callable($this->getDataTitle()) ? $this->getDataTitle()($this->video_id) : $this->getDataTitle();
+        return empty($title) ? null : html_entity_decode($title);
     }
 
     public function getThumbnail(): ?string
@@ -159,12 +179,18 @@ class Video
         return is_callable($this->getDataThumbnail()) ? $this->getDataThumbnail()($this->video_id) : $this->getDataThumbnail();
     }
 
-    public function testUrl(string $url): bool
+    public function testIdvalid(?string $id): bool
+    {
+        return ($test = $this->getDataIdvalid()) ? $test($id) : (bool) preg_match('/^[a-zA-Z0-9_-]{6,}$/', $id);
+    }
+
+    public function testAndAddUrl(string $url): bool
     {
         $found = false;
         if(Encoders::isUrl($url)) {
+            $this->video_url = $url;
             foreach (static::getVideoTypeDescriptions(false) as $type => $data) {
-                if($video_id = $data['test']($url)) {
+                if($video_id = $data['test']($this->video_url)) {
                     $this->setVideoType($type);
                     $this->setVideoId($video_id);
                     $found = true;
@@ -186,11 +212,14 @@ class Video
                 'label' => 'YouTube',
                 'template' => '<iframe width="560" height="315" src="https://www.youtube.com/embed/{{ video.videoid }}" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>',
                 'url_template' => 'https://www.youtube.com/watch?v={{ video.videoid }}',
-                'title' => fn (string $id) => html_entity_decode(explode('</title>', explode('<title>', file_get_contents("https://www.youtube.com/watch?v={$id}"))[1])[0]),
+                'title' => fn (string $id): ?string => preg_replace('/\s-\sYouTube$/', '', explode('</title>', explode('<title>', (string) @file_get_contents("https://www.youtube.com/watch?v={".$id."}"))[1] ?? '')[0]) ?? null,
                 'thumbnail' => fn (string $id, string $quality = 'hqdefault') => "https://img.youtube.com/vi/{$id}/{$quality}.jpg",
                 'test' => function (string $url): bool|string {
                     preg_match('/(?:youtube(?:-nocookie)?\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/ ]{11})/i', $url, $match);
                     return isset($match[1]) && !empty($match[1]) ? $match[1] : false;
+                },
+                'idvalid' => function (?string $id): bool {
+                    return !empty($id) && (bool) preg_match('/^[a-zA-Z0-9_-]{11}$/', $id);
                 },
             ],
             'vimeo' => [
@@ -198,7 +227,7 @@ class Video
                 'label' => 'Viméo',
                 'template' => '<iframe width="560" height="315" src="https://player.vimeo.com/video/{{ video.videoid }}" title="Vimeo video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>',
                 'url_template' => 'https://vimeo.com/{{ video.videoid }}',
-                'title' => fn (string $id) => explode('</title>', explode('<title>', file_get_contents("https://vimeo.com/{$id}"))[1])[0],
+                'title' => fn (string $id): ?string => explode('</title>', explode('<title>', (string) @file_get_contents("https://vimeo.com/{$id}"))[1] ?? '')[0] ?? null,
                 'thumbnail' => null,
                 'test' => function (string $url): bool|string {
                     preg_match("/(https?:\/\/)?(www\.)?(player\.)?vimeo\.com\/?(showcase\/)*([0-9])?([a-z]*\/)*([0-9]{6,11})[?]?.*/", $url, $match);
@@ -210,7 +239,7 @@ class Video
                 'label' => 'Dailymotion',
                 'template' => '<iframe width="560" height="315" src="https://www.dailymotion.com/embed/video/{{ video.videoid }}" title="Dailymotion video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>',
                 'url_template' => 'https://www.dailymotion.com/video/{{ video.videoid }}',
-                'title' => fn (string $id) => explode('</title>', explode('<title>', file_get_contents("https://www.youtube.com/watch?v={$id}"))[1])[0],
+                'title' => fn (string $id): ?string => explode('</title>', explode('<title>', (string) @file_get_contents("https://www.dailymotion.com/video/{$id}"))[1] ?? '')[0] ?? null,
                 'thumbnail' => null,
                 'test' => function (string $url): bool|string {
                     preg_match('/(?:dailymotion\.com\/video|dai\.ly)\/([a-zA-Z0-9]+)/', $url, $match);
@@ -259,7 +288,7 @@ class Video
                 'label' => 'Instagram',
                 'template' => '<iframe width="560" height="315" src="https://www.instagram.com/p/{{ video.videoid }}/embed" title="Instagram video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>',
                 'url_template' => 'https://www.instagram.com/p/{{ video.videoid }}/',
-                'title' => fn (string $id) => explode('</title>', explode('<title>', file_get_contents("https://www.youtube.com/watch?v={$id}"))[1])[0],
+                'title' => fn (string $id): ?string => explode('</title>', explode('<title>', (string) @file_get_contents("https://www.instagram.com/p/{$id}"))[1] ?? '')[0] ?? null,
                 'thumbnail' => null,
                 'test' => function (string $url): bool|string {
                     preg_match('/(?:instagram\.com\/p\/)([a-zA-Z0-9_-]+)/', $url, $match);
@@ -271,7 +300,7 @@ class Video
                 'label' => 'Personnalisé',
                 'template' => null,
                 'url_template' => null,
-                'title' => fn (string $id) => explode('</title>', explode('<title>', file_get_contents("https://www.youtube.com/watch?v={$id}"))[1])[0],
+                'title' => fn (string $id): ?string => explode('</title>', explode('<title>', (string) @file_get_contents("https://www.youtube.com/watch?v={$id}"))[1] ?? '')[0] ?? null,
                 'thumbnail' => null,
                 'test' => fn (string $url): bool|string => true,
             ],
@@ -313,7 +342,7 @@ class Video
 
     public function setDataTitle(string|callable $title): static
     {
-        $this->data['title'] = $title;
+        $this->data['title'] = html_entity_decode($title);
         return $this;
     }
 
@@ -326,6 +355,12 @@ class Video
     public function setDataTest(callable $test): static
     {
         $this->data['test'] = $test;
+        return $this;
+    }
+
+    public function setDataIdvalid(callable $idvalid): static
+    {
+        $this->data['idvalid'] = $idvalid;
         return $this;
     }
 
@@ -367,6 +402,11 @@ class Video
     public function getDataTest(): ?callable
     {
         return $this->data['test'] ?? null;
+    }
+
+    public function getDataIdvalid(): ?callable
+    {
+        return $this->data['idvalid'] ?? null;
     }
 
 }
