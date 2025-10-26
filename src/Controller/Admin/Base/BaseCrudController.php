@@ -296,6 +296,7 @@ abstract class BaseCrudController extends AbstractCrudController
                 ->setLabel(false)
                 ->setIcon('tabler:eye')
                 ->setHtmlAttributes(['title' => $this->translate('action.detail')])
+                ->displayAsLink()
                 ->displayIf(fn (AppEntityInterface $entity) => $this->isGranted($voter::ACTION_READ, $entity))
         );
 
@@ -308,6 +309,7 @@ abstract class BaseCrudController extends AbstractCrudController
                 ->setIcon('tabler:plus')
                 ->displayIf(fn (?AppEntityInterface $entity) => $this->isGranted($voter::ACTION_CREATE, $entity ?? static::ENTITY))
                 ->displayAsForm()
+                // ->displayAsLink()
                 ->linkToRoute('easyadmin_'.strtolower(Classes::getShortname(static::ENTITY)).'_new', $this->getQueryValues())
         );
 
@@ -319,6 +321,7 @@ abstract class BaseCrudController extends AbstractCrudController
                 ->setLabel(false)
                 ->setIcon('tabler:pencil')
                 ->setHtmlAttributes(['title' => $this->translate('action.edit')])
+                ->displayAsLink()
                 ->displayIf(fn (AppEntityInterface $entity) => $this->isGranted($voter::ACTION_UPDATE, $entity))
                 // ->linkToRoute('easyadmin_'.strtolower(Classes::getShortname(static::ENTITY)).'_edit', fn (AppEntityInterface $entity) => array_merge($this->getQueryValues(), ['entityId' => $entity->getId()]))
         );
@@ -331,6 +334,7 @@ abstract class BaseCrudController extends AbstractCrudController
                 ->setLabel(false)
                 ->setIcon('tabler:trash')
                 ->setHtmlAttributes(['title' => $this->translate('action.delete')])
+                ->displayAsForm()
                 ->displayIf(fn (AppEntityInterface $entity) => $this->isGranted($voter::ACTION_DELETE, $entity))
                 // ->linkToRoute('easyadmin_'.strtolower(Classes::getShortname(static::ENTITY)).'_delete', fn (AppEntityInterface $entity) => array_merge($this->getQueryValues(), ['entityId' => $entity->getId()]))
         );
@@ -370,6 +374,8 @@ abstract class BaseCrudController extends AbstractCrudController
                 ;
         });
 
+        $actions->reorder(Crud::PAGE_DETAIL, [Action::DELETE, Action::INDEX, Action::EDIT]);
+
         /*******************************************************************************************/
         /* EDIT
         /*******************************************************************************************/
@@ -384,6 +390,8 @@ abstract class BaseCrudController extends AbstractCrudController
                 ->displayIf(fn (AppEntityInterface $entity) => $this->isGranted($voter::ACTION_LIST, $entity))
                 ->linkToRoute('easyadmin_'.strtolower(Classes::getShortname(static::ENTITY)).'_index', fn (AppEntityInterface $entity) => array_merge($this->getQueryValues(), $this->getAddedParameters($entity)))
         );
+
+        $actions->reorder(Crud::PAGE_EDIT, [Action::INDEX, Action::SAVE_AND_CONTINUE, Action::SAVE_AND_RETURN]);
 
         /*******************************************************************************************/
         /* NEW
@@ -455,7 +463,7 @@ abstract class BaseCrudController extends AbstractCrudController
             // ->renderSidebarMinimized()
             ->addFormTheme('@FOSCKEditor/Form/ckeditor_widget.html.twig')
             ->renderContentMaximized()
-            ->setPaginatorPageSize(20)
+            ->setPaginatorPageSize(10)
             ;
         return $crud;
     }

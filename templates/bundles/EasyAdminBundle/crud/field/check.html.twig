@@ -1,0 +1,8 @@
+{# @var field \EasyCorp\Bundle\EasyAdminBundle\Dto\FieldDto #}
+
+{% set main_styles = ' width: 1.2em; height: 1.2em;' %}
+{% if field.value %}
+<twig:ux:icon name="bi:check-square-fill" style="color: lime;{{ main_styles }}" />
+{% else %}
+<twig:ux:icon name="bi:x-square" style="color: orange;{{ main_styles }}" />
+{% endif %}

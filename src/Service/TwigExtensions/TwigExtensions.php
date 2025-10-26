@@ -1,33 +1,34 @@
 <?php
 namespace Aequation\LaboBundle\Service\TwigExtensions;
 
-use Aequation\LaboBundle\Entity\Image;
-use Aequation\LaboBundle\Model\Interface\ImageInterface;
-use Aequation\LaboBundle\Service\Interface\LaboAppVariableInterface;
-use Aequation\LaboBundle\Service\AppService;
-use Aequation\LaboBundle\Service\Interface\AppEntityManagerInterface;
-use Aequation\LaboBundle\Service\Tools\Classes;
-use Aequation\LaboBundle\Service\Tools\Encoders;
-use Aequation\LaboBundle\Service\Tools\HtmlDom;
-use Aequation\LaboBundle\Service\Tools\Icons;
-use Aequation\LaboBundle\Service\Tools\Strings;
-use Aequation\LaboBundle\Service\Tools\Times;
-
-use Symfony\Component\HttpKernel\KernelInterface;
-use Symfony\Contracts\Translation\TranslatableInterface;
-use Symfony\Component\DependencyInjection\Attribute\Autowire;
-use Symfony\Contracts\Translation\TranslatorInterface;
-use Symfony\UX\Icons\IconRenderer;
-use Doctrine\Common\Collections\Collection;
-use Twig\Extension\AbstractExtension;
-use Twig\Extension\GlobalsInterface;
+use DateTime;
+use Exception;
+use Stringable;
+use Twig\Markup;
 use Twig\TwigFilter;
 use Twig\TwigFunction;
-use Twig\Markup;
+use Symfony\UX\Icons\IconRenderer;
+use Twig\Extension\GlobalsInterface;
+use Twig\Extension\AbstractExtension;
+use Aequation\LaboBundle\Entity\Image;
+use Doctrine\Common\Collections\Collection;
 
-use DateTime;
+use Aequation\LaboBundle\Service\AppService;
+use Aequation\LaboBundle\Service\Tools\Icons;
+use Aequation\LaboBundle\Service\Tools\Times;
+use Aequation\LaboBundle\Service\Tools\Classes;
+use Aequation\LaboBundle\Service\Tools\HtmlDom;
+use Aequation\LaboBundle\Service\Tools\Strings;
+use Aequation\LaboBundle\Service\Tools\Encoders;
+use Symfony\Component\HttpKernel\KernelInterface;
 use EasyCorp\Bundle\EasyAdminBundle\Dto\EntityDto;
-use Stringable;
+use Symfony\Contracts\Translation\TranslatorInterface;
+use Aequation\LaboBundle\Model\Interface\ImageInterface;
+
+use Symfony\Contracts\Translation\TranslatableInterface;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
+use Aequation\LaboBundle\Service\Interface\LaboAppVariableInterface;
+use Aequation\LaboBundle\Service\Interface\AppEntityManagerInterface;
 
 /**
  * Defines the filters and functions used to render the bundle's templates.
@@ -67,6 +68,7 @@ class TwigExtensions extends AbstractExtension implements GlobalsInterface
             new TwigFunction('route_exists', [$this->appService, 'routeExists']),
             new TwigFunction('url_if_exists', [$this->appService, 'getUrlIfExists']),
             new TwigFunction('is_current_route', [$this->appService, 'isCurrentRoute']),
+            new TwigFunction('findEntitiesByCategorys', [$this, 'findEntitiesByCategorys']),
             // HTML tools & icons
             new TwigFunction('getImageBase64', [$this, 'getImageBase64']),
             new TwigFunction('decorate', [Strings::class, 'decorate']),
@@ -172,13 +174,35 @@ class TwigExtensions extends AbstractExtension implements GlobalsInterface
         return $icon;
     }
 
+    public function findEntitiesByCategorys(
+        string $entityClass,
+        array|string $categories = [],
+        ?string $search = null,
+        ?string $context = 'auto'
+    ): array
+    {
+        if(!class_exists($entityClass)) {
+            $entityClass = $this->appEntityManager->getClassnameByShortname($entityClass);
+        }
+        $repo = $this->appEntityManager->getRepository($entityClass);
+        if(method_exists($repo, 'findByCategorys')) {
+            return $repo->findByCategorys($categories, $search, $context);
+        } else if($this->appService->isDev()) {
+            throw new Exception("Repository ".get_class($repo)." has no method findByCategorys");
+        }
+        return [];
+    }
+
     public function getImageBase64(string $path): ?string
     {
         $path = preg_replace('#(resolve\\/)#', '', $path); // ?????
         $path = ltrim($path, '/');
         $path = $this->appService->getDir('public/'.$path);
         if(!file_exists($path)) {
-            throw new \Exception("File not found: $path");
+            if($this->appService->isDev()) {
+                throw new Exception("File not found: $path");
+            }
+            return null;
         }
         return @file_exists($path)
             ? 'data:image/'.pathinfo($path, PATHINFO_EXTENSION).';base64,'.base64_encode(file_get_contents($path))

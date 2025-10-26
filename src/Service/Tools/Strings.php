@@ -278,6 +278,23 @@ class Strings extends BaseService
      * HTML TEXTS
      *************************************************************************************/
 
+	public static function textOrNull(
+		mixed $element,
+		bool $striptags = false,
+		mixed $nullValue = null,
+	): ?string
+	{
+		if(is_object($element)) {
+			$element = $element instanceof Stringable
+				? $element->__toString()
+				: null;
+		}
+		$element = (string) $element;
+		return is_string($element) && strlen(trim(strip_tags($element)))
+			? trim($striptags ? strip_tags($element) : $element)
+			: $nullValue;
+	}
+
 	public static function hasText(
 		mixed $element
 	): bool
@@ -287,9 +304,9 @@ class Strings extends BaseService
 				? $element->__toString()
 				: null;
 		}
-		$element = (string)$element;
+		$element = (string) $element;
 		return is_string($element)
-			? strlen(strip_tags($element)) > 0
+			? strlen(trim(strip_tags($element))) > 0
 			: false;
 	}
 

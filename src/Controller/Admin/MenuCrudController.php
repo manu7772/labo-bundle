@@ -145,18 +145,18 @@ class MenuCrudController extends BaseCrudController
             default:
                 yield IdField::new('id')->setPermission('ROLE_SUPER_ADMIN');
                 yield TextField::new('name', 'Nom');
-                yield TextField::new('slug');
+                yield TextField::new('slug')->setPermission('ROLE_SUPER_ADMIN');
                 yield ThumbnailField::new('photo', 'Photo')
                     ->setBasePath($this->getParameter('vich_dirs.item_photo'))
                     ->setTextAlign('center')
                     ->setSortable(false);
                 yield AssociationField::new('webpage', 'Page web');
-                yield AssociationField::new('items', 'Éléments du menu')->setTextAlign('center');
-                yield IntegerField::new('orderitem', 'Ord.');
+                yield AssociationField::new('items', 'Nb éléments')->setTextAlign('center');
+                yield IntegerField::new('orderitem', 'Ord.')->setPermission('ROLE_SUPER_ADMIN');
                 yield BooleanField::new('prefered', 'Menu principal')->setTextAlign('center');
                 yield BooleanField::new('enabled', 'Activé')->setTextAlign('center');
-                yield AssociationField::new('owner', 'Propriétaire');
-                yield DateTimeField::new('createdAt', 'Création')->setFormat('dd/MM/Y - HH:mm')->setTimezone($this->getLaboContext()->getTimezone())->setTextAlign('right');
+                // yield AssociationField::new('owner', 'Propriétaire');
+                // yield DateTimeField::new('createdAt', 'Création')->setFormat('dd/MM/Y - HH:mm')->setTimezone($this->getLaboContext()->getTimezone())->setTextAlign('right');
                 break;
         }
     }

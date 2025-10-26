@@ -141,7 +141,7 @@ abstract class Image extends Item implements ImageInterface
         $referenceType = UrlGeneratorInterface::ABSOLUTE_URL
     ): ?string
     {
-        $filter ??= $this->getLiipDefaultFilter();
+        $filter ??= $this->getImagefilter();
         return $this->_appManaged->manager->getBrowserPath($this, $filter, $runtimeConfig, $resolver, $referenceType);
     }
 
@@ -236,7 +236,7 @@ abstract class Image extends Item implements ImageInterface
 
     public function getImagefilter(): ?string
     {
-        return $this->imagefilter ??= static::DEFAULT_LIIP_FILTER;
+        return $this->imagefilter ??= $this->getLiipDefaultFilter();
     }
 
     public function setImagefilter(?string $imagefilter): static

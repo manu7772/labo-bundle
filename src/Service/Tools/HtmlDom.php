@@ -2,11 +2,10 @@
 namespace Aequation\LaboBundle\Service\Tools;
 
 use Aequation\LaboBundle\Service\Base\BaseService;
-
+// PHP
+use Twig\Markup;
 use DOMDocument;
 use DOMXPath;
-use Symfony\UX\StimulusBundle\Dto\StimulusAttributes;
-use Twig\Markup;
 
 class HtmlDom extends BaseService
 {

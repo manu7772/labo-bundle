@@ -91,7 +91,7 @@ abstract class LaboRelink extends Item implements LaboRelinkInterface
     protected ?string $linktitle = null;
 
     #[ORM\Column(type: 'text', nullable: true)]
-    protected ?string $subtype = null;
+    protected ?string $subtype = null; // set to TUTORIAL for tutorial video links
 
 
     /**

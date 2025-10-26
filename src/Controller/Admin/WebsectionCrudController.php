@@ -267,27 +267,32 @@ class WebsectionCrudController extends BaseCrudController
                         break;
                 }
 
-                yield FormField::addPanel('Liens externes', Urlink::ICON);
-                    yield CollectionField::new('relinks', 'Urls')
-                        ->setLabel(false)
-                        ->useEntryCrudForm(UrlinkCrudController::class, 'new_embeded', 'edit_embeded')
-                        ->setEntryToStringMethod(fn (?LaboRelinkInterface $entity) => $entity ? (empty($entity->getName()) ? $entity->getLinktitle() : $entity->getName()) : '---')
-                        ->setColumns(12)
-                        ->setEntryIsComplex(true)
-                        ->setFormTypeOption('by_reference', false)
-                        ->setEmptyData(fn (FormInterface $form) => $this->appEntityManager->getNew(UrlinkCrudController::ENTITY))
-                        ;
+                // yield FormField::addPanel('Liens externes', Urlink::ICON);
+                //     yield CollectionField::new('relinks', 'Urls')
+                //         ->setLabel(false)
+                //         ->useEntryCrudForm(UrlinkCrudController::class, 'new_embeded', 'edit_embeded')
+                //         ->setEntryToStringMethod(fn (?LaboRelinkInterface $entity) => $entity ? (empty($entity->getName()) ? $entity->getLinktitle() : $entity->getName()) : '---')
+                //         ->setColumns(12)
+                //         ->setEntryIsComplex(true)
+                //         ->setFormTypeOption('by_reference', false)
+                //         ->setEmptyData(fn (FormInterface $form) => $this->appEntityManager->getNew(UrlinkCrudController::ENTITY))
+                //         ;
                     // yield FormField::addTab(label: false, icon: Videolink::ICON);
                     yield FormField::addPanel('Vidéos', Videolink::ICON);
-                    yield CollectionField::new('videolinks', 'Vidéos')
-                        ->setLabel(false)
-                        ->useEntryCrudForm(VideolinkCrudController::class, 'new_embeded', 'edit_embeded')
-                        ->setEntryToStringMethod(fn (?LaboRelinkInterface $entity) => $entity ? (empty($entity->getName()) ? $entity->getLinktitle() : $entity->getName()) : '---')
+                    yield AssociationField::new('videolinks', 'Vidéos')
+                        ->setFormTypeOptions(['by_reference' => false])
                         ->setColumns(12)
-                        ->setEntryIsComplex(true)
-                        ->setFormTypeOption('by_reference', false)
-                        // ->setEmptyData(fn (FormInterface $form) => $this->appEntityManager->getNew(VideolinkCrudController::ENTITY))
+                        ->setCrudController(VideolinkCrudController::class)
                         ;
+                    // yield CollectionField::new('videolinks', 'Vidéos')
+                    //     ->setLabel(false)
+                    //     ->useEntryCrudForm(VideolinkCrudController::class, 'new_embeded', 'edit_embeded')
+                    //     ->setEntryToStringMethod(fn (?LaboRelinkInterface $entity) => $entity ? (empty($entity->getName()) ? $entity->getLinktitle() : $entity->getName()) : '---')
+                    //     ->setColumns(12)
+                    //     ->setEntryIsComplex(true)
+                    //     ->setFormTypeOption('by_reference', false)
+                    //     // ->setEmptyData(fn (FormInterface $form) => $this->appEntityManager->getNew(VideolinkCrudController::ENTITY))
+                    //     ;
                     // yield CollectionField::new('test','Tests')
                     //     ->allowAdd(true)
                     //     ->allowDelete(true)
@@ -311,29 +316,29 @@ class WebsectionCrudController extends BaseCrudController
                     //     )
                     //     ->setColumns(12)
                     //     ;
-                    yield MultitextsField::new('multitexts','MULTI Textes de la section ['.$this->getLaboContext()->getInstance()->getSectiontype().']')
-                        ->setFormTypeOptions([
-                            'mapped' => false,
-                            'by_reference' => false,
-                        ])
-                        // ->renderExpanded(true)
-                        ->setColumns(12)
-                        ;
-                    yield CollectionField::new('texts','Textes de la section ['.$this->getLaboContext()->getInstance()->getSectiontype().']')
-                        ->setEntryType(CKEditorType::class)
-                        ->allowAdd(true)
-                        ->allowDelete(true)
-                        ->showEntryLabel(false)
-                        ->setFormTypeOptions([
-                            'mapped' => false,
-                            'by_reference' => false,
-                            // 'entry_options' => [
-                            //     'attr' => ['style' => 'width: 100%; min-height: 200px;'],
-                            // ]
-                        ])
-                        // ->renderExpanded(true)
-                        ->setColumns(12)
-                        ;
+                    // yield MultitextsField::new('multitexts','MULTI Textes de la section ['.$this->getLaboContext()->getInstance()->getSectiontype().']')
+                    //     ->setFormTypeOptions([
+                    //         'mapped' => false,
+                    //         'by_reference' => false,
+                    //     ])
+                    //     // ->renderExpanded(true)
+                    //     ->setColumns(12)
+                    //     ;
+                    // yield CollectionField::new('texts','Textes de la section ['.$this->getLaboContext()->getInstance()->getSectiontype().']')
+                    //     ->setEntryType(CKEditorType::class)
+                    //     ->allowAdd(true)
+                    //     ->allowDelete(true)
+                    //     ->showEntryLabel(false)
+                    //     ->setFormTypeOptions([
+                    //         'mapped' => false,
+                    //         'by_reference' => false,
+                    //         // 'entry_options' => [
+                    //         //     'attr' => ['style' => 'width: 100%; min-height: 200px;'],
+                    //         // ]
+                    //     ])
+                    //     // ->renderExpanded(true)
+                    //     ->setColumns(12)
+                    //     ;
                 // yield AssociationField::new('categorys')->setQueryBuilder(static fn (QueryBuilder $qb): QueryBuilder => CategoryRepository::QB_CategoryChoices($qb, Websection::class))
                 //     // ->autocomplete()
                 //     ->setSortProperty('name')

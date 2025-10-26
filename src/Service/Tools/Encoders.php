@@ -10,6 +10,7 @@ use Countable;
 use DateTime;
 use DateTimeInterface;
 use SplFileInfo;
+use Stringable;
 use Symfony\Component\String\ByteString;
 use Twig\Markup;
 
@@ -78,9 +79,12 @@ class Encoders extends BaseService
      * IS URL (HTTP(S))
      *************************************************************************************/
 
-    public static function isUrl(string $url): bool
+    public static function isUrl(mixed $url): bool
     {
-        return filter_var($url, FILTER_VALIDATE_URL) !== false;
+        if(is_object($url) && !($url instanceof Stringable)) {
+            return false;
+        }
+        return filter_var((string) $url, FILTER_VALIDATE_URL) !== false;
     }
 
     /*************************************************************************************

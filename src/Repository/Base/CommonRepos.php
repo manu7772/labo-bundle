@@ -4,6 +4,7 @@ namespace Aequation\LaboBundle\Repository\Base;
 use Aequation\LaboBundle\Model\Interface\AppEntityInterface;
 use Aequation\LaboBundle\Model\Interface\EnabledInterface;
 use Aequation\LaboBundle\Model\Interface\HasOrderedInterface;
+use Aequation\LaboBundle\Model\Interface\LaboCategoryInterface;
 use Aequation\LaboBundle\Model\Interface\SlugInterface;
 use Aequation\LaboBundle\Model\Interface\LaboUserInterface;
 use Aequation\LaboBundle\Repository\Interface\CommonReposInterface;
@@ -176,6 +177,32 @@ abstract class CommonRepos extends ServiceEntityRepository implements CommonRepo
             }
         }
         return true;
+    }
+
+
+    /*************************************************************************************************/
+    /** TRY FIND BY CATEGORYS                                                                        */
+    /*************************************************************************************************/
+
+    public function findByCategorys(
+        string|array $categories,
+        ?array $search = null,
+        string $context = 'auto',
+    ): array
+    {
+        $qb = $this->getQB_findBy(search: $search, context: $context);
+        if(is_a(static::ENTITY_CLASS, LaboCategoryInterface::class, true)) {
+            $categories = (array)$categories;
+            $alias = static::getAlias($qb);
+            if(count($categories)) {
+                $qb->leftJoin($alias.'.categories', 'categories')
+                    ->andWhere('categories.name IN (:cats)')
+                    ->setParameter('cats', array_map(fn($cat) => is_object($cat) ? $cat->getName() : $cat, $categories))
+                    ->groupBy($alias.'.id')
+                    ;
+            }
+        }
+        return $qb->getQuery()->getResult();
     }
 
 
