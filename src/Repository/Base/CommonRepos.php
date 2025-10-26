@@ -191,18 +191,35 @@ abstract class CommonRepos extends ServiceEntityRepository implements CommonRepo
     ): array
     {
         $qb = $this->getQB_findBy(search: $search, context: $context);
-        if(is_a(static::ENTITY_CLASS, LaboCategoryInterface::class, true)) {
+        if($this->hasRelation('categorys')) {
+            // dump($categories, $search, $context);
             $categories = (array)$categories;
             $alias = static::getAlias($qb);
             if(count($categories)) {
-                $qb->leftJoin($alias.'.categories', 'categories')
-                    ->andWhere('categories.name IN (:cats)')
-                    ->setParameter('cats', array_map(fn($cat) => is_object($cat) ? $cat->getName() : $cat, $categories))
-                    ->groupBy($alias.'.id')
-                    ;
+                $qb->leftJoin($alias.'.categorys', 'categorys');
+                // $qb->addSelect('COUNT(categorys) AS HIDDEN catsCount');
+                // $qb->having($qb->expr()->gte('catsCount', 1));
+                if(array_is_list($categories)) {
+                    $qb->andWhere('categorys.name IN (:cats)')
+                        ->setParameter('cats', array_map(fn($cat) => is_object($cat) ? $cat->getName() : $cat, $categories))
+                        ->groupBy($alias.'.id, categorys.id')
+                        ;
+                } else {
+                    foreach ($categories as $field => $cats) {
+                        if(!is_array($cats)) $cats = [$cats];
+                        if(count($cats)) {
+                            $qb->andWhere('categorys.'.$field.' IN (:'.$alias.'_'.$field.'s)')
+                                ->setParameter($alias.'_'.$field.'s', array_map(fn($cat) => is_object($cat) ? $cat->getName() : $cat, $cats))
+                                ;
+                        }
+                    }
+                    $qb->groupBy($alias.'.id, categorys.id');
+                }
             }
         }
-        return $qb->getQuery()->getResult();
+        $result = $qb->getQuery()->getResult();
+        // dump($qb->getDQL(), $result);
+        return $result;
     }
 
 
