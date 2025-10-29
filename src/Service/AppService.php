@@ -682,6 +682,8 @@ class AppService extends BaseService implements AppServiceInterface
         //     $metas[] = '<meta name="turbo-refresh-scroll" content="'.$turbo_refresh.'">';
         // }
         // $metas[] = '<meta name="turbo-refresh-method" content="morph">';
+        // Turbo prefetch
+        $metas[] = '<meta name="turbo-prefetch" content="false">';
         $html = implode(PHP_EOL, $metas);
         return $asMarkup
             ? Strings::markup(html: $html)

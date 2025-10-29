@@ -9,10 +9,8 @@ use Twig\TwigFilter;
 use Twig\TwigFunction;
 use Symfony\UX\Icons\IconRenderer;
 use Twig\Extension\GlobalsInterface;
-use Twig\Extension\AbstractExtension;
-use Aequation\LaboBundle\Entity\Image;
-use Doctrine\Common\Collections\Collection;
 
+use Twig\Extension\AbstractExtension;
 use Aequation\LaboBundle\Service\AppService;
 use Aequation\LaboBundle\Service\Tools\Icons;
 use Aequation\LaboBundle\Service\Tools\Times;
@@ -23,12 +21,15 @@ use Aequation\LaboBundle\Service\Tools\Encoders;
 use Symfony\Component\HttpKernel\KernelInterface;
 use EasyCorp\Bundle\EasyAdminBundle\Dto\EntityDto;
 use Symfony\Contracts\Translation\TranslatorInterface;
-use Aequation\LaboBundle\Model\Interface\ImageInterface;
 
+use Aequation\LaboBundle\Model\Interface\ImageInterface;
 use Symfony\Contracts\Translation\TranslatableInterface;
+use Aequation\LaboBundle\Model\Interface\AppEntityInterface;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
+use Aequation\LaboBundle\Repository\Interface\CommonReposInterface;
 use Aequation\LaboBundle\Service\Interface\LaboAppVariableInterface;
 use Aequation\LaboBundle\Service\Interface\AppEntityManagerInterface;
+use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 
 /**
  * Defines the filters and functions used to render the bundle's templates.
@@ -69,6 +70,7 @@ class TwigExtensions extends AbstractExtension implements GlobalsInterface
             new TwigFunction('url_if_exists', [$this->appService, 'getUrlIfExists']),
             new TwigFunction('is_current_route', [$this->appService, 'isCurrentRoute']),
             new TwigFunction('findEntitiesByCategorys', [$this, 'findEntitiesByCategorys']),
+            new TwigFunction('findEntityBy', [$this, 'findEntityBy']),
             // HTML tools & icons
             new TwigFunction('getImageBase64', [$this, 'getImageBase64']),
             new TwigFunction('decorate', [Strings::class, 'decorate']),
@@ -119,6 +121,7 @@ class TwigExtensions extends AbstractExtension implements GlobalsInterface
             new TwigFilter('normalize', [$this->appService, 'getNormalized']),
             new TwigFilter('htmlentities', [$this, 'getHtmlentities']),
             new TwigFilter('isImageEntity', [$this, 'isImageEntity']),
+            new TwigFilter('uid', [$this, 'getUid']),
         ];
     }
 
@@ -184,13 +187,33 @@ class TwigExtensions extends AbstractExtension implements GlobalsInterface
         if(!class_exists($entityClass)) {
             $entityClass = $this->appEntityManager->getClassnameByShortname($entityClass);
         }
+        /** @var CommonReposInterface */
         $repo = $this->appEntityManager->getRepository($entityClass);
-        if(method_exists($repo, 'findByCategorys')) {
+        if($repo && method_exists($repo, 'findByCategorys')) {
             return $repo->findByCategorys($categories, $search, $context);
         } else if($this->appService->isDev()) {
-            throw new Exception("Repository ".get_class($repo)." has no method findByCategorys");
+            throw new Exception("Repository not found for entity ".$entityClass." or has no method findByCategorys");
         }
         return [];
+    }
+
+    public function findEntityBy(
+        string $entityClass,
+        array $criteria,
+        ?array $orderBy = null
+    ): ?object
+    {
+        if(!class_exists($entityClass)) {
+            $entityClass = $this->appEntityManager->getClassnameByShortname($entityClass);
+        }
+        /** @var ServiceEntityRepository */
+        $repo = $this->appEntityManager->getRepository($entityClass);
+        if($repo) {
+            return $repo->findOneBy($criteria, $orderBy);
+        } else if($this->appService->isDev()) {
+            throw new Exception("Repository not found for entity ".$entityClass);
+        }
+        return null;
     }
 
     public function getImageBase64(string $path): ?string
@@ -351,5 +374,28 @@ class TwigExtensions extends AbstractExtension implements GlobalsInterface
         return false;
     }
 
+    public function getUid(mixed $object, ?string $prefix = null): ?string
+    {
+        switch(true) {
+            case is_string($object):
+                return (strlen((string) $prefix) ? $prefix.'-' : '').md5($object);
+                break;
+            case is_int($object):
+                return (strlen((string) $prefix) ? $prefix.'-' : '').$object;
+                break;
+            case is_float($object):
+                return (strlen((string) $prefix) ? $prefix.'-' : '').md5(str_replace('.', '_', (string)$object));
+                break;
+            case $object instanceof AppEntityInterface:
+                return (strlen((string) $prefix) ? $prefix.'-' : '').md5($object->getEuid());
+                break;
+            case is_object($object):
+                return (strlen((string) $prefix) ? $prefix.'-' : '').spl_object_id($object);
+                break;
+            default:
+                return null;
+                break;
+        }
+    }
 
 }

@@ -24,6 +24,8 @@ interface CommonReposInterface extends ServiceEntityRepositoryInterface
     public static function getQB_orderedChoicesList(QueryBuilder $qb, string|HasOrderedInterface $classOrEntity, string $property): QueryBuilder;
     public static function checkFromAndSearchClasses(QueryBuilder $qb, array|string $classes, bool $throwsException = false): bool;
 
+    public function findByCategorys(string|array $categories, ?array $search = null, string $context = 'auto'): array;
+
     // QueryBuilders
     public function getQB_findBy(?array $search, string $context = 'auto'): QueryBuilder;
 
