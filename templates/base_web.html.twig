@@ -18,8 +18,8 @@
 	</head>
 	{# {% set test = app.session.set('darkmode', true) %} #}
 	{% block body_outer %}
-	{# <body id="app"{{ app.service.getDataTurboBodyAttrs() }} data-app="{{ app.service.appParams(true, 'public_app') }}" class="nav-fixed" {{ stimulus_controller('globalapp') }}> #}
-	<body id="app"{{ app.service.getDataTurboBodyAttrs() }} class="nav-fixed" {{ stimulus_controller('globalapp') }}>
+	{# <body id="app" data-app="{{ app.service.appParams(true, 'public_app') }}" class="nav-fixed" {{ stimulus_controller('globalapp') }}> #}
+	<body id="app" class="nav-fixed" {{ stimulus_controller('globalapp') }}>
 		{% block body_inner %}
 		{% block navbar %}
 			{% if menu is defined %}

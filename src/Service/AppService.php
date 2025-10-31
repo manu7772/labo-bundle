@@ -665,12 +665,6 @@ class AppService extends BaseService implements AppServiceInterface
     /** TURBO                                                                                                   */
     /************************************************************************************************************/
 
-    public function getDataTurboBodyAttrs(): string
-    {
-        $test = false;
-        return $test ? ' data-turbo=false' : '';
-    }
-
     public function getTurboMetas(
         bool $asMarkup = true,
     ): string|Markup
@@ -683,7 +677,7 @@ class AppService extends BaseService implements AppServiceInterface
         // }
         // $metas[] = '<meta name="turbo-refresh-method" content="morph">';
         // Turbo prefetch
-        $metas[] = '<meta name="turbo-prefetch" content="false">';
+        // $metas[] = '<meta name="turbo-prefetch" content="false">';
         $html = implode(PHP_EOL, $metas);
         return $asMarkup
             ? Strings::markup(html: $html)

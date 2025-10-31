@@ -83,7 +83,6 @@ interface AppServiceInterface extends ServiceInterface
     // public function isPublic(): bool;
     // public function isPrivate(): bool;
     // Turbo
-    public function getDataTurboBodyAttrs(): string;
     public function getTurboMetas(bool $asMarkup = true): string|Markup;
     public function isTurboFrameRequest(?Request $request = null): bool;
     public function isTurboStreamRequest(?Request $request = null, bool $prepareRequest = true): bool;
