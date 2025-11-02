@@ -108,6 +108,7 @@ class TwigExtensions extends AbstractExtension implements GlobalsInterface
         return [
             new TwigFilter('textToBr', [$this, 'textToBr']),
             new TwigFilter('ucfirst', [$this, 'getUcfirst']),
+            new TwigFilter('preg_replace', [$this, 'getPregReplace']),
             new TwigFilter('slug', [Strings::class, 'getSlug']),
             new TwigFilter('formateForWebpage', [Strings::class, 'formateForWebpage']),
             new TwigFilter('hasText', [Strings::class, 'hasText']),
@@ -315,6 +316,11 @@ class TwigExtensions extends AbstractExtension implements GlobalsInterface
     public function getUcfirst(string $string): string
     {
         return ucfirst($string);
+    }
+
+    public function getPregReplace(string $string, string $pattern, string $replacement): string
+    {
+        return preg_replace($pattern, $replacement, $string) ?? $string;
     }
 
     public function flashesToSJson(array $flashes): string
