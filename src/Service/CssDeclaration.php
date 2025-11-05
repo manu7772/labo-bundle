@@ -327,7 +327,7 @@ class CssDeclaration extends BaseService implements CssDeclarationInterface
                                 $html = [];
                                 $html['initial'] = $htc->property->getValue($entity);
                                 // dump('HTML Content for '.get_class($entity).'#'.$entity->getId().' ('.$htc->property->name.'): '.(empty($html) ? 'EMPTY' : $html));
-                                if(empty(strip_tags($html['initial']))) {
+                                if(empty(strip_tags($html['initial'] ?? ''))) {
                                     // Remove file if exists
                                     if(!empty($old)) {
                                         // dd('Remove file for html content:'.PHP_EOL.'File: '.$this->filepath.DIRECTORY_SEPARATOR.$filename);
