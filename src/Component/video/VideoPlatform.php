@@ -85,6 +85,11 @@ abstract class VideoPlatform implements VideoPlatformInterface
                 if(!@$this->source_code->loadHTMLFile($url, LIBXML_NOERROR | LIBXML_NOWARNING)) {
                     $this->source_code = null;
                 }
+                $errors = libxml_get_errors();
+                foreach ($errors as $error) {
+                    // Handle each error
+                    print_r($error->message.PHP_EOL);
+                }
                 libxml_clear_errors();
                 libxml_use_internal_errors(false);
             } else {
