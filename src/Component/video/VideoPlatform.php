@@ -81,7 +81,7 @@ abstract class VideoPlatform implements VideoPlatformInterface
         if(!isset($this->source_code) || $force) {
             if($url = $this->getGeneratedUrl()) {
                 $this->source_code = new DOMDocument();
-                if(!@$this->source_code->loadHTMLFile($url)) {
+                if(!@$this->source_code->loadHTMLFile($url, LIBXML_NOERROR | LIBXML_NOWARNING)) {
                     $this->source_code = null;
                 }
             } else {
@@ -165,6 +165,7 @@ abstract class VideoPlatform implements VideoPlatformInterface
     /** @see https://onlinephp.io/c/3a878 */
     public function getTitleFromWeb(): string
     {
+        // return static::VIDEO_DEFAULT_TITLE;
         $title = $this->getSourceCode()?->getElementsByTagName('title')?->item(0)?->nodeValue ?: null;
         $title = trim(iconv('utf-8', 'latin1', $title ?? ''));
         return Strings::textOrNull($title, false) ?: static::VIDEO_DEFAULT_TITLE;
