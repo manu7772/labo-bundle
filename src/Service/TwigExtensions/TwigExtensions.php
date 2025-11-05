@@ -3,13 +3,14 @@ namespace Aequation\LaboBundle\Service\TwigExtensions;
 
 use DateTime;
 use Exception;
+use Throwable;
 use Stringable;
 use Twig\Markup;
 use Twig\TwigFilter;
 use Twig\TwigFunction;
 use Symfony\UX\Icons\IconRenderer;
-use Twig\Extension\GlobalsInterface;
 
+use Twig\Extension\GlobalsInterface;
 use Twig\Extension\AbstractExtension;
 use Aequation\LaboBundle\Service\AppService;
 use Aequation\LaboBundle\Service\Tools\Icons;
@@ -20,12 +21,15 @@ use Aequation\LaboBundle\Service\Tools\Strings;
 use Aequation\LaboBundle\Service\Tools\Encoders;
 use Symfony\Component\HttpKernel\KernelInterface;
 use EasyCorp\Bundle\EasyAdminBundle\Dto\EntityDto;
-use Symfony\Contracts\Translation\TranslatorInterface;
 
+use Liip\ImagineBundle\Imagine\Cache\CacheManager;
+use Symfony\Contracts\Translation\TranslatorInterface;
 use Aequation\LaboBundle\Model\Interface\ImageInterface;
 use Symfony\Contracts\Translation\TranslatableInterface;
+use Liip\ImagineBundle\Imagine\Filter\FilterConfiguration;
 use Aequation\LaboBundle\Model\Interface\AppEntityInterface;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
+use Aequation\LaboBundle\Service\Interface\ImageServiceInterface;
 use Aequation\LaboBundle\Repository\Interface\CommonReposInterface;
 use Aequation\LaboBundle\Service\Interface\LaboAppVariableInterface;
 use Aequation\LaboBundle\Service\Interface\AppEntityManagerInterface;
@@ -50,6 +54,7 @@ class TwigExtensions extends AbstractExtension implements GlobalsInterface
         #[Autowire(service: '.ux_icons.icon_renderer')]
         private IconRenderer $iconRenderer,
         private TranslatorInterface $translator,
+        protected ImageServiceInterface $imageService
     ) {
         $this->appEntityManager = $this->appService->get(AppEntityManagerInterface::class);
     }
@@ -90,6 +95,9 @@ class TwigExtensions extends AbstractExtension implements GlobalsInterface
             new TwigFunction('printFiles', [Encoders::class, 'getPrintFiles']),
             // Globals added to twig
             new TwigFunction('globals', [$this, 'getGlobals']),
+            new TwigFunction('liipfilters', [$this, 'getLiipFilters']),
+            new TwigFunction('liipformat', [$this, 'getLiipFormat']),
+            new TwigFunction('getImageInfo', [$this->imageService, 'getImageInfo']),
         ];
 
         if($this->kernel->getEnvironment() !== 'dev') {
@@ -136,6 +144,50 @@ class TwigExtensions extends AbstractExtension implements GlobalsInterface
             'currentYear' => $this->getCurrentYear(),
             'Identity' => $this->appService->getMainEntreprise(),
         ];
+    }
+
+    public function getLiipFilters(): array
+    {
+        return $this->imageService->getLiipFilters()->all();
+    }
+
+    public function getLiipFormat(string $filter): string
+    {
+        try {
+            $config = $this->imageService->getLiipFilters()->get($filter);
+        } catch (Throwable $th) {
+            trigger_error("LiipImagine filter '$filter' not found: ".$th->getMessage(), E_USER_WARNING);
+            return 'undefined';
+        }
+        if(!isset($config['filters']) || !is_array($config['filters']) || empty($config['filters'])) {
+            return 'undefined';
+        }
+        $size = null;
+        foreach ($config['filters'] as $filter_name => $data) {
+            switch (true) {
+                case in_array($filter_name, ['scale']):
+                    if(is_array($data['dim'] ?? null) && count($data['dim']) >= 2) {
+                        $size = ['width' => $data['dim'][0], 'height' => $data['dim'][1]];
+                        break 2;
+                    }
+                    break;
+                case in_array($filter_name, ['thumbnail', 'crop']):
+                    if(is_array($data['size'] ?? null) && count($data['size']) >= 2) {
+                        $size = ['width' => $data['size'][0], 'height' => $data['size'][1]];
+                        break 2;
+                    }
+                    break;
+                case in_array($filter_name, ['fixed']):
+                    $size = ['width' => $data['width'] ?? $data['height'], 'height' => $data['height'] ?? $data['width']];
+                    break 2;
+            }
+        }
+        if(!is_array($size) || count($size) < 2) {
+            return 'undefined';
+        }
+        return $size['width'] > $size['height'] * 1.5
+            ? 'landscape'
+            : 'portrait';
     }
 
 

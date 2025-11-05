@@ -150,9 +150,7 @@ abstract class Image extends Item implements ImageInterface
         return $this->liipDefaultFilter ??= static::DEFAULT_LIIP_FILTER;
     }
 
-    public function setLiipDefaultFilter(
-        string $liipDefaultFilter
-    ): static
+    public function setLiipDefaultFilter(string $liipDefaultFilter): static
     {
         $this->liipDefaultFilter = $liipDefaultFilter;
         return $this;
@@ -221,9 +219,11 @@ abstract class Image extends Item implements ImageInterface
         return $this;
     }
 
-    public function getDimensions(): ?string
+    public function getDimensions(bool $asArray = false): null|string|array
     {
-        return $this->dimensions;
+        return $asArray
+            ? explode('x', $this->dimensions)
+            : $this->dimensions;
     }
 
     public function setDimensions(mixed $dimensions): static
