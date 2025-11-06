@@ -282,7 +282,7 @@ class Strings extends BaseService
 		mixed $element,
 		bool $striptags = false,
 		mixed $nullValue = null,
-	): ?string
+	): mixed
 	{
 		if(is_object($element)) {
 			$element = $element instanceof Stringable
