@@ -998,7 +998,7 @@ class AppEntityManager extends BaseService implements AppEntityManagerInterface
                     break;
                 case array_key_exists($property, $cmd->fieldMappings):
                     // Column
-                    switch($cmd->fieldMappings[$property]['type']) {
+                    switch($cmd->fieldMappings[$property]->type) {
                         // case 'json':
                         //     $propertyAccessor->setValue($entity, $property, (array)$value);
                         //     break;
