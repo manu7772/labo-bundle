@@ -77,7 +77,7 @@ interface AppContextInterface extends JsonSerializable
     public function isPrivate(): bool;
     public function getFirewall(): string;
     public function getFirewallConfig(): ?FirewallConfig;
-    public function getFirewallName(): string;
+    public function getFirewallName(): ?string;
     public function getFirewalls(): array;
     public function getMainFirewalls(): array;
     public function getFirewallChoices(bool $onlyMains = true): array;

@@ -651,7 +651,7 @@ class AppContextTemp implements AppContextInterface
         return $this->request ? $this->security->getFirewallConfig($this->request) : null;
     }
 
-    public function getFirewallName(): string
+    public function getFirewallName(): ?string
     {
         return $this->_firewall;
     //     $firewallConfig ??= empty($this->request) ? null : $this->security->getFirewallConfig($this->request);

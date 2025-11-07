@@ -27,13 +27,12 @@ abstract class VideoPlatform implements VideoPlatformInterface
     public string $url; // Original given URL
     public ?DOMDocument $source_code; // Raw HTML source code of the video page
     public string $id; // Video ID
-    public string $title; // Video title
+    public readonly string $title; // Video title
     protected bool $alive; // Is the video alive (tested once)
 
     public function __construct(?string $url = null)
     {
         $this->setUrl((string) $url);
-        // dump($this->getTitle());
     }
 
 
@@ -162,26 +161,28 @@ abstract class VideoPlatform implements VideoPlatformInterface
 
     public function getTitle(): string
     {
-        if(!Strings::hasText($this->title ?? null) || $this->title === static::VIDEO_DEFAULT_TITLE) {
-            $this->title = $this->getTitleFromWeb();
+        if(!isset($this->title)) {
+            $title = (string) $this->getSourceCode()?->getElementsByTagName('title')?->item(0)?->nodeValue ?: null;
+            $title = trim(iconv('utf-8', 'latin1', $title));
+            $this->title = Strings::textOrNull($title, true, static::VIDEO_DEFAULT_TITLE);
         }
-        return Strings::textOrNull($this->title, false) ?: static::VIDEO_DEFAULT_TITLE;
+        return $this->title;
     }
 
-    /** @see https://onlinephp.io/c/3a878 */
-    public function getTitleFromWeb(): string
-    {
-        // return static::VIDEO_DEFAULT_TITLE;
-        $title = $this->getSourceCode()?->getElementsByTagName('title')?->item(0)?->nodeValue ?: null;
-        $title = trim(iconv('utf-8', 'latin1', $title ?? ''));
-        return Strings::textOrNull($title, false) ?: static::VIDEO_DEFAULT_TITLE;
-    }
+    // /** @see https://onlinephp.io/c/3a878 */
+    // public function getTitleFromWeb(): string
+    // {
+    //     // return static::VIDEO_DEFAULT_TITLE;
+    //     $title = (string) $this->getSourceCode()?->getElementsByTagName('title')?->item(0)?->nodeValue ?: null;
+    //     $title = trim(iconv('utf-8', 'latin1', $title));
+    //     return Strings::textOrNull($title, true, static::VIDEO_DEFAULT_TITLE);
+    // }
 
-    public function setTitle(string $title): static
-    {
-        $this->title = Strings::textOrNull($title, false) ?: static::VIDEO_DEFAULT_TITLE;
-        return $this;
-    }
+    // public function setTitle(string $title): static
+    // {
+    //     $this->title = Strings::textOrNull($title, false) ?: static::VIDEO_DEFAULT_TITLE;
+    //     return $this;
+    // }
 
 
     /** URL ****************************************************************************************************************************************/

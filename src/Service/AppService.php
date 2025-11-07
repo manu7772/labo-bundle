@@ -184,7 +184,7 @@ class AppService extends BaseService implements AppServiceInterface
         ?SessionInterface $session = null
     ): bool
     {
-        $this->surveyRecursion(__METHOD__);
+        // $this->surveyRecursion(__METHOD__.'::line_'.__LINE__, 20);
         if($session instanceof SessionInterface && !($this->session instanceof SessionInterface)) {
             $this->session = $session;
         }

@@ -47,10 +47,12 @@ class VPlatformYoutube extends VideoPlatform
 
     public function getTitle(): string
     {
-        $parent_title = parent::getTitle();
-        return $this->title = $parent_title === $this->getTitleFromWeb()
-            ? preg_replace('/\s*-\s*YouTube$/', '', $parent_title)
-            : $parent_title;
+        // return static::VIDEO_DEFAULT_TITLE;
+        return preg_replace('/\s*-\s*YouTube$/i', '', parent::getTitle());
+        // $parent_title = parent::getTitle();
+        // return $this->title = $parent_title === $this->getTitleFromWeb()
+        //     ? preg_replace('/\s*-\s*YouTube$/i', '', $parent_title)
+        //     : $parent_title;
     }
 
     public function getIframe(array $options = []): ?Markup

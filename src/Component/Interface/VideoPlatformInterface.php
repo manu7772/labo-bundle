@@ -21,8 +21,8 @@ interface VideoPlatformInterface
     public function getThumbnail(?string $quality = null): ?string;
     public function getThumbnailQualitys(): array;
     public function getTitle(): string;
-    public function getTitleFromWeb(): string;
-    public function setTitle(string $title): static;
+    // public function getTitleFromWeb(): string;
+    // public function setTitle(string $title): static;
     public function getUrl(): ?string;
     public function setUrl(string $url): static;
     public function isUrlValid(): bool;
