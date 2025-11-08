@@ -48,13 +48,13 @@ class LaboController extends CommonController
      */
     #[Route(path: '/css/{action?}/{data?}', name: 'css', methods: ["get","post"])]
     public function css(
-        ?string $action = null,
-        ?string $data = null,
         LaboBundleServiceInterface $laboService,
         CssDeclarationInterface $cssDeclaration,
         #[Autowire(service: 'tailwind.builder')]
         TailwindBuilder $tailwindBuilder,
         Request $request,
+        ?string $action = null,
+        ?string $data = null,
     ): Response
     {
         $action_info = [];
