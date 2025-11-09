@@ -151,6 +151,7 @@ class LaboAppGlobalSubscriber implements EventSubscriberInterface
     public function onController(ControllerEvent $event): void
     {
         if(!$event->isMainRequest()) return;
+        // if($this->appService->isDev()) dump($event->getRequest()->getSession()->get(static::TEST_PASSED_NAME, false));
         $this->initAppContext($event);
         // $event->getRequest()->getSession()->set(static::TEST_PASSED_NAME, false);
         // dd($this->appService->getRoute(), $this->appService->getParameter('lauch_website', null));
@@ -162,7 +163,7 @@ class LaboAppGlobalSubscriber implements EventSubscriberInterface
             if($controller instanceof AbstractController) {
                 $host = $event->getRequest()->getHost();
                 $website_host = preg_replace('/^(www\.)/', '', $this->appService->getParameter('router.request_context.host', []));
-
+                if($this->appService->isDev()) dump($host, $this->appService->getRoute(), $website_host);
                 // **********************************
                 // TEST/DEMO WEBSITES RESTRICTED AREA
                 // **********************************
