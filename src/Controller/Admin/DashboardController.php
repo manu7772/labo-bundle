@@ -113,7 +113,7 @@ class DashboardController extends AbstractDashboardController
         mixed $data,
         array $parameters = [],
         string $domain = 'EasyAdminBundle',
-        string $locale = null,
+        ?string $locale = null,
     ): mixed
     {
         switch (true) {
