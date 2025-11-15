@@ -8,8 +8,9 @@ use Stringable;
 use Twig\Markup;
 use Twig\TwigFilter;
 use Twig\TwigFunction;
-use Symfony\UX\Icons\IconRenderer;
+use Twig\Runtime\EscaperRuntime;
 
+use Symfony\UX\Icons\IconRenderer;
 use Twig\Extension\GlobalsInterface;
 use Twig\Extension\AbstractExtension;
 use Aequation\LaboBundle\Service\AppService;
@@ -20,8 +21,9 @@ use Aequation\LaboBundle\Service\Tools\HtmlDom;
 use Aequation\LaboBundle\Service\Tools\Strings;
 use Aequation\LaboBundle\Service\Tools\Encoders;
 use Symfony\Component\HttpKernel\KernelInterface;
-use EasyCorp\Bundle\EasyAdminBundle\Dto\EntityDto;
 
+use Symfony\UX\TwigComponent\ComponentAttributes;
+use EasyCorp\Bundle\EasyAdminBundle\Dto\EntityDto;
 use Liip\ImagineBundle\Imagine\Cache\CacheManager;
 use Symfony\Contracts\Translation\TranslatorInterface;
 use Aequation\LaboBundle\Model\Interface\ImageInterface;
@@ -127,6 +129,7 @@ class TwigExtensions extends AbstractExtension implements GlobalsInterface
             new TwigFilter('classname', [Classes::class, 'getClassname']),
             new TwigFilter('shortname', [Classes::class, 'getShortname']),
             new TwigFilter('toHtmlAttributes', [HtmlDom::class, 'toHtmlAttributes'], ['is_safe' => ['html']]),
+            new TwigFilter('htmlAttributes', [$this, 'getComponentAttributes']),
             new TwigFilter('normalize', [$this->appService, 'getNormalized']),
             new TwigFilter('htmlentities', [$this, 'getHtmlentities']),
             new TwigFilter('isImageEntity', [$this, 'isImageEntity']),
@@ -416,6 +419,30 @@ class TwigExtensions extends AbstractExtension implements GlobalsInterface
         //     });
         // }
         return $choices;
+    }
+
+    public function getComponentAttributes(
+        ?array $attributes = []
+    ): ComponentAttributes
+    {
+        array_walk($attributes, function(&$v) {
+            if(is_array($v)) {
+                $v = array_filter($v, function($vv) {
+                    return !empty(is_string($vv) ? trim($vv) : $vv);
+                });
+                $v = implode(' ', $v);
+            }
+            if(is_string($v)) {
+                $v = trim($v);
+                if(empty($v)) {
+                    $v = null;
+                }
+            }
+        });
+        $attributes = array_filter($attributes, function($v) {
+            return !empty($v);
+        });
+        return new ComponentAttributes($attributes, new EscaperRuntime(Strings::CHARSET));
     }
 
     public function getHtmlentities(?string $string, bool $striptags = false, int $flags = ENT_QUOTES|ENT_SUBSTITUTE): Markup
