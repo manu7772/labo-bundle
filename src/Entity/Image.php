@@ -9,18 +9,19 @@ use Symfony\Component\Form\FormEvent;
 use Symfony\Component\Form\FormEvents;
 use Aequation\LaboBundle\Service\Tools\Files;
 use Aequation\LaboBundle\Model\Attribute as EA;
+use Aequation\LaboBundle\Service\Tools\Strings;
 use Symfony\Component\HttpFoundation\File\File;
 use Symfony\Component\Form\FormBuilderInterface;
-use Aequation\LaboBundle\Component\AppEntityInfo;
 
+use Aequation\LaboBundle\Component\AppEntityInfo;
 use Symfony\Component\Serializer\Attribute\Groups;
 use Aequation\LaboBundle\Service\Tools\HttpRequest;
 use Vich\UploaderBundle\Mapping\Annotation as Vich;
 use Aequation\LaboBundle\Repository\ImageRepository;
 use Aequation\LaboBundle\Model\Attribute\HtmlContent;
 use Symfony\Component\Validator\Constraints as Assert;
-use Aequation\LaboBundle\Model\Interface\ImageInterface;
 
+use Aequation\LaboBundle\Model\Interface\ImageInterface;
 use Symfony\Component\Serializer\Attribute as Serializer;
 use Aequation\LaboBundle\EventListener\Attribute\AppEvent;
 use Aequation\LaboBundle\Model\Interface\CreatedInterface;
@@ -122,7 +123,7 @@ abstract class Image extends Item implements ImageInterface
         ? $this->_service->getAppService()->get('Tool:Files')->getCopiedTmpFile($file)
         : $file;
         if(!empty($this->getId())) $this->updateUpdatedAt();
-        if(empty($this->filename)) $this->setFilename($this->file->getFilename());
+        if(!Strings::hasText($this->filename)) $this->setFilename($this->file->getFilename());
         $this->updateName();
         return $this;
     }
@@ -167,7 +168,7 @@ abstract class Image extends Item implements ImageInterface
 
     public function updateName(): static
     {
-        if(empty($this->name) && !empty($this->filename)) $this->setName($this->filename);
+        if(!Strings::hasText($this->name) && Strings::hasText($this->filename)) $this->setName($this->filename);
         return $this;
     }
 

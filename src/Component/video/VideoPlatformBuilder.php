@@ -1,13 +1,15 @@
 <?php
 namespace Aequation\LaboBundle\Component\video;
 
-use ReflectionClass;
+use Aequation\LaboBundle\Component\Interface\VideoPlatformBuilderInterface;
 use Aequation\LaboBundle\Service\Tools\Classes;
 use Aequation\LaboBundle\Service\Tools\Encoders;
 use Aequation\LaboBundle\Component\Interface\VideoPlatformInterface;
+// PHP
+use ReflectionClass;
 use InvalidArgumentException;
 
-class VideoPlatformBuilder
+class VideoPlatformBuilder implements VideoPlatformBuilderInterface
 {
     public const AUTO_VIDEO_TYPE = [
         'label' => 'Auto detection',
@@ -77,6 +79,16 @@ class VideoPlatformBuilder
             $color = $rc->getConstant('COLOR');
         }
         return (!empty($icon) ? '<twig:ux:icon name="'.$icon.'" style="color: '.$color.'; height: 1.2em; width: 1.2em; margin-right: 0.5em;" /> ' : null).$label;
+    }
+
+    public static function getIcon(?string $icon = null, ?string $color = null): string
+    {
+        return '<twig:ux:icon name="'.($icon ?? VideoPlatform::ICON ?? 'tabler:video-filled').'" style="color: '.($color ?? VideoPlatform::COLOR ?? 'gray').'; height: 1.2em; width: 1.2em; margin-right: 0.5em;" />';
+    }
+
+    public static function getWebsiteTypeIcon(?string $color = null): string
+    {
+        return static::getIcon(VideoPlatform::ICON_WEBSITE, $color);
     }
 
 }

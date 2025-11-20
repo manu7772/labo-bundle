@@ -71,7 +71,13 @@ class Encoders extends BaseService
         return static::isEuidFormatValid($euid)
             ? preg_replace('/'.static::EUID_SCHEMA.'/', '$1', $euid)
             : null;
-        
+    }
+
+    public static function getUidOfEuid(string $euid): ?string
+    {
+        return static::isEuidFormatValid($euid)
+            ? preg_replace('/'.static::EUID_SCHEMA.'/', '$2', $euid)
+            : null;
     }
 
 

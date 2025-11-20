@@ -7,6 +7,7 @@ use Doctrine\ORM\Mapping as ORM;
 use Aequation\LaboBundle\Model\Trait\Slug;
 use Aequation\LaboBundle\Service\Tools\Files;
 use Aequation\LaboBundle\Model\Attribute as EA;
+use Aequation\LaboBundle\Service\Tools\Strings;
 use Symfony\Component\HttpFoundation\File\File;
 use Aequation\LaboBundle\Model\Attribute\Slugable;
 use Aequation\LaboBundle\Repository\PdfRepository;
@@ -19,8 +20,8 @@ use Aequation\LaboBundle\Model\Interface\SlugInterface;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\Serializer\Attribute as Serializer;
 use Aequation\LaboBundle\EventListener\Attribute\AppEvent;
-use Aequation\LaboBundle\Model\Interface\ImageOwnerInterface;
 use Aequation\LaboBundle\Model\Interface\PdfizableInterface;
+use Aequation\LaboBundle\Model\Interface\ImageOwnerInterface;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Aequation\LaboBundle\Service\Interface\PdfServiceInterface;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
@@ -197,7 +198,7 @@ class Pdf extends Item implements PdfInterface, ImageOwnerInterface
 
     public function updateName(): static
     {
-        if(empty($this->name) && !empty($this->filename)) $this->setName($this->filename);
+        if(Strings::hasText($this->name) && !Strings::hasText($this->filename)) $this->setName($this->filename);
         return $this;
     }
 

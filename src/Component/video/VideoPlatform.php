@@ -22,6 +22,7 @@ abstract class VideoPlatform implements VideoPlatformInterface
     public const THUMBNAIL_QUALITYS = []; // No qualitys
     public const IFRAME_TEMPLATE = '<iframe class="%s" src="https://www.youtube.com/embed/%s" title="%s" frameborder="0" allow="%s" referrerpolicy="strict-origin-when-cross-origin"%s></iframe>';
     public const ICON = 'tabler:video-filled';
+    public const ICON_WEBSITE = 'tabler:video';
     public const COLOR = 'gray';
 
     public string $url; // Original given URL
@@ -245,7 +246,7 @@ abstract class VideoPlatform implements VideoPlatformInterface
 
     public static function getIcon(?string $icon = null, ?string $color = null): string
     {
-        return '<twig:ux:icon name="'.($icon ?? static::ICON ?? 'tabler:video-filled').'" style="color: '.($color ?? static::COLOR ?? 'gray').'; height: 1.2em; width: 1.2em; margin-right: 0.5em;" />';
+        return VideoPlatformBuilder::getIcon($icon ?? static::ICON, $color ?? static::COLOR);
     }
 
 }
