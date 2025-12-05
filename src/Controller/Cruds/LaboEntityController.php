@@ -1,21 +1,21 @@
 <?php
 namespace Aequation\LaboBundle\Controller\Cruds;
 
-use Aequation\LaboBundle\Component\ClassmetadataReport;
-use Aequation\LaboBundle\Model\Interface\AppEntityInterface;
-use Aequation\LaboBundle\Model\Interface\WebpageInterface;
-use Aequation\LaboBundle\Service\Interface\AppEntityManagerInterface;
-use Aequation\LaboBundle\Service\Interface\LaboBundleServiceInterface;
+use Exception;
+use Twig\Environment;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 use Aequation\LaboBundle\Service\Tools\Classes;
+use Symfony\Component\Routing\Annotation\Route;
+
+use Aequation\LaboBundle\Component\ClassmetadataReport;
+use Aequation\LaboBundle\Model\Final\FinalWebpageInterface;
+use Aequation\LaboBundle\Model\Interface\AppEntityInterface;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\DependencyInjection\Attribute\Autowire;
-use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\Routing\Annotation\Route;
-use Twig\Environment;
-
-use Exception;
-use Symfony\Component\HttpFoundation\Request;
+use Aequation\LaboBundle\Service\Interface\AppEntityManagerInterface;
+use Aequation\LaboBundle\Service\Interface\LaboBundleServiceInterface;
 
 abstract class LaboEntityController extends AbstractController
 {
@@ -97,7 +97,7 @@ abstract class LaboEntityController extends AbstractController
         Request $request,
     ): Response
     {
-        /** @var WebpageInterface */
+        /** @var FinalWebpageInterface */
         $entity = $this->manager->getNew();
         // $form = $this->createForm(static::ENTITY_TYPE, $entity);
         // $form->handleRequest($request);

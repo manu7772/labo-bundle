@@ -1,22 +1,22 @@
 <?php
 namespace Aequation\LaboBundle\Controller\Cruds;
 
-use Aequation\LaboBundle\Entity\Ecollection;
-use Aequation\LaboBundle\Entity\Item;
-use Aequation\LaboBundle\Form\Type\WebpageType;
-use Aequation\LaboBundle\Model\Interface\EcollectionInterface;
-use Aequation\LaboBundle\Security\Voter\WebsectionVoter;
-use Aequation\LaboBundle\Service\Interface\AppServiceInterface;
-use Aequation\LaboBundle\Service\Interface\EcollectionServiceInterface;
-use App\Entity\Websection;
 use App\Entity\Webpage;
-use Aequation\LaboBundle\Model\Interface\WebpageInterface;
-use Aequation\LaboBundle\Model\Interface\WebsectionInterface;
-use Symfony\Component\HttpFoundation\JsonResponse;
+use App\Entity\Websection;
+use Aequation\LaboBundle\Entity\Item;
+use Aequation\LaboBundle\Entity\Ecollection;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
+use Aequation\LaboBundle\Form\Type\WebpageType;
+use Symfony\Component\HttpFoundation\JsonResponse;
+use Aequation\LaboBundle\Security\Voter\WebsectionVoter;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
+use Aequation\LaboBundle\Model\Final\FinalWebpageInterface;
+use Aequation\LaboBundle\Model\Interface\WebsectionInterface;
+use Aequation\LaboBundle\Model\Interface\EcollectionInterface;
+use Aequation\LaboBundle\Service\Interface\AppServiceInterface;
+use Aequation\LaboBundle\Service\Interface\EcollectionServiceInterface;
 
 #[Route(path: '/ae-labo/entity', name: 'aequation_labo_entity_')]
 #[IsGranted('ROLE_EDITOR')]
@@ -55,7 +55,7 @@ class LaboWebpageController extends LaboEntityController
         AppServiceInterface $appService
     ): JsonResponse
     {
-        /** @var WebpageInterface|EcollectionInterface $entity */
+        /** @var FinalWebpageInterface|EcollectionInterface $entity */
         /** @var EcollectionServiceInterface */
         $service = $this->manager->getEntityService($entity);
         $raw = json_decode($request->getContent(), true);
@@ -77,7 +77,7 @@ class LaboWebpageController extends LaboEntityController
         }
         if(is_array($items)) {
             // set the order of the items
-            /** @var WebpageInterface|EcollectionInterface $entity */
+            /** @var FinalWebpageInterface|EcollectionInterface $entity */
             $entity = $service->setEcollectionItems($entity, $items, $field);
             $sorted_items = $entity->getWebsectionsOrdered(false)->toArray();
             $sorted_items_euid = array_map(fn(Item $item) => $item->getEuid(), $sorted_items);

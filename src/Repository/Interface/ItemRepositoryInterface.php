@@ -6,5 +6,5 @@ use Doctrine\ORM\QueryBuilder;
 
 interface ItemRepositoryInterface extends CommonReposInterface
 {
-
+    public function findItems(bool $scalar = true): array;
 }

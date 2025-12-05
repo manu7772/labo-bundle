@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="fr" class="{{ app.session and app.session.get('darkmode', app.user.darkmode|default(false)) ? 'dark' : '' }}">
+<html lang="fr" class="{{ app.session and app.session.get('darkmode', app.user.darkmode|default(false)) ? 'dark' : '' }}" data-dev="{{ app.environment == 'dev' ? 'true' : 'false' }}">
 	<head>
 		<meta charset="{{ app.service.getStringEncoder() }}">
 		<meta name="viewport" content="width=device-width, initial-scale=1.0">

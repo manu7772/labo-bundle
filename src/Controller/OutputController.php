@@ -2,16 +2,16 @@
 namespace Aequation\LaboBundle\Controller;
 
 // Aequation
-use Aequation\LaboBundle\Model\Final\FinalVideolinkInterface;
-use Aequation\LaboBundle\Model\Interface\PdfInterface;
-use Aequation\LaboBundle\Model\Interface\PdfizableInterface;
-use Aequation\LaboBundle\Model\Interface\WebpageInterface;
-use Aequation\LaboBundle\Service\Interface\PdfServiceInterface;
-use Aequation\LaboBundle\Service\Interface\AppEntityManagerInterface;
-// Symfony
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
+use Aequation\LaboBundle\Model\Interface\PdfInterface;
+use Aequation\LaboBundle\Model\Final\FinalWebpageInterface;
+use Aequation\LaboBundle\Model\Interface\PdfizableInterface;
+// Symfony
+use Aequation\LaboBundle\Model\Final\FinalVideolinkInterface;
+use Aequation\LaboBundle\Service\Interface\PdfServiceInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Aequation\LaboBundle\Service\Interface\AppEntityManagerInterface;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 
 #[Route('/output', name: 'output_')]
@@ -69,7 +69,7 @@ class OutputController extends AbstractController
     {
         // Try by Webpage slug first
         /** @var ServiceEntityRepository */
-        $repo = $this->appEm->getRepository(WebpageInterface::class);
+        $repo = $this->appEm->getRepository(FinalWebpageInterface::class);
         $doc = $repo->findOneBySlug($pdf) ?? $this->appEm->findEntityByUniqueValue($pdf);
         if(!$doc) {
             // Try find Pdf

@@ -3,10 +3,10 @@ namespace Aequation\LaboBundle\Service;
 
 use Aequation\LaboBundle\Entity\Pdf;
 use Aequation\LaboBundle\Model\Interface\PdfInterface;
-use Aequation\LaboBundle\Model\Interface\PdfizableInterface;
-use Aequation\LaboBundle\Model\Interface\WebpageInterface;
 use Aequation\LaboBundle\Service\Interface\AppServiceInterface;
 use Aequation\LaboBundle\Service\Interface\PdfServiceInterface;
+use Aequation\LaboBundle\Model\Final\FinalWebpageInterface;
+use Aequation\LaboBundle\Model\Interface\PdfizableInterface;
 // Symfony
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\DependencyInjection\Attribute\AsAlias;
@@ -16,7 +16,6 @@ use Liip\ImagineBundle\Imagine\Cache\CacheManager;
 use Nucleos\DompdfBundle\Factory\DompdfFactoryInterface;
 use Vich\UploaderBundle\Templating\Helper\UploaderHelper;
 // PHP
-use Exception;
 use DateTimeImmutable;
 
 #[AsAlias(PdfServiceInterface::class, public: true)]
@@ -94,7 +93,7 @@ class PdfService extends ItemService implements PdfServiceInterface
     ): string
     {
         $content = $pdf->getContent();
-        if($pdf instanceof WebpageInterface) {
+        if($pdf instanceof FinalWebpageInterface) {
             $htmlContent = $this->appService->twig->render($template, ['webpage' => $pdf, 'date' => new DateTimeImmutable(), 'appServie' => $this->appService]);
             // if (!empty($photo = $pdf->getPhoto())) {
             //     $content = '<img src="'.$photo->getFilepathname().'" style="width: 80%; height: auto; margin: 20px auto;">'.$content;

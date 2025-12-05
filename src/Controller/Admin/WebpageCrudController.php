@@ -1,53 +1,40 @@
 <?php
 namespace Aequation\LaboBundle\Controller\Admin;
 
+// App
+use App\Entity\Webpage;
+use App\Entity\Videolink;
+use App\Repository\CategoryRepository;
+use App\Controller\Admin\VideolinkCrudController;
+// Aequation
 use Aequation\LaboBundle\Security\Voter\WebpageVoter;
 use Aequation\LaboBundle\Controller\Admin\Base\BaseCrudController;
 use Aequation\LaboBundle\Entity\Pdf;
 use Aequation\LaboBundle\Field\CKEditorField;
 use Aequation\LaboBundle\Form\Type\PhotoType;
 use Aequation\LaboBundle\Repository\EcollectionRepository;
-use Aequation\LaboBundle\Service\Interface\LaboUserServiceInterface;
-use Aequation\LaboBundle\Service\Interface\WebpageServiceInterface;
-use Aequation\LaboBundle\Service\Tools\Classes;
 use Aequation\LaboBundle\Service\Tools\Strings;
 use Aequation\LaboBundle\Field\ThumbnailField;
 use Aequation\LaboBundle\Field\WebsectionsField;
-use Aequation\LaboBundle\Form\Type\PdfType;
 Use Aequation\LaboBundle\Model\Interface\LaboUserInterface;
-use App\Controller\Admin\UrlinkCrudController;
-use App\Controller\Admin\VideolinkCrudController;
-use Aequation\LaboBundle\Model\Interface\LaboRelinkInterface;
-
-use App\Entity\Webpage;
-use App\Entity\Urlink;
-use App\Entity\Videolink;
-use App\Repository\CategoryRepository;
-
+// Symfony
+use Doctrine\ORM\QueryBuilder;
+use Dom\Text;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Crud;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Filters;
 use EasyCorp\Bundle\EasyAdminBundle\Field\AssociationField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\BooleanField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\ChoiceField;
-use EasyCorp\Bundle\EasyAdminBundle\Field\CollectionField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\DateTimeField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\IdField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\SlugField;
-use EasyCorp\Bundle\EasyAdminBundle\Field\TextEditorField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\TextField;
 use EasyCorp\Bundle\EasyAdminBundle\Filter\TextFilter;
-use EasyCorp\Bundle\EasyAdminBundle\Router\AdminUrlGenerator;
-use Doctrine\ORM\QueryBuilder;
-use EasyCorp\Bundle\EasyAdminBundle\Config\Asset;
 use EasyCorp\Bundle\EasyAdminBundle\Field\ArrayField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\FormField;
-use EasyCorp\Bundle\EasyAdminBundle\Field\ImageField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\IntegerField;
-use EasyCorp\Bundle\EasyAdminBundle\Field\RelationField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\TextareaField;
-use FOS\CKEditorBundle\Form\Type\CKEditorType;
-use Symfony\Component\Security\Http\Attribute\IsGranted;
-use Twig\Markup;
 
 #[IsGranted('ROLE_COLLABORATOR')]
 class WebpageCrudController extends BaseCrudController
@@ -74,14 +61,22 @@ class WebpageCrudController extends BaseCrudController
                 yield FormField::addColumn('col-md-12 col-lg-7');
 
                     yield FormField::addPanel(label: 'Mise en page', icon: 'fa6-solid:file-lines');
+                        yield TextField::new('name', 'Nom');
+                        yield TextField::new('slug', 'Slug');
                         yield BooleanField::new('prefered', 'Page principale');
                         yield TextField::new('title', 'Titre de la page');
                         yield IntegerField::new('orderitem', 'Priorité')->setHelp('Ordre d\'affichage de la page dans les listes.');
                         yield TextField::new('linktitle', 'Titre de lien externe')->formatValue(fn ($value) => Strings::markup($value));
                         yield AssociationField::new('mainmenu', 'Menu intégré')->setCrudController(MenuCrudController::class);
                         yield AssociationField::new('sosmenu', 'Menu SOS')->setCrudController(MenuCrudController::class);
+                        yield TextField::new('twigfileName', 'Nom du modèle');
                         yield TextField::new('content', 'Texte de la page')->renderAsHtml();
                 
+                    yield FormField::addPanel(label: 'Autres informations', icon: 'fa6-solid:info');
+                        yield TextField::new('euid', 'Id Unique');
+                        yield DateTimeField::new('createdAt', 'Création')->setFormat('dd/MM/Y - HH:mm')->setTimezone($this->getLaboContext()->getTimezone());
+                        yield DateTimeField::new('updatedAt', 'Modification')->setFormat('dd/MM/Y - HH:mm')->setTimezone($this->getLaboContext()->getTimezone());
+
                 yield FormField::addColumn('col-md-12 col-lg-5');
 
                     yield FormField::addPanel(label: 'Photo / Export Pdf', icon: 'tabler:photo');
@@ -94,13 +89,6 @@ class WebpageCrudController extends BaseCrudController
                         yield ArrayField::new('pdfiles', 'Fichiers PDF');
                         yield ArrayField::new('relinks', 'Urls');
                         yield ArrayField::new('videolinks', 'Vidéos');
-
-                    yield FormField::addPanel(label: 'Autres informations', icon: 'fa6-solid:info');
-                        yield TextField::new('name', 'Nom');
-                        yield TextField::new('slug', 'Slug');
-                        yield TextField::new('euid', 'Id Unique');
-                        yield DateTimeField::new('createdAt', 'Création')->setFormat('dd/MM/Y - HH:mm')->setTimezone($this->getLaboContext()->getTimezone());
-                        yield DateTimeField::new('updatedAt', 'Modification')->setFormat('dd/MM/Y - HH:mm')->setTimezone($this->getLaboContext()->getTimezone());
 
                     yield FormField::addPanel(label: 'Sécurité', icon: 'fa6-solid:lock');
                         yield AssociationField::new('owner', 'Propriétaire')->setCrudController(UserCrudController::class);
@@ -115,7 +103,7 @@ class WebpageCrudController extends BaseCrudController
                         ->setLabel(false);
 
                 yield FormField::addTab(label: 'Super admin', icon: 'tabler:lock-filled')->setPermission('ROLE_SUPER_ADMIN');
-                    yield TextField::new('twigfileName', 'Nom du modèle')->setPermission('ROLE_SUPER_ADMIN');
+                    // yield TextField::new('twigfileName', 'Nom du modèle')->setPermission('ROLE_SUPER_ADMIN');
                     yield TextField::new('twigfile', 'Chemin du modèle')->setPermission('ROLE_SUPER_ADMIN');
                     yield BooleanField::new('softdeleted', 'Supprimée')->setPermission('ROLE_SUPER_ADMIN');
                     yield TextareaField::new('relationOrderDetails', '[Rel.order info]')->setPermission('ROLE_SUPER_ADMIN');
