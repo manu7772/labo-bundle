@@ -100,6 +100,7 @@ class TwigExtensions extends AbstractExtension implements GlobalsInterface
             new TwigFunction('liipfilters', [$this, 'getLiipFilters']),
             new TwigFunction('liipformat', [$this, 'getLiipFormat']),
             new TwigFunction('getImageInfo', [$this->imageService, 'getImageInfo']),
+            new TwigFunction('anchor', [$this, 'getAnchor']),
         ];
 
         if($this->kernel->getEnvironment() !== 'dev') {
@@ -191,6 +192,11 @@ class TwigExtensions extends AbstractExtension implements GlobalsInterface
         return $size['width'] > $size['height'] * 1.5
             ? 'landscape'
             : 'portrait';
+    }
+
+    public function getAnchor(AppEntityInterface $entity, ?string $prefix = null): string
+    {
+        return ($prefix ?? 'anchor') . '_' . $entity->getId();
     }
 
 
