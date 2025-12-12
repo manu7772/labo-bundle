@@ -12,7 +12,7 @@ use Symfony\Component\HttpFoundation\File\File;
 use Aequation\LaboBundle\Model\Attribute\Slugable;
 use Aequation\LaboBundle\Repository\PdfRepository;
 use Aequation\LaboBundle\Service\Tools\HttpRequest;
-Vich\UploaderBundle\Mapping\Attribute as Vich;
+use Vich\UploaderBundle\Mapping\Attribute as Vich;
 use Aequation\LaboBundle\Model\Attribute\HtmlContent;
 use Aequation\LaboBundle\Model\Interface\PdfInterface;
 use Symfony\Component\Validator\Constraints as Assert;

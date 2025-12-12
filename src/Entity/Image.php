@@ -16,7 +16,7 @@ use Symfony\Component\Form\FormBuilderInterface;
 use Aequation\LaboBundle\Component\AppEntityInfo;
 use Symfony\Component\Serializer\Attribute\Groups;
 use Aequation\LaboBundle\Service\Tools\HttpRequest;
-Vich\UploaderBundle\Mapping\Attribute as Vich;
+use Vich\UploaderBundle\Mapping\Attribute as Vich;
 use Aequation\LaboBundle\Repository\ImageRepository;
 use Aequation\LaboBundle\Model\Attribute\HtmlContent;
 use Symfony\Component\Validator\Constraints as Assert;
