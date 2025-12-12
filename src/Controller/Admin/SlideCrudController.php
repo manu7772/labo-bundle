@@ -38,7 +38,7 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Vich\UploaderBundle\Form\Type\VichImageType;
 
 #[IsGranted('ROLE_COLLABORATOR')]
-class SlideCrudController extends BaseCrudController
+abstract class SlideCrudController extends BaseCrudController
 {
 
     public const ENTITY = Slide::class;

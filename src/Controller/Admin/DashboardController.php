@@ -204,11 +204,11 @@ class DashboardController extends AbstractDashboardController
         $color = 'text-info';
         $medias = [];
         $sub_medias = [];
-        if($this->isGranted(PrixtheseVoter::ADMIN_ACTION_LIST, Prixthese::class)) $medias['Prixthese'] = MenuItem::linkToCrud(label: 'Prix de thèses', icon: Prixthese::ICON, entityFqcn: Prixthese::class);
-        if($this->isGranted(AdvertVoter::ADMIN_ACTION_LIST, Advert::class)) $medias['Advert'] = MenuItem::linkToCrud(label: 'Annonces', icon: Advert::ICON, entityFqcn: Advert::class);
-        if($this->isGranted(SliderVoter::ADMIN_ACTION_LIST, Slider::class)) $medias['Slider'] = MenuItem::linkToCrud(label: 'Diaporamas', icon: Slider::ICON, entityFqcn: Slider::class);
-        if($this->isGranted(SlideVoter::ADMIN_ACTION_LIST, Slide::class)) $medias['Slide'] = MenuItem::linkToCrud(label: 'Diapositives', icon: Slide::ICON, entityFqcn: Slide::class);
-        if($this->isGranted(PdfVoter::ADMIN_ACTION_LIST, Pdf::class)) $medias['Pdf'] = MenuItem::linkToCrud(label: 'Fichiers PDF', icon: Pdf::ICON, entityFqcn: Pdf::class);
+        if(class_exists(Prixthese::class) && $this->isGranted(PrixtheseVoter::ADMIN_ACTION_LIST, Prixthese::class)) $medias['Prixthese'] = MenuItem::linkToCrud(label: 'Prix de thèses', icon: Prixthese::ICON, entityFqcn: Prixthese::class);
+        if(class_exists(Advert::class) && $this->isGranted(AdvertVoter::ADMIN_ACTION_LIST, Advert::class)) $medias['Advert'] = MenuItem::linkToCrud(label: 'Annonces', icon: Advert::ICON, entityFqcn: Advert::class);
+        if(class_exists(Slider::class) && $this->isGranted(SliderVoter::ADMIN_ACTION_LIST, Slider::class)) $medias['Slider'] = MenuItem::linkToCrud(label: 'Diaporamas', icon: Slider::ICON, entityFqcn: Slider::class);
+        if(class_exists(Slide::class) && $this->isGranted(SlideVoter::ADMIN_ACTION_LIST, Slide::class)) $medias['Slide'] = MenuItem::linkToCrud(label: 'Diapositives', icon: Slide::ICON, entityFqcn: Slide::class);
+        if(class_exists(Pdf::class) && $this->isGranted(PdfVoter::ADMIN_ACTION_LIST, Pdf::class)) $medias['Pdf'] = MenuItem::linkToCrud(label: 'Fichiers PDF', icon: Pdf::ICON, entityFqcn: Pdf::class);
         $sub_medias = [];
         if($this->isGranted(CategoryVoter::ADMIN_ACTION_LIST, Category::class)) {
             /** @var LaboCategoryServiceInterface */
