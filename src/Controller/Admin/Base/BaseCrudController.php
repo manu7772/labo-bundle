@@ -724,13 +724,13 @@ abstract class BaseCrudController extends AbstractCrudController
                     }
                     break;
                 default:
-                if(!$this->isGranted(attribute: $voter::ACTION_LIST, subject: $this->getLaboContext()->getInstanceOrClass())) {
-                    $message = vsprintf('Vous n\'êtes pas autorisé à réaliser cette opération "%s" sur l\'entité %s.', [$pageName, $this->getLaboContext()->getEntity()->getFqcn()]);
-                    if($make_exception) throw new Exception(message: $message, code: 403);
-                    $this->addFlash('danger', $message);
-                    $opresult->addDanger($message);
-                }
-                break;
+                    if(!$this->isGranted(attribute: $voter::ACTION_LIST, subject: $this->getLaboContext()->getInstanceOrClass())) {
+                        $message = vsprintf('Vous n\'êtes pas autorisé à réaliser cette opération "%s" sur l\'entité %s.', [$pageName, $this->getLaboContext()->getEntity()->getFqcn()]);
+                        if($make_exception) throw new Exception(message: $message, code: 403);
+                        $this->addFlash('danger', $message);
+                        $opresult->addDanger($message);
+                    }
+                    break;
             }
         }
         return $opresult;
