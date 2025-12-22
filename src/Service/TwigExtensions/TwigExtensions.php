@@ -219,7 +219,7 @@ class TwigExtensions extends AbstractExtension implements GlobalsInterface
      * @param mixed $value
      * @return null
      */
-    public function dump(mixed $value): null
+    public function dump(mixed $value = null): null
     {
         return null;
     }
