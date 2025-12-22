@@ -1,18 +1,13 @@
 <?php
 namespace Aequation\LaboBundle\Security\Voter;
 
-use Aequation\LaboBundle\Model\Interface\WebpageInterface;
 use Aequation\LaboBundle\Security\Voter\Base\BaseVoter;
-use Aequation\LaboBundle\Service\Interface\WebpageServiceInterface;
-use Aequation\LaboBundle\Service\Tools\HttpRequest;
-use Aequation\LaboBundle\Model\Interface\LaboUserInterface;
-use Aequation\LaboBundle\Service\Interface\AppServiceInterface;
-use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
+use Aequation\LaboBundle\Model\Final\FinalWebpageInterface;
 
 class WebpageVoter extends BaseVoter
 {
 
-    public const INTERFACE = WebpageInterface::class;
+    public const INTERFACE = FinalWebpageInterface::class;
 
     // /**
     //  * Vote on attribute

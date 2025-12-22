@@ -1,62 +1,62 @@
 <?php
 namespace Aequation\LaboBundle\Service;
 
-use Aequation\LaboBundle\Component\AppContext;
-use Aequation\LaboBundle\Component\AppContextTemp;
+use UnitEnum;
+use Exception;
 // use Aequation\LaboBundle\Component\Identity;
-use Aequation\LaboBundle\Component\Interface\AppContextInterface;
-use Aequation\LaboBundle\Model\Attribute\ClassCustomService;
-use Aequation\LaboBundle\Model\Interface\AppEntityInterface;
+use ArrayObject;
+use Twig\Markup;
+use DateTimeZone;
+use Twig\Environment;
+use DateTimeImmutable;
+use Twig\Loader\LoaderInterface;
+use Symfony\UX\Turbo\TurboBundle;
+use Symfony\Contracts\Cache\ItemInterface;
+use Doctrine\Common\Collections\Collection;
+use Symfony\Bundle\SecurityBundle\Security;
+use Aequation\LaboBundle\Service\Tools\Files;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\Routing\RequestContext;
+use Aequation\LaboBundle\Component\AppContext;
+use Symfony\Component\Routing\RouteCollection;
+use Symfony\Component\Routing\RouterInterface;
+use Aequation\LaboBundle\Service\Tools\Classes;
+
+use Aequation\LaboBundle\Service\Tools\Strings;
+use Symfony\Component\HttpKernel\KernelInterface;
+use Aequation\LaboBundle\Component\AppContextTemp;
+use Aequation\LaboBundle\Service\Base\BaseService;
+use Symfony\Bundle\FrameworkBundle\Routing\Router;
+use Symfony\Component\HttpFoundation\RequestStack;
+use Aequation\LaboBundle\Service\Tools\HttpRequest;
+use Symfony\Component\DependencyInjection\Container;
+use Symfony\Component\HttpFoundation\Session\Session;
+use Symfony\Component\Serializer\SerializerInterface;
 use Aequation\LaboBundle\Model\Interface\MenuInterface;
 use Aequation\LaboBundle\Model\Interface\SlugInterface;
-use Aequation\LaboBundle\Model\Interface\LaboUserInterface;
-use Aequation\LaboBundle\Model\Interface\WebpageInterface;
-use Aequation\LaboBundle\Service\Base\BaseService;
-use Aequation\LaboBundle\Service\Interface\AppRoleHierarchyInterface;
-use Aequation\LaboBundle\Service\Interface\AppServiceInterface;
-use Aequation\LaboBundle\Service\Interface\CacheServiceInterface;
-use Aequation\LaboBundle\Service\Interface\ServiceInterface;
-use Aequation\LaboBundle\Service\Interface\LaboUserServiceInterface;
-use Aequation\LaboBundle\Service\Tools\Classes;
-use Aequation\LaboBundle\Service\Tools\Files;
-use Aequation\LaboBundle\Service\Tools\HttpRequest;
-use Aequation\LaboBundle\Service\Tools\Strings;
-
-use Symfony\Bundle\FrameworkBundle\Routing\Router;
-use Symfony\Bundle\SecurityBundle\Security;
-use Symfony\Component\DependencyInjection\ContainerInterface;
-use Symfony\Component\DependencyInjection\Container;
-use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
-use Symfony\Component\DependencyInjection\Attribute\AsAlias;
-use Symfony\Component\DependencyInjection\Attribute\Autoconfigure;
-use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpFoundation\RequestStack;
-use Symfony\Component\HttpFoundation\Session\Session;
-use Symfony\Component\HttpFoundation\Session\SessionInterface;
-use Symfony\Component\HttpKernel\KernelInterface;
-use Symfony\Component\Routing\RouteCollection;
-use Symfony\Component\Security\Core\Authentication\Token\UsernamePasswordToken;
-use Symfony\Component\Security\Core\Authorization\AccessDecisionManagerInterface;
-use Symfony\UX\Turbo\TurboBundle;
-use Symfony\Component\Routing\RouterInterface;
-use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
-use Symfony\Component\Serializer\SerializerInterface;
-use Symfony\Contracts\Cache\ItemInterface;
-use Symfony\Component\Routing\RequestContext;
 use Symfony\Bundle\SecurityBundle\Security\FirewallConfig;
+use Aequation\LaboBundle\Model\Final\FinalWebpageInterface;
+use Aequation\LaboBundle\Model\Interface\LaboUserInterface;
+use Aequation\LaboBundle\Model\Attribute\ClassCustomService;
+use Aequation\LaboBundle\Model\Interface\AppEntityInterface;
+use Aequation\LaboBundle\Service\Interface\ServiceInterface;
+use Symfony\Component\DependencyInjection\Attribute\AsAlias;
 use Symfony\Component\Security\Http\Event\LoginSuccessEvent;
-use Doctrine\Common\Collections\Collection;
-use Twig\Environment;
-use Twig\Loader\LoaderInterface;
-use Twig\Markup;
+use Symfony\Component\DependencyInjection\ContainerInterface;
+use Symfony\Component\HttpFoundation\Session\SessionInterface;
+use Aequation\LaboBundle\Service\Interface\AppServiceInterface;
+use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
+use Aequation\LaboBundle\Component\Interface\AppContextInterface;
+use Aequation\LaboBundle\Service\Interface\CacheServiceInterface;
 
-use UnitEnum;
-use DateTimeImmutable;
-use DateTimeZone;
-use Exception;
-use ArrayObject;
-use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
+use Symfony\Component\DependencyInjection\Attribute\Autoconfigure;
+use Aequation\LaboBundle\Service\Interface\LaboUserServiceInterface;
+use Aequation\LaboBundle\Service\Interface\AppRoleHierarchyInterface;
 use Symfony\Component\Serializer\Normalizer\AbstractObjectNormalizer;
+use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
+use Symfony\Component\Security\Core\Authentication\Token\UsernamePasswordToken;
+use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
+use Symfony\Component\Security\Core\Authorization\AccessDecisionManagerInterface;
 
 #[AsAlias(AppServiceInterface::class, public: true)]
 #[Autoconfigure(autowire: true, lazy: false)]
@@ -184,7 +184,7 @@ class AppService extends BaseService implements AppServiceInterface
         ?SessionInterface $session = null
     ): bool
     {
-        $this->surveyRecursion(__METHOD__);
+        // $this->surveyRecursion(__METHOD__.'::line_'.__LINE__, 20);
         if($session instanceof SessionInterface && !($this->session instanceof SessionInterface)) {
             $this->session = $session;
         }
@@ -665,24 +665,20 @@ class AppService extends BaseService implements AppServiceInterface
     /** TURBO                                                                                                   */
     /************************************************************************************************************/
 
-    public function getDataTurboBodyAttrs(): string
-    {
-        $test = false;
-        return $test ? ' data-turbo=false' : '';
-    }
-
     public function getTurboMetas(
         bool $asMarkup = true,
     ): string|Markup
     {
-        $this->surveyRecursion(__METHOD__);
         $metas = [];
         // Turbo refresh
-        $turbo_refresh = $this->getParam('turbo-refresh-scroll', null);
-        if(!empty($turbo_refresh)) {
-            $metas[] = '<meta name="turbo-refresh-scroll" content="'.$turbo_refresh.'">';
-        }
-        $html = implode(PHP_EOL, $metas) ?? '';
+        // $turbo_refresh = $this->getParam('turbo-refresh-scroll', null);
+        // if(!empty($turbo_refresh)) {
+        //     $metas[] = '<meta name="turbo-refresh-scroll" content="'.$turbo_refresh.'">';
+        // }
+        // $metas[] = '<meta name="turbo-refresh-method" content="morph">';
+        // Turbo prefetch
+        // $metas[] = '<meta name="turbo-prefetch" content="false">';
+        $html = implode(PHP_EOL, $metas);
         return $asMarkup
             ? Strings::markup(html: $html)
             : $html;
@@ -695,7 +691,6 @@ class AppService extends BaseService implements AppServiceInterface
      */
     public function isTurboFrameRequest(?Request $request = null): bool
     {
-        $this->surveyRecursion(__METHOD__);
         $request ??= $this->getCurrentRequest();
         return $request
             ? !empty($request->headers->get('Turbo-Frame'))
@@ -713,7 +708,6 @@ class AppService extends BaseService implements AppServiceInterface
         bool $prepareRequest = true,
     ): bool
     {
-        $this->surveyRecursion(__METHOD__);
         $request ??= $this->getCurrentRequest();
         if(empty($request)) return false;
         $isTurbo = $request->getMethod() !== 'GET' && TurboBundle::STREAM_FORMAT === $request->getPreferredFormat();
@@ -728,7 +722,6 @@ class AppService extends BaseService implements AppServiceInterface
         ?Request $request = null,
     ): bool
     {
-        $this->surveyRecursion(__METHOD__);
         $request ??= $this->getCurrentRequest();
         if(empty($request)) return false;
         return $request->headers->get('x-requested-with', null) === 'XMLHttpRequest';
@@ -766,12 +759,11 @@ class AppService extends BaseService implements AppServiceInterface
     ): bool
     {
         $this->surveyRecursion(__METHOD__.'::'.$route);
-        // dump($this->getRoute(), $this->getRouteParams(), $param instanceof MenuInterface ? $param->getItems() : null);
-        if($param instanceof WebpageInterface && $param->isPrefered() && $this->getRoute() == 'app_home') return true;
+        if($param instanceof FinalWebpageInterface && $param->isPrefered() && $this->getRoute() == 'app_home') return true;
         if($route !== $this->getRoute()) return false;
         if(!empty($param)) {
             if($param instanceof SlugInterface) {
-                if($param instanceof WebpageInterface) {
+                if($param instanceof FinalWebpageInterface) {
                     if($param->isPrefered() && empty($this->getRouteParams())) return true;
                 }
                 if($param instanceof MenuInterface) {
@@ -820,9 +812,6 @@ class AppService extends BaseService implements AppServiceInterface
         /** @var RouterInterface */
         $router = $this->get('router');
         $_route = $this->getRoute();
-        // if(!$this->getRoutes()->get($route)) return null;
-
-        // ? : avoid if is same as current route / includes logic security
         if(preg_match('/^\?+/', $route)) {
             $route = preg_replace('/^\?+/', '', $route);
             switch (true) {
@@ -837,28 +826,12 @@ class AppService extends BaseService implements AppServiceInterface
                     break;
             }
         }
-        // // ! : avoid 
-        // if($testB = preg_match('/^\!+/', $route)) {
-        //     $route = preg_replace('/^\!+/', '', $route);
-        //     switch (true) {
-        //         case preg_match('/login/', $route):
-        //             if($this->getUser()) return null;
-        //             break;
-        //         case preg_match('/logout/', $route):
-        //             if(!$this->getUser()) return null;
-        //             break;
-        //         default:
-        //             if($route === $_route) return null;
-        //             break;
-        //     }
-        // }
         $url = null;
         try {
             $url = $router->generate(name: $route, parameters: $parameters, referenceType: $referenceType);
         } catch (\Throwable $th) {
             //throw $th;
         }
-        // dump($url);
         return $url;
     }
 

@@ -1,6 +1,7 @@
 <?php
 namespace Aequation\LaboBundle\Model\Interface;
 
+use Aequation\LaboBundle\Entity\Item;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 
@@ -13,6 +14,7 @@ interface EcollectionInterface extends ItemInterface, HasRelationOrderInterface
     public function removeItem(ItemInterface $item): static;
     public function removeItems(): static;
     public function hasItem(AppEntityInterface $item): bool;
+    public function changePosition(Item $item, string $position): bool;
 
     public function isAcceptsItemForEcollection(AppEntityInterface $item, string $property): bool;
     public function filterAcceptedItemsForEcollection(Collection $items, string $property): Collection;

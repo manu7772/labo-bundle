@@ -2,19 +2,19 @@
 namespace Aequation\LaboBundle\Twig\Components;
 
 use Aequation\LaboBundle\Model\Interface\MenuInterface;
-use Aequation\LaboBundle\Model\Interface\WebpageInterface;
-use Aequation\LaboBundle\Repository\Interface\MenuRepositoryInterface;
+use Aequation\LaboBundle\Model\Final\FinalWebpageInterface;
 use Aequation\LaboBundle\Service\Interface\AppServiceInterface;
-
-use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Aequation\LaboBundle\Repository\Interface\MenuRepositoryInterface;
+// Symfony
 use Symfony\UX\TwigComponent\Attribute\AsTwigComponent;
 use Symfony\Component\Routing\Router;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 
 #[AsTwigComponent()]
 class NavComponent extends AbstractController
 {
 
-    public ?WebpageInterface $webpage;
+    public ?FinalWebpageInterface $webpage;
 
     public function __construct(
         private AppServiceInterface $appService,

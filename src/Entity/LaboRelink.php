@@ -50,6 +50,7 @@ abstract class LaboRelink extends Item implements LaboRelinkInterface
         'Adresse' => 'ADDRESS',
         'Email' => 'EMAIL',
         'Téléphone' => 'PHONE',
+        'Vidéo' => 'VIDEO',
     ];
     public const RELINK_TYPE = null;
 
@@ -81,19 +82,6 @@ abstract class LaboRelink extends Item implements LaboRelinkInterface
     #[Serializer\Ignore]
     protected ?string $target = null;
 
-    // #[ORM\ManyToOne(targetEntity: LaboRelink::class, inversedBy: 'relinks', fetch: 'LAZY')]
-    // #[Serializer\Groups('detail')]
-    // #[Serializer\MaxDepth(1)]
-    // protected ?LaboRelink $parentrelink = null;
-
-    // /**
-    //  * @var Collection<int, LaboRelink>
-    //  */
-    // #[ORM\OneToMany(targetEntity: LaboRelink::class, mappedBy: 'parentrelink', fetch: 'EXTRA_LAZY')]
-    // #[RelationOrder()]
-    // #[Serializer\Ignore]
-    // protected Collection $relinks;
-
     #[ORM\Column]
     #[Serializer\Groups('index')]
     protected bool $turboenabled = true;
@@ -101,6 +89,10 @@ abstract class LaboRelink extends Item implements LaboRelinkInterface
     #[ORM\Column(type: Types::TEXT, nullable: true)]
     #[Serializer\Groups('index')]
     protected ?string $linktitle = null;
+
+    #[ORM\Column(type: 'text', nullable: true)]
+    protected ?string $subtype = null; // set to TUTORIAL for tutorial video links
+
 
     /**
      * @var Collection<int, FinalCategoryInterface>
@@ -359,6 +351,17 @@ abstract class LaboRelink extends Item implements LaboRelinkInterface
             /** @var FinalCategoryInterface $category */
             $this->removeCategory($category);
         }
+        return $this;
+    }
+
+    public function getSubtype(): ?string
+    {
+        return $this->subtype;
+    }
+
+    public function setSubtype(?string $subtype): static
+    {
+        $this->subtype = $subtype;
         return $this;
     }
 

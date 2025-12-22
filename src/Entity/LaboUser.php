@@ -1,45 +1,47 @@
 <?php
 namespace Aequation\LaboBundle\Entity;
 
-use Aequation\LaboBundle\Entity\MappSuperClassEntity;
-use Aequation\LaboBundle\Model\Interface\LaboUserInterface;
-use Aequation\LaboBundle\Model\Interface\ImageOwnerInterface;
-use Aequation\LaboBundle\Model\Trait\Enabled;
-use Aequation\LaboBundle\Model\Trait\Created;
-use Aequation\LaboBundle\Entity\Image;
-use Aequation\LaboBundle\Entity\Portrait;
-use Aequation\LaboBundle\EventListener\Attribute\AppEvent;
-use Aequation\LaboBundle\Model\Attribute\RelationOrder;
-use Aequation\LaboBundle\Model\Interface\UnamedInterface;
-use Aequation\LaboBundle\Model\Trait\Unamed;
-use Aequation\LaboBundle\Repository\LaboUserRepository;
-use Aequation\LaboBundle\Service\Interface\AppEntityManagerInterface;
-use Aequation\LaboBundle\Service\Interface\AppRoleHierarchyInterface;
-use Aequation\LaboBundle\Service\Tools\Encoders;
-use Aequation\LaboBundle\Service\LaboUserService;
-use Aequation\LaboBundle\Model\Attribute as EA;
-use Aequation\LaboBundle\Model\Final\FinalAddresslinkInterface;
-use Aequation\LaboBundle\Model\Final\FinalCategoryInterface;
-use Aequation\LaboBundle\Model\Final\FinalEmailinkInterface;
-use Aequation\LaboBundle\Model\Final\FinalPhonelinkInterface;
-use Aequation\LaboBundle\Model\Final\FinalUrlinkInterface;
-use Aequation\LaboBundle\Model\Interface\CreatedInterface;
-use Aequation\LaboBundle\Model\Interface\EnabledInterface;
-use Aequation\LaboBundle\Model\Interface\LaboRelinkInterface;
-// Symfony
-use Doctrine\ORM\Mapping as ORM;
-use Doctrine\Common\Collections\ArrayCollection;
-use Doctrine\Common\Collections\Collection;
-use Doctrine\DBAL\Types\Types;
-use Symfony\Component\Validator\Constraints as Assert;
-use Symfony\Component\Security\Core\Validator\Constraints as SecurityAssert;
-use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
-use Symfony\Component\Security\Core\User\EquatableInterface;
-use Symfony\Component\Security\Core\User\UserInterface;
-use Symfony\Component\Serializer\Attribute as Serializer;
-// PHP
 use DateInterval;
 use DateTimeImmutable;
+use Doctrine\DBAL\Types\Types;
+use Doctrine\ORM\Mapping as ORM;
+use Aequation\LaboBundle\Entity\Image;
+use Aequation\LaboBundle\Entity\Portrait;
+use Doctrine\Common\Collections\Collection;
+use Aequation\LaboBundle\Model\Trait\Unamed;
+use Aequation\LaboBundle\Model\Trait\Created;
+use Aequation\LaboBundle\Model\Trait\Enabled;
+use Aequation\LaboBundle\Model\Attribute as EA;
+use Aequation\LaboBundle\Service\Tools\Encoders;
+use Doctrine\Common\Collections\ArrayCollection;
+use Aequation\LaboBundle\Service\LaboUserService;
+use Aequation\LaboBundle\Entity\MappSuperClassEntity;
+use Aequation\LaboBundle\Model\Attribute\HtmlContent;
+use Symfony\Component\Validator\Constraints as Assert;
+use Aequation\LaboBundle\Model\Attribute\RelationOrder;
+use Aequation\LaboBundle\Repository\LaboUserRepository;
+use Symfony\Component\Security\Core\User\UserInterface;
+use Aequation\LaboBundle\Model\Interface\UnamedInterface;
+use Symfony\Component\Serializer\Attribute as Serializer;
+use Aequation\LaboBundle\EventListener\Attribute\AppEvent;
+use Aequation\LaboBundle\Model\Final\FinalUrlinkInterface;
+use Aequation\LaboBundle\Model\Interface\CreatedInterface;
+// Symfony
+use Aequation\LaboBundle\Model\Interface\EnabledInterface;
+use Aequation\LaboBundle\Model\Interface\LaboUserInterface;
+use Aequation\LaboBundle\Model\Final\FinalCategoryInterface;
+use Aequation\LaboBundle\Model\Final\FinalEmailinkInterface;
+use Symfony\Component\Security\Core\User\EquatableInterface;
+use Aequation\LaboBundle\Model\Final\FinalPhonelinkInterface;
+use Aequation\LaboBundle\Model\Interface\ImageOwnerInterface;
+use Aequation\LaboBundle\Model\Interface\LaboRelinkInterface;
+use Aequation\LaboBundle\Model\Final\FinalAddresslinkInterface;
+use Aequation\LaboBundle\Model\Final\FinalVideolinkInterface;
+use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
+// PHP
+use Aequation\LaboBundle\Service\Interface\AppEntityManagerInterface;
+use Aequation\LaboBundle\Service\Interface\AppRoleHierarchyInterface;
+use Symfony\Component\Security\Core\Validator\Constraints as SecurityAssert;
 
 #[ORM\Entity(repositoryClass: LaboUserRepository::class)]
 // #[EA\ClassCustomService(LaboUserServiceInterface::class)]
@@ -64,7 +66,7 @@ abstract class LaboUser extends MappSuperClassEntity implements LaboUserInterfac
     ];
 
     #[Serializer\Ignore]
-    public readonly LaboUserService|AppEntityManagerInterface $_service;
+    public readonly AppEntityManagerInterface $_service;
 
     #[ORM\Column(length: 180, unique: true)]
     #[Assert\Email(message: 'L\'adresse {{ value }} est invalide')]
@@ -125,6 +127,7 @@ abstract class LaboUser extends MappSuperClassEntity implements LaboUserInterfac
 
     #[ORM\Column(length: 255, nullable: true)]
     #[Serializer\Groups('index')]
+    #[HtmlContent]
     protected ?string $fonction = null;
 
     /**
@@ -164,6 +167,13 @@ abstract class LaboUser extends MappSuperClassEntity implements LaboUserInterfac
     #[Serializer\MaxDepth(1)]
     protected Collection $phones;
 
+    #[ORM\ManyToMany(targetEntity: FinalVideolinkInterface::class, cascade: ['persist', 'remove'], orphanRemoval: true)]
+    #[RelationOrder()]
+    #[Assert\Valid()]
+    #[Serializer\Groups('detail')]
+    #[Serializer\MaxDepth(1)]
+    protected Collection $videolinks;
+
     public function __construct()
     {
         parent::__construct();
@@ -172,6 +182,7 @@ abstract class LaboUser extends MappSuperClassEntity implements LaboUserInterfac
         $this->addresses = new ArrayCollection();
         $this->emails = new ArrayCollection();
         $this->phones = new ArrayCollection();
+        $this->videolinks = new ArrayCollection();
     }
 
     public function isEqualTo(UserInterface $user): bool
@@ -246,7 +257,7 @@ abstract class LaboUser extends MappSuperClassEntity implements LaboUserInterfac
     {
         $name = trim(str_replace(["\n", "\r"], '', $this->firstname.' '.$this->lastname));
         if(empty($name)) $name = $this->email;
-        return $name;
+        return (string) $name;
     }
 
     public function setRoleHierarchy(AppRoleHierarchyInterface $roleHierarchy): void
@@ -294,7 +305,7 @@ abstract class LaboUser extends MappSuperClassEntity implements LaboUserInterfac
     }
 
     #[Serializer\Ignore]
-    public function getRolesChoices(UserInterface $user = null): array
+    public function getRolesChoices(?UserInterface $user = null): array
     {
         return $this->roleHierarchy->getRolesChoices($user ?? $this);
     }
@@ -354,7 +365,7 @@ abstract class LaboUser extends MappSuperClassEntity implements LaboUserInterfac
 
     public function autoGeneratePassword(
         int $length = 32,
-        string $chars = null,
+        ?string $chars = null,
         bool $replace = true
     ): static
     {
@@ -513,7 +524,10 @@ abstract class LaboUser extends MappSuperClassEntity implements LaboUserInterfac
         // Remove previous portrait
         // if($this->portrait && $this->portrait !== $portrait) $this->portrait->removeLinkedto();
         // $this->portrait = $portrait->setLinkedto($this);
-        $this->portrait = $portrait;
+        if(!empty($portrait->getFile())) {
+            $this->removePortrait();
+            $this->portrait = $portrait;
+        }
         return $this;
     }
 
@@ -589,10 +603,11 @@ abstract class LaboUser extends MappSuperClassEntity implements LaboUserInterfac
     ): ?LaboRelinkInterface
     {
         $propertys = [
+            'relinks' => FinalUrlinkInterface::class,
             'addresses' => FinalAddresslinkInterface::class,
             'emails' => FinalEmailinkInterface::class,
             'phones' => FinalPhonelinkInterface::class,
-            'relinks' => FinalUrlinkInterface::class,
+            'videos' => FinalVideolinkInterface::class,
         ];
         $property = array_search($class, $propertys);
         $notHasPrefered = !method_exists($class, 'isPrefered');
@@ -713,6 +728,38 @@ abstract class LaboUser extends MappSuperClassEntity implements LaboUserInterfac
         return $this;
     }
 
+    public function getMainUrlink(
+        bool $anyway = true
+    ): ?FinalUrlinkInterface
+    {
+        return $this->getMainLaboRelink(FinalUrlinkInterface::class, $anyway);
+    }
+
+    public function getMainVideolink(
+        bool $anyway = true
+    ): ?FinalVideolinkInterface
+    {
+        return $this->getMainLaboRelink(FinalVideolinkInterface::class, $anyway);
+    }
+
+    public function getVideolinks(): Collection
+    {
+        return $this->videolinks;
+    }
+
+    public function addVideolink(FinalVideolinkInterface $videolink): static
+    {
+        if (!$this->videolinks->contains($videolink)) {
+            $this->videolinks->add($videolink);
+        }
+        return $this;
+    }
+
+    public function removeVideolink(FinalVideolinkInterface $videolink): static
+    {
+        $this->videolinks->removeElement($videolink);
+        return $this;
+    }
 
 
 }

@@ -122,12 +122,10 @@ class AppContextTemp implements AppContextInterface
         $this->_requestFrom_turbo_frame     = $this->appService->isTurboFrameRequest();
         $this->_requestFrom_turbo_stream    = $this->appService->isTurboStreamRequest();
         $this->_requestFrom_xml_http        = $this->appService->isXmlHttpRequest();
-        // $valid = $this->setInitData($this->initData);
         $valid = $this->isValid(true);
         if(!$this->isTempContext() && !$this->_requestFrom_cli) {
             $serialized = $this->jsonSerialize();
             $this->appService->setSessionData($this->appService::CONTEXT_SESSNAME, $serialized);
-            // dump($serialized);
         }
         return $valid;
     }
@@ -191,10 +189,6 @@ class AppContextTemp implements AppContextInterface
                     case 'datenow':
                         $this->$_name = new DateTimeImmutable($value);
                         break;
-                    // case 'firewall':
-                    //     // dump($this->appService->get('security.firewall.map'));
-                    //     dd($value, $this->security->getFirewallConfig($this->request));
-                    //     break;
                     default:
                         $this->$_name = $value;
                         break;
@@ -357,7 +351,7 @@ class AppContextTemp implements AppContextInterface
     protected function getComputedDarkmode(): bool
     {
         if($this->_user instanceof LaboUserInterface) return $this->_user->isDarkmode();
-        $default_darkmode = $this->appService->getParam('darkmode', true);
+        $default_darkmode = $this->appService->getParam('darkmode', false);
         return $this->session?->get('darkmode', $default_darkmode) ?: $default_darkmode;
     }
 
@@ -657,7 +651,7 @@ class AppContextTemp implements AppContextInterface
         return $this->request ? $this->security->getFirewallConfig($this->request) : null;
     }
 
-    public function getFirewallName(): string
+    public function getFirewallName(): ?string
     {
         return $this->_firewall;
     //     $firewallConfig ??= empty($this->request) ? null : $this->security->getFirewallConfig($this->request);

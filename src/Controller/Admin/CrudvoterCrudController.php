@@ -43,7 +43,6 @@ class CrudvoterCrudController extends BaseCrudController
         $this->checkGrants($pageName);
         /** @var CrudvoterServiceInterface $manager */
         $manager = $this->manager;
-        // $info = $this->getContextInfo();
         switch ($pageName) {
             case Crud::PAGE_DETAIL:
                 yield IdField::new('id');

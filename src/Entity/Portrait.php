@@ -3,17 +3,15 @@ namespace Aequation\LaboBundle\Entity;
 
 use Aequation\LaboBundle\Entity\Image;
 use Aequation\LaboBundle\Model\Attribute as EA;
-use Aequation\LaboBundle\Model\Interface\ImageOwnerInterface;
 use Aequation\LaboBundle\Model\Interface\PortraitInterface;
 use Aequation\LaboBundle\Repository\PortraitRepository;
-use Aequation\LaboBundle\Service\Interface\AppEntityManagerInterface;
 use Aequation\LaboBundle\Service\Interface\PortraitServiceInterface;
-
+// Symfony
 use Doctrine\ORM\Mapping as ORM;
-use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\HttpFoundation\File\File;
-use Vich\UploaderBundle\Mapping\Annotation as Vich;
 use Symfony\Component\Serializer\Attribute as Serializer;
+use Symfony\Component\Validator\Constraints as Assert;
+use Vich\UploaderBundle\Mapping\Attribute as Vich;
 
 #[ORM\Entity(repositoryClass: PortraitRepository::class)]
 #[ORM\HasLifecycleCallbacks]
@@ -24,47 +22,27 @@ class Portrait extends Image implements PortraitInterface
 
     public const ICON = "tabler:user-square-rounded";
     public const FA_ICON = "camera";
+    public const MAPPING = 'portrait';
+    public const DEFAULT_LIIP_FILTER = "photo_reduced_600";
+    public const THUMBNAIL_LIIP_FILTER = 'miniature_q';
+    public const LIIP_FILTERS = [
+        // 'Aucun format prédéfini' => null,
+        'normal_x300',
+        'normal_x800',
+        'photo_h',
+        'photo_v',
+        'photo_q',
+        'photo_reduced_600',
+    ];
 
-    #[Serializer\Ignore]
-    public readonly PortraitServiceInterface|AppEntityManagerInterface $_service;
-
-    #[Vich\UploadableField(mapping: 'portrait', fileNameProperty: 'filename', size: 'size', mimeType: 'mime', originalName: 'originalname', dimensions: 'dimensions')]
+    #[Vich\UploadableField(mapping: self::MAPPING, fileNameProperty: 'filename', size: 'size', mimeType: 'mime', originalName: 'originalname', dimensions: 'dimensions')]
+    #[Assert\File(
+        maxSize: '12M',
+        maxSizeMessage: 'Le fichier ne peut pas dépasser la taille de {{ limit }}{{ suffix }} : votre fichier fait {{ size }}{{ suffix }}',
+        mimeTypes: ["image/jpeg", "image/jpg", "image/png", "image/gif", "image/webp"],
+        mimeTypesMessage: "Format invalide. Formats valides : JPEG, PNG, GIF, WEBP"
+    )]
     #[Serializer\Ignore]
     protected ?File $file = null;
-
-    // #[ORM\OneToOne(inversedBy: 'portrait')]
-    // #[Serializer\Ignore]
-    // protected ?LaboUser $linkedto = null;
-
-    // public function getLinkedto(): ?ImageOwnerInterface
-    // {
-    //     return $this->linkedto;
-    // }
-
-    // public function setLinkedto(?ImageOwnerInterface $linkedto): static
-    // {
-    //     $this->linkedto = $linkedto;
-    //     return $this;
-    // }
-
-    // public function getMainattached(): ?LaboUser
-    // {
-    //     return $this->linkedto;
-    // }
-
-    // public function setMainattached(?LaboUser $mainattached): static
-    // {
-    //     return $this->setLinkedto($mainattached);
-    // }
-
-    // public function getAttached(): ?LaboUser
-    // {
-    //     return $this->linkedto;
-    // }
-
-    // public function setAttached(?LaboUser $attached): static
-    // {
-    //     return $this->setLinkedto($attached);
-    // }
 
 }

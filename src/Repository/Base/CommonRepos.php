@@ -4,6 +4,7 @@ namespace Aequation\LaboBundle\Repository\Base;
 use Aequation\LaboBundle\Model\Interface\AppEntityInterface;
 use Aequation\LaboBundle\Model\Interface\EnabledInterface;
 use Aequation\LaboBundle\Model\Interface\HasOrderedInterface;
+use Aequation\LaboBundle\Model\Interface\LaboCategoryInterface;
 use Aequation\LaboBundle\Model\Interface\SlugInterface;
 use Aequation\LaboBundle\Model\Interface\LaboUserInterface;
 use Aequation\LaboBundle\Repository\Interface\CommonReposInterface;
@@ -132,9 +133,6 @@ abstract class CommonRepos extends ServiceEntityRepository implements CommonRepo
         array $exclude_ids = [],
     ): QueryBuilder
     {
-        // if(is_string($classOrEntity) && !is_a($classOrEntity, HasOrderedInterface::class)) {
-        //     throw new Exception(vsprintf('Error %s line %d: entity %s is not interface of %s', [__METHOD__, __LINE__, $classOrEntity, HasOrderedInterface::class]));
-        // }
         $classes = $classOrEntity::ITEMS_ACCEPT[$property];
         // $qb ??= $this->createQueryBuilder(static::NAME);
         $alias = static::getAlias($qb);
@@ -160,7 +158,6 @@ abstract class CommonRepos extends ServiceEntityRepository implements CommonRepo
         //     ->setParameter('ids', $exclude_ids);
         // }
         static::__filter_Enabled($qb);
-        // dd($qb->getQuery()->getResult());
         return $qb;
     }
 
@@ -171,7 +168,6 @@ abstract class CommonRepos extends ServiceEntityRepository implements CommonRepo
     ): bool
     {
         $from = static::getFrom($qb);
-        // dump('Testing From: '.static::getFrom($qb).' (Alias: '.static::getAlias($qb).') => '.json_encode($classes));
         foreach ((array)$classes as $class) {
             if(!is_a($class, $from, true)) {
                 if($throwsException) {
@@ -181,6 +177,49 @@ abstract class CommonRepos extends ServiceEntityRepository implements CommonRepo
             }
         }
         return true;
+    }
+
+
+    /*************************************************************************************************/
+    /** TRY FIND BY CATEGORYS                                                                        */
+    /*************************************************************************************************/
+
+    public function findByCategorys(
+        string|array $categories,
+        ?array $search = null,
+        string $context = 'auto',
+    ): array
+    {
+        $qb = $this->getQB_findBy(search: $search, context: $context);
+        if($this->hasRelation('categorys')) {
+            // dump($categories, $search, $context);
+            $categories = (array)$categories;
+            $alias = static::getAlias($qb);
+            if(count($categories)) {
+                $qb->leftJoin($alias.'.categorys', 'categorys');
+                // $qb->addSelect('COUNT(categorys) AS HIDDEN catsCount');
+                // $qb->having($qb->expr()->gte('catsCount', 1));
+                if(array_is_list($categories)) {
+                    $qb->andWhere('categorys.name IN (:cats)')
+                        ->setParameter('cats', array_map(fn($cat) => is_object($cat) ? $cat->getName() : $cat, $categories))
+                        ->groupBy($alias.'.id, categorys.id')
+                        ;
+                } else {
+                    foreach ($categories as $field => $cats) {
+                        if(!is_array($cats)) $cats = [$cats];
+                        if(count($cats)) {
+                            $qb->andWhere('categorys.'.$field.' IN (:'.$alias.'_'.$field.'s)')
+                                ->setParameter($alias.'_'.$field.'s', array_map(fn($cat) => is_object($cat) ? $cat->getName() : $cat, $cats))
+                                ;
+                        }
+                    }
+                    $qb->groupBy($alias.'.id, categorys.id');
+                }
+            }
+        }
+        $result = $qb->getQuery()->getResult();
+        // dump($qb->getDQL(), $result);
+        return $result;
     }
 
 

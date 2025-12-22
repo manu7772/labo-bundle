@@ -21,5 +21,26 @@ class ItemRepository extends CommonRepos implements ItemRepositoryInterface
     const ENTITY_CLASS = Item::class;
     const NAME = 'item';
 
+    public function findItems(
+        bool $scalar = true
+    ): array
+    {
+        $qb = $this->createQueryBuilder(static::NAME);
+        $qb->orderBy(static::NAME.'.shortname', 'ASC');
+
+        if($scalar) {
+            $qb->select(static::NAME.'.id, '.static::NAME.'.shortname, '.static::NAME.'.classname, '.static::NAME.'.name, '.static::NAME.'.enabled, '.static::NAME.'.softdeleted');
+            $result = $qb->getQuery()->getScalarResult();
+            array_walk($result, function (&$item) {
+                $item['id'] = (int)$item['id'];
+                $item['enabled'] = (bool)$item['enabled'];
+                $item['softdeleted'] = (bool)$item['softdeleted'];
+                $item['active'] = (!$item['softdeleted'] && $item['enabled']);
+            });
+        } else {
+            $result = $qb->getQuery()->getResult();
+        }
+        return $result;
+    }
 
 }

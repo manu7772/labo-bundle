@@ -1,25 +1,29 @@
 <?php
 namespace Aequation\LaboBundle\Entity;
 
+use DateTimeInterface;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Aequation\LaboBundle\Model\Trait\Slug;
 use Aequation\LaboBundle\Service\Tools\Files;
 use Aequation\LaboBundle\Model\Attribute as EA;
+use Aequation\LaboBundle\Service\Tools\Strings;
 use Symfony\Component\HttpFoundation\File\File;
 use Aequation\LaboBundle\Model\Attribute\Slugable;
 use Aequation\LaboBundle\Repository\PdfRepository;
 use Aequation\LaboBundle\Service\Tools\HttpRequest;
-use Vich\UploaderBundle\Mapping\Annotation as Vich;
+use Vich\UploaderBundle\Mapping\Attribute as Vich;
+use Aequation\LaboBundle\Model\Attribute\HtmlContent;
 use Aequation\LaboBundle\Model\Interface\PdfInterface;
 use Symfony\Component\Validator\Constraints as Assert;
 use Aequation\LaboBundle\Model\Interface\SlugInterface;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\Serializer\Attribute as Serializer;
+use Aequation\LaboBundle\EventListener\Attribute\AppEvent;
 use Aequation\LaboBundle\Model\Interface\PdfizableInterface;
+use Aequation\LaboBundle\Model\Interface\ImageOwnerInterface;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Aequation\LaboBundle\Service\Interface\PdfServiceInterface;
-use DateTimeInterface;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 
 #[ORM\Entity(repositoryClass: PdfRepository::class)]
@@ -29,7 +33,7 @@ use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 #[EA\ClassCustomService(PdfServiceInterface::class)]
 #[Vich\Uploadable]
 #[Slugable('name')]
-class Pdf extends Item implements PdfInterface
+class Pdf extends Item implements PdfInterface, ImageOwnerInterface
 {
 
     use Slug;
@@ -45,9 +49,11 @@ class Pdf extends Item implements PdfInterface
     protected int $sourcetype = 0;
 
     #[ORM\Column(type: Types::TEXT, nullable: true)]
+    #[HtmlContent]
     protected ?string $description = null;
 
     #[ORM\Column(type: Types::TEXT, nullable: true)]
+    #[HtmlContent]
     protected ?string $content = null;
 
     // #[Assert\NotNull(message: 'Le nom de fichier ne peut être null')]
@@ -56,7 +62,7 @@ class Pdf extends Item implements PdfInterface
 
     #[Vich\UploadableField(mapping: 'pdf', fileNameProperty: 'filename', size: 'size', mimeType: 'mime', originalName: 'originalname')]
     #[Assert\File(
-        maxSize: '12M',
+        maxSize: '32M',
         maxSizeMessage: 'Le fichier ne peut pas dépasser la taille de {{ limit }}{{ suffix }} : votre fichier fait {{ size }}{{ suffix }}',
         mimeTypes: ["application/pdf"],
         mimeTypesMessage: "Format invalide, vous devez indiquer un fichier PDF",
@@ -80,10 +86,27 @@ class Pdf extends Item implements PdfInterface
     #[ORM\Column(length: 32)]
     protected ?string $orientation = 'portrait';
 
+    #[ORM\Column]
+    protected bool $selection = false;
+
+    #[ORM\ManyToOne(inversedBy: 'pdfiles')]
+    private ?Item $pdfowner = null;
+
+    #[ORM\OneToOne(cascade: ['persist', 'remove'], orphanRemoval: true)]
+    #[Assert\Valid()]
+    #[Serializer\Ignore]
+    protected ?Photo $photo = null;
+
 
     public function __toString(): string
     {
-        return $this->filename ?? parent::__toString();
+        return $this->name ?: $this->filename ?: parent::__toString();
+    }
+
+    public function __clone()
+    {
+        parent::__clone();
+        $this->photo = null;
     }
 
     public function isPdfExportable(): bool
@@ -138,11 +161,13 @@ class Pdf extends Item implements PdfInterface
         File $file
     ): static
     {
-        $this->file = $this->_service->getAppService()->get('Tool:Files')->getCopiedTmpFile($file);
-        if($this->file instanceof UploadedFile) {
-            if(!empty($this->getId())) $this->updateUpdatedAt();
-            if(empty($this->filename)) $this->setFilename($this->file->getClientOriginalName());
-            $this->updateName();
+        if($file = $file instanceof UploadedFile ? $file : $this->_service->getAppService()->get('Tool:Files')->getCopiedTmpFile($file)) {
+            $this->file = $file;
+            if($this->file instanceof UploadedFile) {
+                if(!empty($this->getUpdatedAt())) $this->updateUpdatedAt();
+                if(empty($this->filename)) $this->setFilename($this->file->getClientOriginalName());
+                $this->updateName();
+            }
         }
         return $this;
     }
@@ -173,7 +198,7 @@ class Pdf extends Item implements PdfInterface
 
     public function updateName(): static
     {
-        if(empty($this->name) && !empty($this->filename)) $this->setName($this->filename);
+        if(Strings::hasText($this->name) && !Strings::hasText($this->filename)) $this->setName($this->filename);
         return $this;
     }
 
@@ -182,13 +207,16 @@ class Pdf extends Item implements PdfInterface
     ): ?string
     {
         $date = null;
-        if($versioned === true) {
-            $date = $this->getUpdatedAt() ?? $this->getCreatedAt();
-        } elseif($versioned instanceof DateTimeInterface) {
+        if($versioned instanceof DateTimeInterface) {
             $date = $versioned;
+        } else if($versioned ) {
+            $date = $this->getUpdatedAt() ?? $this->getCreatedAt();
         }
-        return $this->filename.($date ? '_v'.$date->format('Ymd-His') : '').'.pdf';
-        // return $this->filename;
+        if($date) {
+            $filename = preg_replace('/((\.pdf)+)$/i', '', $this->filename);
+            return $filename.'_v'.$date->format('Ymd-His').'.pdf';
+        }
+        return $this->filename;
     }
 
     public function setFilename(?string $filename): static
@@ -285,6 +313,80 @@ class Pdf extends Item implements PdfInterface
     public static function getOrientationChoices(): array
     {
         return array_combine(static::ORIENTATIONS, static::ORIENTATIONS);
+    }
+
+    public function isSelection(): bool
+    {
+        return $this->selection;
+    }
+
+    public function setSelection(bool $selection): static
+    {
+        $this->selection = $selection;
+        return $this;
+    }
+
+    public function getPdfowner(): ?Item
+    {
+        return $this->pdfowner;
+    }
+
+    public function setPdfowner(?Item $pdfowner): static
+    {
+        $this->pdfowner = $pdfowner;
+        return $this;
+    }
+
+
+    /**********************************************************************************************
+     * PHOTO
+     **********************************************************************************************/
+
+    public function removeOwnedImage(Image $photo): static
+    {
+        return $this->photo === $photo
+            ? $this->removePhoto()
+            : $this;
+    }
+
+    #[Serializer\MaxDepth(1)]
+    public function getFirstImage(): ?Image
+    {
+        return $this->photo;
+    }
+
+    #[Serializer\MaxDepth(1)]
+    public function getPhoto(): ?Photo
+    {
+        return $this->photo;
+    }
+
+    public function setPhoto(Photo $photo): static
+    {
+        if(!empty($photo->getFile())) {
+            $this->removePhoto();
+            $this->photo = $photo;
+        }
+        return $this;
+    }
+
+    public function removePhoto(): static
+    {
+        // if($this->photo instanceof Photo) {
+        //     $photo = $this->photo;
+            $this->photo = null;
+        //     $photo->removeLinkedto();
+        // }
+        return $this;
+    }
+
+    #[AppEvent(groups: [AppEvent::POST_SUBMIT])]
+    public function onDeleteFirstImage(): static
+    {
+        if($this->photo instanceof Image && $this->photo->isDeleteImage()) {
+            $this->removePhoto();
+        }
+        return $this;
     }
 
 }

@@ -1,0 +1,17 @@
+
+https://stackoverflow.com/questions/29246079/doctrine-2-select-entities-with-none-or-less-than-relations
+
+$db = $this->createQueryBuilder('u');
+$db->addSelect('COUNT(errors) AS HIDDEN errorCount');
+$db->leftJoin('u.errors', 'errors');
+$db->where('u.field1 IS NULL AND u.field2 NOT LIKE \'\'');
+$db->having('errorCount < 3');
+$db->groupBy('u');
+
+https://stackoverflow.com/questions/18404530/adding-a-having-clause-to-doctrine-statement
+-> contient moins ou égal à 0 catégories :
+$qb->leftJoin('entity.categorys', 'cats')
+    ->addSelect('COUNT(cats) AS HIDDEN catsCount')
+    ->groupBy('cats.id, entity.id')
+    ->having($qb->expr()->lte('catsCount', 0))
+    ;

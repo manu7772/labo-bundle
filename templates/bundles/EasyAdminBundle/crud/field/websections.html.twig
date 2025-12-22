@@ -4,11 +4,6 @@
 {% set value = entity.instance.getWebsectionsOrdered(false) %}
 {# {% set value = field.value %} #}
 
-{# <div>
-    {{ dump(app.user|serialize('json', {groups: 'index'})) }}
-    {{ dump(entity.instance|serialize('json', {groups: 'index'})) }}
-</div> #}
-
 {% if value is iterable %}
 
     {% if field.customOption('useJavascript', true) %}

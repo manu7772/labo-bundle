@@ -1,29 +1,39 @@
 <?php
 namespace Aequation\LaboBundle\Service;
 
-use Aequation\LaboBundle\AequationLaboBundle;
-use Aequation\LaboBundle\Component\CssManager;
-use Aequation\LaboBundle\EventListener\Attribute\AppEvent;
-use Aequation\LaboBundle\Form\Type\CssType;
-use Aequation\LaboBundle\Model\Attribute\CssClasses;
-use Aequation\LaboBundle\Service\Base\BaseService;
-use Aequation\LaboBundle\Service\Interface\AppEntityManagerInterface;
-use Aequation\LaboBundle\Service\Interface\CssDeclarationInterface;
-use Aequation\LaboBundle\Service\Interface\FormServiceInterface;
-use Aequation\LaboBundle\Service\Interface\LaboBundleServiceInterface;
-use Aequation\LaboBundle\Service\Tools\Classes;
-use Aequation\LaboBundle\Service\Tools\Files;
-use Aequation\LaboBundle\Service\Tools\Iterables;
-use Aequation\LaboBundle\Service\Tools\Strings;
 use Exception;
+use Twig\Environment;
+use DateTimeImmutable;
+use Symfony\Component\Process\Process;
+use Symfony\Component\Form\FormInterface;
+use Symfony\Contracts\Cache\ItemInterface;
+use Aequation\LaboBundle\Form\Type\CssType;
+use Aequation\LaboBundle\AequationLaboBundle;
+use Aequation\LaboBundle\Service\Tools\Files;
+use Aequation\LaboBundle\Component\CssManager;
+use Aequation\LaboBundle\Service\Tools\Classes;
+use Aequation\LaboBundle\Service\Tools\Strings;
+use Doctrine\Common\Collections\ArrayCollection;
+use Symfonycasts\TailwindBundle\TailwindBuilder;
+use Aequation\LaboBundle\Service\Tools\Iterables;
+use Aequation\LaboBundle\Service\Base\BaseService;
+use Symfony\Component\String\Slugger\AsciiSlugger;
+use Aequation\LaboBundle\Model\Attribute\CssClasses;
+use Aequation\LaboBundle\Model\Attribute\HtmlContent;
+use Aequation\LaboBundle\EventListener\Attribute\AppEvent;
+use Aequation\LaboBundle\Model\Interface\AppEntityInterface;
+use Aequation\LaboBundle\Model\Interface\SlugInterface;
 use Symfony\Component\DependencyInjection\Attribute\AsAlias;
-use Symfony\Component\DependencyInjection\Attribute\Autoconfigure;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\DependencyInjection\ContainerInterface;
-use Symfony\Component\Form\FormInterface;
-use Symfony\Component\Process\Process;
-use Symfony\Contracts\Cache\ItemInterface;
-use Symfonycasts\TailwindBundle\TailwindBuilder;
+use Aequation\LaboBundle\Service\Interface\FormServiceInterface;
+use Symfony\Component\DependencyInjection\Attribute\Autoconfigure;
+use Aequation\LaboBundle\Service\Interface\CssDeclarationInterface;
+use Aequation\LaboBundle\Service\Interface\AppEntityManagerInterface;
+use Aequation\LaboBundle\Service\Interface\LaboBundleServiceInterface;
+use Symfony\Component\HttpFoundation\Session\Session;
+use Stringable;
+use Symfony\Component\Translation\TranslatableMessage;
 
 #[AsAlias(CssDeclarationInterface::class, public: true)]
 #[Autoconfigure(autowire: true, lazy: true)]
@@ -33,10 +43,10 @@ class CssDeclaration extends BaseService implements CssDeclarationInterface
     public const CACHE_CSS_ATTRIBUTES_NAME = 'Cache_Css_Attributes';
     public const CACHE_CSS_ATTRIBUTES_LIFE = 24 * 3600;
 
-    public const FILE_PATH = 'templates';
+    public const FILE_PATH = 'templates/locals';
     public const FILE_NAME = 'tailwind_css_declarations.html.twig';
 
-    public const BUNDLE_FILE_PATH = 'templates';
+    public const BUNDLE_FILE_PATH = 'templates/locals';
     public const BUNDLE_FILE_NAME = 'tailwind_css_declarations.html.twig';
 
     public const CLASS_TYPES = ['ORIGIN', 'COMPUTED', 'ADDED','UNKNOWN'];
@@ -52,6 +62,7 @@ class CssDeclaration extends BaseService implements CssDeclarationInterface
 
     public function __construct(
         protected LaboBundleServiceInterface $laboAppService,
+        protected Environment $twig,
         #[Autowire(service: 'tailwind.builder')]
         protected TailwindBuilder $tailwindBuilder,
     )
@@ -277,6 +288,102 @@ class CssDeclaration extends BaseService implements CssDeclarationInterface
             $this->classes = $save;
         }
         return $result;
+    }
+
+
+    /**********************************************************************************
+     * REGISTER ENTITIES HTML CONTENT
+     */
+
+    public function registerHtmlContent(string $action, array $entities, bool $update = false): bool
+    {
+        $updatedTemplates = 0;
+        $passeds = new ArrayCollection();
+        $slugger ??= new AsciiSlugger();
+        $now = new DateTimeImmutable('now', new \DateTimeZone('Europe/Paris'));
+        $separator = PHP_EOL.PHP_EOL.'<!-- HTML CONTENT SEPARATOR -->'.PHP_EOL.PHP_EOL;
+        foreach ($entities as $entity) {
+            if($entity instanceof AppEntityInterface) {
+                $name = $entity->getEuid();
+            } else if($entity instanceof Stringable) {
+                $name = (string) $entity;
+            } else {
+                continue;
+            }
+            if(!$passeds->contains($entity) && $htcss = Classes::getPropertyAttributes($entity, HtmlContent::class, true)) {
+                foreach ($htcss as $htcs) {
+                    if($htc = reset($htcs)) {
+                        $filename = $slugger->slug($name).'@'.$htc->property->name.'.html.twig';
+                        $old = $this->tool_files->getFileContent($this->filepath, $filename);
+                        switch ($action) {
+                            case 'deletions':
+                                // deletions
+                                if($old !== false) $this->tool_files->removeFile($this->filepath.DIRECTORY_SEPARATOR.$filename);
+                                break;
+                            default:
+                                // insertions, updates
+                                $html_head = '<!-- HTML CONTENTS GENERATED FROM ENTITY PROPERTIES / '.$now->format('Y-m-d H:i:s').' -->'.PHP_EOL.PHP_EOL;
+                                /** @var HtmlContent $htc */
+                                $html = [];
+                                $html['initial'] = $htc->property->getValue($entity);
+                                // dump('HTML Content for '.get_class($entity).'#'.$entity->getId().' ('.$htc->property->name.'): '.(empty($html) ? 'EMPTY' : $html));
+                                if(empty(strip_tags($html['initial'] ?? ''))) {
+                                    // Remove file if exists
+                                    if(!empty($old)) {
+                                        // dd('Remove file for html content:'.PHP_EOL.'File: '.$this->filepath.DIRECTORY_SEPARATOR.$filename);
+                                        $this->tool_files->removeFile($this->filepath.DIRECTORY_SEPARATOR.$filename);
+                                        $updatedTemplates++;
+                                    }
+                                } else {
+                                    $initial_html = Strings::formateForWebpage($html['initial']);
+                                    if($entity instanceof AppEntityInterface) {
+                                        switch ($entity->getShortname()) {
+                                            case 'Webpage':
+                                                $html[] = $this->twig->createTemplate($initial_html, $filename)->render(['webpage' => $entity]);
+                                                break;
+                                            case 'Websection':
+                                                $html[] = $this->twig->createTemplate($initial_html, $filename)->render(['websection' => $entity]);
+                                                break;
+                                            default:
+                                                $html[] = $initial_html;
+                                                break;
+                                        }
+                                    } else {
+                                        $html[] = $initial_html;
+                                    }
+                                    $html = $html_head.implode($separator, array_unique($html));
+                                    if(!$old) {
+                                        // dump('Create file for html content:'.PHP_EOL.'File: '.$filename);
+                                        $this->tool_files->putFileContent($this->filepath, $filename, $html);
+                                    } else if($old === $html) {
+                                        // dump('No change for html content:'.PHP_EOL.'File: '.$filename);
+                                        break;
+                                    } else {
+                                        // dump('Update file for html content:'.PHP_EOL.'File: '.$filename);
+                                        $this->tool_files->putFileContent($this->filepath, $filename, $html);
+                                    }
+                                    $updatedTemplates++;
+                                }
+                                break;
+                        }
+                    }
+                }
+                $passeds->add($entity);
+            }
+        }
+        unset($passeds);
+        if($updatedTemplates > 0 && $update) {
+            // dump('Processing Tailwind CSS build...');
+            // Tailwind build
+            $process = $this->buildTailwindCss(watch: false, poll: false, minify: true);
+            if($session = $this->laboAppService->getSession()) {
+                /** @var Session $session */
+                $session->getFlashBag()->add('success', new TranslatableMessage(vsprintf('Tailwind CSS build completed (%d template%s updated).', [$updatedTemplates, $updatedTemplates > 1 ? 's' : ''])), 'admin');
+            }
+            // dump('Tailwind build output: '.$process->getOutput());
+            return true;
+        }
+        return $updatedTemplates > 0;
     }
 
 

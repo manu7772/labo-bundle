@@ -1,13 +1,15 @@
 <?php
 namespace Aequation\LaboBundle\Service\Tools;
 
+use Aequation\LaboBundle\Model\Attribute\CssClasses;
 use Aequation\LaboBundle\Service\Base\BaseService;
-use DateTime;
+// Symfony
 use Symfony\Component\String\Inflector\EnglishInflector;
 use Symfony\Component\String\Inflector\FrenchInflector;
 use Symfony\Component\String\Slugger\AsciiSlugger;
-// use Faker\Factory as Faker;
 use function Symfony\Component\String\u;
+// use Faker\Factory as Faker;
+use DateTime;
 use DOMDocument;
 use DOMDocumentType;
 use DOMElement;
@@ -25,7 +27,7 @@ class Strings extends BaseService
 
 	public static function markup(
 		?string $html,
-		string $charset = null
+		?string $charset = null
 	): Markup
 	{
 		return new Markup(
@@ -212,10 +214,86 @@ class Strings extends BaseService
 		return preg_split('/'.$spliter.'/', $text, -1, PREG_SPLIT_NO_EMPTY);
 	}
 
+    #[CssClasses(target: 'value')]
+    public static function getCssClasses(): array
+    {
+        $css = [
+			'pre' => "text-sky-700 text-lg font-semibold",
+			'blockquote' => "text-amber-700 text-lg font-semibold",
+			'u' => "underline",
+			'i' => "italic",
+			'em' => "italic",
+			'del' => "underline",
+			'ul' => "list-disc pl-8",
+			'li' => "",
+			'a' => "inline-block rounded-md bg-sky-600 hover:bg-sky-400 text-white my-2 px-4 py-2 !no-underline"
+		];
+		return $css;
+    }
+
+	public static function formateForWebpage(string $text, int $mode = 1): Markup
+	{
+		switch ($mode) {
+			case 0:
+				// Raw HTML
+				$code = $text;
+				break;
+			case 1:
+				// CKEditorField
+				$code = preg_replace_callback('#(&lt;)(\/?twig:)(.*?)(&gt;)#', fn ($matches) => '<'.$matches[2].htmlspecialchars_decode($matches[3]).'>', $text);
+				break;
+			default:
+				// TextEditorField
+				$css = static::getCssClasses();
+				$replaces = [
+					'/<h1>/' => '<h3>',
+					'/<\/h1>/' => '</h3>',
+					'/<pre>/' => '<div class="'.$css['pre'].'">',
+					'/<\/pre>/' => '</div>',
+					'/<blockquote>/' => '<div class="'.$css['blockquote'].'">',
+					'/<\/blockquote>/' => '</div>',
+					'/<u>/' => '<div class="'.$css['u'].'">',
+					'/<\/u>/' => '</div>',
+					'/<i>/' => '<span class="'.$css['i'].'">',
+					'/<\/i>/' => '</span>',
+					'/<em>/' => '<span class="'.$css['em'].'">',
+					'/<\/em>/' => '</span>',
+					'/<del>/' => '<span class="'.$css['del'].'">',
+					'/<\/del>/' => '</span>',
+					'/<ul>/' => '<ul class="'.$css['ul'].'">',
+					'/<\/ul>/' => '</ul>',
+					'/<li>/' => '<li class="'.$css['li'].'"><div>',
+					'/<\/li>/' => '</div></li>',
+					// Twig components
+					'/&lt;twig:(.*?)&gt;/' => '<twig:$1>',
+					'/&lt;\/twig:(.*?)&gt;/' => '</twig:$1>',
+				];
+				$code = preg_replace(array_keys($replaces), $replaces, $text);
+				break;
+			}
+			return static::markup($code);
+	}
 
     /** ***********************************************************************************
      * HTML TEXTS
      *************************************************************************************/
+
+	public static function textOrNull(
+		mixed $element,
+		bool $striptags = false,
+		mixed $nullValue = null,
+	): mixed
+	{
+		if(is_object($element)) {
+			$element = $element instanceof Stringable
+				? $element->__toString()
+				: null;
+		}
+		$element = (string) $element;
+		return is_string($element) && strlen(trim(strip_tags($element)))
+			? trim($striptags ? strip_tags($element) : $element)
+			: $nullValue;
+	}
 
 	public static function hasText(
 		mixed $element
@@ -226,9 +304,9 @@ class Strings extends BaseService
 				? $element->__toString()
 				: null;
 		}
-		$element = (string)$element;
+		$element = (string) $element;
 		return is_string($element)
-			? strlen(strip_tags($element)) > 0
+			? strlen(trim(strip_tags($element))) > 0
 			: false;
 	}
 

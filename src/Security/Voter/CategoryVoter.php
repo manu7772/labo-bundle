@@ -1,14 +1,15 @@
 <?php
 namespace Aequation\LaboBundle\Security\Voter;
 
-use Aequation\LaboBundle\Model\Interface\LaboCategoryInterface;
 use Aequation\LaboBundle\Model\User;
-use Aequation\LaboBundle\Security\Voter\Base\BaseVoter;
-use Aequation\LaboBundle\Service\Interface\LaboCategoryServiceInterface;
 use Aequation\LaboBundle\Service\AppService;
 use Aequation\LaboBundle\Service\Tools\HttpRequest;
+use Aequation\LaboBundle\Security\Voter\Base\BaseVoter;
 use Aequation\LaboBundle\Model\Interface\LaboUserInterface;
+use Symfony\Component\Security\Core\Authorization\Voter\Vote;
+use Aequation\LaboBundle\Model\Interface\LaboCategoryInterface;
 use Aequation\LaboBundle\Service\Interface\AppServiceInterface;
+use Aequation\LaboBundle\Service\Interface\LaboCategoryServiceInterface;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 
 class CategoryVoter extends BaseVoter
@@ -26,10 +27,11 @@ class CategoryVoter extends BaseVoter
     protected function voteOnAttribute(
         string $attribute,
         mixed $subject,
-        TokenInterface $token
+        TokenInterface $token,
+        ?Vote $vote = null
     ): bool
     {
-        $vote = parent::voteOnAttribute($attribute, $subject, $token);
+        $vote = parent::voteOnAttribute($attribute, $subject, $token, $vote);
         if(!$vote) return false;
         /** @var LaboUserInterface */
         $user = $token->getUser();

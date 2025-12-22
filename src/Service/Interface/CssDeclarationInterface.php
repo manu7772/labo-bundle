@@ -20,6 +20,7 @@ interface CssDeclarationInterface
     public function refreshClasses(): bool;
     public function saveClasses(): bool;
     public function resetAll(): bool;
+    public function registerHtmlContent(string $action, array $entities, bool $update = false): bool;
     public function getCssForm(?CssManager $cssManager = null): FormInterface;
     // Tailwind
     public function buildTailwindCss(bool $watch, bool $poll, bool $minify, ?callable $callback = null): Process;

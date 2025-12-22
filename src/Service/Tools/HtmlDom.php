@@ -2,11 +2,10 @@
 namespace Aequation\LaboBundle\Service\Tools;
 
 use Aequation\LaboBundle\Service\Base\BaseService;
-
+// PHP
+use Twig\Markup;
 use DOMDocument;
 use DOMXPath;
-use Symfony\UX\StimulusBundle\Dto\StimulusAttributes;
-use Twig\Markup;
 
 class HtmlDom extends BaseService
 {
@@ -58,32 +57,52 @@ class HtmlDom extends BaseService
 
     public static function toHtmlAttributes(
         ?array $attributes
-    ): string
+    ): Markup
     {
-        $string = '';
-        if(empty($attributes)) return $string;
+        // dump($attributes);
+        $attrs = [];
+        if(empty($attributes)) return Strings::markup('');
         foreach ($attributes as $name => $values) {
-            switch (true) {
-                case is_array($values) && $name === "style":
-                    $css = [];
-                    foreach ($values as $key => $value) {
-                        $css[] = (is_string($key) ? $key.':' : '').$value;
-                    }
-                    $string .= ' '.$name.'="'.implode('; ', $css).'"';
-                    break;
-                case is_array($values):
-                    $string .= ' '.$name.'="'.implode(' ', $values).'"';
-                case is_string($values):
-                    $string .= ' '.$name.'="'.$values.'"';
-                    break;
-                default:
-                    dd($name, $values);
-                    $string .= ' '.$name.'="'.$values.'"';
-                    break;
+            if(!empty($values) || is_bool($values)) {
+                // dump($name, $values);
+                switch (true) {
+                    case !is_string($name) && is_string($values):
+                        $attrs[] = $values.'="true"';
+                        break;
+                    case $name === "style":
+                        $css = [];
+                        if(is_array($values)) {
+                            foreach ($values as $key => $value) {
+                                $css[] = (is_string($key) ? $key.':' : '').$value;
+                            }
+                        } else if(is_string($values)) {
+                            $css[] = $values;
+                        }
+                        if(!empty($css)) {
+                            $attrs[] = $name.'="'.implode('; ', $css).'"';
+                        }
+                        break;
+                    case $name === "class":
+                        $attrs[] = $name.'="'.(is_array($values) ? implode(' ', $values) : $values).'"';
+                        break;
+                    case is_array($values):
+                        $attrs[] = $name.'="'.implode(' ', $values).'"';
+                        break;
+                    case is_string($values):
+                        $attrs[] = $name.'="'.$values.'"';
+                        break;
+                    case is_bool($values) && is_string($name):
+                        $attrs[] = $name.'="'.($values ? 'true' : 'false').'"';
+                        break;
+                    default:
+                        // dd($name, $values);
+                        $attrs[] = $name.'="'.$values.'"';
+                        break;
+                }
             }
         }
-        // dump($string);
-        return $string;
+        $attributes = empty($attrs) ? '' : ' '.implode(' ', $attrs);
+        return Strings::markup($attributes);
     }
 
 

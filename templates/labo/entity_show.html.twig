@@ -6,7 +6,6 @@
 {% block title_h1 -%}{{ ux_icon('symfony', {height: '48px', width: '48px', class: 'text-success'}) }} LABO Entity <mark class="text-primary">{{ meta_info.shortname }}</mark>{%- endblock %}
 
 {% block right_content %}
-{# <pre>{{ dump(meta_infos|default(null)) }}</pre> #}
 {% if meta_info is not null %}
 <div class="mb-2">
     <span><twig:ux:icon name="tabler:caret-left-filled" width="24px" /></span> <a href="{{ path('aequation_labo_entity_list') }}"{{ turbo_enable(false) }}>Liste des entités</a>
@@ -56,9 +55,6 @@
     </header>
     <table>
         <tbody>
-            {# <tr>
-                <td colspan="100%">{{ dump(meta_info.data) }}</td>
-            </tr> #}
             <tr><td>Root entity</td><td>{{ meta_info.rootEntityName }}</td></tr>
             <tr><td>Manager</td><td>{{ meta_info.manager|default('<span class="pico-color-red-400">unknown</span>')|raw }}</td></tr>
             <tr><td>Instantiable</td><td>{{ (meta_info.instantiable ? '<span class="pico-color-green-300">' ~ validIcon(true, '24px') ~ '</span>' : '<span class="pico-color-red-400">' ~ validIcon(false, '24px') ~ '</span>')|raw }}</td></tr>
@@ -133,7 +129,6 @@
             <tr>
                 <td>LifecycleCallbacks</td>
                 <td>
-                    {# {{ dump(meta_info.lifecycleCallbacks) }} #}
                     {% if meta_info.lifecycleCallbacks|length %}
                     <ul class="mb-0 list-unstyled list-inside pl-0">
                         {% for name,lcc in meta_info.lifecycleCallbacks %}
@@ -201,7 +196,6 @@
                 </ul>
             {% endif %}
             </td></tr>
-            {# <tr><td colspan="100%">{{ dump(meta) }}</tr></td> #}
         </tbody>
     </table>
 </article>

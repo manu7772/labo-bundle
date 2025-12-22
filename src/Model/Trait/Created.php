@@ -7,6 +7,7 @@ use Doctrine\ORM\Mapping as ORM;
 use Doctrine\Persistence\Event\LifecycleEventArgs;
 use Symfony\Component\Validator\Constraints as Assert;
 use Symfony\Component\Serializer\Attribute as Serializer;
+use Doctrine\ORM\EntityManager;
 // PHP
 use DateTimeImmutable;
 use DateTimeZone;
@@ -15,8 +16,8 @@ use Exception;
 trait Created
 {
 
-    #[ORM\Column(updatable: false, nullable: false)]
-    #[Assert\NotNull()]
+    #[ORM\Column(nullable: false)]
+    #[Assert\NotNull(message: 'Le createdAt ne peut pas être nul')]
     #[Serializer\Groups('detail')]
     protected DateTimeImmutable $createdAt;
 
@@ -25,7 +26,7 @@ trait Created
     protected ?DateTimeImmutable $updatedAt = null;
 
     #[ORM\Column]
-    #[Assert\NotNull()]
+    #[Assert\NotNull(message: 'Le timezone ne peut pas être nul')]
     #[Serializer\Groups('detail')]
     protected ?string $timezone = null;
 
@@ -69,14 +70,20 @@ trait Created
     }
 
     #[ORM\PreUpdate]
-    public function updateUpdatedAt(LifecycleEventArgs $args = null): static
+    public function updateUpdatedAt(?LifecycleEventArgs $args = null): static
     {
+        /** @var EntityManager $em */
+        $em = $args?->getObjectManager();
+        $changeSet = $em?->getUnitOfWork()->getEntityChangeSet($this) ?? [];
+        if(isset($changeSet['updatedAt'])) {
+            return $this;
+        }
         $this->setUpdatedAt();
         return $this;
     }
 
     public function setUpdatedAt(
-        DateTimeImmutable $updatedAt = null
+        ?DateTimeImmutable $updatedAt = null
     ): static
     {
         $this->updatedAt = $updatedAt ?? new DateTimeImmutable();
@@ -89,19 +96,17 @@ trait Created
     }
 
     #[ORM\PrePersist]
-    public function updateCreatedAt(LifecycleEventArgs $args = null): static
+    public function updateCreatedAt(?LifecycleEventArgs $args = null): static
     {
         $this->setCreatedAt();
         return $this;
     }
 
     public function setCreatedAt(
-        DateTimeImmutable $createdAt = null
+        ?DateTimeImmutable $createdAt = null
     ): static
     {
-        if(empty($this->createdAt)) {
-            $this->createdAt = $createdAt ?? new DateTimeImmutable();
-        }
+        $this->createdAt = $createdAt ?? new DateTimeImmutable();
         return $this;
     }
 

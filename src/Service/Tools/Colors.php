@@ -69,9 +69,6 @@ class Colors extends BaseService
 		array_walk($matches, function(&$value, $key) {
 			$value = ['decimal' => $value, 'hexa' => str_pad(dechex((int) $value), 2, '0', STR_PAD_LEFT)];
 		});
-		// if(empty($matches)) {
-			// echo('"><h3>HEXA: '.json_encode($rgb).'</h3><pre>'); var_dump($matches); die('</pre>');
-		// }
 		return $rgb = '#'.dechex($matches[1]['hexa']).dechex($matches[2]['hexa']).dechex($matches[3]['hexa']);
 
 	}

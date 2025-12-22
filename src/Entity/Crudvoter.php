@@ -29,7 +29,7 @@ class Crudvoter extends MappSuperClassEntity implements CrudvoterInterface, Crea
     public const FA_ICON = "user-lock";
 
     #[Serializer\Ignore]
-    public readonly CrudvoterService|AppEntityManagerInterface $_service;
+    public readonly AppEntityManagerInterface $_service;
 
     #[ORM\Column(length: 255)]
     protected ?string $voterclass = null;

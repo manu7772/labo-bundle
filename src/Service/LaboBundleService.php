@@ -58,7 +58,7 @@ class LaboBundleService extends AppService implements LaboBundleServiceInterface
     protected function stopPublic(): void
     {
         if($this->isDev() && $this->isPublic() && !$this->appContext->isCliXmlHttpRequest()) {
-            throw new Exception(vsprintf('WARNING: %s line %d: this service should not be loaded in public firewall (firewall is %s)!%s', [__METHOD__, __LINE__, $this->getFirewall(), PHP_EOL.$this->appContext->getDumped()]));
+            // throw new Exception(vsprintf('WARNING: %s line %d: this service should not be loaded in public firewall (firewall is %s)!%s', [__METHOD__, __LINE__, $this->getFirewall(), PHP_EOL.$this->appContext->getDumped()]));
             // dd('This method '.__METHOD__.' should not be used while in PUBLIC firewall');
         }
     }
@@ -116,7 +116,7 @@ class LaboBundleService extends AppService implements LaboBundleServiceInterface
     /************************************************************************************************************/
 
     public function getJelasticForm(
-        Jelastic $data = null,
+        ?Jelastic $data = null,
         array $options = [],
     ): FormInterface
     {
@@ -264,7 +264,7 @@ class LaboBundleService extends AppService implements LaboBundleServiceInterface
     /************************************************************************************************************/
 
     public function getDeclaredClasses(
-        array|object|string $listOfClasses = null
+        null|array|object|string $listOfClasses = null
     ): array
     {
         Classes::filterDeclaredClasses(listOfClasses: $listOfClasses, sort: true);
@@ -272,7 +272,7 @@ class LaboBundleService extends AppService implements LaboBundleServiceInterface
     }
 
     public function getAppAttributesList(
-        array|object|string $listOfClasses = null
+        null|array|object|string $listOfClasses = null
     ): array
     {
         if(empty($listOfClasses)) $listOfClasses = Classes::REGEX_APP_CLASS;

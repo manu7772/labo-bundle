@@ -2,13 +2,13 @@
 namespace Aequation\LaboBundle\Model\Trait;
 
 // Aequation
-use Aequation\LaboBundle\Model\Interface\WebpageInterface;
-use Aequation\LaboBundle\Model\Interface\ScreenableInterface;
-// Symfony
+use Exception;
 use Doctrine\ORM\Mapping as ORM;
+// Symfony
 use Symfony\Component\Serializer\Attribute as Serializer;
 // PHP
-use Exception;
+use Aequation\LaboBundle\Model\Final\FinalWebpageInterface;
+use Aequation\LaboBundle\Model\Interface\ScreenableInterface;
 
 trait Screenable
 {
@@ -20,17 +20,17 @@ trait Screenable
         }
     }
 
-    #[ORM\ManyToOne(targetEntity: WebpageInterface::class)]
+    #[ORM\ManyToOne(targetEntity: FinalWebpageInterface::class)]
     #[ORM\JoinColumn(nullable: true)]
     #[Serializer\Ignore]
-    protected ?WebpageInterface $webpage;
+    protected ?FinalWebpageInterface $webpage;
 
-    public function getWebpage(): ?WebpageInterface
+    public function getWebpage(): ?FinalWebpageInterface
     {
         return $this->webpage;
     }
 
-    public function setWebpage(?WebpageInterface $webpage): static
+    public function setWebpage(?FinalWebpageInterface $webpage): static
     {
         $this->webpage = $webpage;
         return $this;

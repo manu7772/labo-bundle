@@ -36,7 +36,6 @@ class EcollectionRepository extends ItemRepository implements EcollectionReposit
                 ->setParameter('names', $classname::ITEMS_ACCEPT[$field])
                 ;
         }
-        // dump($qb->getDQL());
         return $qb;
     }
 

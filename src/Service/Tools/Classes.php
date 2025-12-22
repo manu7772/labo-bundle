@@ -300,7 +300,7 @@ class Classes extends BaseService
      * @return void
      */
     public static function filterDeclaredClasses(
-        array|object|string &$listOfClasses = null,
+        null|array|object|string &$listOfClasses = null,
         bool $sort = false
     ): void
     {
@@ -327,7 +327,7 @@ class Classes extends BaseService
      * @return void
      */
     public static function filterDeclaredInterfaces(
-        array|object|string &$interfaces = null,
+        null|array|object|string &$interfaces = null,
         bool $sort = false
     ): void
     {
@@ -352,7 +352,7 @@ class Classes extends BaseService
      */
     public static function filterByInterface(
         string|array $interfaces,
-        array|object|string $listOfClasses = null
+        null|array|object|string $listOfClasses = null
     ): array
     {
         static::filterDeclaredInterfaces($interfaces);
@@ -375,7 +375,7 @@ class Classes extends BaseService
     public static function getInheritedClasses(
         object|string $objectOrClass,
         bool $reverse = false,
-        array|object|string $listOfClasses = null,
+        null|array|object|string $listOfClasses = null,
         bool $onlyInstantiables = false,
     ): array
     {
@@ -413,7 +413,7 @@ class Classes extends BaseService
      */
     public static function getAttributes(
         ?string $attributeClass = null,
-        array|object|string $listOfClasses = null,
+        null|array|object|string $listOfClasses = null,
         bool $searchParents = true,
         int $selectType = 0
     ): array

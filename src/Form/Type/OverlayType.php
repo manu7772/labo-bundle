@@ -46,7 +46,6 @@ class OverlayType extends AbstractType
                 'expanded' => true,
             ])
             ;
-        
         parent::buildForm($builder, $options);
     }
 

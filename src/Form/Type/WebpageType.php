@@ -5,6 +5,7 @@ use Aequation\LaboBundle\Entity\Ecollection;
 use Aequation\LaboBundle\Entity\Item;
 use Aequation\LaboBundle\Entity\Photo;
 use Aequation\LaboBundle\Entity\Uname;
+use Aequation\LaboBundle\Form\base\BaseAppType;
 use Aequation\LaboBundle\Form\Type\PhotoType;
 use Aequation\LaboBundle\Model\Final\FinalCategoryInterface;
 use App\Entity\Menu;
@@ -17,7 +18,7 @@ use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfonycasts\DynamicForms\DynamicFormBuilder;
 
-class WebpageType extends AbstractType
+class WebpageType extends BaseAppType
 {
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
@@ -47,22 +48,19 @@ class WebpageType extends AbstractType
             ->add('mainmenu', EntityType::class, [
                 'class' => Menu::class,
                 'choice_label' => 'name',
+                // 'empty_data' => $this->laboEm->getEntityService(Menu::class),
             ])
             ->add('slider', EntityType::class, [
                 'class' => Slider::class,
                 'choice_label' => 'name',
+                // 'empty_data' => $this->laboEm->getEntityService(Slider::class),
             ])
             ->add('photo', PhotoType::class, [
-                // 'class' => Photo::class,
+                'class' => Photo::class,
                 // 'choice_label' => 'id',
+                'empty_data' => $this->laboEm->getEntityService(Photo::class),
             ])
         ;
     }
 
-    public function configureOptions(OptionsResolver $resolver): void
-    {
-        $resolver->setDefaults([
-            'data_class' => Webpage::class,
-        ]);
-    }
 }

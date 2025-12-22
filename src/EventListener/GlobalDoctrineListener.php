@@ -12,6 +12,7 @@ use Aequation\LaboBundle\Model\Interface\ImageInterface;
 use Aequation\LaboBundle\Model\Interface\OwnerInterface;
 use Aequation\LaboBundle\Model\Interface\UnamedInterface;
 use Aequation\LaboBundle\EventListener\Attribute\AppEvent;
+use Aequation\LaboBundle\Model\Attribute\HtmlContent;
 use Aequation\LaboBundle\Model\Final\FinalCategoryInterface;
 use Aequation\LaboBundle\Model\Final\FinalEntrepriseInterface;
 use Aequation\LaboBundle\Model\Interface\EnabledInterface;
@@ -23,6 +24,8 @@ use Aequation\LaboBundle\Model\Interface\LaboArticleInterface;
 use Aequation\LaboBundle\Service\Interface\PdfServiceInterface;
 use Aequation\LaboBundle\Service\Interface\AppEntityManagerInterface;
 use Aequation\LaboBundle\Service\Interface\AppRoleHierarchyInterface;
+use Aequation\LaboBundle\Service\Interface\CssDeclarationInterface;
+use Aequation\LaboBundle\Service\Tools\Classes;
 use Aequation\LaboBundle\Service\Tools\Encoders;
 // Symfony
 use Doctrine\ORM\Events;
@@ -40,6 +43,7 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Persistence\Event\LifecycleEventArgs;
 use Doctrine\Bundle\DoctrineBundle\Attribute\AsDoctrineListener;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\ORM\Event\PreFlushEventArgs;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 // PHP
@@ -54,10 +58,14 @@ use Exception;
 #[AsDoctrineListener(event: Events::postUpdate)]
 // #[AsDoctrineListener(event: Events::preRemove)]
 #[AsDoctrineListener(event: Events::postRemove)]
+#[AsDoctrineListener(event: Events::preFlush)]
 #[AsDoctrineListener(event: Events::onFlush)]
 #[AsDoctrineListener(event: Events::postFlush)]
 class GlobalDoctrineListener
 {
+    public const ENTITY_ACTIONS = ['insertions', 'updates', 'deletions'];
+    protected array $scheduledEntities;
+
     public function __construct(
         private EntityManagerInterface $em,
         private SlugService $slugService,
@@ -65,7 +73,18 @@ class GlobalDoctrineListener
         private AppEntityManagerInterface $manager,
         private UserPasswordHasherInterface $userPasswordHasher,
         private ParameterBagInterface $parameterBag,
-    ) {}
+        private CssDeclarationInterface $cssDeclaration,
+    ) {
+        $this->resetScheduledEntities();
+    }
+
+    protected function resetScheduledEntities(): void
+    {
+        $this->scheduledEntities = [];
+        foreach (static::ENTITY_ACTIONS as $action) {
+            $this->scheduledEntities[$action] = new ArrayCollection();
+        }
+    }
 
     // public function onLoad(LifecycleEventArgs $event): void
     // {
@@ -90,25 +109,29 @@ class GlobalDoctrineListener
 
     public function postLoad(PostLoadEventArgs $event): void
     {
-        /** @var AppEntityInterface */
         $entity = $event->getObject();
-        // Add Entity manager
-        $this->manager->setManagerToEntity($entity);
+        if($entity instanceof AppEntityInterface && !isset($entity->_service)) {
+            // Add Entity manager
+            $this->manager->setManagerToEntity($entity);
+        }
         // /** @var AppEntityManagerInterface */
         $entity->_service->dispatchEvent($entity, AppEvent::onLoad, ['event' => $event]);
         // Specificity entity
         if($entity instanceof LaboUserInterface) {
             $entity->setRoleHierarchy($this->roleHierarchy);
         }
-        if($entity instanceof HasOrderedInterface) {
-            $entity->loadedRelationOrder();
-        }
+        // if($entity instanceof HasOrderedInterface) {
+        //     $entity->loadedRelationOrder();
+        // }
     }
 
     public function prePersist(PrePersistEventArgs $event): void
     {
-        /** @var AppEntityInterface */
         $entity = $event->getObject();
+        if($entity instanceof AppEntityInterface && !isset($entity->_service)) {
+            // Add Entity manager
+            $this->manager->setManagerToEntity($entity);
+        }
         // $entity->_service->dispatchEvent($entity, Events::prePersist);
 
         if($entity instanceof ImageInterface) {
@@ -159,19 +182,17 @@ class GlobalDoctrineListener
         /** @var AppEntityInterface */
         $entity = $event->getObject();
         $entity->_service->clearAppEvents(entity: $entity);
-        // Specificity entity
-        // switch (true) {
-        //     case $entity instanceof SiteparamsInterface:
-        //         $this->needRefresh ??= $entity->__getAppManaged()->manager;
-        //         break;
-        // }
+        $this->addScheduledEntity($entity, 'insertions');
     }
 
     public function preUpdate(PreUpdateEventArgs $event): void
     {
         $entity_update = false;
-        /** @var AppEntityInterface */
         $entity = $event->getObject();
+        if($entity instanceof AppEntityInterface && !isset($entity->_service)) {
+            // Add Entity manager
+            $this->manager->setManagerToEntity($entity);
+        }
         // $entity->_service->dispatchEvent($entity, Events::preUpdate);
 
         if($entity instanceof LaboArticleInterface) {
@@ -285,12 +306,7 @@ class GlobalDoctrineListener
         /** @var AppEntityInterface */
         $entity = $event->getObject();
         $entity->_service->clearAppEvents(entity: $entity);
-        // Specificity entity
-        // switch (true) {
-        //     case $entity instanceof SiteparamsInterface:
-        //         $this->needRefresh ??= $entity->__getAppManaged()->manager;
-        //         break;
-        // }
+        $this->addScheduledEntity($entity, 'updates');
     }
 
     // public function preRemove(PreRemoveEventArgs $event): void
@@ -303,13 +319,14 @@ class GlobalDoctrineListener
     {
         /** @var AppEntityInterface */
         $entity = $event->getObject();
-        // $entity->_service->clearAppEvents(entity: $entity);
-        // Specificity entity
-        // switch (true) {
-        //     case $entity instanceof SiteparamsInterface:
-        //         $this->needRefresh ??= $entity->__getAppManaged()->manager;
-        //         break;
-        // }
+        $this->addScheduledEntity($entity, 'deletions');
+    }
+
+    public function preFlush(PreFlushEventArgs $args): void
+    {
+        /** @var UnitOfWork */
+        // $uow = $this->em->getUnitOfWork();
+        // dump($args, $uow->getScheduledEntityInsertions());
     }
 
     public function onFlush(OnFlushEventArgs $args): void
@@ -321,6 +338,11 @@ class GlobalDoctrineListener
         // $resetSlugsControls = false;
         // Persist
         foreach ($uow->getScheduledEntityInsertions() as $entity) {
+            if($entity->_isModel()) {
+                continue;
+                // dump('Try to save a model entity!', $entity);
+                // throw new Exception(vsprintf("Error %s line %d: you can not insert a model entity (%s).", [__METHOD__, __LINE__, $entity::class]));
+            }
             switch (true) {
                 case $entity instanceof SlugInterface:
                     if($this->slugService->computeUniqueSlug($entity)) {
@@ -454,34 +476,41 @@ class GlobalDoctrineListener
         }
 
         // Softdelete
-        foreach ($uow->getScheduledEntityDeletions() as $entity) {
-            if($entity instanceof EnabledInterface && !$entity->isSoftdeleted()) {
-                throw new Exception(vsprintf('Error line %d %s(): %s can not be deleted!', [__LINE__, __METHOD__, $entity::class]));
-                // if(!$entity->isSoftdeleted() || !$this->manager->isGranted('ROLE_SUPER_ADMIN')) {
-                    // $id = $entity->getId();
-                    // $classname = $entity->getClassname();
-                    // detach entity
-                    // $uow->detach($entity);
-                    // retrieve entity
-                    // $entity = $this->manager->getRepository($classname)->find($id);
-                    // $entity->setSoftdeleted(true);
-                    // $uow->scheduleForUpdate($entity);
-                    // $uow->recomputeSingleEntityChangeSet($this->em->getClassMetadata(get_class($entity)), $entity);
-                    // if($uow->isScheduledForDelete($entity)) {
-                    //     throw new Exception(vsprintf('Error line %d %s(): %s can not be deleted!', [__LINE__, __METHOD__, $entity::class]));
-                    // }
-                    // if(!$uow->isScheduledForUpdate($entity)) {
-                    //     throw new Exception(vsprintf('Error line %d %s(): %s can not be softdeleted!', [__LINE__, __METHOD__, $entity::class]));
-                    // }
-                // }
-            }
-        }
+        // foreach ($uow->getScheduledEntityDeletions() as $entity) {
+        //     if($entity instanceof EnabledInterface && !$entity->isSoftdeleted()) {
+        //         throw new Exception(vsprintf('Error line %d %s(): %s can not be deleted!', [__LINE__, __METHOD__, $entity::class]));
+        //         // if(!$entity->isSoftdeleted() || !$this->manager->isGranted('ROLE_SUPER_ADMIN')) {
+        //             // $id = $entity->getId();
+        //             // $classname = $entity->getClassname();
+        //             // detach entity
+        //             // $uow->detach($entity);
+        //             // retrieve entity
+        //             // $entity = $this->manager->getRepository($classname)->find($id);
+        //             // $entity->setSoftdeleted(true);
+        //             // $uow->scheduleForUpdate($entity);
+        //             // $uow->recomputeSingleEntityChangeSet($this->em->getClassMetadata(get_class($entity)), $entity);
+        //             // if($uow->isScheduledForDelete($entity)) {
+        //             //     throw new Exception(vsprintf('Error line %d %s(): %s can not be deleted!', [__LINE__, __METHOD__, $entity::class]));
+        //             // }
+        //             // if(!$uow->isScheduledForUpdate($entity)) {
+        //             //     throw new Exception(vsprintf('Error line %d %s(): %s can not be softdeleted!', [__LINE__, __METHOD__, $entity::class]));
+        //             // }
+        //         // }
+        //     }
+        // }
 
     }
 
     public function postFlush(PostFlushEventArgs $args): void
     {
+        $uow = $this->em->getUnitOfWork();
         $this->slugService->resetControls();
+        foreach ($this->scheduledEntities as $action => $list) {
+            if($list->count() > 0) {
+                $this->cssDeclaration->registerHtmlContent($action, $list->toArray(), true);
+            }
+        }
+        $this->resetScheduledEntities();
     }
 
 
@@ -509,5 +538,24 @@ class GlobalDoctrineListener
     //     $metadata = $em->getClassMetadata($object::class);
     //     $uow->recomputeSingleEntityChangeSet($metadata, $object);
     // }
+
+    protected function addScheduledEntity(object $entity, string $type): void
+    {
+        if(!in_array($type, static::ENTITY_ACTIONS, true)) {
+            // Error
+            throw new Exception(vsprintf('Error line %d %s(): type %s is not valid!', [__LINE__, __METHOD__, $type]));
+        }
+        foreach ($this->scheduledEntities as $action => $list) {
+            if($action !== $type) {
+                if($list->contains($entity)) {
+                    // Error
+                    throw new Exception(vsprintf('Error line %d %s(): %s can not be scheduled for %s because already scheduled for %s!', [__LINE__, __METHOD__, $entity::class, $type, $action]));
+                }
+            } else if(!$list->contains($entity)) {
+                // Add to the correct list
+                $list->add($entity);
+            }
+        }
+    }
 
 }

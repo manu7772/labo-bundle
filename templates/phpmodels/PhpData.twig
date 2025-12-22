@@ -19,10 +19,6 @@ class PhpData implements PhpDataInterface
     {
         $this->data = json_decode(static::JSON_DATA, true) ?? [];
         $this->version = new DateTimeImmutable(static::VERSION);
-        {% if debug|default(false) -%}
-        dump($this->data);
-        if(empty($this->data)) throw new Exception(vsprintf('Error %S line %d: property data can not be empty. Generated with constant of value %s (as a json string) but got null while json_decode.', [__METHOD__, __LINE__, static::JSON_DATA]));
-        {%- endif %}
     }
 
     public function needUpdate(): bool

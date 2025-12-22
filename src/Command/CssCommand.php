@@ -2,6 +2,8 @@
 namespace Aequation\LaboBundle\Command;
 
 use Aequation\LaboBundle\Service\Interface\CssDeclarationInterface;
+use Aequation\LaboBundle\Service\CssDeclaration;
+// Symfony
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
@@ -12,7 +14,7 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 
 #[AsCommand(
     name: 'app:css',
-    description: 'Declare css classes (for tailwind) in a twig file (app/templates/tailwind_css_declarations.html.twig)',
+    description: 'Declare css classes (for tailwind) in a twig file ('.CssDeclaration::BUNDLE_FILE_PATH.DIRECTORY_SEPARATOR.CssDeclaration::BUNDLE_FILE_NAME.')',
 )]
 class CssCommand extends Command
 {
@@ -36,7 +38,7 @@ class CssCommand extends Command
         $io = new SymfonyStyle($input, $output);
 
         if(!$this->cssDeclaration->refreshClasses()) {
-            return $io->error(vsprintf('L\'enregistrement du fichier %s a échoué !', []));
+            $io->error(vsprintf('L\'enregistrement du fichier %s a échoué !', []));
         }
         
         $classes = $this->cssDeclaration->getClasses(true);

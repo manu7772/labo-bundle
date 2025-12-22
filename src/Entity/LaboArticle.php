@@ -3,20 +3,22 @@ namespace Aequation\LaboBundle\Entity;
 
 use Aequation\LaboBundle\Model\Trait\Slug;
 use Aequation\LaboBundle\Model\Attribute as EA;
-use Aequation\LaboBundle\Model\Attribute\RelationOrder;
 use Aequation\LaboBundle\Model\Attribute\Slugable;
-use Aequation\LaboBundle\Model\Final\FinalCategoryInterface;
-use Aequation\LaboBundle\Repository\LaboArticleRepository;
-use Aequation\LaboBundle\Model\Interface\LaboArticleInterface;
 use Aequation\LaboBundle\Service\Interface\LaboArticleServiceInterface;
+use Aequation\LaboBundle\Model\Attribute\HtmlContent;
+use Aequation\LaboBundle\Model\Attribute\RelationOrder;
+use Aequation\LaboBundle\Repository\LaboArticleRepository;
+use Aequation\LaboBundle\Model\Final\FinalCategoryInterface;
+use Aequation\LaboBundle\Model\Interface\LaboArticleInterface;
+use Aequation\LaboBundle\Model\Trait\Screenable;
 // Symfony
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
-use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
-use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
+use Doctrine\Common\Collections\ArrayCollection;
 use Symfony\Component\Serializer\Attribute as Serializer;
-use Vich\UploaderBundle\Mapping\Annotation as Vich;
+use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
+use Vich\UploaderBundle\Mapping\Attribute as Vich;
 // PHP
 use DateTimeInterface;
 
@@ -32,23 +34,21 @@ use DateTimeInterface;
 abstract class LaboArticle extends Item implements LaboArticleInterface
 {
 
-    use Slug;
+    use Slug, Screenable;
 
     public const ICON = "tabler:article";
     public const FA_ICON = "fa-regular fa-newspaper";
     public const ITEMS_ACCEPT = [
         'categorys' => [FinalCategoryInterface::class],
     ];
-    public const DEFAULT_WEBPAGE = null;
 
 
     #[ORM\Column(type: Types::TEXT, nullable: true)]
+    #[HtmlContent]
     protected ?string $title = null;
 
-    #[ORM\Column(type: Types::STRING, nullable: false)]
-    protected string $webpage;
-
     #[ORM\Column(type: Types::TEXT, nullable: false)]
+    #[HtmlContent]
     protected string $content;
 
     #[ORM\Column(type: Types::DATETIME_MUTABLE, nullable: true)]
@@ -80,17 +80,6 @@ abstract class LaboArticle extends Item implements LaboArticleInterface
     public function setTitle(?string $title): static
     {
         $this->title = $title;
-        return $this;
-    }
-
-    public function getWebpage(): string
-    {
-        return $this->webpage;
-    }
-
-    public function setWebpage(string $webpage): static
-    {
-        $this->webpage = $webpage;
         return $this;
     }
 

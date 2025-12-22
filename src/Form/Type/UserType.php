@@ -21,6 +21,11 @@ use Symfony\Component\Validator\Constraints\Regex;
 class UserType extends BaseAppType
 {
     public const CLASSNAME = User::class;
+    public const FORM_CLASS = [
+        // '@defaults' => 'tailwind-form',
+        'data-action' => 'live#action',
+        'data-action-name' => 'prevent|save',
+    ];
 
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
@@ -98,18 +103,11 @@ class UserType extends BaseAppType
 
     public function configureOptions(OptionsResolver $resolver): void
     {
-        $defaults = [
-            'data_class' => static::CLASSNAME,
-            'attr' => [
-                'class' => $this->getFormClass(),
-                'data-action' => 'live#action',
-                'data-action-name' => 'prevent|save',
-            ],
-        ];
+        $defaults = $this->getBaseDefaults();
         if(strtolower($this->environment) !== 'prod') {
             $defaults['attr']['novalidate'] = true;
         }
-        $resolver->setDefaults(defaults: $defaults);
+        $resolver->setDefaults($defaults);
     }
 
 }

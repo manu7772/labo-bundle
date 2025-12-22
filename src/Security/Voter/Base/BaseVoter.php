@@ -18,6 +18,7 @@ use Symfony\Component\Security\Core\Authorization\Voter\VoterInterface;
 
 use Exception;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
+use Symfony\Component\Security\Core\Authorization\Voter\Vote;
 
 abstract class BaseVoter extends Voter implements VoterInterface, AppVoterInterface
 {
@@ -74,7 +75,8 @@ abstract class BaseVoter extends Voter implements VoterInterface, AppVoterInterf
     protected function voteOnAttribute(
         string $attribute,
         mixed $subject,
-        TokenInterface $token
+        TokenInterface $token,
+        ?Vote $vote = null
     ): bool
     {
         $vote = HttpRequest::isCli();
@@ -99,9 +101,10 @@ abstract class BaseVoter extends Voter implements VoterInterface, AppVoterInterf
                             break;
                         case static::ACTION_DUPLICATE:
                         case static::MAIN_ACTION_DUPLICATE:
-                            $vote = true;
-                            if($subject instanceof EnabledInterface && $subject->isSoftdeleted()) $vote = false;
-                            if(method_exists($subject, 'getName') && preg_match('/(\s-\scopie\d+)$/', $subject->getName())) $vote = false;
+                            $vote = false; // not allowed on main side
+                            // $vote = true;
+                            // if($subject instanceof EnabledInterface && $subject->isSoftdeleted()) $vote = false;
+                            // if(method_exists($subject, 'getName') && preg_match('/(\s-\scopie\d+)$/', $subject->getName())) $vote = false;
                             break;
                         case static::ACTION_UPDATE:
                         case static::MAIN_ACTION_UPDATE:
@@ -133,9 +136,10 @@ abstract class BaseVoter extends Voter implements VoterInterface, AppVoterInterf
                             break;
                         case static::ACTION_DUPLICATE:
                         case static::ADMIN_ACTION_DUPLICATE:
-                            $vote = $this->isGranted('ROLE_COLLABORATOR');
-                            if($subject instanceof EnabledInterface && $subject->isSoftdeleted()) $vote = false;
-                            if(method_exists($subject, 'getName') && preg_match('/(\s-\scopie\d+)$/', $subject->getName())) $vote = false;
+                            $vote = false; // not allowed on main side
+                            // $vote = $this->isGranted('ROLE_COLLABORATOR');
+                            // if($subject instanceof EnabledInterface && $subject->isSoftdeleted()) $vote = false;
+                            // if(method_exists($subject, 'getName') && preg_match('/(\s-\scopie\d+)$/', $subject->getName())) $vote = false;
                             break;
                         case static::ACTION_UPDATE:
                         case static::ADMIN_ACTION_UPDATE:

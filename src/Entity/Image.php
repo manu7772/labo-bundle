@@ -1,33 +1,35 @@
 <?php
 namespace Aequation\LaboBundle\Entity;
 
-use Aequation\LaboBundle\Component\AppEntityInfo;
-use Aequation\LaboBundle\EventListener\Attribute\AppEvent;
-use Aequation\LaboBundle\Model\Interface\CreatedInterface;
-use Aequation\LaboBundle\Model\Interface\ImageInterface;
-use Aequation\LaboBundle\Model\Interface\ImageOwnerInterface;
-use Aequation\LaboBundle\Repository\ImageRepository;
-use Aequation\LaboBundle\Model\Attribute as EA;
-use Aequation\LaboBundle\Model\Interface\AppEntityInterface;
-use Aequation\LaboBundle\Service\Interface\ImageServiceInterface;
-use Aequation\LaboBundle\Service\Tools\Files;
-use Aequation\LaboBundle\Service\Tools\HttpRequest;
-
-use Doctrine\ORM\Mapping as ORM;
-use Doctrine\DBAL\Types\Types;
-use Symfony\Component\HttpFoundation\File\File;
-use Symfony\Component\Validator\Constraints as Assert;
-use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
-use Symfony\Component\Serializer\Attribute as Serializer;
-use Vich\UploaderBundle\Mapping\Annotation as Vich;
-
 use Exception;
-use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
+use Doctrine\DBAL\Types\Types;
+use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Form\Form;
-use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\Form\FormEvent;
 use Symfony\Component\Form\FormEvents;
+use Aequation\LaboBundle\Service\Tools\Files;
+use Aequation\LaboBundle\Model\Attribute as EA;
+use Aequation\LaboBundle\Service\Tools\Strings;
+use Symfony\Component\HttpFoundation\File\File;
+use Symfony\Component\Form\FormBuilderInterface;
+
+use Aequation\LaboBundle\Component\AppEntityInfo;
 use Symfony\Component\Serializer\Attribute\Groups;
+use Aequation\LaboBundle\Service\Tools\HttpRequest;
+use Vich\UploaderBundle\Mapping\Attribute as Vich;
+use Aequation\LaboBundle\Repository\ImageRepository;
+use Aequation\LaboBundle\Model\Attribute\HtmlContent;
+use Symfony\Component\Validator\Constraints as Assert;
+
+use Aequation\LaboBundle\Model\Interface\ImageInterface;
+use Symfony\Component\Serializer\Attribute as Serializer;
+use Aequation\LaboBundle\EventListener\Attribute\AppEvent;
+use Aequation\LaboBundle\Model\Interface\CreatedInterface;
+use Aequation\LaboBundle\Model\Interface\AppEntityInterface;
+use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
+use Aequation\LaboBundle\Model\Interface\ImageOwnerInterface;
+use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
+use Aequation\LaboBundle\Service\Interface\ImageServiceInterface;
 
 #[ORM\Entity(repositoryClass: ImageRepository::class)]
 #[ORM\DiscriminatorColumn(name: "class_name", type: "string")]
@@ -40,15 +42,31 @@ abstract class Image extends Item implements ImageInterface
 
     public const ICON = 'tabler:photo';
     public const FA_ICON = 'camera';
+    public const MAPPING = 'photo';
     public const SERIALIZATION_PROPS = ['id','euid','name','file','filename','size','mime','classname','shortname'];
-    public const DEFAULT_LIIP_FILTER = "photo_q";
+    public const DEFAULT_LIIP_FILTER = "normal_x800";
     public const THUMBNAIL_LIIP_FILTER = 'miniature_q';
+    public const LIIP_FILTERS = [
+        // 'Aucun format prédéfini' => null,
+        'normal_x300',
+        'normal_x800',
+        'normal_x1200',
+        'photo_h',
+        'photo_v',
+        'photo_q',
+        'photo_reduced_600',
+        'photo_fullscreen',
+        'landscapethin',
+        'landscapemin',
+        'landscape',
+    ];
+    
 
     // #[Assert\NotNull(message: 'Le nom de fichier ne peut être null')]
     #[ORM\Column(length: 255)]
     protected ?string $filename = null;
 
-    #[Vich\UploadableField(mapping: 'photo', fileNameProperty: 'filename', size: 'size', mimeType: 'mime', originalName: 'originalname', dimensions: 'dimensions')]
+    #[Vich\UploadableField(mapping: self::MAPPING, fileNameProperty: 'filename', size: 'size', mimeType: 'mime', originalName: 'originalname', dimensions: 'dimensions')]
     #[Assert\File(
         maxSize: '12M',
         maxSizeMessage: 'Le fichier ne peut pas dépasser la taille de {{ limit }}{{ suffix }} : votre fichier fait {{ size }}{{ suffix }}',
@@ -70,7 +88,11 @@ abstract class Image extends Item implements ImageInterface
     #[ORM\Column(length: 255)]
     protected ?string $dimensions = null;
 
+    #[ORM\Column(length: 255, nullable: true)]
+    protected ?string $imagefilter;
+
     #[ORM\Column(type: Types::TEXT, nullable: true)]
+    #[HtmlContent]
     protected ?string $description = null;
 
     protected bool $deleteImage = false;
@@ -79,7 +101,12 @@ abstract class Image extends Item implements ImageInterface
     public function __toString(): string
     {
         return $this->name ?? $this->filename ?? parent::__toString();
-    }    
+    }
+
+    public static function getLiipFilterChoices(): array
+    {
+        return array_combine(array_map(fn($v) => 'liip_names.'.$v, static::LIIP_FILTERS), static::LIIP_FILTERS);
+    }
 
     /**
      * If manually uploading a file (i.e. not using Symfony Form) ensure an instance
@@ -96,7 +123,7 @@ abstract class Image extends Item implements ImageInterface
         ? $this->_service->getAppService()->get('Tool:Files')->getCopiedTmpFile($file)
         : $file;
         if(!empty($this->getId())) $this->updateUpdatedAt();
-        if(empty($this->filename)) $this->setFilename($this->file->getFilename());
+        if(!Strings::hasText($this->filename)) $this->setFilename($this->file->getFilename());
         $this->updateName();
         return $this;
     }
@@ -115,7 +142,7 @@ abstract class Image extends Item implements ImageInterface
         $referenceType = UrlGeneratorInterface::ABSOLUTE_URL
     ): ?string
     {
-        $filter ??= $this->getLiipDefaultFilter();
+        $filter ??= $this->getImagefilter();
         return $this->_appManaged->manager->getBrowserPath($this, $filter, $runtimeConfig, $resolver, $referenceType);
     }
 
@@ -124,9 +151,7 @@ abstract class Image extends Item implements ImageInterface
         return $this->liipDefaultFilter ??= static::DEFAULT_LIIP_FILTER;
     }
 
-    public function setLiipDefaultFilter(
-        string $liipDefaultFilter
-    ): static
+    public function setLiipDefaultFilter(string $liipDefaultFilter): static
     {
         $this->liipDefaultFilter = $liipDefaultFilter;
         return $this;
@@ -143,7 +168,7 @@ abstract class Image extends Item implements ImageInterface
 
     public function updateName(): static
     {
-        if(empty($this->name) && !empty($this->filename)) $this->setName($this->filename);
+        if(!Strings::hasText($this->name) && Strings::hasText($this->filename)) $this->setName($this->filename);
         return $this;
     }
 
@@ -195,9 +220,11 @@ abstract class Image extends Item implements ImageInterface
         return $this;
     }
 
-    public function getDimensions(): ?string
+    public function getDimensions(bool $asArray = false): null|string|array
     {
-        return $this->dimensions;
+        return $asArray
+            ? explode('x', $this->dimensions)
+            : $this->dimensions;
     }
 
     public function setDimensions(mixed $dimensions): static
@@ -205,6 +232,17 @@ abstract class Image extends Item implements ImageInterface
         $this->dimensions = is_array($dimensions)
             ? implode('x',$dimensions)
             : (string)$dimensions;
+        return $this;
+    }
+
+    public function getImagefilter(): ?string
+    {
+        return $this->imagefilter ??= $this->getLiipDefaultFilter();
+    }
+
+    public function setImagefilter(?string $imagefilter): static
+    {
+        $this->imagefilter = $imagefilter;
         return $this;
     }
 

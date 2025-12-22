@@ -4,6 +4,7 @@ namespace Aequation\LaboBundle\Controller\Admin;
 use Aequation\LaboBundle\Security\Voter\SliderVoter;
 use Aequation\LaboBundle\Controller\Admin\Base\BaseCrudController;
 use Aequation\LaboBundle\Entity\LaboUser;
+use Aequation\LaboBundle\Field\CKEditorField;
 use Aequation\LaboBundle\Model\Interface\AppEntityInterface;
 use Aequation\LaboBundle\Repository\EcollectionRepository;
 use Aequation\LaboBundle\Service\Interface\SliderServiceInterface;
@@ -53,11 +54,6 @@ class SliderCrudController extends BaseCrudController
     public function configureFields(string $pageName): iterable
     {
         $this->checkGrants($pageName);
-        $info = $this->getContextInfo();
-        /** @var User $user */
-        $user = $this->getUser();
-        $timezone = $this->getParameter('timezone');
-        $current_tz = $timezone !== $user->getTimezone() ? $user->getTimezone() : $timezone;
         switch ($pageName) {
             case Crud::PAGE_DETAIL:
                 yield IdField::new('id')->setPermission('ROLE_SUPER_ADMIN');
@@ -67,11 +63,11 @@ class SliderCrudController extends BaseCrudController
                 yield TextField::new('slidertypeAsText', 'Type de diaporama');
                 yield TextField::new('title', 'Titre');
                 yield ArrayField::new('items', 'Diapositives');
-                yield TextEditorField::new('content', 'Texte')->formatValue(function ($value) { return Strings::markup($value); });
+                yield TextEditorField::new('content', 'Texte')->setNumOfRows(20)->formatValue(function ($value) { return Strings::markup($value); });
                 yield BooleanField::new('enabled', 'Activé');
                 yield BooleanField::new('softdeleted', 'Supprimé')->setPermission('ROLE_SUPER_ADMIN');
-                yield DateTimeField::new('createdAt', 'Création')->setFormat('dd/MM/Y - HH:mm')->setTimezone($current_tz);
-                yield DateTimeField::new('updatedAt', 'Modification')->setFormat('dd/MM/Y - HH:mm')->setTimezone($current_tz);
+                yield DateTimeField::new('createdAt', 'Création')->setFormat('dd/MM/Y - HH:mm')->setTimezone($this->getLaboContext()->getTimezone());
+                yield DateTimeField::new('updatedAt', 'Modification')->setFormat('dd/MM/Y - HH:mm')->setTimezone($this->getLaboContext()->getTimezone());
                 break;
             case Crud::PAGE_NEW:
                 yield FormField::addTab('Informations')
@@ -87,7 +83,7 @@ class SliderCrudController extends BaseCrudController
                         ->setColumns(6)
                         ->setRequired(true)
                         ;
-                    yield TextEditorField::new('content', 'Texte de présentation')->setColumns(12);
+                    yield CKEditorField::new('content', 'Texte de présentation')->setColumns(12)->formatValue(fn ($value) => Strings::markup($value));
                     // yield TextareaField::new('content', 'Texte')
                     //     ->setFormType(CKEditorType::class)
                     //     ->setFormTypeOptions(
@@ -150,7 +146,7 @@ class SliderCrudController extends BaseCrudController
                         ->setColumns(6)
                         ->setRequired(true)
                         ;
-                    yield TextEditorField::new('content', 'Texte de présentation')->setColumns(12);
+                    yield CKEditorField::new('content', 'Texte de présentation')->setColumns(12)->formatValue(fn ($value) => Strings::markup($value));
                     yield FormField::addTab('Diapositives')
                         ->setIcon('fa6-solid:camera');
                     yield AssociationField::new('items', 'Diapositives')
@@ -174,7 +170,7 @@ class SliderCrudController extends BaseCrudController
                 yield AssociationField::new('items', 'Diapositives')->setTextAlign('center')->setSortable(false);
                 yield BooleanField::new('enabled', 'Activé')->setTextAlign('center');
                 yield AssociationField::new('owner', 'Propriétaire');
-                yield DateTimeField::new('createdAt', 'Création')->setFormat('dd/MM/Y - HH:mm')->setTimezone($current_tz);
+                yield DateTimeField::new('createdAt', 'Création')->setFormat('dd/MM/Y - HH:mm')->setTimezone($this->getLaboContext()->getTimezone());
                 break;
         }
     }

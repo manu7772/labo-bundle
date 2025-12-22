@@ -85,7 +85,6 @@ class TwigfileMetadata
         $default = $data['form']['default'][$fieldname] ?? [];
         $field = $data['form'][$context][$fieldname] ?? [];
         $field = array_merge($field, $default);
-        // dump($data, $context, $fieldname, $field);
         if(!empty($field)) {
             if(!($field['show'] ?? true)) return false;
             if(!isset($field['type'])) return true;

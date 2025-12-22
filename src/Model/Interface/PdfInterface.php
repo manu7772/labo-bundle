@@ -1,6 +1,7 @@
 <?php
 namespace Aequation\LaboBundle\Model\Interface;
 
+use Aequation\LaboBundle\Entity\Item;
 use DateTimeInterface;
 use Symfony\Component\HttpFoundation\File\File;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
@@ -37,5 +38,8 @@ interface PdfInterface extends ItemInterface, SlugInterface, PdfizableInterface
     public function setDescription(?string $description): static;
     public function getContent(): ?string;
     public function setContent(?string $content): static;
+
+    public function getPdfowner(): ?Item;
+    public function setPdfowner(?Item $pdfowner): static;
 
 }

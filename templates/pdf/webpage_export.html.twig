@@ -1,4 +1,4 @@
-<h1 style="font-size: 2.4rem; text-align: center; margin: 0 auto 48px; color: darkblue;">{{ webpage.title|striptags }}</h1>
+<h1 style="font-size: 2.4rem; text-align: center; margin: 0 auto 48px; color: darkblue;">{{ webpage.title|htmlentities(true) }}</h1>
 <hr>
 <div>
     {{ webpage.content|raw }}

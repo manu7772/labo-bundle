@@ -20,6 +20,7 @@ use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
+use Exception;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Serializer\Attribute as Serializer;
 use Symfony\Component\Serializer\Attribute\Groups;
@@ -40,11 +41,19 @@ abstract class Item extends MappSuperClassEntity implements ItemInterface, Creat
 
     #[ORM\Column(length: 255)]
     #[Serializer\Groups('index')]
+    #[Assert\NotBlank(message: 'Vous devez renseigner un nom')]
     protected ?string $name = null;
 
     #[ORM\ManyToMany(targetEntity: Ecollection::class, inversedBy: 'items', fetch: 'EXTRA_LAZY')]
     #[Serializer\Ignore]
     protected Collection $parents;
+
+    /**
+     * @var Collection<int, Pdf>
+     */
+    #[ORM\OneToMany(targetEntity: Pdf::class, mappedBy: 'pdfowner', cascade: ['persist'])]
+    #[Assert\Valid()]
+    protected Collection $pdfiles;
 
     #[ORM\Column]
     protected int $orderitem = 0;
@@ -53,6 +62,7 @@ abstract class Item extends MappSuperClassEntity implements ItemInterface, Creat
     {
         parent::__construct();
         $this->parents = new ArrayCollection();
+        $this->pdfiles = new ArrayCollection();
     }
 
     public function __clone()
@@ -64,7 +74,7 @@ abstract class Item extends MappSuperClassEntity implements ItemInterface, Creat
 
     public function __toString(): string
     {
-        return empty($this->name) ? parent::__toString() : $this->name;
+        return empty($this->name ?? null) ? parent::__toString() : $this->name;
     }
 
     public function getOrderitem(): int
@@ -85,25 +95,34 @@ abstract class Item extends MappSuperClassEntity implements ItemInterface, Creat
 
     public function setName(string $name): static
     {
-        $this->name = trim($name);
+        $this->name = $name;
         return $this;
     }
 
     #[Serializer\Ignore]
     public function addParent(EcollectionInterface $parent): static
     {
+        if($this->_isModel() || $parent->_isModel()) {
+            // Cannot add parent to model
+            return $this;
+        }
         if($parent === $this) {
             // Failed to add parent
+            throw new Exception(vsprintf('Error %s line %d: An item cannot be parent of itself!', [__METHOD__, __LINE__]));
             $this->removeParent($parent);
             return $this;
         }
         if(!$this->hasParent($parent)) {
             $this->parents->add($parent);
         }
-        if(!($parent->hasItem($this) || $parent->addItem($this))) {
-            // Failed to add parent
-            $this->removeParent($parent);
-            $parent->removeItem($this);
+        if(!$parent->hasItem($this)) {
+            // dump('***** Adding parent "'.$parent.'" to '.$this->__toString().'...');
+            if(!$parent->addItem($this)) {
+                // dump('***** Failed to add parent "'.$parent.'" to '.$this->__toString().'...');
+                // Failed to add parent
+                $this->removeParent($parent);
+                $parent->removeItem($this);
+            }
         }
         return $this;
     }
@@ -141,5 +160,34 @@ abstract class Item extends MappSuperClassEntity implements ItemInterface, Creat
         return $this;
     }
 
+    /**
+     * @return Collection<int, Pdf>
+     */
+    public function getPdfiles(): Collection
+    {
+        return $this->pdfiles;
+    }
+
+    public function addPdfile(Pdf $pdfile): static
+    {
+        if (!$this->pdfiles->contains($pdfile)) {
+            $this->pdfiles->add($pdfile);
+            $pdfile->setPdfowner($this);
+        }
+
+        return $this;
+    }
+
+    public function removePdfile(Pdf $pdfile): static
+    {
+        if ($this->pdfiles->removeElement($pdfile)) {
+            // set the owning side to null (unless already changed)
+            if ($pdfile->getPdfowner() === $this) {
+                $pdfile->setPdfowner(null);
+            }
+        }
+
+        return $this;
+    }
 
 }

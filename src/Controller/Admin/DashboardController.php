@@ -1,62 +1,73 @@
 <?php
 namespace Aequation\LaboBundle\Controller\Admin;
 
-use Aequation\LaboBundle\Entity\Crudvoter;
-use Aequation\LaboBundle\Entity\Image;
-use Aequation\LaboBundle\Entity\LaboRelink;
-use Aequation\LaboBundle\Entity\Pdf;
-use Aequation\LaboBundle\Security\Voter\CategoryVoter;
-use Aequation\LaboBundle\Security\Voter\CrudvoterVoter;
-use Aequation\LaboBundle\Security\Voter\ImageVoter;
-use Aequation\LaboBundle\Security\Voter\MenuVoter;
-use Aequation\LaboBundle\Security\Voter\SiteparamsVoter;
-use Aequation\LaboBundle\Security\Voter\AdvertVoter;
-use Aequation\LaboBundle\Security\Voter\SliderVoter;
-use Aequation\LaboBundle\Security\Voter\SlideVoter;
-use Aequation\LaboBundle\Security\Voter\UserVoter;
-use Aequation\LaboBundle\Security\Voter\WebpageVoter;
-use Aequation\LaboBundle\Entity\Siteparams;
-use Aequation\LaboBundle\Model\Interface\LaboUserInterface;
-use Aequation\LaboBundle\Repository\LaboUserRepository;
-use Aequation\LaboBundle\Security\Voter\AddresslinkVoter;
-use Aequation\LaboBundle\Security\Voter\EmailinkVoter;
-use Aequation\LaboBundle\Security\Voter\EntrepriseVoter;
-use Aequation\LaboBundle\Security\Voter\PdfVoter;
-use Aequation\LaboBundle\Security\Voter\PhonelinkVoter;
-use Aequation\LaboBundle\Security\Voter\UrlinkVoter;
-use Aequation\LaboBundle\Security\Voter\WebsectionVoter;
-use Aequation\LaboBundle\Service\Interface\AppEntityManagerInterface;
-use Aequation\LaboBundle\Service\Interface\LaboCategoryServiceInterface;
-use Aequation\LaboBundle\Service\Interface\LaboRelinkServiceInterface;
-use Aequation\LaboBundle\Service\Tools\Classes;
+use App\Entity\Menu;
+use App\Entity\User;
+use App\Entity\Slide;
 use App\Entity\Advert;
+use App\Entity\Slider;
+use App\Entity\Urlink;
+use App\Entity\Webpage;
 use App\Entity\Category;
-use App\Entity\Addresslink;
 use App\Entity\Emailink;
 use App\Entity\Phonelink;
-use App\Entity\Urlink;
+use App\Entity\Prixthese;
+use App\Entity\Videolink;
 use App\Entity\Entreprise;
-use App\Entity\Menu;
-use App\Entity\Slide;
-use App\Entity\Slider;
-use App\Entity\Webpage;
 use App\Entity\Websection;
-use App\Entity\User;
-use EasyCorp\Bundle\EasyAdminBundle\Attribute\AdminDashboard;
-use EasyCorp\Bundle\EasyAdminBundle\Config\Assets;
-use EasyCorp\Bundle\EasyAdminBundle\Config\Crud;
-use Symfony\Component\Security\Core\User\UserInterface;
-use EasyCorp\Bundle\EasyAdminBundle\Config\Dashboard;
-use EasyCorp\Bundle\EasyAdminBundle\Config\MenuItem;
-use EasyCorp\Bundle\EasyAdminBundle\Config\Option\EA;
-use EasyCorp\Bundle\EasyAdminBundle\Config\UserMenu;
-use EasyCorp\Bundle\EasyAdminBundle\Controller\AbstractDashboardController;
-use EasyCorp\Bundle\EasyAdminBundle\Router\AdminUrlGenerator;
+use App\Entity\Addresslink;
+use Aequation\LaboBundle\Entity\Pdf;
+use Aequation\LaboBundle\Entity\Image;
+use Aequation\LaboBundle\Entity\Photo;
+use App\Security\Voter\PrixtheseVoter;
+use Aequation\LaboBundle\Entity\Picture;
+use Aequation\LaboBundle\Entity\Portrait;
+use Aequation\LaboBundle\Entity\Crudvoter;
+use Aequation\LaboBundle\Entity\LaboRelink;
+use Aequation\LaboBundle\Entity\Siteparams;
 use Symfony\Component\HttpFoundation\Response;
+use Aequation\LaboBundle\Service\Tools\Classes;
 use Symfony\Component\Routing\Annotation\Route;
-use Symfony\Component\Security\Http\Attribute\IsGranted;
-use Symfony\Component\Security\Http\Authentication\AuthenticationUtils;
+use EasyCorp\Bundle\EasyAdminBundle\Config\Crud;
+use Aequation\LaboBundle\Security\Voter\PdfVoter;
+use Aequation\LaboBundle\Security\Voter\MenuVoter;
+use Aequation\LaboBundle\Security\Voter\UserVoter;
+use EasyCorp\Bundle\EasyAdminBundle\Config\Action;
+use EasyCorp\Bundle\EasyAdminBundle\Config\Assets;
+use Aequation\LaboBundle\Security\Voter\ImageVoter;
+use Aequation\LaboBundle\Security\Voter\PhotoVoter;
+use Aequation\LaboBundle\Security\Voter\SlideVoter;
+use Aequation\LaboBundle\Security\Voter\AdvertVoter;
+use Aequation\LaboBundle\Security\Voter\SliderVoter;
+use Aequation\LaboBundle\Security\Voter\UrlinkVoter;
+use EasyCorp\Bundle\EasyAdminBundle\Config\MenuItem;
+use EasyCorp\Bundle\EasyAdminBundle\Config\UserMenu;
+use Aequation\LaboBundle\Security\Voter\PictureVoter;
+use Aequation\LaboBundle\Security\Voter\WebpageVoter;
+use EasyCorp\Bundle\EasyAdminBundle\Config\Dashboard;
+use EasyCorp\Bundle\EasyAdminBundle\Config\Option\EA;
+use Aequation\LaboBundle\Security\Voter\CategoryVoter;
+use Aequation\LaboBundle\Security\Voter\EmailinkVoter;
+use Aequation\LaboBundle\Security\Voter\PortraitVoter;
 use Symfony\Contracts\Translation\TranslatorInterface;
+use Aequation\LaboBundle\Repository\LaboUserRepository;
+use Aequation\LaboBundle\Security\Voter\CrudvoterVoter;
+use Aequation\LaboBundle\Security\Voter\PhonelinkVoter;
+use Aequation\LaboBundle\Security\Voter\VideolinkVoter;
+use Symfony\Component\Security\Core\User\UserInterface;
+use Aequation\LaboBundle\Security\Voter\EntrepriseVoter;
+use Aequation\LaboBundle\Security\Voter\SiteparamsVoter;
+use Aequation\LaboBundle\Security\Voter\WebsectionVoter;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
+use Aequation\LaboBundle\Security\Voter\AddresslinkVoter;
+use Aequation\LaboBundle\Model\Interface\LaboUserInterface;
+use EasyCorp\Bundle\EasyAdminBundle\Attribute\AdminDashboard;
+use EasyCorp\Bundle\EasyAdminBundle\Router\AdminUrlGenerator;
+use Aequation\LaboBundle\Service\Interface\AppEntityManagerInterface;
+use Aequation\LaboBundle\Service\Interface\WebsectionServiceInterface;
+use Symfony\Component\Security\Http\Authentication\AuthenticationUtils;
+use Aequation\LaboBundle\Service\Interface\LaboCategoryServiceInterface;
+use EasyCorp\Bundle\EasyAdminBundle\Controller\AbstractDashboardController;
 
 /**
  * Override temlates
@@ -82,7 +93,6 @@ class DashboardController extends AbstractDashboardController
     #[Route(path: '/easyadmin', name: 'easyadmin')]
     public function index(): Response
     {
-        // dump($this->isGranted(WebpageVoter::ADMIN_ACTION_LIST, Webpage::class));
         // Admin granted page
         if(!static::ADMIN_HOMEPAGE && $this->isGranted(WebpageVoter::ADMIN_ACTION_LIST, Webpage::class)) {
             // $adminUrlGenerator = $this->container->get(AdminUrlGenerator::class);
@@ -103,7 +113,7 @@ class DashboardController extends AbstractDashboardController
         mixed $data,
         array $parameters = [],
         string $domain = 'EasyAdminBundle',
-        string $locale = null,
+        ?string $locale = null,
     ): mixed
     {
         switch (true) {
@@ -161,14 +171,29 @@ class DashboardController extends AbstractDashboardController
         $color = 'text-success-emphasis';
         yield MenuItem::section('Site public')->setCssClass($color);
         yield MenuItem::linkToUrl(label: 'Retour au site', icon: 'tabler:home-filled', url: $this->generateUrl('app_home'));
-        yield MenuItem::linkToUrl(label: 'Quitter', icon: 'tabler:lock-filled', url: $route_logout);
+        yield MenuItem::linkToLogout(label: 'Déconnexion', icon: 'tabler:lock-filled')->setPermission('ROLE_USER');
         yield MenuItem::linkToUrl(label: 'Labo', icon: 'tabler:brand-symfony', url: $this->generateUrl('aequation_labo_home'))->setPermission('ROLE_SUPER_ADMIN');
+        if(class_exists('App\\Controller\\Admin\\VideoTutoCrudController')) {
+            yield MenuItem::linkToUrl(label: 'Tutorels', icon: 'tabler:video', url: $this->adminUrlGenerator->setController('App\\Controller\\Admin\\VideoTutoCrudController')->setAction(Action::INDEX)->generateUrl());
+        }
 
         // 2. MANAGER
         $color = 'text-primary-emphasis';
         $webmanage = [];
         if($this->isGranted(WebpageVoter::ADMIN_ACTION_LIST, Webpage::class)) $webmanage['Webpage'] = MenuItem::linkToCrud(label: 'Pages web', icon: Webpage::ICON, entityFqcn: Webpage::class);
-        if($this->isGranted(WebsectionVoter::ADMIN_ACTION_LIST, Websection::class)) $webmanage['Websection'] = MenuItem::linkToCrud(label: 'Sections web', icon: Websection::ICON, entityFqcn: Websection::class);
+        $sub_sections = [];
+        if($this->isGranted(WebsectionVoter::ADMIN_ACTION_LIST, Websection::class)) {
+            /** @var WebsectionServiceInterface */
+            $entService = $this->manager->getEntityService(Websection::class);
+            $sectionTypes = $entService->getSectiontypes();
+            foreach ($sectionTypes as $type) {
+                $url = $this->generateUrl('easyadmin_websection_index', ['type' => $type]);
+                $sub_sections[$type] = MenuItem::linkToUrl(label: 'Type '.ucfirst($type), icon: null, url: $url);
+            }
+            if(count($sub_sections)) {
+                $webmanage['Websection'] = MenuItem::subMenu(label: 'Sections', icon: Websection::ICON)->setSubItems($sub_sections);
+            }
+        }
         if($this->isGranted(MenuVoter::ADMIN_ACTION_LIST, Menu::class)) $webmanage['Menu'] = MenuItem::linkToCrud(label: 'Menus', icon: Menu::ICON, entityFqcn: Menu::class);
         if(count($webmanage)) {
             yield MenuItem::section('Contenu du site')->setCssClass($color);
@@ -179,10 +204,11 @@ class DashboardController extends AbstractDashboardController
         $color = 'text-info';
         $medias = [];
         $sub_medias = [];
-        if($this->isGranted(AdvertVoter::ADMIN_ACTION_LIST, Advert::class)) $medias['Advert'] = MenuItem::linkToCrud(label: 'Annonces', icon: Advert::ICON, entityFqcn: Advert::class);
-        if($this->isGranted(SliderVoter::ADMIN_ACTION_LIST, Slider::class)) $medias['Slider'] = MenuItem::linkToCrud(label: 'Diaporamas', icon: Slider::ICON, entityFqcn: Slider::class);
-        if($this->isGranted(SlideVoter::ADMIN_ACTION_LIST, Slide::class)) $medias['Slide'] = MenuItem::linkToCrud(label: 'Diapositives', icon: Slide::ICON, entityFqcn: Slide::class);
-        if($this->isGranted(PdfVoter::ADMIN_ACTION_LIST, Pdf::class)) $medias['Pdf'] = MenuItem::linkToCrud(label: 'Fichiers PDF', icon: Pdf::ICON, entityFqcn: Pdf::class);
+        if(class_exists(Prixthese::class) && $this->isGranted(PrixtheseVoter::ADMIN_ACTION_LIST, Prixthese::class)) $medias['Prixthese'] = MenuItem::linkToCrud(label: 'Prix de thèses', icon: Prixthese::ICON, entityFqcn: Prixthese::class);
+        if(class_exists(Advert::class) && $this->isGranted(AdvertVoter::ADMIN_ACTION_LIST, Advert::class)) $medias['Advert'] = MenuItem::linkToCrud(label: 'Annonces', icon: Advert::ICON, entityFqcn: Advert::class);
+        if(class_exists(Slider::class) && $this->isGranted(SliderVoter::ADMIN_ACTION_LIST, Slider::class)) $medias['Slider'] = MenuItem::linkToCrud(label: 'Diaporamas', icon: Slider::ICON, entityFqcn: Slider::class);
+        if(class_exists(Slide::class) && $this->isGranted(SlideVoter::ADMIN_ACTION_LIST, Slide::class)) $medias['Slide'] = MenuItem::linkToCrud(label: 'Diapositives', icon: Slide::ICON, entityFqcn: Slide::class);
+        if(class_exists(Pdf::class) && $this->isGranted(PdfVoter::ADMIN_ACTION_LIST, Pdf::class)) $medias['Pdf'] = MenuItem::linkToCrud(label: 'Fichiers PDF', icon: Pdf::ICON, entityFqcn: Pdf::class);
         $sub_medias = [];
         if($this->isGranted(CategoryVoter::ADMIN_ACTION_LIST, Category::class)) {
             /** @var LaboCategoryServiceInterface */
@@ -192,19 +218,27 @@ class DashboardController extends AbstractDashboardController
                 $name = $this->translator->trans('names', [], Classes::getShortname($type));
                 if($name === 'names') $name = Classes::getShortname($type);
                 $url = $this->generateUrl('easyadmin_category_index', ['type' => Classes::getShortname($type)]);
-                $sub_medias[$type] = MenuItem::linkToUrl(label: 'Type '.ucfirst($this->translate('names', [], Classes::getShortname($type))), icon: Category::ICON, url: $url);
+                $sub_medias[$type] = MenuItem::linkToUrl(label: 'Type '.ucfirst($name), icon: Category::ICON, url: $url);
             }
             if(count($sub_medias)) {
                 $medias['Category'] = MenuItem::subMenu(label: 'Categories', icon: Category::ICON)->setSubItems($sub_medias);
             }
         }
         $sub_medias = [];
-        if($this->isGranted(AddresslinkVoter::ADMIN_ACTION_LIST, Addresslink::class)) $sub_medias[$type] = MenuItem::linkToCrud(label: ucfirst($this->translate('names', [], Classes::getShortname(Addresslink::class))), icon: Addresslink::ICON, entityFqcn: Addresslink::class);
-        if($this->isGranted(PhonelinkVoter::ADMIN_ACTION_LIST, Phonelink::class)) $sub_medias[$type] = MenuItem::linkToCrud(label: ucfirst($this->translate('names', [], Classes::getShortname(Phonelink::class))), icon: Phonelink::ICON, entityFqcn: Phonelink::class);
-        if($this->isGranted(EmailinkVoter::ADMIN_ACTION_LIST, Emailink::class)) $sub_medias[$type] = MenuItem::linkToCrud(label: ucfirst($this->translate('names', [], Classes::getShortname(Emailink::class))), icon: Emailink::ICON, entityFqcn: Emailink::class);
-        if($this->isGranted(UrlinkVoter::ADMIN_ACTION_LIST, Urlink::class)) $sub_medias[$type] = MenuItem::linkToCrud(label: ucfirst($this->translate('names', [], Classes::getShortname(Urlink::class))), icon: Urlink::ICON, entityFqcn: Urlink::class);
+        if($this->isGranted(AddresslinkVoter::ADMIN_ACTION_LIST, Addresslink::class)) $sub_medias['Adresses'] = MenuItem::linkToCrud(label: ucfirst($this->translate('names', [], Classes::getShortname(Addresslink::class))), icon: Addresslink::ICON, entityFqcn: Addresslink::class);
+        if($this->isGranted(PhonelinkVoter::ADMIN_ACTION_LIST, Phonelink::class)) $sub_medias['Téléphones'] = MenuItem::linkToCrud(label: ucfirst($this->translate('names', [], Classes::getShortname(Phonelink::class))), icon: Phonelink::ICON, entityFqcn: Phonelink::class);
+        if($this->isGranted(EmailinkVoter::ADMIN_ACTION_LIST, Emailink::class)) $sub_medias['Emails'] = MenuItem::linkToCrud(label: ucfirst($this->translate('names', [], Classes::getShortname(Emailink::class))), icon: Emailink::ICON, entityFqcn: Emailink::class);
+        if($this->isGranted(UrlinkVoter::ADMIN_ACTION_LIST, Urlink::class)) $sub_medias['Liens'] = MenuItem::linkToCrud(label: ucfirst($this->translate('names', [], Classes::getShortname(Urlink::class))), icon: Urlink::ICON, entityFqcn: Urlink::class);
         if(count($sub_medias)) {
             $medias['Urlinks'] = MenuItem::subMenu(label: 'Contacts', icon: LaboRelink::ICON)->setSubItems($sub_medias);
+        }
+        $sub_medias = [];
+        if($this->isGranted(PictureVoter::ADMIN_ACTION_LIST, Picture::class)) $sub_medias['Pictures'] = MenuItem::linkToCrud(label: ucfirst($this->translate('names', [], Classes::getShortname(Picture::class))), icon: Picture::ICON, entityFqcn: Picture::class);
+        if($this->isGranted(VideolinkVoter::ADMIN_ACTION_LIST, Videolink::class)) $sub_medias['Vidéos'] = MenuItem::linkToCrud(label: ucfirst($this->translate('names', [], Classes::getShortname(Videolink::class))), icon: Videolink::ICON, entityFqcn: Videolink::class);
+        if($this->isGranted(PhotoVoter::ADMIN_ACTION_LIST, Photo::class)) $sub_medias['Photos'] = MenuItem::linkToCrud(label: ucfirst($this->translate('names', [], Classes::getShortname(Photo::class))), icon: Photo::ICON, entityFqcn: Photo::class);
+        if($this->isGranted(PortraitVoter::ADMIN_ACTION_LIST, Portrait::class)) $sub_medias['Portraits'] = MenuItem::linkToCrud(label: ucfirst($this->translate('names', [], Classes::getShortname(Portrait::class))), icon: Portrait::ICON, entityFqcn: Portrait::class);
+        if(count($sub_medias)) {
+            $medias['Mediafiles'] = MenuItem::subMenu(label: 'Médias', icon: Image::ICON)->setSubItems($sub_medias);
         }
         if(count($medias)) {
             yield MenuItem::section('Médias & liens')->setCssClass($color);

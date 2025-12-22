@@ -6,7 +6,6 @@
 
 {% block body %}
     <h1>Bonjour {{ app.user|default('le monde') }} !</h1>
-    {# {{ dump(webpage|default('NOT FOUND!!!')) }} #}
     <div class="mx-auto md:max-w-md lg:max-w-3xl h-96 max-h-96 overflow-hidden">
         <div class="video-container">
             <video autoplay muted {# controls #} loop>

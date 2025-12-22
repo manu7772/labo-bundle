@@ -1,12 +1,13 @@
 <?php
 namespace Aequation\LaboBundle\Security\Voter;
 
+use Aequation\LaboBundle\Service\Tools\HttpRequest;
 use Aequation\LaboBundle\Model\Interface\MenuInterface;
 use Aequation\LaboBundle\Security\Voter\Base\BaseVoter;
-use Aequation\LaboBundle\Service\Interface\MenuServiceInterface;
-use Aequation\LaboBundle\Service\Tools\HttpRequest;
 use Aequation\LaboBundle\Model\Interface\LaboUserInterface;
+use Symfony\Component\Security\Core\Authorization\Voter\Vote;
 use Aequation\LaboBundle\Service\Interface\AppServiceInterface;
+use Aequation\LaboBundle\Service\Interface\MenuServiceInterface;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 
 class MenuVoter extends BaseVoter
@@ -24,10 +25,11 @@ class MenuVoter extends BaseVoter
     protected function voteOnAttribute(
         string $attribute,
         mixed $subject,
-        TokenInterface $token
+        TokenInterface $token,
+        ?Vote $vote = null
     ): bool
     {
-        $vote = parent::voteOnAttribute($attribute, $subject, $token);
+        $vote = parent::voteOnAttribute($attribute, $subject, $token, $vote);
         if(!$vote) return false;
         /** @var LaboUserInterface */
         $user = $token->getUser();
@@ -80,7 +82,8 @@ class MenuVoter extends BaseVoter
                             break;
                         case static::ACTION_DUPLICATE:
                         case static::ADMIN_ACTION_DUPLICATE:
-                            $vote = $this->isGranted('ROLE_EDITOR');
+                            $vote = false; // no duplicate on admin side
+                            // $vote = $this->isGranted('ROLE_EDITOR');
                             break;
                         case static::ACTION_UPDATE:
                         case static::ADMIN_ACTION_UPDATE:

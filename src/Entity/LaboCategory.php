@@ -1,27 +1,28 @@
 <?php
 namespace Aequation\LaboBundle\Entity;
 
-use Aequation\LaboBundle\Entity\MappSuperClassEntity;
-use Aequation\LaboBundle\Model\Interface\LaboCategoryInterface;
-use Aequation\LaboBundle\Model\Interface\CreatedInterface;
+use Exception;
+use Doctrine\ORM\Mapping as ORM;
+use Aequation\LaboBundle\Model\Trait\Slug;
+use Doctrine\ORM\Event\PreUpdateEventArgs;
+use Doctrine\ORM\Mapping\MappedSuperclass;
+use Doctrine\ORM\Event\PrePersistEventArgs;
+use Aequation\LaboBundle\Model\Trait\Unamed;
+use Aequation\LaboBundle\Model\Trait\Created;
 use Aequation\LaboBundle\Model\Attribute as EA;
+use Aequation\LaboBundle\Service\Tools\Classes;
+use Doctrine\ORM\Mapping\HasLifecycleCallbacks;
 use Aequation\LaboBundle\Model\Attribute\Slugable;
+use Aequation\LaboBundle\Entity\MappSuperClassEntity;
+use Aequation\LaboBundle\Model\Attribute\HtmlContent;
 use Aequation\LaboBundle\Model\Interface\SlugInterface;
 use Aequation\LaboBundle\Model\Interface\UnamedInterface;
-use Aequation\LaboBundle\Model\Trait\Created;
-use Aequation\LaboBundle\Model\Trait\Slug;
-use Aequation\LaboBundle\Model\Trait\Unamed;
+use Symfony\Component\Serializer\Attribute as Serializer;
+use Aequation\LaboBundle\Model\Interface\CreatedInterface;
+use Aequation\LaboBundle\Model\Interface\LaboCategoryInterface;
+use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Aequation\LaboBundle\Service\Interface\AppEntityManagerInterface;
 use Aequation\LaboBundle\Service\Interface\LaboCategoryServiceInterface;
-use Aequation\LaboBundle\Service\Tools\Classes;
-use Doctrine\ORM\Event\PrePersistEventArgs;
-use Doctrine\ORM\Event\PreUpdateEventArgs;
-use Doctrine\ORM\Mapping as ORM;
-use Doctrine\ORM\Mapping\HasLifecycleCallbacks;
-use Doctrine\ORM\Mapping\MappedSuperclass;
-use Exception;
-use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
-use Symfony\Component\Serializer\Attribute as Serializer;
 
 // #[EA\ClassCustomService(LaboCategoryServiceInterface::class)]
 #[MappedSuperclass]
@@ -38,7 +39,7 @@ abstract class LaboCategory extends MappSuperClassEntity implements LaboCategory
     public const FA_ICON = "clipboard-list";
 
     #[Serializer\Ignore]
-    public readonly AppEntityManagerInterface|LaboCategoryServiceInterface $_service;
+    public readonly AppEntityManagerInterface $_service;
 
     #[ORM\Column(nullable: false)]
     #[Serializer\Groups('index')]
@@ -52,6 +53,7 @@ abstract class LaboCategory extends MappSuperClassEntity implements LaboCategory
 
     #[ORM\Column(length: 64, nullable: true)]
     #[Serializer\Groups('detail')]
+    #[HtmlContent]
     protected ?string $description = null;
 
 
@@ -80,7 +82,9 @@ abstract class LaboCategory extends MappSuperClassEntity implements LaboCategory
     #[Serializer\Ignore]
     public function getTypeChoices(): array
     {
-        return $this->categoryTypeChoices ??= $this->_service->getCategoryTypeChoices(true);
+        /** @var LaboCategoryServiceInterface $service */
+        $service = $this->_service;
+        return $this->categoryTypeChoices ??= $service->getCategoryTypeChoices(true);
     }
 
     /**
@@ -145,7 +149,9 @@ abstract class LaboCategory extends MappSuperClassEntity implements LaboCategory
     public function setType(string $type): static
     {
         $availables = [];
-        foreach ($this->_service->getCategoryTypeChoices(false) as $classname => $values) {
+        /** @var LaboCategoryServiceInterface $service */
+        $service = $this->_service;
+        foreach ($service->getCategoryTypeChoices(false) as $classname => $values) {
             $availables[$classname] = Classes::getShortname($classname);
         }
         if(!array_key_exists($type, $availables)) {

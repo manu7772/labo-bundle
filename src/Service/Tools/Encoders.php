@@ -10,6 +10,7 @@ use Countable;
 use DateTime;
 use DateTimeInterface;
 use SplFileInfo;
+use Stringable;
 use Symfony\Component\String\ByteString;
 use Twig\Markup;
 
@@ -24,7 +25,7 @@ class Encoders extends BaseService
 
     public static function generatePassword(
         int $length = 12,
-        string $chars = null
+        ?string $chars = null
     ): string
     {
         return ByteString::fromRandom($length, $chars)->toString();
@@ -70,9 +71,27 @@ class Encoders extends BaseService
         return static::isEuidFormatValid($euid)
             ? preg_replace('/'.static::EUID_SCHEMA.'/', '$1', $euid)
             : null;
-        
     }
 
+    public static function getUidOfEuid(string $euid): ?string
+    {
+        return static::isEuidFormatValid($euid)
+            ? preg_replace('/'.static::EUID_SCHEMA.'/', '$2', $euid)
+            : null;
+    }
+
+
+    /*************************************************************************************
+     * IS URL (HTTP(S))
+     *************************************************************************************/
+
+    public static function isUrl(mixed $url): bool
+    {
+        if(is_object($url) && !($url instanceof Stringable)) {
+            return false;
+        }
+        return filter_var((string) $url, FILTER_VALIDATE_URL) !== false;
+    }
 
     /*************************************************************************************
      * VARIABLES

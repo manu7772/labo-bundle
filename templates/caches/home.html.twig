@@ -38,11 +38,6 @@
         </li>
         {% endfor %}
     </ul>
-    {% if app.service.dev %}
-        {# {% do cacheService.resetDevShortcuts %} #}
-        {# {{ dump(cacheService.defaultsDevShortcuts) }} #}
-        {# {{ dump(cacheService.sessionDevShortcuts) }} #}
-    {% endif %}
 </article>
 
 <article{{ turbo_off() }}>

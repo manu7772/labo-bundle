@@ -26,7 +26,7 @@ class Uname extends MappSuperClassEntity implements UnameInterface
     public const FA_ICON = "fingerprint";
 
     #[Serializer\Ignore]
-    public readonly UnameService|AppEntityManagerInterface $_service;
+    public readonly AppEntityManagerInterface $_service;
 
     #[ORM\Column(length: 255)]
     #[Assert\Length(min: 3, minMessage: 'Uname doit contenir au moins {{ min }} lettres')]
@@ -49,8 +49,8 @@ class Uname extends MappSuperClassEntity implements UnameInterface
     }
 
     public function attributeEntity(
-        UnamedInterface $entity,
-        string $uname = null
+        UnamedInterface&AppEntityInterface $entity,
+        ?string $uname = null
     ): static
     {
         if(!isset($this->entity)) {

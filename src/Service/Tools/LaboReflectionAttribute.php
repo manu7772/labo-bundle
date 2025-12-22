@@ -29,11 +29,6 @@ class LaboReflectionAttribute extends BaseService
             $this->instance = $this->reflectionAttribute->newInstance();
         } catch (\Throwable $th) {
             $this->addError($th->getMessage());
-            echo('<article><pre class="p-3"><h2>'.$this->reflectionAttribute->getName().'</h2>');
-            var_dump($this);
-            echo('</pre>');
-            echo('<div>-> Failed to get instance of '.$this->reflectionAttribute->getName()).'</div>';
-            die($th->getMessage().'</article>');
             $this->instance = null;
         }
         $this->isAttribute = true;

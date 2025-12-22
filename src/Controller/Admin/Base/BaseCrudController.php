@@ -1,57 +1,57 @@
 <?php
 namespace Aequation\LaboBundle\Controller\Admin\Base;
 
-use Aequation\LaboBundle\Component\Opresult;
-use Aequation\LaboBundle\EventListener\Attribute\AppEvent;
-use Aequation\LaboBundle\EventSubscriber\LaboFormsSubscriber;
-use Aequation\LaboBundle\Model\Interface\AppEntityInterface;
+use App\Entity\Category;
+use App\Entity\Websection;
+// Aequation/Labo
+use Aequation\LaboBundle\Component\LaboAdminContext;
 use Aequation\LaboBundle\Model\Interface\EnabledInterface;
-use Aequation\LaboBundle\Security\Voter\Interface\AppVoterInterface;
-use Aequation\LaboBundle\Service\AppService;
-use Aequation\LaboBundle\Service\Interface\AppEntityManagerInterface;
+use Aequation\LaboBundle\Model\Interface\AppEntityInterface;
+use Aequation\LaboBundle\EventSubscriber\LaboFormsSubscriber;
 use Aequation\LaboBundle\Service\Interface\LaboUserServiceInterface;
+use Aequation\LaboBundle\Service\Interface\AppEntityManagerInterface;
+use Aequation\LaboBundle\Component\Interface\LaboAdminContextInterface;
+use Aequation\LaboBundle\Component\Opresult;
+use Aequation\LaboBundle\Service\AppService;
 use Aequation\LaboBundle\Service\Tools\Classes;
 use Aequation\LaboBundle\Service\Tools\Strings;
-
-use App\Service\AppEntityManager;
-use DateTime;
-use EasyCorp\Bundle\EasyAdminBundle\Controller\AbstractCrudController;
-use EasyCorp\Bundle\EasyAdminBundle\Collection\FieldCollection;
-use EasyCorp\Bundle\EasyAdminBundle\Collection\FilterCollection;
-use EasyCorp\Bundle\EasyAdminBundle\Config\Action;
-use EasyCorp\Bundle\EasyAdminBundle\Config\Actions;
+// Symfony
+use Doctrine\ORM\QueryBuilder;
+use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\Form\FormBuilderInterface;
+use Symfony\Component\HttpFoundation\RequestStack;
+use Symfony\Component\HttpFoundation\RedirectResponse;
+use Symfony\Contracts\Translation\TranslatorInterface;
+use Symfony\Component\Security\Core\Authorization\Voter\VoterInterface;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Crud;
+use EasyCorp\Bundle\EasyAdminBundle\Config\Asset;
+use EasyCorp\Bundle\EasyAdminBundle\Config\Action;
+use EasyCorp\Bundle\EasyAdminBundle\Config\Assets;
+use EasyCorp\Bundle\EasyAdminBundle\Dto\EntityDto;
 use EasyCorp\Bundle\EasyAdminBundle\Dto\SearchDto;
+use EasyCorp\Bundle\EasyAdminBundle\Config\Actions;
+use EasyCorp\Bundle\EasyAdminBundle\Security\Permission;
 use EasyCorp\Bundle\EasyAdminBundle\Config\KeyValueStore;
 use EasyCorp\Bundle\EasyAdminBundle\Context\AdminContext;
-use EasyCorp\Bundle\EasyAdminBundle\Dto\EntityDto;
-
-use Doctrine\ORM\EntityManagerInterface;
-use Doctrine\ORM\QueryBuilder;
-use EasyCorp\Bundle\EasyAdminBundle\Config\Assets;
-use EasyCorp\Bundle\EasyAdminBundle\Config\Dashboard;
-use EasyCorp\Bundle\EasyAdminBundle\Contracts\Field\FieldInterface;
-use EasyCorp\Bundle\EasyAdminBundle\Event\AfterCrudActionEvent;
-use EasyCorp\Bundle\EasyAdminBundle\Event\AfterEntityPersistedEvent;
-use EasyCorp\Bundle\EasyAdminBundle\Event\BeforeCrudActionEvent;
-use EasyCorp\Bundle\EasyAdminBundle\Event\BeforeEntityPersistedEvent;
-use EasyCorp\Bundle\EasyAdminBundle\Exception\ForbiddenActionException;
-use EasyCorp\Bundle\EasyAdminBundle\Exception\InsufficientEntityPermissionException;
 use EasyCorp\Bundle\EasyAdminBundle\Factory\EntityFactory;
-use EasyCorp\Bundle\EasyAdminBundle\Field\Field;
-use EasyCorp\Bundle\EasyAdminBundle\Security\Permission;
-use Symfony\Component\Form\FormBuilderInterface;
-use Symfony\Component\Form\FormEvent;
-use Symfony\Component\Form\FormEvents;
-
-use Exception;
+use EasyCorp\Bundle\EasyAdminBundle\Router\AdminUrlGenerator;
+use EasyCorp\Bundle\EasyAdminBundle\Collection\FieldCollection;
+use EasyCorp\Bundle\EasyAdminBundle\Event\AfterCrudActionEvent;
+use EasyCorp\Bundle\EasyAdminBundle\Collection\FilterCollection;
+use EasyCorp\Bundle\EasyAdminBundle\Event\BeforeCrudActionEvent;
+use EasyCorp\Bundle\EasyAdminBundle\Contracts\Field\FieldInterface;
+use EasyCorp\Bundle\EasyAdminBundle\Event\AfterEntityPersistedEvent;
+use EasyCorp\Bundle\EasyAdminBundle\Event\BeforeEntityPersistedEvent;
+use EasyCorp\Bundle\EasyAdminBundle\Controller\AbstractCrudController;
+use EasyCorp\Bundle\EasyAdminBundle\Router\AdminUrlGeneratorInterface;
+use EasyCorp\Bundle\EasyAdminBundle\Exception\ForbiddenActionException;
+use EasyCorp\Bundle\EasyAdminBundle\Contracts\Context\AdminContextInterface;
+use EasyCorp\Bundle\EasyAdminBundle\Exception\InsufficientEntityPermissionException;
+// PHP
+use DateTime;
 use Iterator;
-use phpDocumentor\Reflection\Types\Iterable_;
+use Exception;
 use ReflectionClass;
-use Symfony\Component\HttpFoundation\RequestStack;
-use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\Security\Core\Authorization\Voter\VoterInterface;
-use Symfony\Contracts\Translation\TranslatorInterface;
 
 abstract class BaseCrudController extends AbstractCrudController
 {
@@ -60,9 +60,14 @@ abstract class BaseCrudController extends AbstractCrudController
     public const VOTER = 'undefined';
     public const DEFAULT_SORT = ['id' => 'ASC'];
     public const THROW_EXCEPTION_WHEN_FORBIDDEN = true;
-    public const CUT_NAME_LENGTH = 24;
+    public const CUT_NAME_LENGTH = 48;
+
+    public const SAVE_AND_DETAIL = 'saveAndDetail';
+
 
     public readonly array $query_values;
+    public readonly AppEntityManagerInterface $appEntityManager;
+    public readonly LaboAdminContextInterface $laboAdminContext;
 
     public function __construct(
         protected RequestStack $requestStack,
@@ -70,6 +75,7 @@ abstract class BaseCrudController extends AbstractCrudController
         protected LaboUserServiceInterface $userService,
         protected TranslatorInterface $translator,
     ) {
+        $this->appEntityManager = $manager;
         $this->manager = $manager->getEntityService(static::ENTITY);
         if($manager->isDev()) {
             // [DEV] check entity class service
@@ -81,7 +87,6 @@ abstract class BaseCrudController extends AbstractCrudController
         }
         $query = $this->requestStack->getMainRequest()?->query;
         $this->query_values = $query ? $query->all() : [];
-        // dump($this->query_values);
     }
 
     /**
@@ -187,7 +192,6 @@ abstract class BaseCrudController extends AbstractCrudController
                 }
             }
         }
-        // dump($newlist);
         foreach ($newlist as $name => $field) {
             yield $name => $field;
         }
@@ -196,19 +200,23 @@ abstract class BaseCrudController extends AbstractCrudController
 
     public function configureAssets(Assets $assets): Assets
     {
+        parent::configureAssets($assets);
         $date = new DateTime();
-        return $assets
-            // ->addAssetMapperEntry('my-app')
-            // ->addJsFile('js/editorjs.js')
+        $assets
+            // ->addAssetMapperEntry('eadminlabo')
+            ->addCssFile(Asset::new('styles/eadmin.css'))
+            ->addJsFile(Asset::new('js/globaleasyadmin.js'))
+            ->addJsFile(Asset::new('js/bsytplayer.js'))
             ->addHtmlContentToHead('<!-- Generated by Aequation Webdesign (with Symfony/EasyAdminBundle) at '.$date->format(DATE_ATOM).' -->')
             ;
+        return $assets;
     }
 
     protected function translate(
         mixed $data,
         array $parameters = [],
         string $domain = 'EasyAdminBundle',
-        string $locale = null,
+        ?string $locale = null,
     ): mixed
     {
         switch (true) {
@@ -240,6 +248,13 @@ abstract class BaseCrudController extends AbstractCrudController
     ): Actions
     {
         $voter = static::getEntityVoter();
+        $type = $this->getQueryValue('type');
+        $typename = $type ? $type : '';
+        $test = $this->translate('name', [], $type ?? '');
+        if($test !== 'name') {
+            $typename = $test;
+        }
+        $typename = !empty($typename) ? ' '.$typename : null;
 
         /*******************************************************************************************/
         /* ADDED ACTIONS
@@ -268,51 +283,55 @@ abstract class BaseCrudController extends AbstractCrudController
 
         // DETAIL
         $actions->add(Crud::PAGE_INDEX, Action::DETAIL);
-        $actions->update(Crud::PAGE_INDEX, Action::DETAIL, function(Action $action) use ($voter) {
-            $action
+        $actions->update(
+            Crud::PAGE_INDEX,
+            Action::DETAIL,
+            fn (Action $action) => $action
                 ->setLabel(false)
                 ->setIcon('tabler:eye')
                 ->setHtmlAttributes(['title' => $this->translate('action.detail')])
-                ->displayIf(function (AppEntityInterface $entity) use ($voter) {
-                    return $this->isGranted($voter::ACTION_READ, $entity);
-                });
-            return $action;
-        });
+                ->displayAsLink()
+                ->displayIf(fn (AppEntityInterface $entity) => $this->isGranted($voter::ACTION_READ, $entity))
+        );
 
         // NEW
-        $actions->update(Crud::PAGE_INDEX, Action::NEW, function(Action $action) use ($voter) {
-            $action
-                ->setLabel($this->translate('action.new'))
+        $actions->update(
+            Crud::PAGE_INDEX,
+            Action::NEW,
+            fn (Action $action) => $action
+                ->setLabel($this->translate('action.new').$typename)
                 ->setIcon('tabler:plus')
-                ->displayIf(function (?AppEntityInterface $entity) use ($voter) {
-                    return $this->isGranted($voter::ACTION_CREATE, $entity ?? static::ENTITY);
-                });
-            return $action;
-        });
+                ->displayIf(fn (?AppEntityInterface $entity) => $this->isGranted($voter::ACTION_CREATE, $entity ?? static::ENTITY))
+                ->displayAsForm()
+                // ->displayAsLink()
+                ->linkToRoute('easyadmin_'.strtolower(Classes::getShortname(static::ENTITY)).'_new', $this->getQueryValues())
+        );
 
         // EDIT
-        $actions->update(Crud::PAGE_INDEX, Action::EDIT, function(Action $action) use ($voter) {
-            $action
+        $actions->update(
+            Crud::PAGE_INDEX,
+            Action::EDIT,
+            fn (Action $action) => $action
                 ->setLabel(false)
                 ->setIcon('tabler:pencil')
                 ->setHtmlAttributes(['title' => $this->translate('action.edit')])
-                ->displayIf(function (AppEntityInterface $entity) use ($voter) {
-                    return $this->isGranted($voter::ACTION_UPDATE, $entity);
-                });
-            return $action;
-        });
+                ->displayAsLink()
+                ->displayIf(fn (AppEntityInterface $entity) => $this->isGranted($voter::ACTION_UPDATE, $entity))
+                // ->linkToRoute('easyadmin_'.strtolower(Classes::getShortname(static::ENTITY)).'_edit', fn (AppEntityInterface $entity) => array_merge($this->getQueryValues(), ['entityId' => $entity->getId()]))
+        );
 
         // DELETE
-        $actions->update(Crud::PAGE_INDEX, Action::DELETE, function(Action $action) use ($voter) {
-            $action
+        $actions->update(
+            Crud::PAGE_INDEX,
+            Action::DELETE,
+            fn (Action $action) => $action
                 ->setLabel(false)
                 ->setIcon('tabler:trash')
                 ->setHtmlAttributes(['title' => $this->translate('action.delete')])
-                ->displayIf(function (AppEntityInterface $entity) use ($voter) {
-                    return $this->isGranted($voter::ACTION_DELETE, $entity);
-                });
-            return $action;
-        });
+                ->displayAsForm()
+                ->displayIf(fn (AppEntityInterface $entity) => $this->isGranted($voter::ACTION_DELETE, $entity))
+                // ->linkToRoute('easyadmin_'.strtolower(Classes::getShortname(static::ENTITY)).'_delete', fn (AppEntityInterface $entity) => array_merge($this->getQueryValues(), ['entityId' => $entity->getId()]))
+        );
 
         $actions->reorder(Crud::PAGE_INDEX, [Action::DELETE, Action::EDIT, Action::DETAIL]);
 
@@ -322,37 +341,34 @@ abstract class BaseCrudController extends AbstractCrudController
 
         // INDEX
         $actions->update(Crud::PAGE_DETAIL, Action::INDEX, function(Action $action) use ($voter) {
-            $action
+            return $action
                 ->setLabel($this->translate('action.index'))
                 ->setIcon('tabler:list')
                 ->setHtmlAttributes(['title' => $this->translate('action.index')])
-                ->displayIf(function (AppEntityInterface $entity) use ($voter) {
-                    return $this->isGranted($voter::ACTION_LIST, $entity);
-                });
-            return $action;
+                ->displayIf(fn (AppEntityInterface $entity) => $this->isGranted($voter::ACTION_LIST, $entity))
+                ->linkToRoute('easyadmin_'.strtolower(Classes::getShortname(static::ENTITY)).'_index', fn (AppEntityInterface $entity) => array_merge($this->getQueryValues(), $this->getAddedParameters($entity)))
+                ;
         });
 
         // DELETE
         $actions->update(Crud::PAGE_DETAIL, Action::DELETE, function(Action $action) use ($voter) {
-            $action
+            return $action
                 // ->setCssClass('btn-danger')
                 ->setHtmlAttributes(['title' => 'Supprimer'])
-                ->displayIf(function (AppEntityInterface $entity) use ($voter) {
-                    return $this->isGranted($voter::ACTION_DELETE, $entity);
-                });
-            return $action;
+                ->displayIf(fn (AppEntityInterface $entity) => $this->isGranted($voter::ACTION_DELETE, $entity))
+                ;
         });
 
         // EDIT
         $actions->update(Crud::PAGE_DETAIL, Action::EDIT, function(Action $action) use ($voter) {
-            $action
+            return $action
                 ->setIcon('tabler:pencil')
                 ->setHtmlAttributes(['title' => 'Éditer'])
-                ->displayIf(function (AppEntityInterface $entity) use ($voter) {
-                    return $this->isGranted($voter::ACTION_UPDATE, $entity);
-                });
-            return $action;
+                ->displayIf(fn (AppEntityInterface $entity) => $this->isGranted($voter::ACTION_UPDATE, $entity))
+                ;
         });
+
+        $actions->reorder(Crud::PAGE_DETAIL, [Action::DELETE, Action::INDEX, Action::EDIT]);
 
         /*******************************************************************************************/
         /* EDIT
@@ -360,16 +376,16 @@ abstract class BaseCrudController extends AbstractCrudController
 
         // INDEX
         $actions->add(Crud::PAGE_EDIT, Action::INDEX);
-        $actions->update(Crud::PAGE_EDIT, Action::INDEX, function(Action $action) use ($voter) {
+        $actions->update(Crud::PAGE_EDIT, Action::INDEX, fn (Action $action) =>
             $action
                 ->setLabel('Liste')
                 ->setIcon('tabler:list')
                 ->setHtmlAttributes(['title' => 'Retour à la liste'])
-                ->displayIf(function (AppEntityInterface $entity) use ($voter) {
-                    return $this->isGranted($voter::ACTION_LIST, $entity);
-                });
-            return $action;
-        });
+                ->displayIf(fn (AppEntityInterface $entity) => $this->isGranted($voter::ACTION_LIST, $entity))
+                ->linkToRoute('easyadmin_'.strtolower(Classes::getShortname(static::ENTITY)).'_index', fn (AppEntityInterface $entity) => array_merge($this->getQueryValues(), $this->getAddedParameters($entity)))
+        );
+
+        $actions->reorder(Crud::PAGE_EDIT, [Action::INDEX, Action::SAVE_AND_CONTINUE, Action::SAVE_AND_RETURN]);
 
         /*******************************************************************************************/
         /* NEW
@@ -377,18 +393,16 @@ abstract class BaseCrudController extends AbstractCrudController
 
         // INDEX
         $actions->add(Crud::PAGE_NEW, Action::INDEX);
-        $actions->update(Crud::PAGE_NEW, Action::INDEX, function(Action $action) use ($voter) {
+        $actions->update(Crud::PAGE_NEW, Action::INDEX, fn (Action $action) =>
             $action
                 ->setLabel('Liste')
                 ->setIcon('tabler:list')
                 ->setHtmlAttributes(['title' => 'Retour à la liste'])
-                ->displayIf(function (AppEntityInterface $entity) use ($voter) {
-                    return $this->isGranted($voter::ACTION_LIST, $entity);
-                });
-            return $action;
-        });
+                ->displayIf(fn (AppEntityInterface $entity) => $this->isGranted($voter::ACTION_LIST, $entity))
+                ->linkToRoute('easyadmin_'.strtolower(Classes::getShortname(static::ENTITY)).'_index', fn (AppEntityInterface $entity) => array_merge($this->getQueryValues(), $this->getAddedParameters($entity)))
+        );
 
-
+        // Add new actions
         $actions
             ->add(Crud::PAGE_INDEX, $action_lnks['duplicate'])
             ->add(Crud::PAGE_DETAIL, $action_lnks['duplicate'])
@@ -413,6 +427,9 @@ abstract class BaseCrudController extends AbstractCrudController
         if($sing_shortname === 'name') $sing_shortname = ucfirst(Strings::singularize($shortname));
         $plur_shortname = $this->translate('names', [], $shortname);
         if($plur_shortname === 'names') $plur_shortname = ucfirst(Strings::pluralize($shortname));
+        // Query parameters
+        // dump($this->query_values);
+        $type = $this->getQueryValue('type');
         // Configure Crud
         $crud
             ->setDefaultSort(static::DEFAULT_SORT)
@@ -420,10 +437,10 @@ abstract class BaseCrudController extends AbstractCrudController
                 'crud/field/id' => '@EasyAdmin/crud/field/id_with_icon.html.twig',
                 // 'crud/field/thumbnail' => '@EasyAdmin/crud/field/template.html.twig',
             ])
-            ->setPageTitle('index', '<small>Liste des </small>%entity_label_plural%')
-            ->setPageTitle('detail', '%entity_label_singular%')
-            ->setPageTitle('edit', '<small>Modifier </small>%entity_label_singular%')
-            ->setPageTitle('new', '<small>Créer </small>%entity_label_singular%')
+            ->setPageTitle('index', '<small>Liste des </small>%entity_label_plural%'.($type ? '<small> de type <strong>'.$type.'</strong></small>' : ''))
+            ->setPageTitle('detail', '%entity_label_singular%'.($type ? '<small> de type <strong>'.$type.'</strong></small>' : ''))
+            ->setPageTitle('edit', '<small>Modifier </small>%entity_label_singular%'.($type ? '<small> de type <strong>'.$type.'</strong></small>' : ''))
+            ->setPageTitle('new', '<small>Créer </small>%entity_label_singular%'.($type ? '<small> de type <strong>'.$type.'</strong></small>' : ''))
             ->setTimezone($this->manager->getAppService()->getAppContext()->getTimezone()->getName())
             // ->setEntityLabelInSingular(Strings::singularize($shortname))
             // ->setEntityLabelInPlural(Strings::pluralize($shortname))
@@ -438,8 +455,9 @@ abstract class BaseCrudController extends AbstractCrudController
             //     'attr' => ['class' => 'text-info']
             // ])
             // ->renderSidebarMinimized()
+            ->addFormTheme('@FOSCKEditor/Form/ckeditor_widget.html.twig')
             ->renderContentMaximized()
-            ->setPaginatorPageSize(20)
+            ->setPaginatorPageSize(10)
             ;
         return $crud;
     }
@@ -484,7 +502,6 @@ abstract class BaseCrudController extends AbstractCrudController
         $context->getCrud()->getActionsConfig()->setPageName(Crud::PAGE_NEW);
         $this->container->get(EntityFactory::class)->processFields($context->getEntity(), FieldCollection::new($this->configureFields(Crud::PAGE_NEW)));
         $context->getCrud()->setFieldAssets($this->getFieldAssets($context->getEntity()->getFields()));
-        // dump($context, $request->query->all(), $context->getCrud(), $context->getCrud()->getActionsConfig());
         $this->container->get(EntityFactory::class)->processActions($context->getEntity(), $context->getCrud()->getActionsConfig());
 
         $newForm = $this->createNewForm($context->getEntity(), $context->getCrud()->getNewFormOptions(), $context);
@@ -528,6 +545,76 @@ abstract class BaseCrudController extends AbstractCrudController
         return $responseParameters;
     }
 
+    protected function compileAddedParameters(object $context): array
+    {
+        $dto = null;
+        $entity = null;
+        switch (true) {
+            case $context instanceof AdminContextInterface:
+                $dto = $context->getEntity();
+                $entity = $dto->getInstance();
+                break;
+            case $context instanceof EntityDto:
+                $dto = $context;
+                $entity = $dto->getInstance();
+                $context = null;
+                break;
+            case $context instanceof AppEntityInterface:
+                $entity = $context;
+                $dto = null;
+                $context = null;
+                break;
+            default:
+                throw new Exception(vsprintf('Error %s line %d: context must be instance of %s, %s or %s!', [__METHOD__, __LINE__, AdminContextInterface::class, EntityDto::class, AppEntityInterface::class]));
+        }
+        return [
+            'dto' => $dto,
+            'entity' => $entity,
+            'context' => $context,
+        ];
+    }
+
+    protected function getAddedParameters(object $context): array
+    {
+        /** @see https://www.php.net/manual/fr/function.extract.php */
+        extract($this->compileAddedParameters($context), EXTR_OVERWRITE);
+        $params = [];
+        switch (true) {
+            case ($entity instanceof Websection):
+                $params['type'] = $entity->getSectiontype();
+                break;
+            case ($entity instanceof Category):
+                $params['type'] = $entity->getType();
+                break;
+            default:
+                # code...
+                break;
+        }
+        return $params;
+    }
+
+    protected function getRedirectResponseAfterSave(AdminContext $context, string $action): RedirectResponse
+    {
+        $submitButtonName = $context->getRequest()->request->all()['ea']['newForm']['btn'] ?? null;
+        /** @var AdminUrlGeneratorInterface $adminUrlGenerator */
+        $adminUrlGenerator = $this->container->get(AdminUrlGenerator::class);
+        $url = match ($submitButtonName) {
+            Action::SAVE_AND_CONTINUE => $adminUrlGenerator
+            ->setAction(Action::EDIT)
+            ->setEntityId($context->getEntity()->getPrimaryKeyValue())
+                ->generateUrl(),
+            static::SAVE_AND_DETAIL => $adminUrlGenerator
+                ->setAction(Action::DETAIL)
+                ->setEntityId($context->getEntity()->getPrimaryKeyValue())
+                ->generateUrl(),
+            Action::SAVE_AND_RETURN => $adminUrlGenerator->setAction(Action::INDEX)->setAll($this->getAddedParameters($context))->generateUrl(),
+            Action::SAVE_AND_ADD_ANOTHER => $adminUrlGenerator->setAction(Action::NEW)->generateUrl(),
+            default => $this->generateUrl($context->getDashboardRouteName()),
+        };
+        // dd($context, $this->getAddedParameters($context), $submitButtonName, $action, $adminUrlGenerator);
+        return $this->redirect($url);
+    }
+
     public static function getEntityFqcn(): string
     {
         $class = static::ENTITY;
@@ -542,39 +629,48 @@ abstract class BaseCrudController extends AbstractCrudController
         return $class;
     }
 
-    protected function getContextInfo(): array
+    protected function getLaboContext(): ?LaboAdminContextInterface
     {
-        $info = [
-            'user' => null,
-            'entityDto' => null,
-            'classname' => null,
-            'entity' => null,
-        ];
-        $context = $this->getContext();
-        if($context) {
-            $info['user']       = $context->getUser() ?? $this->getUser();
-            $info['entityDto']  = $context->getEntity();
-            $info['classname']  = $info['entityDto'] instanceof EntityDto ? $info['entityDto']->getFqcn() : null;
-            $info['entity']     = $info['entityDto'] instanceof EntityDto ? $info['entityDto']->getInstance() : null;
-            if(empty($info['entity'])) {
-                // $info['entity'] = $this->createEntity(entityFqcn: $info['classname'], checkGrant: false);
-                $info['entity'] = $this->manager instanceof AppEntityManagerInterface
-                    ? $this->manager->getModel()
-                    : new $info['classname'];
-            }
-            $RC = new ReflectionClass($info['classname']);
-            $info['instantiable'] = $RC->isInstantiable();
-        }
-        // dump($info);
-        return $info;
+        return $this->laboAdminContext ??= new LaboAdminContext($this, $this->getContext());
     }
+
+    // protected function getContextInfo(): array
+    // {
+    //     trigger_deprecation(
+    //         'aequation\labo-bundle',
+    //         '2.0.0',
+    //         'This method '.__METHOD__.' is deprecated. Use LaboAdminContext you can get from $this->getLaboContext() instead.',
+    //         __METHOD__,
+    //     );
+    //     $info = [
+    //         'user' => null,
+    //         'entityDto' => null,
+    //         'classname' => null,
+    //         'entity' => null,
+    //     ];
+    //     $context = $this->getContext();
+    //     if($context) {
+    //         $info['user']       = $context->getUser() ?? $this->getUser();
+    //         $info['entityDto']  = $context->getEntity();
+    //         $info['classname']  = $context->getEntity()->getFqcn();
+    //         $this->getLaboContext()->getInstance()     = $context->getEntity()->getInstance() ?? $info['classname'];
+    //         // if(empty($this->getLaboContext()->getInstance())) {
+    //         //     // $this->getLaboContext()->getInstance() = $this->createEntity(entityFqcn: $info['classname'], checkGrant: false);
+    //         //     $this->getLaboContext()->getInstance() = $this->manager instanceof AppEntityManagerInterface
+    //         //         ? $this->manager->getModel()
+    //         //         : new $info['classname'];
+    //         // }
+    //         $RC = new ReflectionClass($info['classname']);
+    //         $info['instantiable'] = $RC->isInstantiable();
+    //     }
+    //     return $info;
+    // }
 
     public function createIndexQueryBuilder(SearchDto $searchDto, EntityDto $entityDto, FieldCollection $fields, FilterCollection $filters): QueryBuilder
     {
-        $info = $this->getContextInfo();
         $queryBuilder = parent::createIndexQueryBuilder($searchDto, $entityDto, $fields, $filters);
 
-        if(!$this->isGranted('ROLE_SUPER_ADMIN') && $info['entity'] instanceof EnabledInterface) {
+        if(!$this->isGranted('ROLE_SUPER_ADMIN') && is_a($this->getLaboContext()->getInstance(), EnabledInterface::class, true)) {
             $queryBuilder->andWhere('entity.softdeleted = false');
         }
         return $queryBuilder;
@@ -592,42 +688,41 @@ abstract class BaseCrudController extends AbstractCrudController
     {
         if(!is_bool($make_exception)) $make_exception = static::THROW_EXCEPTION_WHEN_FORBIDDEN;
         $opresult = new Opresult();
-        $info = $this->getContextInfo();
         $voter = $this->getEntityVoter();
-        if($info['instantiable'] && is_a($voter, VoterInterface::class, true)) {
+        if($this->getLaboContext()->isInstantiable() && is_a($voter, VoterInterface::class, true)) {
             switch ($pageName) {
                 case Crud::PAGE_DETAIL:
-                    if(!$this->isGranted(attribute: $voter::ACTION_READ, subject: $info['entity'])) {
-                        $message = vsprintf('Vous n\'êtes pas autorisé consulter cet élément %s.', [$info['entity']?->__toString() ?? $info['entityDto']->getFqcn()]);
+                    if(!$this->isGranted(attribute: $voter::ACTION_READ, subject: $this->getLaboContext()->getInstanceOrClass())) {
+                        $message = vsprintf('Vous n\'êtes pas autorisé consulter cet élément %s.', [$this->getLaboContext()->getInstance()?->__toString() ?? $this->getLaboContext()->getEntity()->getFqcn()]);
                         if($make_exception) throw new Exception(message: $message, code: 403);
                         $this->addFlash('danger', $message);
                         $opresult->addDanger($message);
                     }
                     break;
                 case Crud::PAGE_NEW:
-                    if(!$this->isGranted(attribute: $voter::ACTION_CREATE, subject: $info['entity'])) {
-                        $message = vsprintf('Vous n\'êtes pas autorisé à réaliser cette création (%s).', [$info['entityDto']->getFqcn()]);
+                    if(!$this->isGranted(attribute: $voter::ACTION_CREATE, subject: $this->getLaboContext()->getInstanceOrClass())) {
+                        $message = vsprintf('Vous n\'êtes pas autorisé à réaliser cette création (%s).', [$this->getLaboContext()->getEntity()->getFqcn()]);
                         if($make_exception) throw new Exception(message: $message, code: 403);
                         $this->addFlash('danger', $message);
                         $opresult->addDanger($message);
                     }
                     break;
                 case Crud::PAGE_EDIT:
-                    if(!$this->isGranted(attribute: $voter::ACTION_UPDATE, subject: $info['entity'])) {
-                        $message = vsprintf('Vous n\'êtes pas autorisé à réaliser cette modification de %s.', [$info['entity']?->__toString() ?? $info['entityDto']->getFqcn()]);
+                    if(!$this->isGranted(attribute: $voter::ACTION_UPDATE, subject: $this->getLaboContext()->getInstanceOrClass())) {
+                        $message = vsprintf('Vous n\'êtes pas autorisé à réaliser cette modification de %s.', [$this->getLaboContext()->getInstance()?->__toString() ?? $this->getLaboContext()->getEntity()->getFqcn()]);
                         if($make_exception) throw new Exception(message: $message, code: 403);
                         $this->addFlash('danger', $message);
                         $opresult->addDanger($message);
                     }
                     break;
                 default:
-                if(!$this->isGranted(attribute: $voter::ACTION_LIST, subject: $info['entity'])) {
-                    $message = vsprintf('Vous n\'êtes pas autorisé à réaliser cette opération "%s" sur l\'entité %s.', [$pageName, $info['entityDto']->getFqcn()]);
-                    if($make_exception) throw new Exception(message: $message, code: 403);
-                    $this->addFlash('danger', $message);
-                    $opresult->addDanger($message);
-                }
-                break;
+                    if(!$this->isGranted(attribute: $voter::ACTION_LIST, subject: $this->getLaboContext()->getInstanceOrClass())) {
+                        $message = vsprintf('Vous n\'êtes pas autorisé à réaliser cette opération "%s" sur l\'entité %s.', [$pageName, $this->getLaboContext()->getEntity()->getFqcn()]);
+                        if($make_exception) throw new Exception(message: $message, code: 403);
+                        $this->addFlash('danger', $message);
+                        $opresult->addDanger($message);
+                    }
+                    break;
             }
         }
         return $opresult;
@@ -641,7 +736,7 @@ abstract class BaseCrudController extends AbstractCrudController
         bool $checkGrant = true,
     ): ?AppEntityInterface
     {
-        if($checkGrant) $this->checkGrants(Crud::PAGE_NEW);
+        // if($checkGrant) $this->checkGrants(Crud::PAGE_NEW);
         $RC = new ReflectionClass($entityFqcn);
         if($RC->isInstantiable()) {
             $entity = $this->manager instanceof AppEntityManagerInterface
@@ -680,6 +775,7 @@ abstract class BaseCrudController extends AbstractCrudController
     public function createNewFormBuilder(EntityDto $entityDto, KeyValueStore $formOptions, AdminContext $context): FormBuilderInterface
     {
         $formBuilder = parent::createNewFormBuilder($entityDto, $formOptions, $context);
+        // $formBuilder->setEmptyData($this->createEntity($entityDto->getFqcn(), false));
         $entity = $formBuilder->getData();
         if($entity instanceof AppEntityInterface) {
             $formBuilder->addEventSubscriber(new LaboFormsSubscriber($this->manager));

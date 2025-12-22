@@ -29,8 +29,11 @@ class AppEvent extends baseClassAttribute implements AppEventInterface, AppAttri
     public const beforePreUpdate    = 'beforePreUpdate';
     public const beforePreRemove    = 'beforePreRemove';
     // Form events
+    public const PRE_SUBMIT         = FormEvents::PRE_SUBMIT;
+    public const SUBMIT             = FormEvents::SUBMIT;
     public const POST_SUBMIT        = FormEvents::POST_SUBMIT;
     public const PRE_SET_DATA       = FormEvents::PRE_SET_DATA;
+    public const POST_SET_DATA      = FormEvents::POST_SET_DATA;
 
     public readonly ReflectionMethod $method;
     public readonly array $events;

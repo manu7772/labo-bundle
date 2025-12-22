@@ -19,7 +19,11 @@ use Aequation\LaboBundle\Service\Interface\AppServiceInterface;
 use Aequation\LaboBundle\Service\Tools\Classes;
 use Aequation\LaboBundle\Service\Tools\Encoders;
 use Aequation\LaboBundle\Service\Tools\HttpRequest;
-
+// Symfony
+use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\ORM\Mapping\ClassMetadata;
+use Doctrine\Persistence\Event\LifecycleEventArgs;
+use Doctrine\ORM\UnitOfWork;
 use Symfony\Component\Security\Core\Authorization\AccessDecisionManagerInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use Symfony\Component\DependencyInjection\Attribute\AsAlias;
@@ -29,11 +33,7 @@ use Symfony\Component\Validator\ConstraintViolationList;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Contracts\Cache\ItemInterface;
-use Doctrine\ORM\EntityManagerInterface;
-use Doctrine\ORM\Mapping\ClassMetadata;
-use Doctrine\Persistence\Event\LifecycleEventArgs;
-use Doctrine\ORM\UnitOfWork;
-
+// PHP
 use Closure;
 use DateTime;
 use DateTimeImmutable;
@@ -157,7 +157,7 @@ class AppEntityManager extends BaseService implements AppEntityManagerInterface
     }
 
     public function getEntityShortname(
-        string|AppEntityInterface $objectOrClass = null
+        null|string|AppEntityInterface $objectOrClass = null
     ): string
     {
         $classname ??= static::ENTITY;
@@ -257,7 +257,7 @@ class AppEntityManager extends BaseService implements AppEntityManagerInterface
     }
 
     public function getEntityMetadataReport(
-        string $classname = null,
+        ?string $classname = null,
     ): ClassmetadataReport
     {
         $meta_infos = $this->getEntityMetadataReports();
@@ -278,16 +278,8 @@ class AppEntityManager extends BaseService implements AppEntityManagerInterface
             },
             commentaire: 'All entities reports (meta infos)',
         );
-        // dd($reports);
         return $reports;
     }
-
-    // public function dumpReports(): void
-    // {
-    //     foreach ($this->computeEntityMetadataReports() as $test) {
-    //         dump(json_encode($test));
-    //     }
-    // }
 
     private function computeEntityMetadataReports(): array
     {
@@ -350,8 +342,8 @@ class AppEntityManager extends BaseService implements AppEntityManagerInterface
     /****************************************************************************************************/
 
     public function getRepository(
-        string $classname = null,
-        string $field = null, // if field, find repository where is declared this $field
+        ?string $classname = null,
+        ?string $field = null, // if field, find repository where is declared this $field
         bool $onlyCommonRepos = true
     ): ?CommonReposInterface
     {
@@ -377,8 +369,6 @@ class AppEntityManager extends BaseService implements AppEntityManagerInterface
         }
         /** @var CommonReposInterface */
         $repo = $this->em->getRepository($classname);
-        // if(!empty($field)) dump($classname, $field, get_class($repo));
-        // if(!is_null($repo) && !($repo instanceof CommonReposInterface)) dd($this->__toString(), $origin_classname, $classname, $cmd, $cmd->name, $repo);
         return $onlyCommonRepos && $repo instanceof CommonReposInterface ? $repo : null;
     }
 
@@ -455,7 +445,7 @@ class AppEntityManager extends BaseService implements AppEntityManagerInterface
      * @return ClassMetadata|null
      */
     public function getClassMetadata(
-        string|AppEntityInterface $objectOrClass = null,
+        null|string|AppEntityInterface $objectOrClass = null,
     ): ?ClassMetadata
     {
         $classname = $objectOrClass instanceof AppEntityInterface ? $objectOrClass->getClassname() : $objectOrClass;
@@ -509,8 +499,8 @@ class AppEntityManager extends BaseService implements AppEntityManagerInterface
     }
 
     public function getNewHydrateds(
-        string|array|callable $filter = null
-    ): array
+        null|string|array|callable $filter = null
+    ): iterable
     {
         if(empty($filter)) return $this->hydrateds;
         if(is_callable($filter)) {
@@ -525,7 +515,7 @@ class AppEntityManager extends BaseService implements AppEntityManagerInterface
     }
 
     public function getScheduledForInsert(
-        string|array|callable $filter = null
+        null|string|array|callable $filter = null
     ): array
     {
         /** @var UnitOfWork */
@@ -544,7 +534,7 @@ class AppEntityManager extends BaseService implements AppEntityManagerInterface
     }
 
     public function getScheduledForUpdate(
-        string|array|callable $filter = null
+        null|string|array|callable $filter = null
     ): array
     {
         /** @var UnitOfWork */
@@ -563,7 +553,7 @@ class AppEntityManager extends BaseService implements AppEntityManagerInterface
     }
 
     public function getScheduledForDelete(
-        string|array|callable $filter = null
+        null|string|array|callable $filter = null
     ): array
     {
         /** @var UnitOfWork */
@@ -595,9 +585,9 @@ class AppEntityManager extends BaseService implements AppEntityManagerInterface
      * @return AppEntityInterface|false
      */
     public function getNew(
-        string $classname = null,
-        callable $postCreate = null,
-        string $uname = null
+        ?string $classname = null,
+        ?callable $postCreate = null,
+        ?string $uname = null
     ): AppEntityInterface|false
     {
         $classname ??= static::ENTITY;
@@ -617,28 +607,35 @@ class AppEntityManager extends BaseService implements AppEntityManagerInterface
     }
 
     public function getModel(
-        string $classname = null,
-        callable $postCreate = null,
-        string|array|null $event = null
+        ?string $classname = null,
+        ?callable $postCreate = null,
+        null|string|array $event = null
     ): AppEntityInterface|false
     {
-        $model = $this->getNew($classname, $postCreate);
-        if($model) {
-            $model->_setModel(); // IMPORTANT!!!
-            if(!empty($event)) {
-                $this->dispatchEvent($model, $event);
-            }
-            if(is_callable($postCreate)) {
-                $postCreate(entity: $model);
-            }    
+        // $model = $this->getNew($classname, $postCreate);
+        $classname ??= static::ENTITY;
+        if(!class_exists($classname) || !$this->entityExists($classname, false, true)) {
+            throw new Exception(vsprintf("Error %s line %d: %s entity does not exist or is not instantiable", [__METHOD__, __LINE__, $classname]));
         }
+        /** @var AppEntityInterface $model */
+        $model = new $classname();
+        if(!($model instanceof AppEntityInterface)) return false;
+        // $this->setManagerToEntity($model);
+
+        $model->_setModel(); // IMPORTANT!!!
+        // if(!empty($event)) {
+        //     $this->dispatchEvent($model, $event);
+        // }
+        // if(is_callable($postCreate)) {
+        //     $postCreate(entity: $model);
+        // }
         return $model;
     }
 
     public function initEntity(
         AppEntityInterface $entity,
         ?callable $postCreate = null,
-        string|array|null $event = null
+        null|string|array $event = null
     ): AppEntityInterface
     {
         if($this->isDev() && !$entity->_appManaged->isNew()) {
@@ -657,7 +654,7 @@ class AppEntityManager extends BaseService implements AppEntityManagerInterface
 
     public final function setManagerToEntity(
         AppEntityInterface $entity,
-        string|array|null $event = null
+        null|string|array $event = null
     ): AppEntityInterface
     {
         if(!$entity->__isAppManaged() || $entity->_isClone()) {
@@ -708,7 +705,7 @@ class AppEntityManager extends BaseService implements AppEntityManagerInterface
 
     protected final function executeAppEvent(
         AppEntityInterface $entity,
-        string $group = null,
+        ?string $group = null,
         array $data = [],
     ): static
     {
@@ -724,7 +721,6 @@ class AppEntityManager extends BaseService implements AppEntityManagerInterface
                     throw new Exception(vsprintf('Error %s line %d: can not define "%s" method in %s attribute without a risk of ininite loop!', [__METHOD__, __LINE__, __FUNCTION__, $event]));
                 }
                 if($reflAttr->isApplicable($entity, $group)) {
-                    // dump(vsprintf('Apply event %s method %s (group: %s) to SERVICE %s for %s "%s" on %s line %d', [$event, $method, json_encode($group), $entity->_service->__toString(), $entity->getClassname(), $entity->__toString() ?? "null", __METHOD__, __LINE__]));
                     $entity->_service->$method($entity, $data, $group);
                     $applyed = true;
                 }
@@ -736,7 +732,6 @@ class AppEntityManager extends BaseService implements AppEntityManagerInterface
                 /** @var AppEvent $reflAttr */
                 $method = $reflAttr->method->name;
                 if($reflAttr->isApplicable($entity, $group)) {
-                    // dump(vsprintf('Apply event %s method %s (group: %s) to ENTITY %s "%s" on %s line %d', [$event, $method, json_encode($group), $entity->getClassname(), $entity->__toString() ?? "null", __METHOD__, __LINE__]));
                     $entity->$method($entity->_service, $data, $group);
                     $applyed = true;
                 }
@@ -753,21 +748,6 @@ class AppEntityManager extends BaseService implements AppEntityManagerInterface
         $entity->_appManaged->clearAppEvents();
         return $this;
     }
-
-    // /**
-    //  * Test event
-    //  * @param AppEntityInterface $entity
-    //  * @param mixed $data
-    //  */
-    // #[AppEvent(groups: [AppEvent::PRE_SET_DATA])]
-    // public function testEvent(
-    //     AppEntityInterface $entity,
-    //     mixed $data = [],
-    //     $group = null,
-    // ): void
-    // {
-    //     if($this->isDev()) dump(vsprintf('Applying event %s of (%s) %s (line %d) on "%s" with data %s...', [$group, static::class, __METHOD__, __LINE__, $entity, json_encode($data)]));
-    // }
 
     /**
      * Set owner (current User) to OwnerInterface entity
@@ -821,6 +801,9 @@ class AppEntityManager extends BaseService implements AppEntityManagerInterface
         bool|Opresult $opresultException = true
     ): bool
     {
+        if($entity->_isModel()) {
+            throw new Exception(vsprintf("Error %s line %d: you can not insert a model entity (%s).", [__METHOD__, __LINE__, $entity::class]));
+        }
         $this->checkPersistable($entity);
         $isNew = $entity->_appManaged->isNew();
         try {
@@ -828,11 +811,9 @@ class AppEntityManager extends BaseService implements AppEntityManagerInterface
                 // Before persit
                 $this->executeAppEvent($entity, AppEvent::beforePrePersist, []);
                 $this->em->persist($entity);
-                // dump('Is NEW : '.json_encode($isNew).' > Persisted "'.$entity.'" (id: '.json_encode($entity->getId()).')... : '.json_encode($this->isManaged($entity)));
             } else {
                 // Before update
                 $this->executeAppEvent($entity, AppEvent::beforePreUpdate, []);
-                // dump('Is NEW : '.json_encode($isNew).' > NOT Persisted "'.$entity.'" (id: '.json_encode($entity->getId()).')... : '.json_encode($this->isManaged($entity)));
             }
         } catch (Throwable $th) {
             if($opresultException instanceof Opresult) {
@@ -894,7 +875,7 @@ class AppEntityManager extends BaseService implements AppEntityManagerInterface
             if($opresultException instanceof Opresult) {
                 $opresultException->addDanger(vsprintf('La suppression de %s %s a échoué', [$entity->getClassname(), $entity->__toString()]));
             } else if($opresultException) {
-                throw new Exception(vsprintf("La suppression a échoué ! Veuiller recommencer l'opération, s.v.p.%s", [PHP_EOL.$th->__toString()]));
+                // throw new Exception(vsprintf("La suppression a échoué ! Veuiller recommencer l'opération, s.v.p.%s", [PHP_EOL.$th->__toString()]));
             }
             return false;
         }
@@ -994,7 +975,7 @@ class AppEntityManager extends BaseService implements AppEntityManagerInterface
     public function hydrateEntity(
         AppEntityInterface|string $entity,
         array $data,
-        string $uname = null,
+        ?string $uname = null,
     ): AppEntityInterface|false
     {
         if(is_string($entity) && $this->entityExists($entity)) {
@@ -1017,7 +998,7 @@ class AppEntityManager extends BaseService implements AppEntityManagerInterface
                     break;
                 case array_key_exists($property, $cmd->fieldMappings):
                     // Column
-                    switch($cmd->fieldMappings[$property]['type']) {
+                    switch($cmd->fieldMappings[$property]->type) {
                         // case 'json':
                         //     $propertyAccessor->setValue($entity, $property, (array)$value);
                         //     break;
@@ -1092,7 +1073,7 @@ class AppEntityManager extends BaseService implements AppEntityManagerInterface
      * @return Opresult
      */
     public function loadEntities(
-        string $path = null,
+        ?string $path = null,
         bool $replace = false,
         bool $persist = true,
         array|string $classes = [],
