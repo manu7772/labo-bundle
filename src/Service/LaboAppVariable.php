@@ -1,17 +1,17 @@
 <?php
 namespace Aequation\LaboBundle\Service;
 
-// use Aequation\LaboBundle\Component\AppContext;
 use Aequation\LaboBundle\Component\Interface\AppContextInterface;
 use Aequation\LaboBundle\Service\Interface\AppServiceInterface;
 use Aequation\LaboBundle\Service\Interface\LaboAppVariableInterface;
 use Aequation\LaboBundle\Service\Interface\LaboBundleServiceInterface;
+// Symfony
 use Symfony\Bridge\Twig\AppVariable;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpKernel\KernelInterface;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
 use Symfony\Component\Translation\LocaleSwitcher;
-
+// PHP
 use DateTime;
 
 class LaboAppVariable extends AppVariable implements LaboAppVariableInterface
@@ -81,5 +81,25 @@ class LaboAppVariable extends AppVariable implements LaboAppVariableInterface
 
     }
 
+
+    public function getHost(): ?string
+    {
+        return $this->service->getHost();
+    }
+
+    public function isLocalHost(): bool
+    {
+        return $this->service->isLocalHost();
+    }
+
+    public function isProdHost(?array $countries = null): bool
+    {
+        return $this->service->isProdHost($countries);
+    }
+
+    // public function getRouter(): RouterInterface
+    // {
+    //     return $this->service->get('router');
+    // }
 
 }

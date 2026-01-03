@@ -35,6 +35,10 @@ interface AppServiceInterface extends ServiceInterface
     public function get(string $id, int $invalidBehavior = ContainerInterface::EXCEPTION_ON_INVALID_REFERENCE): ?object;
     public static function getClassServiceName(string|AppEntityInterface $objectOrClass): ?string;
     public function getClassService(string|AppEntityInterface $objectOrClass): ?ServiceInterface;
+    // Host
+    public function getHost(): ?string;
+    public function isLocalHost(): bool;
+    public function isProdHost(?array $countries = null): bool;
     // Twig
     public function getTwig(): Environment;
     public function getTwigLoader(): LoaderInterface;

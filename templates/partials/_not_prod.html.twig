@@ -1,0 +1,57 @@
+{% set admin_and_dev = is_granted('ROLE_ADMIN') and app.environment != 'prod' %}
+{% if not app.isProdHost() or admin_and_dev %}
+    <style>
+        .not-prod {
+            position: fixed;
+            top: 60px;
+            right: 10px;
+            width: 180px;
+            height: auto;
+            color: white;
+            text-align: center;
+            z-index: 100000;
+            padding: 5px 0;
+            border-radius: 6px;
+            cursor: pointer;
+            user-select: none;
+            {% if app.isLocalHost() and not app.environment == 'dev' %}
+            {% else %}
+            animation: fadeOutAfterDelay {{ app.isLocalHost() ? '2s' : '6s' }} forwards;
+            {% endif %}
+            background: {{ app.isLocalHost() ? '#f0ad4e' : '#d9534f' }};
+        }
+
+        @keyframes fadeOutAfterDelay {
+            0%, 90% {
+                opacity: {{ app.isLocalHost() ? '.85' : '1' }};
+                visibility: visible;
+            }
+            100% {
+                opacity: 0;
+                visibility: hidden;
+            }
+        }
+        /* .not-prod:hover {
+            display: none;
+        } */
+    </style>
+    <div class="not-prod">
+        <strong>ATTENTION !</strong>
+        {% if app.environment == 'dev' %}
+        <div style="font-size: .9em; line-height: .85em; padding: 1px 5px; font-weight: bold; color: yellow;">
+            DEV MODE ENABLED
+        </div>
+        {% elseif app.isLocalHost() %}
+        <div style="font-size: .9em; line-height: .85em; padding: 1px 5px; font-weight: bold; color: darkred;">
+            PROD MODE ENABLED
+        </div>
+        {% endif %}
+        <div style="font-size: .9em; line-height: .85em; padding: 1px 5px;">
+            {% if app.isLocalHost() %}
+            Vous êtes sur<br>le serveur local
+            {% else %}
+            Vous n'êtes pas sur le serveur de production !
+            {% endif %}
+        </div>
+    </div>
+{% endif %}

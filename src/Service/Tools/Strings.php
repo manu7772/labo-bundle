@@ -231,8 +231,9 @@ class Strings extends BaseService
 		return $css;
     }
 
-	public static function formateForWebpage(string $text, int $mode = 1): Markup
+	public static function formateForWebpage(?string $text, int $mode = 1): Markup
 	{
+		$text = (string) $text;
 		switch ($mode) {
 			case 0:
 				// Raw HTML

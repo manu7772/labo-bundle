@@ -19,7 +19,7 @@
 	</head>
 	{% block body %}
 	{# <body id="app" data-app="{{ app.service.appParams(true, 'public_app') }}" {{ stimulus_controller('globalapp') }}> #}
-	<body class="wscss" id="app" {{ stimulus_controller('globalapp') }}>
+    <body class="wscss" id="app" {{ stimulus_controller('globalapp') }}>
         {% include '@AequationLabo/partials/_not_prod.html.twig' %}
         {% block option_nav_section %}
         <twig:OptionMenu :webpage="webpage|default(null)" />
@@ -27,27 +27,17 @@
         {% block nav_section %}
         <twig:HeaderMenu :webpageOrMenu="webpage|default(null)" :options="true" />
         {% endblock %}
-        {% set banner_section = webpage.firstWebsection('banner')|default(null) %}
-        {% set hasBanner = banner_section.active|default(false) %}
-        {% block banner_section %}
-            {% if hasBanner %}
-            {% include banner_section.twigfile with {websection: banner_section} %}
-            {% endif %}
-        {% endblock %}
+        {# REMOVED ANY BANNER HERE #}
         <div class="main-container">
             {% block main_container %}
                 {# main content here #}
                 {% for websection in webpage.websections('section', true)|default([]) %}
-                    {% include websection.twigfile %}
+                    {% include websection.twigfile with {websection: websection} %}
                 {% endfor %}
             {% endblock %}
-			{% block addons %}
-			{% endblock %}
+            {# {% include 'partials/_aide.html.twig' %} #}
             {% block footer_section %}
-            {% set footer = webpage.firstWebsection('footer')|default(null) %}
-            {% if footer is not null and footer.active %}
-                {% include footer.twigfile with {websection: footer} %}
-            {% endif %}
+            <twig:Footer :webpage="webpage|default(null)" :footer="webpage.firstWebsection('footer')|default(null)" />
             {% endblock %}
         </div>
 		{% block after_container %}

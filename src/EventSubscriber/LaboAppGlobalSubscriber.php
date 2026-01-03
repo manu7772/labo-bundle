@@ -162,8 +162,8 @@ class LaboAppGlobalSubscriber implements EventSubscriberInterface
             $controller = $this->getControllerObjectFromEvent($event);
             if($controller instanceof AbstractController) {
                 $host = $event->getRequest()->getHost();
-                $website_host = preg_replace('/^(www\.)/', '', $this->appService->getParameter('router.request_context.host', []));
-                if($this->appService->isDev()) dump($host, $this->appService->getRoute(), $website_host);
+                $website_host = preg_replace('/^(www\.)/', '', $this->appService->getParameter('router.request_context.host', ''));
+                // if($this->appService->isDev()) dump($host, $this->appService->getRoute(), $website_host);
                 // **********************************
                 // TEST/DEMO WEBSITES RESTRICTED AREA
                 // **********************************
