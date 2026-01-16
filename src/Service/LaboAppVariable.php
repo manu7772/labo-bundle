@@ -87,6 +87,11 @@ class LaboAppVariable extends AppVariable implements LaboAppVariableInterface
         return $this->service->getHost();
     }
 
+    public function getWebsiteHost(?string $ext = null): ?string
+    {
+        return $this->service->getWebsiteHost($ext);
+    }
+
     public function isLocalHost(): bool
     {
         return $this->service->isLocalHost();

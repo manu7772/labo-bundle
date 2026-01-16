@@ -37,6 +37,7 @@ interface AppServiceInterface extends ServiceInterface
     public function getClassService(string|AppEntityInterface $objectOrClass): ?ServiceInterface;
     // Host
     public function getHost(): ?string;
+    public function getWebsiteHost(?string $ext = null): ?string;
     public function isLocalHost(): bool;
     public function isProdHost(?array $countries = null): bool;
     // Twig

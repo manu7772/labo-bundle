@@ -1,0 +1,153 @@
+{% macro webpageAttrs(webpage) %}
+    {%- if is_granted('ROLE_EDITOR') -%}
+    data-popover-target="popover-user-tools-w-{{ webpage.id }}" data-popover-trigger="click" data-popover-placement="bottom"
+    {%- endif -%}
+{% endmacro %}
+
+{% macro webpage(webpage) %}
+    {% if is_granted('ROLE_EDITOR') and webpage.shortname|default(null) in ['Webpage'] %}
+        {% import _self as self %}
+        <span {{ webpage.shortname|default(null) in ['Webpage'] ? self.webpageAttrs(webpage) }} class="h-full px-4 place-content-center cursor-pointer hover:bg-primary-400 opacity-50 hover:opacity-100 z-1001">
+            {% set currentItem = webpage.currentItem|default(webpage) %}
+            <div data-popover id="popover-user-tools-w-{{ webpage.id }}" role="tooltip" class="absolute z-20 invisible inline-block min-w-80 text-sm transition-opacity duration-300 border rounded-lg shadow-sm opacity-0 border-gray-600 bg-gray-800">
+                <div class="px-6 py-0 border-b rounded-t-lg border-gray-600 bg-gray-700 dark">
+                    <h5 class="font-semibold text-white py-2"><span class="font-thin italic opacity-50">{{ 'name'|trans([], currentItem.shortname) }} : </span> "{{ currentItem.name }}"</h5>
+                </div>
+                <div class="px-3 py-1 flex flex-col gap-1 text-gray-400 my-2">
+                    {% set admin_path = is_granted('ROLE_EDITOR') ? url_if_exists('easyadmin') : null %}
+                    {% set labo_home = is_granted('ROLE_SUPER_ADMIN') ? url_if_exists('aequation_labo_home') : null %}
+                    {% if admin_path %}<a {{ turbo_enable(false) }} href="{{ admin_path }}" target="_blank" class="text-gray-300 hover:text-white"><strong><twig:ux:icon name="tabler:world-cog" class="w-4 h-4 inline-block" /> Administration du site</strong></a>{% endif %}
+                    {# {% if is_granted('ROLE_EDITOR') %}
+                    <a href="https://docs.google.com/spreadsheets/d/1MChi68RzU_SxnhPSBAEwiIvPgIuWmy0XGRUx3kzj3nk/edit?usp=sharing" target="_blank" rel="noopener noreferrer" class="hover:text-white"><twig:ux:icon name="tabler:file-type-ppt" class="w-4 h-4 inline-block" /> Travail: menus</a>
+                    <a href="https://docs.google.com/presentation/d/1PljzRm6f3pLvaVqOlSMKGNLOmxrBy8c4WH0ElOP9-pU/edit?usp=sharing" target="_blank" rel="noopener noreferrer" class="hover:text-white"><twig:ux:icon name="tabler:file-type-xls" class="w-4 h-4 inline-block" /> Travail: pages web</a>
+                    {% endif %} #}
+                    {% if labo_home %}<a {{ turbo_enable(false) }} href="{{ labo_home }}" target="_blank" class="hover:text-white"><twig:ux:icon name="tabler:brand-symfony" class="w-4 h-4 inline-block" /> Labo</a>{% endif %}
+                    {# <hr class="my-2 border-slate-500"> #}
+                    <a class="hover:text-white" data-turbo="false" target="_blank" href="{{ url('easyadmin_' ~ currentItem.shortname|lower ~ '_detail', {entityId: currentItem.id}) }}"><twig:ux:icon name="tabler:eye" class="w-4 h-4 inline-block" /> {{ 'name'|trans([], currentItem.shortname) }} "{{ currentItem.name }}"</a>
+                    {% if webpage != currentItem %}
+                    <a class="hover:text-white pl-4" data-turbo="false" target="_blank" href="{{ url('easyadmin_' ~ webpage.shortname|lower ~ '_detail', {entityId: webpage.id}) }}" title="Cette {{ 'name'|trans([], webpage.shortname) }} est utilisée uniquement pour afficher l'élément '{{ 'name'|trans([], currentItem.shortname) }}' ci-dessus. Vérifiez lequel de ces 2 éléments vous souhaitez réellement consulter.">
+                        <twig:ux:icon name="tabler:arrow-rotary-left" class="w-4 h-4 inline-block rotate-180" /> {{ 'name'|trans([], webpage.shortname) }} "{{ webpage.name }}"
+                    </a>
+                    {% endif %}
+                    {# <a class="hover:text-white" data-turbo="false" target="_blank" href="{{ url('easyadmin_webpage_edit', {entityId: webpage.id}) }}"><twig:ux:icon name="tabler:pencil" class="w-4 h-4 inline-block" /> Modifier "{{ webpage.name }}"</a> #}
+                    {% if webpage.mainmenu %}
+                    {# <hr class="my-2 border-slate-500"> #}
+                    <a class="hover:text-white" data-turbo="false" target="_blank" href="{{ url('easyadmin_menu_detail', {entityId: webpage.mainmenu.id}) }}"><twig:ux:icon name="tabler:eye" class="w-4 h-4 inline-block" /> Menu principal</a>
+                    {# <a class="hover:text-white" data-turbo="false" target="_blank" href="{{ url('easyadmin_menu_edit', {entityId: webpage.mainmenu.id}) }}"><twig:ux:icon name="tabler:pencil" class="w-4 h-4 inline-block" /> Modifier le menu principal</a> #}
+                    {% endif %}
+                    {% if Identity|default(null) %}
+                    {# <hr class="my-2 border-slate-500"> #}
+                    <a class="hover:text-white" data-turbo="false" target="_blank" href="{{ url('easyadmin_entreprise_detail', {entityId: Identity.id}) }}"><twig:ux:icon name="tabler:eye" class="w-4 h-4 inline-block" /> {{ 'name'|trans([], Identity.shortname) }} "{{ Identity.name|striptags }}"</a>
+                    {% endif %}
+                    {% set video_tuto = is_granted('ROLE_EDITOR') ? url_if_exists('video-tuto') : null %}
+                    {% if video_tuto %}
+                    <hr class="my-2 border-slate-500">
+                    <a {{ turbo_enable(false) }} href="{{ path('app_logout') }}" class="text-gray-300 hover:text-white"><strong><twig:ux:icon name="tabler:user-x" class="w-4 h-4 inline-block" /> Quitter</strong></a>
+                    <hr class="my-2 border-slate-500">
+                    <a {{ turbo_enable(false) }} href="{{ video_tuto }}" target="_blank" class="text-gray-300 hover:text-white"><strong><twig:ux:icon name="tabler:chalkboard-teacher" class="w-4 h-4 inline-block" /> Tutoriels de gestion du site</strong></a>
+                    {% endif %}
+                    <hr class="my-2 border-slate-500">
+                    {% if (not app.isProdHost()) or app.isLocalHost() %}
+                    <a href="https://{{ app.getWebsiteHost('fr') }}" target="_blank" class="text-gray-300 hover:text-white"><strong><twig:ux:icon name="tabler:world-check" class="w-4 h-4 inline-block" /> Aller vers le site de PRODUCTION</strong></a>
+                    {% endif %}
+                    {% if app.isProdHost() or app.isLocalHost() %}
+                    <a href="https://test.{{ app.getWebsiteHost('fr') }}" target="_blank" class="text-gray-300 hover:text-white"><strong><twig:ux:icon name="tabler:world-cancel" class="w-4 h-4 inline-block" /> Aller vers le site de TEST</strong></a>
+                    {% endif %}
+                    {# <hr class="my-2 border-slate-500">
+                    <div class="font-bold">Webpage informations :</div>
+                    {% if is_granted('ROLE_SUPER_ADMIN') %}
+                    <div><u>ID:</u> {{ webpage.id }}</div>
+                    <div><u>Template:</u> {{ webpage.twigfile }}</div>
+                    {% endif %}
+                    <div><u>Slug:</u></div>
+                    <div>{{ currentItem.slug }}</div>
+                    <div><u>Link:</u></div>
+                    <div>&lt;{{ 'twig:Elements:Webpage :id="' ~ currentItem.id ~ '"' }}&gt;<br>{{ currentItem.linktitle }}<br>&lt;{{ '/twig:Elements:Webpage' }}&gt;</div> #}
+                </div>
+            </div>
+            {{ ux_icon('tabler:settings-cog', {class: 'w-6 h-6'}) }}
+        </span>
+    {% elseif app.user %}
+        <a href="{{ path('app_logout') }}" class="h-full px-4 place-content-center cursor-pointer hover:bg-red-600" title="Quitter">{{ ux_icon('tabler:user-x', {class: 'w-6 h-6'}) }}</a>
+    {% else %}
+        <a href="{{ path('app_login') }}" class="h-full px-4 place-content-center cursor-pointer hover:bg-teal-medium" title="Connecter à mon compte">{{ ux_icon('tabler:user', {class: 'w-6 h-6'}) }}</a>
+    {% endif %}
+{% endmacro %}
+
+{% macro webpage_inside(webpage, position = 'top') %}
+    {% if is_granted('ROLE_EDITOR') %}
+        {% set currentItem = webpage.currentItem|default(webpage) %}
+        <div data-popover-target="popover-user-tools-ins-{{ webpage.id }}" data-popover-trigger="click" data-popover-placement="left" class="absolute max-sm:hidden inline-flex opacity-40 hover:opacity-100 cursor-pointer z-1000" style="{{ position }}: 16px; right: 0px;" title="Cliquez pour modifier {{ 'name'|trans([], currentItem.shortname) }} `{{ currentItem.name }}`">
+            <span class="border border-slate-200 bg-slate-600 hover:bg-slate-700 rounded-md px-0 py-2">
+                <twig:ux:icon name="tabler:settings-cog" class="w-8 text-slate-200 p-0 m-0" />
+            </span>
+        </div>
+        <div data-popover id="popover-user-tools-ins-{{ webpage.id }}" role="tooltip" class="max-sm:hidden absolute z-10 invisible inline-block min-w-80 text-sm transition-opacity duration-300 border rounded-lg shadow-sm opacity-0 border-gray-600 bg-gray-800">
+            <div class="px-6 py-0 border-b rounded-t-lg border-gray-600 bg-gray-700 dark">
+                <h5 class="font-semibold text-white py-2"><span class="font-thin italic opacity-50">{{ currentItem.name }}</h5>
+            </div>
+            <div class="px-3 py-1 flex flex-col gap-0 text-gray-400 my-2">
+                <a class="hover:text-white" data-turbo="false" target="_blank" href="{{ url('easyadmin_' ~ currentItem.shortname|lower ~ '_detail', {entityId: currentItem.id}) }}"><twig:ux:icon name="tabler:eye" class="w-4 h-4 inline-block" /> {{ 'name'|trans([], currentItem.shortname) }} "{{ currentItem.name }}"</a>
+                {% if webpage != currentItem %}
+                <a class="hover:text-white" data-turbo="false" target="_blank" href="{{ url('easyadmin_' ~ webpage.shortname|lower ~ '_detail', {entityId: webpage.id}) }}"><twig:ux:icon name="tabler:eye" class="w-4 h-4 inline-block" /> {{ 'name'|trans([], webpage.shortname) }} "{{ webpage.name }}"</a>
+                {% endif %}
+            </div>
+        </div>
+    {% endif %}
+{% endmacro %}
+
+{% macro websection(webpage, websection, position = 'top') %}
+    {% if is_granted('ROLE_EDITOR') %}
+        <div data-popover-target="popover-user-tools-ww-{{ webpage.id }}-{{ websection.id }}" data-popover-trigger="click" data-popover-placement="left" class="absolute max-sm:hidden inline-flex opacity-40 hover:opacity-100 cursor-pointer z-1000" style="{{ position }}: 16px; right: 16px;" title="Cliquez pour modifier la section `{{ websection.name|striptags }}` de la page `{{ webpage.name|striptags }}`">
+            <span class="border border-slate-200 bg-slate-600 hover:bg-slate-700 rounded-md px-1 py-0">
+                <twig:ux:icon name="tabler:settings-cog" class="size-5 text-slate-200 p-0 m-0" />
+            </span>
+        </div>
+        <div data-popover id="popover-user-tools-ww-{{ webpage.id }}-{{ websection.id }}" role="tooltip" class="max-sm:hidden absolute z-10 invisible inline-block min-w-80 text-sm transition-opacity duration-300 border rounded-lg shadow-sm opacity-0 border-gray-600 bg-gray-800">
+            <div class="px-6 py-0 border-b rounded-t-lg border-gray-600 bg-gray-700 dark">
+                <h5 class="font-semibold text-white py-2"><span class="font-thin italic opacity-50">{{ websection.sectiontype|trans()|striptags|capitalize }}</span> {{ websection.name }}</h5>
+            </div>
+            <div class="px-3 py-1 flex flex-col gap-0 text-gray-400 my-2">
+                <a class="hover:text-white" data-turbo="false" target="_blank" href="{{ url('easyadmin_websection_detail', {entityId: websection.id}) }}"><twig:ux:icon name="tabler:eye" class="w-4 h-4 inline-block" /> Voir</a>
+                {# <a class="hover:text-white" data-turbo="false" target="_blank" href="{{ url('easyadmin_websection_edit', {entityId: websection.id}) }}"><twig:ux:icon name="tabler:pencil" class="w-4 h-4 inline-block" /> Modifier</a> #}
+                <a class="hover:text-white" data-turbo="false" href="{{ path('aequation_labo_entity_webpage_remove_websection', {webpage: webpage.id, websection: websection.id }) }}"><twig:ux:icon name="tabler:x" class="w-4 h-4 inline-block" /> Retirer de cette page</a>
+                {% if websection.active %}
+                <a class="hover:text-white" data-turbo="false" href="{{ path('aequation_labo_entity_websection_enable', {websection: websection.id, value: 0 }) }}"><twig:ux:icon name="tabler:eye-x" class="w-4 h-4 inline-block" /> Désactiver (partout)</a>
+                {% else %}
+                <a class="hover:text-white" data-turbo="false" href="{{ path('aequation_labo_entity_websection_enable', {websection: websection.id, value: 1 }) }}"><twig:ux:icon name="tabler:eye-check" class="w-4 h-4 inline-block" /> Activer (partout)</a>
+                {% endif %}
+                {% if websection.sectiontype == 'section' %}
+                    <hr class="my-2 border-slate-500">
+                    <a class="hover:text-white" data-turbo="false" href="{{ path('aequation_labo_entity_webpage_move_websection', {webpage: webpage.id, websection: websection.id, position: 'top' }) }}"><twig:ux:icon name="tabler:arrow-bar-to-up" class="w-4 h-4 inline-block" /> En premier</a>
+                    <a class="hover:text-white" data-turbo="false" href="{{ path('aequation_labo_entity_webpage_move_websection', {webpage: webpage.id, websection: websection.id, position: 'up' }) }}"><twig:ux:icon name="tabler:arrow-up" class="w-4 h-4 inline-block" /> Remonter</a>
+                    <a class="hover:text-white" data-turbo="false" href="{{ path('aequation_labo_entity_webpage_move_websection', {webpage: webpage.id, websection: websection.id, position: 'down' }) }}"><twig:ux:icon name="tabler:arrow-down" class="w-4 h-4 inline-block" /> Descendre</a>
+                    <a class="hover:text-white" data-turbo="false" href="{{ path('aequation_labo_entity_webpage_move_websection', {webpage: webpage.id, websection: websection.id, position: 'bottom' }) }}"><twig:ux:icon name="tabler:arrow-bar-to-down" class="w-4 h-4 inline-block" /> En dernier</a>
+                {% endif %}
+            </div>
+        </div>
+    {% endif %}
+{% endmacro %}
+
+{% macro item(item, position = 'top') %}
+    {% if is_granted('ROLE_EDITOR') %}
+        <div data-popover-target="popover-user-tools-item-{{ item.id }}" data-popover-trigger="click" data-popover-placement="left" class="absolute max-sm:hidden inline-flex opacity-40 hover:opacity-100 cursor-pointer z-1000" style="{{ position }}: 16px; right: 16px;" title="Cliquez pour modifier `{{ item.name|striptags }}`">
+            <span class="border border-slate-200 bg-slate-600 hover:bg-slate-700 rounded-md px-0 py-2">
+                <twig:ux:icon name="tabler:settings-cog" class="w-8 text-slate-200 p-0 m-0" />
+            </span>
+        </div>
+        <div data-popover id="popover-user-tools-item-{{ item.id }}" role="tooltip" class="max-sm:hidden absolute z-10 invisible inline-block min-w-80 text-sm transition-opacity duration-300 border rounded-lg shadow-sm opacity-0 border-gray-600 bg-gray-800">
+            <div class="px-6 py-0 border-b rounded-t-lg border-gray-600 bg-gray-700 dark">
+                <h5 class="font-semibold text-white py-2"><span class="font-thin italic opacity-50">{{ 'name'|trans([], item.shortname)|capitalize }}</span> {{ item.name }}</h5>
+            </div>
+            <div class="px-3 py-1 flex flex-col gap-0 text-gray-400 my-2">
+                <a class="hover:text-white" data-turbo="false" target="_blank" href="{{ url('easyadmin_' ~ item.shortname|lower ~ '_detail', {entityId: item.id}) }}"><twig:ux:icon name="tabler:eye" class="w-4 h-4 inline-block" /> Voir</a>
+                {# <a class="hover:text-white" data-turbo="false" target="_blank" href="{{ url('easyadmin_' ~ item.shortname|lower ~ '_edit', {entityId: item.id}) }}"><twig:ux:icon name="tabler:pencil" class="w-4 h-4 inline-block" /> Modifier</a> #}
+                {# {% if item.active %}
+                <a class="hover:text-white" data-turbo="false" href="{{ path('aequation_labo_entity_item_enable', {item: item.id, value: 0 }) }}"><twig:ux:icon name="tabler:eye-x" class="w-4 h-4 inline-block" /> Désactiver (partout)</a>
+                {% else %}
+                <a class="hover:text-white" data-turbo="false" href="{{ path('aequation_labo_entity_item_enable', {item: item.id, value: 1 }) }}"><twig:ux:icon name="tabler:eye-check" class="w-4 h-4 inline-block" /> Activer (partout)</a>
+                {% endif %} #}
+            </div>
+        </div>
+    {% endif %}
+{% endmacro %}

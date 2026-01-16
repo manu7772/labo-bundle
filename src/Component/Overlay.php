@@ -2,6 +2,7 @@
 namespace Aequation\LaboBundle\Component;
 
 use Aequation\LaboBundle\Service\Tools\Encoders;
+use Aequation\LaboBundle\Service\Tools\Strings;
 use JsonSerializable;
 use ReflectionClass;
 use Serializable;
@@ -10,27 +11,79 @@ class Overlay implements JsonSerializable, Serializable
 {
 
     public const TITLE_CLASSES = [
-        "Taille 1" => "text-1xl",
-        "Taille 2" => "text-2xl",
-        "Taille 3" => "text-3xl",
-        "Manuscrit" => "cursive",
-        "Justify" => "text-justify",
-        "Gauche" => "text-left",
-        "Droite" => "text-right",
-        "Centré" => "text-center",
+        'size' => [
+            'type' => 'select',
+            'multiple' => false,
+            "Très grand" => "xl",
+            "Grand" => "lg",
+            "Moyen" => "md",
+        ],
+        'style' => [
+            'type' => 'select',
+            'multiple' => true,
+            "Gras" => "font-bold",
+            "Italique" => "italic",
+            "Souligné" => "underline",
+        ],
+        'align' => [
+            'type' => 'select',
+            'multiple' => false,
+            "À gauche" => "text-left",
+            "Centré" => "text-center",
+            "À droite" => "text-right",
+            "Justifié" => "text-justify",
+            ],
+        'font' => [
+            'type' => 'select',
+            'multiple' => false,
+            "Par défaut" => "",
+            "Manuscrit" => "cursive",
+        ],
     ];
 
     public const TEXT_CLASSES = [
-        "Justifié" => "text-justify",
-        "Gauche" => "text-left",
-        "Droite" => "text-right",
-        "Centré" => "text-center",
+        'size' => [
+            'type' => 'select',
+            'multiple' => false,
+            'values' => [
+                "Très grand" => "xl",
+                "Grand" => "lg",
+                "Moyen" => "md",
+            ],
+        ],
+        'style' => [
+            'type' => 'select',
+            'multiple' => true,
+            'values' => [
+                "Gras" => "font-bold",
+                "Italique" => "italic",
+                "Souligné" => "underline",
+            ],
+        ],
+        'align' => [
+            'type' => 'select',
+            'multiple' => false,
+            'values' => [
+                "À gauche" => "text-left",
+                "Centré" => "text-center",
+                "À droite" => "text-right",
+                "Justifié" => "text-justify",
+            ],
+        ],
+        'font' => [
+            'type' => 'select',
+            'multiple' => false,
+            'values' => [
+                "Par défaut" => "",
+                "Manuscrit" => "cursive",
+            ],
+        ],
     ];
-
     public const OVERLAY_POSITIONS = [
         'Haut à gauche' => "overlay-top-left",
         'Haut à droite' => "overlay-top-right",
         'Haut au centre' => "overlay-top-center",
+        'Centré au milieu' => "overlay-center-center",
         'Bas à gauche' => "overlay-bottom-left",
         'Bas à droite' => "overlay-bottom-right",
         'Bas au centre' => "overlay-bottom-center",
@@ -48,7 +101,7 @@ class Overlay implements JsonSerializable, Serializable
     protected ?array $text_classes = null;
 
     public function __construct(
-        array $data = null
+        ?array $data = null
     )
     {
         $this->position = static::OVERLAY_POSITIONS['Bas au centre'];
@@ -56,7 +109,7 @@ class Overlay implements JsonSerializable, Serializable
             $this->name = Encoders::geUniquid('overlay', '_');
         } else {
             foreach ($data as $key => $value) {
-                $this->$key = $value;
+                $this->$key = is_array($value) ? array_values($value) : $value;
             }
         }
     }
@@ -99,7 +152,17 @@ class Overlay implements JsonSerializable, Serializable
         $rc = new ReflectionClass(static::class);
         foreach ($rc->getProperties() as $prop) {
             $name = $prop->name;
-            $data[$name] = $this->$name;
+            switch ($name) {
+                // case 'title':
+                //     $data[$name] = $this->getTitle(true);
+                //     break;
+                // case 'text':
+                //     $data[$name] = $this->getText(true);
+                //     break;
+                default:
+                    $data[$name] = $this->$name;
+                    break;
+            }
         }
         return $data;
     }
@@ -128,22 +191,25 @@ class Overlay implements JsonSerializable, Serializable
         return $this;
     }
 
-    public function getTitle(): ?string
+    public function getTitle(bool $withHtml = false): ?string
     {
-        return $this->title;
+        if(!Strings::hasText($this->title)) {
+            return null;
+        }
+        return $withHtml ? nl2br($this->title) : $this->title;
     }
 
     public function setTitleClasses(
         array $title_classes
     ): static
     {
-        $this->title_classes = $title_classes;
+        $this->title_classes = array_values($title_classes);
         return $this;
     }
 
     public function getTitleClasses(): array
     {
-        return $this->title_classes;
+        return array_values($this->title_classes ?? []);
     }
 
     public static function getTitleClassesChoices(): array
@@ -153,7 +219,7 @@ class Overlay implements JsonSerializable, Serializable
 
     public function hasTitle(): bool
     {
-        return strlen(strip_tags((string)$this->title)) > 0;
+        return Strings::hasText((string)$this->title);
     }
 
     public function setText(?string $text): static
@@ -162,9 +228,12 @@ class Overlay implements JsonSerializable, Serializable
         return $this;
     }
 
-    public function getText(): ?string
+    public function getText(bool $withHtml = false): ?string
     {
-        return $this->text;
+        if(!Strings::hasText($this->text)) {
+            return null;
+        }
+        return $withHtml ? nl2br($this->text) : $this->text;
     }
 
     public function setTextClasses(
@@ -177,7 +246,7 @@ class Overlay implements JsonSerializable, Serializable
 
     public function getTextClasses(): array
     {
-        return $this->text_classes;
+        return $this->text_classes ?? [];
     }
 
     public static function getTextClassesChoices(): array
@@ -187,7 +256,7 @@ class Overlay implements JsonSerializable, Serializable
 
     public function hasTtext(): bool
     {
-        return strlen(strip_tags((string)$this->text)) > 0;
+        return Strings::hasText($this->text);
     }
 
 }

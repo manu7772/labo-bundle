@@ -159,6 +159,16 @@ class AppService extends BaseService implements AppServiceInterface
         return $this->getCurrentRequest()?->getHost() ?? null;
     }
 
+    public function getWebsiteHost(?string $ext = null): ?string
+    {
+        $website_host = preg_replace('/^(www\.)/', '', $this->getParameter('router.request_context.host', ''));
+        if(!empty($ext)) {
+            $ext = preg_replace('/^\./', '', $ext);
+            $website_host = preg_replace('#\.([a-z]{2,})$#', '.'.$ext, $website_host);
+        }
+        return empty($website_host) ? null : $website_host;
+    }
+
     public function isLocalHost(): bool
     {
         $host = $this->getHost();
@@ -175,7 +185,7 @@ class AppService extends BaseService implements AppServiceInterface
             $countries = ['com', 'fr'];
         }
         $host = $this->getHost();
-        $website_host = preg_replace('/^(www\.)/', '', $this->getParameter('router.request_context.host', ''));
+        $website_host = $this->getWebsiteHost();
         $validHosts = [];
         foreach (array_unique($countries) as $country) {
             $country = strtolower(preg_replace('/^\./', '', $country));
