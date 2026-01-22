@@ -1,4 +1,5 @@
 /vendor/
+/internal_documentation/
 /.vscode/
 .phpunit.result.cache
 .php_cs.cache

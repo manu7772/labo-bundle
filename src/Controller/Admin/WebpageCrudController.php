@@ -66,10 +66,10 @@ class WebpageCrudController extends BaseCrudController
                         yield BooleanField::new('prefered', 'Page principale');
                         yield TextField::new('title', 'Titre de la page');
                         yield IntegerField::new('orderitem', 'Priorité')->setHelp('Ordre d\'affichage de la page dans les listes.');
-                        yield TextField::new('linktitle', 'Titre de lien externe')->formatValue(fn ($value) => Strings::markup($value));
+                        yield TextareaField::new('linktitle', 'Titre de lien externe')->formatValue(fn ($value) => Strings::markup($value));
                         yield AssociationField::new('mainmenu', 'Menu intégré')->setCrudController(MenuCrudController::class);
                         yield AssociationField::new('sosmenu', 'Menu SOS')->setCrudController(MenuCrudController::class);
-                        yield TextField::new('twigfileName', 'Nom du modèle');
+                        yield TextField::new('twigfileName', 'Mise en page')->setHelp('Modèle de mise en page utilisé pour cette page web.');
                         yield TextField::new('content', 'Texte de la page')->renderAsHtml();
                 
                     yield FormField::addPanel(label: 'Autres informations', icon: 'fa6-solid:info');
@@ -133,7 +133,8 @@ class WebpageCrudController extends BaseCrudController
                     yield FormField::addColumn('col-md-8');
 
                     yield TextField::new('title', 'Titre de la page');
-                    yield TextField::new('linktitle', 'Titre de lien externe')
+                    yield TextareaField::new('linktitle', 'Titre de lien externe')
+                        ->setNumOfRows(2)
                         ->setHelp('Entrez ici le texte pour les liens qui dirigeront vers cette page web. Optionel : si non renseigné, le <strong>Titre de la page</strong> sera utilisé.');
                     yield AssociationField::new('categorys')->setQueryBuilder(fn (QueryBuilder $qb): QueryBuilder => CategoryRepository::QB_CategoryChoices($qb, Webpage::class))
                         // ->autocomplete()

@@ -207,11 +207,14 @@ class Strings extends BaseService
 
 	public static function text2array(
 		string $text,
-		string $spliter = '\r'
+		string $spliter = '#\s*(?:\r\n|\n|\r)+\s*#u'
 	): array
 	{
 		if(!static::hasText($text)) return [];
-		return preg_split('/'.$spliter.'/', $text, -1, PREG_SPLIT_NO_EMPTY);
+		$array = preg_split($spliter, $text, -1, PREG_SPLIT_NO_EMPTY);
+		return array_filter($array, function($value) {
+			return static::hasText($value);
+		});
 	}
 
     #[CssClasses(target: 'value')]
@@ -273,6 +276,14 @@ class Strings extends BaseService
 				break;
 			}
 			return static::markup($code);
+	}
+
+	public static function normalizeTelephoneNumber(string $phone): string
+	{
+		$phone = preg_replace('/\D+/', '', $phone);
+		// Add spaces every 2 digits for readability
+		$phone = trim(implode(' ', str_split($phone, 2)));
+		return $phone;
 	}
 
     /** ***********************************************************************************

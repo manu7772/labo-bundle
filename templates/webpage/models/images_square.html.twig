@@ -1,0 +1,98 @@
+{# templates/webpage/models/images_square.html.twig #}
+{# description : Images carrées et agrandissement dans une popup #}
+{% extends "@AequationLabo/base_web.html.twig" %}
+
+{% block main_container %}
+
+    {% block before_slider %}
+    {% endblock %}
+
+    {% block the_slider %}
+        {% if webpage is defined %}
+    
+            {% if webpage.slider.slides|default([]) is not empty %}
+            <section>
+                <div class="section-container">
+                    {% set normalizedSlider = app.service.getNormalized(webpage.slider, null, {groups: ['index','BaSlider']}) %}
+                    <div {{ stimulus_controller('modal-slider', {slider: normalizedSlider}) }} class="slider-square">
+                        {% for slide in webpage.slider.slides %}
+                        <div class="thumbs">
+                            <img {{ stimulus_action('modal-slider', 'openModal', 'click', {slideId: slide.id}) }} src="{{ vich_uploader_asset(slide)|imagine_filter('thumbnail_q') }}" alt="{{ slide.slug }}" />
+                        </div>
+                        {% endfor %}
+                        <el-dialog>
+                            <dialog {{ stimulus_target('modal-slider', 'dialog') }} aria-labelledby="dialog-title">
+                                <el-dialog-backdrop {{ stimulus_action('modal-slider', 'closeModal', 'click') }}></el-dialog-backdrop>
+                                <div tabindex="0">
+                                    <el-dialog-panel class="max-w-6xl">
+                                        <div class="dialog-container">
+                                            <div class="sm:flex sm:items-start">
+                                                <div class="mt-3 grow text-center sm:mt-0 sm:text-left">
+                                                    <h3 {{ stimulus_target('modal-slider', 'title') }} id="dialog-title" class="text-xl font-semibold mt-0 text-slate-900 dark:text-white"></h3>
+                                                    <div {{ stimulus_target('modal-slider', 'content') }} class="mt-2 text-sm text-slate-500 dark:text-slate-400"></div>
+
+                                                    <div {{ stimulus_target('modal-slider', 'mouseZone') }} class="min-w-full m-0 relative text-center rounded-lg mt-4 overflow-hidden">
+                                                        <div class="beforafter">
+                                                            <div {{ stimulus_target('modal-slider', 'blockBefore') }} class="imgbloc">
+                                                                <img {{ stimulus_target('modal-slider', 'image') }} src="" alt="" />
+                                                                <div {{ stimulus_target('modal-slider', 'legendBAfter') }} class="bloctxt">Avant</div>
+                                                            </div>
+                                                            <div {{ stimulus_target('modal-slider', 'blockBAfter') }} class="foregd transit">
+                                                                <div class="foregd-slide">
+                                                                    <div {{ stimulus_target('modal-slider', 'blockImgBAfter') }} class="imgbloc"> <!-- animation-delay -->
+                                                                        <img {{ stimulus_target('modal-slider', 'imageBAfter') }} src="" alt="" />
+                                                                        <div class="bloctxt bloctxt-client_secondary">Après</div>
+                                                                    </div>
+                                                                    <div {{ stimulus_target('modal-slider', 'BAfterHandler') }} class="handler">
+                                                                        <twig:ux:icon name="tabler:circle-arrow-right-filled" clip-rule="evenodd" fill-rule="evenodd" stroke-linejoin="round" stroke-miterlimit="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" />
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="dialog-footer">
+                                            <button type="button" {{ stimulus_action('modal-slider', 'previousSlide', 'click') }} class="slidernav inline-flex rounded-md bg-white px-3 py-2 font-semibold text-slate-900 shadow-sm ring-1 ring-inset ring-slate-300 hover:bg-slate-50 w-auto dark:bg-white/10 dark:text-white dark:shadow-none dark:ring-white/5 dark:hover:bg-white/20">
+                                                <twig:ux:icon name="tabler:arrow-big-left-filled" class="w-6 h-6" />
+                                            </button>
+                                            <button type="button" {{ stimulus_action('modal-slider', 'nextSlide', 'click') }} class="slidernav inline-flex rounded-md bg-white px-3 py-2 font-semibold text-slate-900 shadow-sm ring-1 ring-inset ring-slate-300 hover:bg-slate-50 w-auto dark:bg-white/10 dark:text-white dark:shadow-none dark:ring-white/5 dark:hover:bg-white/20">
+                                                <twig:ux:icon name="tabler:arrow-big-right-filled" class="w-6 h-6" />
+                                            </button>
+                                            <button type="button" {{ stimulus_action('modal-slider', 'closeModal', 'click') }} class="inline-flex rounded-md bg-white px-3 py-2 font-semibold text-slate-900 shadow-sm ring-1 ring-inset ring-slate-300 hover:bg-slate-50 w-auto dark:bg-white/10 dark:text-white dark:shadow-none dark:ring-white/5 dark:hover:bg-white/20">
+                                                Fermer
+                                            </button>
+                                        </div>
+                                    </el-dialog-panel>
+                                </div>
+                            </dialog>
+                        </el-dialog>
+                    </div>
+                </div>
+            </section>
+            {% else %}
+                {% include '@AequationLabo/partials/_empty_slider.html.twig' %}
+            {% endif %}
+
+            {% block slider_texts %}
+                {% if webpage.slider.title or webpage.slider.content %}
+                    <section class="pt-1">
+                        {% if webpage.slider.title %}
+                        <h3 class="mb-3">{{ webpage.slider.title|raw }}</h3>
+                        {% endif %}
+                        {% if webpage.slider.content %}
+                        {{ webpage.slider.content|raw }}
+                        {% endif %}
+                    </section>
+                {% endif %}
+            {% endblock %}
+
+        {% endif %}
+    {% endblock %}
+
+    {% block after_slider %}
+    {% endblock %}
+
+{% endblock %}

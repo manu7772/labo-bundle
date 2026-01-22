@@ -4,14 +4,14 @@
     {%- endif -%}
 {% endmacro %}
 
-{% macro webpage(webpage) %}
+{% macro webpage(webpage, class = 'h-full px-4 place-content-center cursor-pointer hover:bg-primary-400 opacity-50 hover:opacity-100 z-[1001]') %}
     {% if is_granted('ROLE_EDITOR') and webpage.shortname|default(null) in ['Webpage'] %}
         {% import _self as self %}
-        <span {{ webpage.shortname|default(null) in ['Webpage'] ? self.webpageAttrs(webpage) }} class="h-full px-4 place-content-center cursor-pointer hover:bg-primary-400 opacity-50 hover:opacity-100 z-1001">
+        <span {{ webpage.shortname|default(null) in ['Webpage'] ? self.webpageAttrs(webpage) }} class="{{ class }}" title="Outils de gestion pour la page `{{ webpage.name }}`">
             {% set currentItem = webpage.currentItem|default(webpage) %}
             <div data-popover id="popover-user-tools-w-{{ webpage.id }}" role="tooltip" class="absolute z-20 invisible inline-block min-w-80 text-sm transition-opacity duration-300 border rounded-lg shadow-sm opacity-0 border-gray-600 bg-gray-800">
                 <div class="px-6 py-0 border-b rounded-t-lg border-gray-600 bg-gray-700 dark">
-                    <h5 class="font-semibold text-white py-2"><span class="font-thin italic opacity-50">{{ 'name'|trans([], currentItem.shortname) }} : </span> "{{ currentItem.name }}"</h5>
+                    <h5 class="font-semibold text-white py-2"><span class="font-thin italic opacity-60">{{ 'name'|trans([], currentItem.shortname) }} : </span> "{{ currentItem.name }}"</h5>
                 </div>
                 <div class="px-3 py-1 flex flex-col gap-1 text-gray-400 my-2">
                     {% set admin_path = is_granted('ROLE_EDITOR') ? url_if_exists('easyadmin') : null %}
@@ -39,19 +39,19 @@
                     {# <hr class="my-2 border-slate-500"> #}
                     <a class="hover:text-white" data-turbo="false" target="_blank" href="{{ url('easyadmin_entreprise_detail', {entityId: Identity.id}) }}"><twig:ux:icon name="tabler:eye" class="w-4 h-4 inline-block" /> {{ 'name'|trans([], Identity.shortname) }} "{{ Identity.name|striptags }}"</a>
                     {% endif %}
-                    {% set video_tuto = is_granted('ROLE_EDITOR') ? url_if_exists('video-tuto') : null %}
-                    {% if video_tuto %}
                     <hr class="my-2 border-slate-500">
                     <a {{ turbo_enable(false) }} href="{{ path('app_logout') }}" class="text-gray-300 hover:text-white"><strong><twig:ux:icon name="tabler:user-x" class="w-4 h-4 inline-block" /> Quitter</strong></a>
+                    {% set video_tuto = is_granted('ROLE_EDITOR') ? url_if_exists('video-tuto') : null %}
+                    {% if video_tuto %}
                     <hr class="my-2 border-slate-500">
                     <a {{ turbo_enable(false) }} href="{{ video_tuto }}" target="_blank" class="text-gray-300 hover:text-white"><strong><twig:ux:icon name="tabler:chalkboard-teacher" class="w-4 h-4 inline-block" /> Tutoriels de gestion du site</strong></a>
                     {% endif %}
                     <hr class="my-2 border-slate-500">
                     {% if (not app.isProdHost()) or app.isLocalHost() %}
-                    <a href="https://{{ app.getWebsiteHost('fr') }}" target="_blank" class="text-gray-300 hover:text-white"><strong><twig:ux:icon name="tabler:world-check" class="w-4 h-4 inline-block" /> Aller vers le site de PRODUCTION</strong></a>
+                    <a href="https://{{ app.getWebsiteHost() }}" target="_blank" class="text-gray-300 hover:text-white"><strong><twig:ux:icon name="tabler:world-check" class="w-4 h-4 inline-block" /> Aller vers le site de PRODUCTION</strong></a>
                     {% endif %}
                     {% if app.isProdHost() or app.isLocalHost() %}
-                    <a href="https://test.{{ app.getWebsiteHost('fr') }}" target="_blank" class="text-gray-300 hover:text-white"><strong><twig:ux:icon name="tabler:world-cancel" class="w-4 h-4 inline-block" /> Aller vers le site de TEST</strong></a>
+                    <a href="https://test.{{ app.getWebsiteHost() }}" target="_blank" class="text-gray-300 hover:text-white"><strong><twig:ux:icon name="tabler:world-cancel" class="w-4 h-4 inline-block" /> Aller vers le site de TEST</strong></a>
                     {% endif %}
                     {# <hr class="my-2 border-slate-500">
                     <div class="font-bold">Webpage informations :</div>
@@ -68,7 +68,7 @@
             {{ ux_icon('tabler:settings-cog', {class: 'w-6 h-6'}) }}
         </span>
     {% elseif app.user %}
-        <a href="{{ path('app_logout') }}" class="h-full px-4 place-content-center cursor-pointer hover:bg-red-600" title="Quitter">{{ ux_icon('tabler:user-x', {class: 'w-6 h-6'}) }}</a>
+        <a {{ turbo_enable(false) }} href="{{ path('app_logout') }}" class="h-full px-4 place-content-center cursor-pointer hover:bg-red-600" title="Quitter">{{ ux_icon('tabler:user-x', {class: 'w-6 h-6'}) }}</a>
     {% else %}
         <a href="{{ path('app_login') }}" class="h-full px-4 place-content-center cursor-pointer hover:bg-teal-medium" title="Connecter à mon compte">{{ ux_icon('tabler:user', {class: 'w-6 h-6'}) }}</a>
     {% endif %}
