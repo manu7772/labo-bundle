@@ -16,8 +16,9 @@
                     {% set normalizedSlider = app.service.getNormalized(webpage.slider, null, {groups: ['index','BaSlider']}) %}
                     <div {{ stimulus_controller('modal-slider', {slider: normalizedSlider}) }} class="slider-square">
                         {% for slide in webpage.slider.slides %}
+                        {% set the_img = slide.slidebases.isEmpty() ? slide : slide.slidebases.last %}
                         <div class="thumbs">
-                            <img {{ stimulus_action('modal-slider', 'openModal', 'click', {slideId: slide.id}) }} src="{{ vich_uploader_asset(slide)|imagine_filter('thumbnail_q') }}" alt="{{ slide.slug }}" />
+                            <img {{ stimulus_action('modal-slider', 'openModal', 'click', {slideId: slide.id}) }} src="{{ vich_uploader_asset(the_img)|imagine_filter('thumbnail_q') }}" alt="{{ slide.slug }}" />
                         </div>
                         {% endfor %}
                         <el-dialog>
