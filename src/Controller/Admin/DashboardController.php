@@ -1,6 +1,7 @@
 <?php
 namespace Aequation\LaboBundle\Controller\Admin;
 
+use App\Controller\Admin\WebpageCrudController as AppWebpageCrudController;
 use App\Entity\Menu;
 use App\Entity\User;
 use App\Entity\Slide;
@@ -96,7 +97,7 @@ class DashboardController extends AbstractDashboardController
         // Admin granted page
         if(!static::ADMIN_HOMEPAGE && $this->isGranted(WebpageVoter::ADMIN_ACTION_LIST, Webpage::class)) {
             // $adminUrlGenerator = $this->container->get(AdminUrlGenerator::class);
-            return $this->redirect($this->adminUrlGenerator->setController(WebpageCrudController::class)->generateUrl());
+            return $this->redirect($this->adminUrlGenerator->setController(AppWebpageCrudController::class)->generateUrl());
         }
         // Admin default homepage
         /** @see https://symfony.com/bundles/EasyAdminBundle/current/dashboards.html#customizing-the-dashboard-contents */
