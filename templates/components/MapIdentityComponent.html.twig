@@ -1,0 +1,5 @@
+<div{{ attributes }}>
+    {% if this.map|default(null) is not empty %}
+    {{ ux_map(this.map, {style: 'height: 600px; z-index: 0;'}) }}
+    {% endif %}
+</div>

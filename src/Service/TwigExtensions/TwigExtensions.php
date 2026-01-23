@@ -35,6 +35,7 @@ use Aequation\LaboBundle\Service\Interface\ImageServiceInterface;
 use Aequation\LaboBundle\Repository\Interface\CommonReposInterface;
 use Aequation\LaboBundle\Service\Interface\LaboAppVariableInterface;
 use Aequation\LaboBundle\Service\Interface\AppEntityManagerInterface;
+use Aequation\LaboBundle\Service\Interface\AppServiceInterface;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 
 /**
@@ -51,7 +52,7 @@ class TwigExtensions extends AbstractExtension implements GlobalsInterface
 
     public function __construct(
         private KernelInterface $kernel,
-        private AppService $appService,
+        private AppServiceInterface $appService,
         private LaboAppVariableInterface $laboAppVariable,
         #[Autowire(service: '.ux_icons.icon_renderer')]
         private IconRenderer $iconRenderer,

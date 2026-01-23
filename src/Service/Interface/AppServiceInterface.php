@@ -48,6 +48,7 @@ interface AppServiceInterface extends ServiceInterface
     public function initializeAppContext(?SessionInterface $session = null): bool;
     public function getAppContext(): ?AppContextInterface;
     public function hasAppContext(): bool;
+    public function getMainEntreprise(): ?Object;
     // Normalizer/Serializer
     public function getSerialized(mixed $object, ?string $format = null, array $context = []): array|string|int|float|bool|\ArrayObject|null;
     public function getNormalized(mixed $object, ?string $format = null, array $context = []): array|string|int|float|bool|\ArrayObject|null;
