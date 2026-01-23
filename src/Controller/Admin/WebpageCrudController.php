@@ -37,10 +37,8 @@ use EasyCorp\Bundle\EasyAdminBundle\Field\IntegerField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\TextareaField;
 
 #[IsGranted('ROLE_COLLABORATOR')]
-class WebpageCrudController extends BaseCrudController
+abstract class WebpageCrudController extends BaseCrudController
 {
-    public const ENTITY = Webpage::class;
-    public const VOTER = WebpageVoter::class;
 
     public function configureFilters(Filters $filters): Filters
     {
