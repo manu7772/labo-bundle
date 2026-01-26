@@ -1,0 +1,40 @@
+<div {{ attributes }}>
+    {% set slides = slider.slides(true)|default([]) %}
+    {% if slides is not empty %}
+        {# {% set normalizedSlider = app.service.getNormalized(slider, null, {groups: ['index','BaSlider']}) %} #}
+        <div id="slide-{{ slider.id }}" class="z-0 relative w-full md:w-1/2 mx-auto aspect-square" data-carousel="slide">
+            <!-- Carousel wrapper -->
+            <div class="relative w-full aspect-square overflow-hidden rounded-base">
+                {% for slide in slides %}
+                <!-- Item {{ loop.index }} -->
+                <div class="hidden duration-700 ease-in-out" data-carousel-item>
+                    <img src="{{ vich_uploader_asset(slide)|imagine_filter('photo_q') }}" alt="{{ slide.slug }}" class="absolute block w-full -translate-x-1/2 -translate-y-1/2 top-1/2 left-1/2 {{ slide.classes|join(' ') }}">
+                </div>
+                {% endfor %}
+            </div>
+            {% if this.indicators %}
+            <!-- Slider indicators -->
+            <div class="absolute z-30 flex -translate-x-1/2 bottom-5 left-1/2 space-x-3 rtl:space-x-reverse">
+                {% for slide in slides %}
+                <button type="button" class="w-3 h-3 rounded-base" aria-current="{{ loop.first|json_encode }}" aria-label="Slide {{  loop.index }}" data-carousel-slide-to="{{ loop.index0 }}"></button>
+                {% endfor %}
+            </div>
+            {% endif %}
+            {% if this.controls %}
+            <!-- Slider controls -->
+            <button type="button" class="absolute z-30 top-0 start-0 flex items-center justify-center h-full px-4 cursor-pointer group focus:outline-none" data-carousel-prev>
+                <span class="inline-flex items-center justify-center w-10 h-10 rounded-base bg-white/30 dark:bg-gray-800/30 group-hover:bg-white/50 dark:group-hover:bg-gray-800/60 group-focus:ring-4 group-focus:ring-white dark:group-focus:ring-gray-800/70 group-focus:outline-none">
+                    <twig:ux:icon name="tabler:arrow-big-left-filled" class="w-5 h-5 text-white rtl:rotate-180" />
+                    <span class="sr-only">Précédente</span>
+                </span>
+            </button>
+            <button type="button" class="absolute z-30 top-0 end-0 flex items-center justify-center h-full px-4 cursor-pointer group focus:outline-none" data-carousel-next>
+                <span class="inline-flex items-center justify-center w-10 h-10 rounded-base bg-white/30 dark:bg-gray-800/30 group-hover:bg-white/50 dark:group-hover:bg-gray-800/60 group-focus:ring-4 group-focus:ring-white dark:group-focus:ring-gray-800/70 group-focus:outline-none">
+                    <twig:ux:icon name="tabler:arrow-big-right-filled" class="w-5 h-5 text-white rtl:rotate-180" />
+                    <span class="sr-only">Suivante</span>
+                </span>
+            </button>
+            {% endif %}
+        </div>
+    {% endif %}
+</div>
