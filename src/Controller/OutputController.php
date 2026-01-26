@@ -100,5 +100,12 @@ class OutputController extends AbstractController
         throw $this->createNotFoundException(vsprintf('La vidéo %s n\'existe pas', [$video]));
     }
 
-
+    #[Route('/qrcode/{data}', name: 'qrcode_img', methods: ['GET'])]
+    public function qrcodeOutputAction(
+        string $data
+    ): Response
+    {
+        // TODO: implement QR code output
+        throw $this->createNotFoundException('Not implemented yet for data:\n'.$data);
+    }
 }
