@@ -67,11 +67,11 @@ class PdfService extends ItemService implements PdfServiceInterface
         // --- Add page numbers
         $canvas = $dompdf->getCanvas();
         $canvas->page_script(function ($pageNumber, $pageCount, $canvas, $fontMetrics) {
-            $text = "Page $pageNumber / $pageCount";
             // $font = $fontMetrics->getFont('monospace');
             $pageWidth = $canvas->get_width();
             $pageHeight = $canvas->get_height();
             $size = 10;
+            $text = $this->appService->getMainEntreprise()->getName().' - Doits réservés '.date('m/Y').' - p.'.$pageNumber.' / '.$pageCount;
             $width = $fontMetrics->getTextWidth($text, $font ?? null, $size);
             $canvas->text($pageWidth - $width - 36, $pageHeight - 32, $text, $font ?? null, $size);
         });
