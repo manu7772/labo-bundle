@@ -37,9 +37,11 @@
         <div class="main-container">
             {% block main_container %}
                 {# main content here #}
+                {% block sections_container %}
                 {% for websection in webpage.websections('section', true)|default([]) %}
                     {% include websection.twigfile %}
                 {% endfor %}
+                {% endblock %}
             {% endblock %}
 			{% block addons %}
 			{% endblock %}

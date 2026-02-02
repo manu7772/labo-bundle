@@ -308,7 +308,9 @@ class Strings extends BaseService
 	}
 
 	public static function hasText(
-		mixed $element
+		mixed $element,
+		int $minLength = 0,
+		?int $maxLength = null,
 	): bool
 	{
 		if(is_object($element)) {
@@ -317,8 +319,9 @@ class Strings extends BaseService
 				: null;
 		}
 		$element = (string) $element;
+		$striped = strlen(trim(strip_tags($element)));
 		return is_string($element)
-			? strlen(trim(strip_tags($element))) > 0
+			? ($striped >= $minLength) && ($maxLength === null || $striped <= $maxLength)
 			: false;
 	}
 

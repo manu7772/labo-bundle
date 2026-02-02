@@ -8,6 +8,8 @@ interface CreatedInterface extends AppEntityInterface
 {
     public function __construct_created(): void;
     public function __clone_created(): void;
+    public function getLastActionAt(): ?DateTimeImmutable;
+    public function getDatedVersion(): ?string;
     public function getUpdatedAt(): ?DateTimeImmutable;
     public function updateUpdatedAt(): static;
     public function setUpdatedAt(): static;

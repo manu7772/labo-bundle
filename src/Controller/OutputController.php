@@ -106,6 +106,6 @@ class OutputController extends AbstractController
     ): Response
     {
         // TODO: implement QR code output
-        throw $this->createNotFoundException('Not implemented yet for data:\n'.$data);
+        throw $this->createNotFoundException('Not implemented yet for data: '.$data);
     }
 }

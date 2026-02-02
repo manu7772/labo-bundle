@@ -31,9 +31,11 @@
         <div class="main-container">
             {% block main_container %}
                 {# main content here #}
+                {% block sections_container %}
                 {% for websection in webpage.websections('section', true)|default([]) %}
                     {% include websection.twigfile with {websection: websection} %}
                 {% endfor %}
+                {% endblock %}
             {% endblock %}
             {# {% include 'partials/_aide.html.twig' %} #}
             {% block footer_section %}

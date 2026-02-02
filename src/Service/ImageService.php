@@ -1,6 +1,7 @@
 <?php
 namespace Aequation\LaboBundle\Service;
 
+use Aequation\LaboBundle\Component\ImageInfo;
 use Throwable;
 use Liip\ImagineBundle\Model\Binary;
 use Aequation\LaboBundle\Entity\Image;
@@ -49,6 +50,21 @@ class ImageService extends ItemService implements ImageServiceInterface
         parent::__construct($em, $appService, $accessDecisionManager, $validator);
     }
 
+    public function getAppService(): AppServiceInterface
+    {
+        return $this->appService;
+    }
+
+    public function getVichHelper(): UploaderHelper
+    {
+        return $this->vichHelper;
+    }
+
+    public function getLiipCache(): CacheManager
+    {
+        return $this->liipCache;
+    }
+
     public static function estimateRatio(int $x, int $y): string
     {
         if($x > $y * static::RATIO_LIMIT && $x >= static::WIDTH_LIMIT) {
@@ -60,100 +76,94 @@ class ImageService extends ItemService implements ImageServiceInterface
         return self::IMG_FORMAT_SQUARE;
     }
 
-    public function getImageInfo(?ImageInterface $image, null|string|false $liipfilter = null, $resolver = null, bool $generate = true): array
+    public function getImagePathInfo(?string $path): array
     {
-        $path = $image ? $this->vichHelper->asset($image) : null;
-        $info = [
-            'format' => self::IMG_FORMAT_UNKNOWN,
-            'width' => null,
-            'height' => null,
-            'filter' => empty($liipfilter) ? null : $liipfilter,
-            // 'size' => null,
-            // 'mime' => null,
-            // 'extension' => $path_info['extension'] ?? null,
-            'path' => $path,
-            'url' => null,
-            'stored' => false,
-        ];
-
-        if(!$image) {
-            // return $info;
-        } else if(false === $liipfilter) {
-            // No filter, use original dimensions
-            $imgsize = $image->getDimensions(true);
-            if($imgsize) {
-                // Infos from Image entity
-                $info['format'] = static::estimateRatio($imgsize[0], $imgsize[1]);
-                $info['width'] = $imgsize[0];
-                $info['height'] = $imgsize[1];
-            } else {
-                // No dimensions stored, get from file
-                $url = trim($path, '/');
-                if($imgsize = @getimagesize($url)) {
-                    $info['format'] = static::estimateRatio($imgsize[0], $imgsize[1]);
-                    $info['width'] = $imgsize[0];
-                    $info['height'] = $imgsize[1];
-                    // $info['size'] = @filesize($url);
-                    // $info['mime'] = $dimensions['mime'] ?? null;
-                }
-            }
-            return $info;
-        } else {
-            if(empty($liipfilter)) {
-                // No filter defined, use image default filter
-                $liipfilter = $image->getImagefilter() ?? $image->getLiipDefaultFilter();
-            }
-            $info['filter'] = $liipfilter;
-            // Filter defined, get dimensions from filtered image
-            // $info['stored'] = $this->liipCache->isStored($path, $liipfilter, $resolver);
-            // if(!$info['stored'] && $generate) {
-            //     $info['url'] = $this->generateFilteredImage($path, $liipfilter, $resolver);
-            //     $info['stored'] = $this->liipCache->isStored($path, $liipfilter, $resolver);
-            // } else {
-            //     $info['url'] = $this->generateFilteredImage($path, $liipfilter, $resolver);
-            //     // $info['url'] = $this->liipCache->generateUrl($path, $liipfilter, [], $resolver, UrlGeneratorInterface::ABSOLUTE_URL);
-            // }
-            $info['url'] = $this->generateFilteredImage($path, $liipfilter, $resolver);
-            $info['stored'] = $this->liipCache->isStored($path, $liipfilter, $resolver);
-            if(!$info['stored']) {
-                return $info;
-            }
-            $liipfilterPath = $this->liipCache->resolve($path, $liipfilter, $resolver);
-            if(Encoders::isUrl($liipfilterPath)) {
-                // Url
-                $liipfilterUrl = parse_url($liipfilterPath);
-                $file_info = pathinfo($liipfilterUrl['path']);
-            } else {
-                // Path
-                $file_info = pathinfo($liipfilterPath);
-            }
-            $liipfilterPath = trim($file_info['dirname'].DIRECTORY_SEPARATOR.$file_info['basename'], '/');
-            if(@file_exists($liipfilterPath) && $imgsize = @getimagesize($liipfilterPath)) {
-                $info['format'] = static::estimateRatio($imgsize[0], $imgsize[1]);
-                $info['width'] = $imgsize[0];
-                $info['height'] = $imgsize[1];
-                // $info['size'] = @filesize($url);
-                // $info['mime'] = $imgsize['mime'] ?? null;
-            }
+        $corrected_path = @file_exists($path) ? $path : $this->appService->getDir('public/'.ltrim($path, DIRECTORY_SEPARATOR));
+        $path_info = @pathinfo($corrected_path, PATHINFO_ALL);
+        if(Encoders::isUrl($corrected_path)) {
+            $url_parts = parse_url($corrected_path);
+            $path_info = pathinfo($url_parts['path']);
         }
-        // dump($info);
-        return $info;
+        $path_info['requested_path'] = $corrected_path;
+        $path_info['file_exists'] = @file_exists($corrected_path);
+        $path_info['created_at'] = null;
+        $path_info['modified_at'] = null;
+        if($path_info['file_exists']) {
+            $creation_date = filectime($corrected_path);
+            $path_info['created_at'] = date("F d Y H:i:s", $creation_date);
+            $modification_date = filemtime($corrected_path);
+            $path_info['modified_at'] = date("F d Y H:i:s", $modification_date);
+        }
+        return $path_info;
     }
 
-    // protected function store(ImageInterface $image, string $liipfilter, ?string $mime = null): void
-    // {
-    //     $url = trim($this->vichHelper->asset($image), '/');
-    //     // dump($url.' => '.json_encode(@file_exists($url)));
-    //     $binary = new Binary(file_get_contents($url), $mime ?? $image->getMime());
-    //     // dump($binary);
-    //     $this->liipCache->store($binary, $url, $liipfilter);
-    // }
+    public function getImageInfo(object|array $image, null|string|false $liipfilter = null, $resolver = null, bool $generate = true): ImageInfo
+    {
+        return new ImageInfo($this, $image, $liipfilter, $resolver);
 
-    public function generateFilteredImage(string|ImageInterface $imageOrPath, string $liipfilter, $resolver = null): ?string
+        // $path = $this->vichHelper->asset($image);
+        // $path_info = $this->getImagePathInfo($path);
+        // $imgsize = $image instanceof ImageInterface ? $image->getDimensions(true) : [];
+        // switch (true) {
+        //     case $liipfilter === false:
+        //         $liipfilter = null;
+        //         break;
+        //     case empty($liipfilter):
+        //         $liipfilter = $image instanceof ImageInterface ? $image->getImagefilter() : null;
+        //         break;
+        // }
+        // $filter_available = $this->isAvailableLiipFilter($liipfilter);
+        // // Bust cache to get updated image
+        // $stored = false;
+        // $busted = false;
+        // $refresh = false;
+        // if($filter_available) {
+        //     // Test refresh cached image
+        //     $busted = $this->filterService->bustCache($path, $liipfilter);
+        //     $stored = $this->liipCache->isStored($path, $liipfilter, $resolver);
+        //     $refresh = $this->filterService->warmUpCache($path, $liipfilter, $resolver, $generate);
+        //     // $filtered_path = $this->liipCache->resolve($path_info['requested_path'], $liipfilter, $resolver);
+        //     $filtered_path = $this->appService->getDir('public/'.ltrim(preg_replace('#(resolve\/|\.\.\/)#', '', $this->liipCache->generateUrl($path, $liipfilter, [], $resolver, UrlGeneratorInterface::RELATIVE_PATH)), DIRECTORY_SEPARATOR));
+        //     $filtered_pathinfo = $this->getImagePathInfo($filtered_path);
+        // }
+        // $info = [
+        //     'valid' => $filtered_pathinfo['file_exists'],
+        //     'filename' => $image instanceof ImageInterface ? $image->getFilename() : ($path_info['filename'] ?? null),
+        //     'orientation' => empty($imgsize) ? self::IMG_FORMAT_UNKNOWN : static::estimateRatio($imgsize[0], $imgsize[1]),
+        //     'width' => $imgsize[0] ?? null,
+        //     'height' => $imgsize[1] ?? null,
+        //     'filter' => $liipfilter,
+        //     'filter_available' => $filter_available,
+        //     'size' => $image instanceof ImageInterface ? $image->getSize() : null,
+        //     'mime' => $image instanceof ImageInterface ? $image->getMime() : null,
+        //     'extension' => $path_info['extension'] ?? null,
+        //     'path_original' => $path,
+        //     'real_path' => $path_info['requested_path'] ?? null,
+        //     'url' => null,
+        //     'path_info' => $path_info,
+        //     'base64' => fn () => isset($path_info['file_exists']) ? 'data:image/'.pathinfo($path_info['requested_path'], PATHINFO_EXTENSION).';base64,'.base64_encode(file_get_contents($path_info['requested_path'])) : null,
+        //     // 'available_filters' => $this->getLiipFiltersNames(),
+        //     'filtered_image' => !$filter_available ? false : [
+        //         'is_busted' => $busted,
+        //         'is_stored' => $stored,
+        //         'is_refreshed' => $refresh,
+        //         'is_stored_after_refresh' => $this->liipCache->isStored($path, $liipfilter, $resolver),
+        //         'path' => $filtered_path,
+        //         'path_info' => $filtered_pathinfo,
+        //         'base64' => fn () => isset($filtered_pathinfo['file_exists']) ? 'data:image/'.pathinfo($filtered_pathinfo['requested_path'], PATHINFO_EXTENSION).';base64,'.base64_encode(file_get_contents($filtered_pathinfo['requested_path'])) : null,
+        //         // 'absolute_url' => $this->liipCache->generateUrl($path, $liipfilter, [], $resolver, UrlGeneratorInterface::ABSOLUTE_URL),
+        //         // 'relative_url' => $this->liipCache->generateUrl($path, $liipfilter, [], $resolver, UrlGeneratorInterface::RELATIVE_PATH),
+        //         // 'relative_path' => $this->liipCache->generateUrl($path, $liipfilter, [], $resolver, UrlGeneratorInterface::RELATIVE_PATH),
+        //         // 'network_path' => $this->liipCache->generateUrl($path, $liipfilter, [], $resolver, UrlGeneratorInterface::NETWORK_PATH),
+        //     ],
+        // ];
+    }
+
+    public function generateFilteredImage(string|ImageInterface $imageOrPath, ?string $liipfilter = null, $resolver = null): ?string
     {
         $path = $imageOrPath instanceof ImageInterface ? $this->vichHelper->asset($imageOrPath) : $imageOrPath;
         try {
-            return $this->filterService->getUrlOfFilteredImage($path, $liipfilter, $resolver);
+            return $this->filterService->getUrlOfFilteredImage($path, $liipfilter ?? ($imageOrPath instanceof ImageInterface ? $imageOrPath->getLiipDefaultFilter() : 'default'), $resolver);
         } catch (Throwable $th) {
             return null;
         }
@@ -177,6 +187,16 @@ class ImageService extends ItemService implements ImageServiceInterface
     public function getLiipFilters(): FilterConfiguration
     {
         return $this->filterConfig;
+    }
+
+    public function getLiipFiltersNames(): array
+    {
+        return array_keys($this->filterConfig->all());
+    }
+
+    public function isAvailableLiipFilter(?string $filter): bool
+    {
+        return array_key_exists($filter, $this->filterConfig->all());
     }
 
 }

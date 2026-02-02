@@ -2,13 +2,12 @@
 namespace Aequation\LaboBundle\Twig\Components;
 
 use Aequation\LaboBundle\Model\Interface\SliderInterface;
+use Doctrine\Common\Collections\Collection;
 // Symfony
 use Symfony\UX\TwigComponent\Attribute\AsTwigComponent;
 
 #[AsTwigComponent()]
-class SimpleCarouselComponent
+class PdfListComponent
 {
-    public ?SliderInterface $slider;
-    public bool $controls = true;
-    public bool $indicators = true;
+    public Collection $pdfiles;
 }

@@ -50,6 +50,12 @@ trait Created
         return $this->updatedAt ?? $this->createdAt;
     }
 
+    public function getDatedVersion(): ?string
+    {
+        $lastAction = $this->getLastActionAt();
+        return 'v'.($lastAction ? $lastAction->getTimestamp() : '0000000000 - unversioned');
+    }
+
     /**
      * Returns if last action on this entity is before the given $date
      * @param DateTimeImmutable|string $date
