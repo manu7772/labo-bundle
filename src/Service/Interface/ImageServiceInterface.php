@@ -20,6 +20,7 @@ interface ImageServiceInterface extends ItemServiceInterface
     public function generateFilteredImage(string|ImageInterface $imageOrPath, string $liipfilter, $resolver = null): ?string;
     public function getBrowserPath(ImageInterface $image, ?string $filter = null, array $runtimeConfig = [], $resolver = null, $referenceType = UrlGeneratorInterface::ABSOLUTE_URL): string;
     public function getLiipFilters(): FilterConfiguration;
+    public function getLiipFilter(?string $filter): ?array;
     public function getLiipFiltersNames(): array;
     public function isAvailableLiipFilter(?string $filter): bool;
 }
