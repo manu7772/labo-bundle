@@ -1,6 +1,7 @@
 <!DOCTYPE html>
-<html {# class="{{ app.service.getDarkmodeClass() }}" #} data-dev="{{ app.environment == 'dev' ? 'true' : 'false' }}">
+<html {% block darkmode %}{% endblock %} data-dev="{{ app.environment == 'dev' ? 'true' : 'false' }}">
 	<head>
+        {% block html_meta %}
 		<meta charset="{{ app.service.getStringEncoder() }}">
 		<meta name="viewport" content="width=device-width, initial-scale=1.0">
 		<title>
@@ -16,6 +17,7 @@
 			{% block importmap %}{{ importmap('app') }}{% endblock %}
 		{% endblock %}
 		{{ app.service.getTurboMetas() }}
+        {% endblock %}
 	</head>
 	{% block body %}
 	{# <body id="app" data-app="{{ app.service.appParams(true, 'public_app') }}" {{ stimulus_controller('globalapp') }}> #}
@@ -34,9 +36,11 @@
             {% include banner_section.twigfile with {websection: banner_section} %}
             {% endif %}
         {% endblock %}
-        <div class="main-container">
+        <div class="main-container {% block main_container_class %}{% endblock %}" {% block main_container_attrs %}{% endblock %}>
             {% block main_container %}
                 {# main content here #}
+                {% block webpage_content %}
+                {% endblock %}
                 {% block sections_container %}
                 {% for websection in webpage.websections('section', true)|default([]) %}
                     {% include websection.twigfile %}

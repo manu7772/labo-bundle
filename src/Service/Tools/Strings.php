@@ -309,7 +309,7 @@ class Strings extends BaseService
 
 	public static function hasText(
 		mixed $element,
-		int $minLength = 0,
+		int $minLength = 1,
 		?int $maxLength = null,
 	): bool
 	{

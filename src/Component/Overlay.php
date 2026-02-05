@@ -1,84 +1,95 @@
 <?php
 namespace Aequation\LaboBundle\Component;
 
-use Aequation\LaboBundle\Service\Tools\Encoders;
-use Aequation\LaboBundle\Service\Tools\Strings;
-use JsonSerializable;
-use ReflectionClass;
 use Serializable;
+use ReflectionClass;
+use JsonSerializable;
+use Aequation\LaboBundle\Service\Tools\Strings;
+use Aequation\LaboBundle\Service\Tools\Encoders;
+use Aequation\LaboBundle\Model\Attribute\CssClasses;
 
 class Overlay implements JsonSerializable, Serializable
 {
 
-    public const TITLE_CLASSES = [
-        'size' => [
-            'type' => 'select',
-            'multiple' => false,
-            "Très grand" => "xl",
-            "Grand" => "lg",
-            "Moyen" => "md",
-        ],
-        'style' => [
-            'type' => 'select',
-            'multiple' => true,
-            "Gras" => "font-bold",
-            "Italique" => "italic",
-            "Souligné" => "underline",
-        ],
-        'align' => [
-            'type' => 'select',
-            'multiple' => false,
-            "À gauche" => "text-left",
-            "Centré" => "text-center",
-            "À droite" => "text-right",
-            "Justifié" => "text-justify",
+    public const ITEMS_ATTRIBUTES = [
+        'title' => [
+            'size' => [
+                'type' => 'select',
+                'multiple' => false,
+                'values' => [
+                    "Très grand" => "text-xl",
+                    "Grand" => "text-lg",
+                    "Moyen" => "text-md",
+                ],
             ],
-        'font' => [
-            'type' => 'select',
-            'multiple' => false,
-            "Par défaut" => "",
-            "Manuscrit" => "cursive",
+            'style' => [
+                'type' => 'select',
+                'multiple' => true,
+                'values' => [
+                    "Gras" => "font-bold",
+                    "Italique" => "italic",
+                    "Souligné" => "underline",
+                ],
+            ],
+            'align' => [
+                'type' => 'select',
+                'multiple' => false,
+                'values' => [
+                    "À gauche" => "text-left",
+                    "Centré" => "text-center",
+                    "À droite" => "text-right",
+                    "Justifié" => "text-justify",
+                ],
+            ],
+            'font' => [
+                'type' => 'select',
+                'multiple' => false,
+                'values' => [
+                    "Par défaut" => "",
+                    "Manuscrit" => "cursive",
+                ],
+            ],
+        ],
+        'text' => [
+            'size' => [
+                'type' => 'select',
+                'multiple' => false,
+                'values' => [
+                    "Grand" => "text-lg",
+                    "Moyen" => "text-md",
+                    "Petit" => "text-sm",
+                ],
+            ],
+            'style' => [
+                'type' => 'select',
+                'multiple' => true,
+                'values' => [
+                    "Gras" => "font-bold",
+                    "Italique" => "italic",
+                    "Souligné" => "underline",
+                ],
+            ],
+            'align' => [
+                'type' => 'select',
+                'multiple' => false,
+                'values' => [
+                    "À gauche" => "text-left",
+                    "Centré" => "text-center",
+                    "À droite" => "text-right",
+                    "Justifié" => "text-justify",
+                ],
+            ],
+            'font' => [
+                'type' => 'select',
+                'multiple' => false,
+                'values' => [
+                    "Par défaut" => "",
+                    "Manuscrit" => "cursive",
+                ],
+            ],
         ],
     ];
 
-    public const TEXT_CLASSES = [
-        'size' => [
-            'type' => 'select',
-            'multiple' => false,
-            'values' => [
-                "Très grand" => "xl",
-                "Grand" => "lg",
-                "Moyen" => "md",
-            ],
-        ],
-        'style' => [
-            'type' => 'select',
-            'multiple' => true,
-            'values' => [
-                "Gras" => "font-bold",
-                "Italique" => "italic",
-                "Souligné" => "underline",
-            ],
-        ],
-        'align' => [
-            'type' => 'select',
-            'multiple' => false,
-            'values' => [
-                "À gauche" => "text-left",
-                "Centré" => "text-center",
-                "À droite" => "text-right",
-                "Justifié" => "text-justify",
-            ],
-        ],
-        'font' => [
-            'type' => 'select',
-            'multiple' => false,
-            'values' => [
-                "Par défaut" => "",
-                "Manuscrit" => "cursive",
-            ],
-        ],
-    ];
     public const OVERLAY_POSITIONS = [
         'Haut à gauche' => "overlay-top-left",
         'Haut à droite' => "overlay-top-right",
@@ -112,6 +123,23 @@ class Overlay implements JsonSerializable, Serializable
                 $this->$key = is_array($value) ? array_values($value) : $value;
             }
         }
+    }
+
+    #[CssClasses(target: 'value')]
+    public static function declareCss(): array
+    {
+        // die('declareCss method must be implemented in ' . static::class);
+        $classes = [];
+        foreach (static::ITEMS_ATTRIBUTES as $item => $attributes) {
+            foreach ($attributes as $attribute => $options) {
+                if(is_array($options['values'] ?? null) && count($options['values'])) {
+                    $classes = array_merge($classes, array_values($options['values']));
+                }
+            }
+        }
+        $classes = array_unique(array_values($classes));
+        die('declareCss for ' . static::class . ' : ' . implode(', ', $classes));
+        return $classes;
     }
 
     public function __toString(): string
@@ -167,6 +195,11 @@ class Overlay implements JsonSerializable, Serializable
         return $data;
     }
 
+
+    /*************************************************************/
+    /** OVERLAY BLOCK                                           **/
+    /*************************************************************/
+
     public function getPosition(): string
     {
         return $this->position ??= static::OVERLAY_POSITIONS['Bas au centre'];
@@ -185,6 +218,11 @@ class Overlay implements JsonSerializable, Serializable
         return static::OVERLAY_POSITIONS;
     }
 
+
+    /*************************************************************/
+    /** TITLE                                                   **/
+    /*************************************************************/
+
     public function setTitle(?string $title): static
     {
         $this->title = $title;
@@ -199,28 +237,15 @@ class Overlay implements JsonSerializable, Serializable
         return $withHtml ? nl2br($this->title) : $this->title;
     }
 
-    public function setTitleClasses(
-        array $title_classes
-    ): static
-    {
-        $this->title_classes = array_values($title_classes);
-        return $this;
-    }
-
-    public function getTitleClasses(): array
-    {
-        return array_values($this->title_classes ?? []);
-    }
-
-    public static function getTitleClassesChoices(): array
-    {
-        return static::TITLE_CLASSES;
-    }
-
     public function hasTitle(): bool
     {
         return Strings::hasText((string)$this->title);
     }
+
+
+    /*************************************************************/
+    /** TEXT                                                    **/
+    /*************************************************************/
 
     public function setText(?string $text): static
     {
@@ -236,27 +261,43 @@ class Overlay implements JsonSerializable, Serializable
         return $withHtml ? nl2br($this->text) : $this->text;
     }
 
-    public function setTextClasses(
-        array $text_classes
-    ): static
-    {
-        $this->text_classes = $text_classes;
-        return $this;
-    }
-
-    public function getTextClasses(): array
-    {
-        return $this->text_classes ?? [];
-    }
-
-    public static function getTextClassesChoices(): array
-    {
-        return static::TEXT_CLASSES;
-    }
-
-    public function hasTtext(): bool
+    public function hasText(): bool
     {
         return Strings::hasText($this->text);
+    }
+
+
+    /*************************************************************/
+    /** CALL for data                                           **/
+    /*************************************************************/
+
+    public static function __callStatic($method, $args)
+    {
+        $getters = ['is', 'get', 'has'];
+        $setters = ['set'];
+        // get getter prefix
+        if($prefix = preg_match('/^('.implode('|', array_merge($getters, $setters)).')(.+)$/', $method, $matches_1)) {
+            $items = array_keys(static::ITEMS_ATTRIBUTES);
+            if(count($matches_1) === 3 && $item = preg_match('/^('.implode('|', $items).')(.+)$/i', $matches_1[2], $matches_2)) {
+                $item = lcfirst($matches_2[1]);
+                $attrs = array_keys(static::ITEMS_ATTRIBUTES[$item] ?? []);
+                if(count($attrs) && count($matches_2) === 3 && $attribute = preg_match('/^('.implode('|', $attrs).')(.+)$/i', $matches_2[2], $matches_3)) {
+                    $attribute = lcfirst($matches_3[1]);
+                    dd($method, $prefix, $matches_1, $item, $matches_2, $attribute, $matches_3);
+                }
+                    
+                $action = $matches_1[1];
+                $item = strtolower($matches_2[1]);
+                $property = $item . '_classes';
+                switch ($action) {
+                    case in_array($action, $getters):
+                        return static::$$property ?? null;
+                    case in_array($action, $setters):
+                        static::$$property = $args[0] ?? null;
+                        return true;
+                }
+            }
+        }
     }
 
 }

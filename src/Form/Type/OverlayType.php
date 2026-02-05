@@ -22,28 +22,81 @@ class OverlayType extends AbstractType
                 'required' => true,
                 'choices' => Overlay::getPositionChoices(),
                 'multiple' => false,
+                'expanded' => false,
             ])
+            // TITLE text
             ->add('title', TextType::class, [
                 'label' => 'Titre',
                 'required' => false,
             ])
-            ->add('title_classes', ChoiceType::class, [
-                'label' => 'Style de titre',
-                'required' => false,
-                'choices' => Overlay::getTitleClassesChoices(),
-                'multiple' => true,
-                'expanded' => true,
+            // TITLE size
+            ->add('title_size', ChoiceType::class, [
+                'label' => 'Taille du titre',
+                'required' => Overlay::isTitleSizeRequired(),
+                'choices' => Overlay::getTitleSizeChoices(),
+                'multiple' => Overlay::isTitleSizeMultiple(),
+                'expanded' => false,
             ])
+            // TITLE style
+            ->add('title_style', ChoiceType::class, [
+                'label' => 'Style du titre',
+                'required' => Overlay::isTitleStyleRequired(),
+                'choices' => Overlay::getTitleStyleChoices(),
+                'multiple' => Overlay::isTitleStyleMultiple(),
+                'expanded' => false,
+            ])
+            // TITLE align
+            ->add('title_align', ChoiceType::class, [
+                'label' => 'Alignement du titre',
+                'required' => Overlay::isTitleAlignRequired(),
+                'choices' => Overlay::getTitleAlignChoices(),
+                'multiple' => Overlay::isTitleAlignMultiple(),
+                'expanded' => false,
+            ])
+            // TITLE font
+            ->add('title_font', ChoiceType::class, [
+                'label' => 'Police du titre',
+                'required' => Overlay::isTitleFontRequired(),
+                'choices' => Overlay::getTitleFontChoices(),
+                'multiple' => Overlay::isTitleFontMultiple(),
+                'expanded' => false,
+            ])
+            // TEXT
             ->add('text', TextareaType::class, [
                 'label' => 'Texte',
                 'required' => false,
             ])
-            ->add('text_classes', ChoiceType::class, [
-                'label' => 'Style de texte',
-                'required' => false,
-                'choices' => Overlay::getTextClassesChoices(),
-                'multiple' => true,
-                'expanded' => true,
+            // TEXT size
+            ->add('text_size', ChoiceType::class, [
+                'label' => 'Taille du texte',
+                'required' => Overlay::isTextSizeRequired(),
+                'choices' => Overlay::getTextSizeChoices(),
+                'multiple' => Overlay::isTextSizeMultiple(),
+                'expanded' => false,
+            ])
+            // TEXT style
+            ->add('text_style', ChoiceType::class, [
+                'label' => 'Style du texte',
+                'required' => Overlay::isTextStyleRequired(),
+                'choices' => Overlay::getTextStyleChoices(),
+                'multiple' => Overlay::isTextStyleMultiple(),
+                'expanded' => false,
+            ])
+            // TEXT align
+            ->add('text_align', ChoiceType::class, [
+                'label' => 'Alignement du texte',
+                'required' => Overlay::isTextAlignRequired(),
+                'choices' => Overlay::getTextAlignChoices(),
+                'multiple' => Overlay::isTextAlignMultiple(),
+                'expanded' => false,
+            ])
+            // TEXT font
+            ->add('text_font', ChoiceType::class, [
+                'label' => 'Police du texte',
+                'required' => Overlay::isTextFontRequired(),
+                'choices' => Overlay::getTextFontChoices(),
+                'multiple' => Overlay::isTextFontMultiple(),
+                'expanded' => false,
             ])
             ;
         parent::buildForm($builder, $options);
