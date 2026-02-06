@@ -73,14 +73,6 @@ class CssDeclaration extends BaseService implements CssDeclarationInterface
         $this->setFilename(static::FILE_NAME);
     }
 
-
-    #[CssClasses(target: 'value')]
-    public static function declareCss(): array
-    {
-        $css = array_merge($css ?? [], Overlay::declareCss());
-        return array_unique(array_values($css));
-    }
-
     public function setFilepath(
         string $filepath,
         bool $create = true

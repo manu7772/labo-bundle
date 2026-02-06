@@ -147,7 +147,7 @@ trait AppEntity
     #[Serializer\Ignore]
     private function getNewEuid(): string
     {
-        return Encoders::geUniquid($this->classname.'|');
+        return Encoders::getUniquid($this->classname.'|');
     }
 
     public function getClassname(): string
