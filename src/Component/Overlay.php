@@ -1,18 +1,17 @@
 <?php
 namespace Aequation\LaboBundle\Component;
 
-use Serializable;
-use JsonSerializable;
-//Symfony
-use BadMethodCallException;
-use Aequation\LaboBundle\Component\Nothing;
 use Aequation\LaboBundle\Service\Tools\Strings;
 use Aequation\LaboBundle\Service\Tools\Encoders;
-// PHP
+//Symfony
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\TextareaType;
+// PHP
+use Serializable;
+use JsonSerializable;
+use BadMethodCallException;
 
 class Overlay implements JsonSerializable, Serializable
 {
@@ -37,18 +36,34 @@ class Overlay implements JsonSerializable, Serializable
                     'Bas au centre' => "overlay-bottom-center",
                 ],
             ],
-            'style' => [
-                'label' => 'Bloc > style',
-                'priority' => 110,
+            // 'style' => [
+            //     'label' => 'Bloc > style',
+            //     'priority' => 110,
+            //     'type' => ChoiceType::class,
+            //     'required' => true,
+            //     'multiple' => false,
+            //     'expanded' => false,
+            //     'empty_data' => "bg-black/50",
+            //     'choices' => [
+            //         'Sombre' => "bg-black/50",
+            //         'Clair' => "bg-white/50",
+            //         'Transparent' => "bg-transparent",
+            //     ],
+            // ],
+            'width' => [
+                'label' => 'Bloc > taille',
+                'priority' => 105,
                 'type' => ChoiceType::class,
                 'required' => true,
                 'multiple' => false,
                 'expanded' => false,
-                'empty_data' => "bg-black/50",
+                'empty_data' => "",
                 'choices' => [
-                    'Sombre' => "bg-black/50",
-                    'Clair' => "bg-white/50",
-                    'Transparent' => "bg-transparent",
+                    '40%' => "overlay-sm",
+                    '60%' => "overlay-md",
+                    '70%' => "",
+                    '80%' => "overlay-lg",
+                    '95%' => "overlay-xl",
                 ],
             ],
         ],
@@ -66,11 +81,11 @@ class Overlay implements JsonSerializable, Serializable
                 'multiple' => false,
                 'expanded' => false,
                 'required' => true,
-                'empty_data' => "text-md",
+                'empty_data' => "md",
                 'choices' => [
-                    "Moyen" => "text-md",
-                    "Grand" => "text-lg",
-                    "Très grand" => "text-xl",
+                    "Moyen" => "md",
+                    "Grand" => "lg",
+                    "Très grand" => "xl",
                 ],
             ],
             'style' => [
@@ -233,6 +248,28 @@ class Overlay implements JsonSerializable, Serializable
         return $classes;
     }
 
+    public function getCompiled(): array
+    {
+        $compiled = [];
+        foreach ($this->data as $item => $attributes) {
+            $compiled[$item]['text'] = null;
+            $compiled[$item]['class'] = [];
+            foreach ($attributes as $attribute => $value) {
+                switch ($attribute) {
+                    case 'text':
+                        $compiled[$item]['text'] = $value;
+                        break;
+                    default:
+                        $value = (array) $value;
+                        $compiled[$item]['class'] = array_unique(array_merge($compiled[$item]['class'], $value));
+                        break;
+                }
+            }
+            $compiled[$item]['class'] = array_filter($compiled[$item]['class'], fn($c) => !empty($c));
+        }
+        return $compiled;
+    }
+
     public function __toString(): string
     {
         return $this->getTitleText() ?? $this->name;
@@ -269,21 +306,6 @@ class Overlay implements JsonSerializable, Serializable
     }
 
 
-    // public function getAvailableNames(): array
-    // {
-    //     if(!isset($this->availableNames)) {
-    //         $availableNames = [];
-    //         foreach (array_keys(static::ITEMS_ATTRIBUTES) as $key) {
-    //             foreach (array_keys(static::ITEMS_ATTRIBUTES[$key]) as $attribute) {
-    //                 $availableNames[] = $key . '_' . $attribute;
-    //                 $availableNames[] = Strings::stringFormated($key . '_' . $attribute, 'camel');
-    //             }
-    //         }
-    //         $this->availableNames = $availableNames;
-    //     }
-    //     return $this->availableNames;
-    // }
-
     /*************************************************************/
     /** CALL for data                                           **/
     /*************************************************************/
@@ -313,7 +335,6 @@ class Overlay implements JsonSerializable, Serializable
                 return $this->data[$parts['item']][$parts['attribute']];
             }
         }
-        dump($name, $parts, $this->data);
         throw new BadMethodCallException("Property $name not found in " . static::class);
     }
 
@@ -325,7 +346,6 @@ class Overlay implements JsonSerializable, Serializable
                 return;
             }
         }
-        dump($name, $value, $parts, $this->data);
         throw new BadMethodCallException("Property $name not found in " . static::class);
     }
 
@@ -348,7 +368,6 @@ class Overlay implements JsonSerializable, Serializable
         $setters = ['set'];
         // get getter prefix
         if($parts = static::parseMethod($name, false)) {
-            dump($name, $parts, $arguments);
             switch (true) {
                 case in_array($parts['sgetter'], $getters):
                     // getters
@@ -370,7 +389,6 @@ class Overlay implements JsonSerializable, Serializable
                     break;
             }
         }
-        dump($name, $arguments);
         throw new BadMethodCallException("Method $name not supported in " . static::class) ;
     }
 
@@ -385,33 +403,6 @@ class Overlay implements JsonSerializable, Serializable
             }
             
         }
-        // // get getter prefix
-        // if(preg_match('/^('.implode('|', $getters).')(.+)$/', $method, $matches_1)) {
-        //     $items = array_keys(static::ITEMS_ATTRIBUTES);
-        //     if(count($matches_1) === 3 && preg_match('/^('.implode('|', $items).')(.+)$/i', $matches_1[2], $matches_2)) {
-        //         $item = lcfirst($matches_2[1]);
-        //         $attrs = array_keys(static::ITEMS_ATTRIBUTES[$item] ?? []);
-        //         if(count($attrs) && count($matches_2) === 3 && preg_match('/^('.implode('|', $attrs).')(.+)$/i', $matches_2[2], $matches_3)) {
-        //             $attribute = lcfirst($matches_3[1]);
-        //             $action = lcfirst($matches_3[2]);
-        //             $actions = array_keys(array_filter(static::ITEMS_ATTRIBUTES[$item][$attribute] ?? [], fn(string $k) => preg_match('/^(?!_)/', $k), ARRAY_FILTER_USE_KEY));
-        //             if(count($actions) && count($matches_3) === 3) {
-        //                 // dump($item, $attribute, $action);
-        //                 switch (true) {
-        //                     // case $action === 'choices':
-        //                     //     return static::ITEMS_ATTRIBUTES[$item][$attribute]['_values'] ?? [];
-        //                     //     break;
-        //                     case in_array($action, $actions):
-        //                         return static::ITEMS_ATTRIBUTES[$item][$attribute][$action];
-        //                         break;
-        //                     default:
-        //                         // not supported action
-        //                         break;
-        //                 }
-        //             }
-        //         }
-        //     }
-        // }
         throw new BadMethodCallException("Method $method not supported in " . static::class) ;
     }
 

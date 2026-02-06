@@ -322,6 +322,16 @@ abstract class LaboSlide extends Image implements SlideInterface, SlugInterface,
         return array_values($this->overlays ?? []);
     }
 
+    #[Serializer\Groups(['rslider'])]
+    public function getOverlaysCompiled(): array
+    {
+        $overlays = [];
+        foreach ($this->getOverlays() as $overlay) {
+            $overlays[] = $overlay->getCompiled();
+        }
+        return $overlays;
+    }
+
     public function addOverlay(Overlay $overlay): static
     {
         $this->overlays ??= [];
