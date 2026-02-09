@@ -64,16 +64,11 @@ class ImageCrudController extends BaseCrudController
                 yield DateTimeField::new('createdAt')->setFormat('dd/MM/Y - HH:mm');
                 break;
             case Crud::PAGE_NEW:
-                yield TextField::new('name')->setColumns(4)->setRequired(true);
-                yield TextareaField::new('description')->setColumns(4)->formatValue(fn ($value) => Strings::markup($value));
-                yield AssociationField::new('owner', 'Propriétaire')->setColumns(4)->setPermission('ROLE_ADMIN')->setCrudController(UserCrudController::class);
-                yield TextField::new('file')->setFormType(VichImageType::class);
-                break;
             case Crud::PAGE_EDIT:
                 yield TextField::new('name')->setColumns(4)->setRequired(true);
                 yield TextareaField::new('description')->setColumns(4)->formatValue(fn ($value) => Strings::markup($value));
                 yield AssociationField::new('owner', 'Propriétaire')->setColumns(4)->setPermission('ROLE_ADMIN')->setCrudController(UserCrudController::class);
-                yield TextField::new('file')->setFormType(VichImageType::class)->setDisabled();
+                yield TextField::new('file')->setFormType(VichImageType::class)->setDisabled($pageName === Crud::PAGE_EDIT);
                 break;
             default:
                 yield IdField::new('id')->setPermission('ROLE_SUPER_ADMIN');

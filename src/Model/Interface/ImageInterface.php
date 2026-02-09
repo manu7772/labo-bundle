@@ -5,6 +5,10 @@ use Symfony\Component\HttpFoundation\File\File;
 
 interface ImageInterface extends ItemInterface
 {
+    public static function getDefaultLiipFilter(): string;
+    public static function getThumbnailLiipFilter(): string;
+    public static function getAvailableLiipFilters(): array|true;
+    // public function getLiipFilterChoices(): array;
     public function setFile(File $file): static;
     public function getFile(): File|null;
     public function updateName(): static;

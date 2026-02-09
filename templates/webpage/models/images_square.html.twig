@@ -1,5 +1,5 @@
 {# templates/webpage/models/images_square.html.twig #}
-{# description : Images carrées et agrandissement dans une popup #}
+{# description : Miniatures carrées et agrandissement dans une popup #}
 {% extends "@AequationLabo/base_web.html.twig" %}
 
 {% block main_container %}
@@ -14,7 +14,7 @@
             <section>
                 <div class="section-container">
                     {% set normalizedSlider = app.service.getNormalized(webpage.slider, null, {groups: ['index','BaSlider']}) %}
-                    <div {{ stimulus_controller('modal-slider', {slider: normalizedSlider}) }} class="slider-square">
+                    <div {{ stimulus_controller('modal-slider', {slider: normalizedSlider, format: 'respect_format_path'}) }} class="slider-square">
                         {% for slide in webpage.slider.slides %}
                         {% set the_img = slide.slidebases.isEmpty() ? slide : slide.slidebases.last %}
                         <div class="thumbs">

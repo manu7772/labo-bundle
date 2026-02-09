@@ -1,19 +1,20 @@
 <?php
 namespace Aequation\LaboBundle\Form\Type;
 
-use Aequation\LaboBundle\Entity\Image;
-use Aequation\LaboBundle\Form\base\BaseAppType;
-use Aequation\LaboBundle\Model\Interface\ImageOwnerInterface;
-
-use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
-use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
-use Symfony\Component\Form\Extension\Core\Type\TextType;
-use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\Form\FormEvent;
+use Aequation\LaboBundle\Entity\Image;
 use Symfony\Component\Form\FormEvents;
-use Symfony\Component\OptionsResolver\OptionsResolver;
-use Symfony\Component\Validator\Constraints\Choice;
+
+use Aequation\LaboBundle\Form\base\BaseAppType;
+use Symfony\Component\Form\FormBuilderInterface;
 use Vich\UploaderBundle\Form\Type\VichImageType;
+use Symfony\Component\Validator\Constraints\Choice;
+use Symfony\Component\OptionsResolver\OptionsResolver;
+use Symfony\Component\Form\Extension\Core\Type\TextType;
+use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
+use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
+use Aequation\LaboBundle\Model\Interface\ImageOwnerInterface;
+use Aequation\LaboBundle\Service\Interface\ImageServiceInterface;
 
 class ImageType extends BaseAppType
 {
@@ -22,7 +23,9 @@ class ImageType extends BaseAppType
 
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
-        $class = $builder->getDataClass();
+        // $class = $builder->getDataClass();
+        /** @var ImageServiceInterface */
+        $manager = $this->manager;
         $builder
             ->add('name', TextType::class, [
                 'label' => 'nom',
@@ -33,10 +36,11 @@ class ImageType extends BaseAppType
             ])
             ->add('imagefilter', ChoiceType::class, [
                 'label' => 'Format d\'affichage',
-                'required' => true,
+                'required' => false,
                 'placeholder' => 'Choisissez un format d\'affichage par défaut',
-                'choices' => $class::getLiipFilterChoices(),
+                'choices' => $manager->getLiipFilterChoices(400, 300, $builder->getData()),
                 'choice_translation_domain' => 'messages',
+                'empty_data' => $manager->getDefaultLiipFilterName($builder->getData() ?? $builder->getDataClass()),
             ])
         ;
         parent::buildForm($builder, $options);

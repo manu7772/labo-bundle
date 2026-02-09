@@ -1,41 +1,37 @@
 <?php
 namespace Aequation\LaboBundle\Controller\Admin;
 
-use Aequation\LaboBundle\Security\Voter\SlideVoter;
-use Aequation\LaboBundle\Controller\Admin\Base\BaseCrudController;
-use Aequation\LaboBundle\Entity\LaboUser;
+use App\Entity\Slide;
+// Aequation
+use Aequation\LaboBundle\Form\Type\SlidebaseType;
 use Aequation\LaboBundle\Field\CKEditorField;
 use Aequation\LaboBundle\Field\ThumbnailField;
 use Aequation\LaboBundle\Form\Type\OverlayType;
-use Aequation\LaboBundle\Service\Interface\SlideServiceInterface;
-use Aequation\LaboBundle\Service\Interface\LaboUserServiceInterface;
-use Aequation\LaboBundle\Service\Tools\Encoders;
 use Aequation\LaboBundle\Service\Tools\Strings;
-
-use App\Entity\Slide;
-use App\Form\Type\SlidebaseType;
-
+use Aequation\LaboBundle\Service\Tools\Encoders;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Crud;
-use EasyCorp\Bundle\EasyAdminBundle\Config\Filters;
-use EasyCorp\Bundle\EasyAdminBundle\Field\ArrayField;
-use EasyCorp\Bundle\EasyAdminBundle\Field\AssociationField;
-use EasyCorp\Bundle\EasyAdminBundle\Field\BooleanField;
-use EasyCorp\Bundle\EasyAdminBundle\Field\ChoiceField;
-use EasyCorp\Bundle\EasyAdminBundle\Field\CollectionField;
-use EasyCorp\Bundle\EasyAdminBundle\Field\DateTimeField;
-use EasyCorp\Bundle\EasyAdminBundle\Field\FormField;
-use EasyCorp\Bundle\EasyAdminBundle\Field\IdField;
-use EasyCorp\Bundle\EasyAdminBundle\Field\ImageField;
-use EasyCorp\Bundle\EasyAdminBundle\Field\IntegerField;
-use EasyCorp\Bundle\EasyAdminBundle\Field\SlugField;
-use EasyCorp\Bundle\EasyAdminBundle\Field\TextEditorField;
-use EasyCorp\Bundle\EasyAdminBundle\Field\TextField;
-use EasyCorp\Bundle\EasyAdminBundle\Filter\ChoiceFilter;
-use EasyCorp\Bundle\EasyAdminBundle\Filter\DateTimeFilter;
-use EasyCorp\Bundle\EasyAdminBundle\Filter\NumericFilter;
-use EasyCorp\Bundle\EasyAdminBundle\Filter\TextFilter;
-use Symfony\Component\Security\Http\Attribute\IsGranted;
+// Symfony
 use Vich\UploaderBundle\Form\Type\VichImageType;
+use EasyCorp\Bundle\EasyAdminBundle\Field\IdField;
+use Aequation\LaboBundle\Security\Voter\SlideVoter;
+use EasyCorp\Bundle\EasyAdminBundle\Config\Filters;
+use EasyCorp\Bundle\EasyAdminBundle\Field\FormField;
+use EasyCorp\Bundle\EasyAdminBundle\Field\TextField;
+use EasyCorp\Bundle\EasyAdminBundle\Field\ChoiceField;
+use EasyCorp\Bundle\EasyAdminBundle\Filter\TextFilter;
+use EasyCorp\Bundle\EasyAdminBundle\Field\BooleanField;
+use EasyCorp\Bundle\EasyAdminBundle\Field\IntegerField;
+use EasyCorp\Bundle\EasyAdminBundle\Field\DateTimeField;
+use EasyCorp\Bundle\EasyAdminBundle\Filter\ChoiceFilter;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
+use EasyCorp\Bundle\EasyAdminBundle\Filter\NumericFilter;
+use EasyCorp\Bundle\EasyAdminBundle\Field\CollectionField;
+use EasyCorp\Bundle\EasyAdminBundle\Field\TextEditorField;
+use EasyCorp\Bundle\EasyAdminBundle\Filter\DateTimeFilter;
+use EasyCorp\Bundle\EasyAdminBundle\Field\AssociationField;
+use Aequation\LaboBundle\Controller\Admin\Base\BaseCrudController;
+use Aequation\LaboBundle\Entity\LaboSlide;
+use Aequation\LaboBundle\Model\Final\FinalLaboSlideInterface;
 
 #[IsGranted('ROLE_COLLABORATOR')]
 abstract class SlideCrudController extends BaseCrudController
@@ -74,6 +70,7 @@ abstract class SlideCrudController extends BaseCrudController
                 yield TextField::new('originalname');
                 // yield TextField::new('content')->renderAsHtml();
                 yield TextField::new('dimensions');
+                yield TextField::new('imagefilterName', 'Format de l\'image');
                 yield ThumbnailField::new('_self', 'Image')
                     ->setBasePath($this->getParameter('vich_dirs.slider_slides'));
                 yield CollectionField::new('slidebases', 'Images additionnelles (max. '.$this->getLaboContext()->getInstance()->getMaxSlidebases().')')
@@ -92,7 +89,7 @@ abstract class SlideCrudController extends BaseCrudController
                 yield FormField::addColumn('col-md-6');
                     yield TextField::new('name')->setRequired(true);
                     yield ChoiceField::new('classes', 'Styles')
-                        ->setChoices(function (?Slide $slide) { return $slide ? $slide->getClassesChoices() : Slide::getClassesChoices(); })
+                        ->setChoices(function (?FinalLaboSlideInterface $slide) { return $slide ? $slide->getClassesChoices() : LaboSlide::getClassesChoices(); })
                         ->setRequired(false)
                         ->allowMultipleChoices(true);
                     yield CollectionField::new('overlays', 'Textes')
@@ -125,7 +122,7 @@ abstract class SlideCrudController extends BaseCrudController
 
                 yield TextField::new('name')->setColumns(12)->setRequired(true);
                 yield ChoiceField::new('classes', 'Styles')
-                    ->setChoices(function (?Slide $slide) { return $slide ? $slide->getClassesChoices() : Slide::getClassesChoices(); })
+                    ->setChoices(function (?FinalLaboSlideInterface $slide) { return $slide ? $slide->getClassesChoices() : LaboSlide::getClassesChoices(); })
                     ->setRequired(false)
                     ->allowMultipleChoices(true)
                     ->setColumns(12);
@@ -144,6 +141,10 @@ abstract class SlideCrudController extends BaseCrudController
                     ->setRequired(true)
                     ->setFormType(VichImageType::class)
                     ->setColumns(6);
+                yield ChoiceField::new('imagefilter', 'Format de l\'image')
+                    ->setChoices($this->manager->getLiipFilterChoices(0, 0, $slide))
+                    ->setColumns(6)
+                    ->setRequired(true);
                 if($hasOverlays) {
                     yield CollectionField::new('overlays', 'Textes')
                         ->setRequired(false)
@@ -174,13 +175,14 @@ abstract class SlideCrudController extends BaseCrudController
                 $allowAdd = $this->getLaboContext()->getInstance()->canAddSlidebases();
                 $hasSbases = $this->getLaboContext()->getInstance()->hasSlidebasesOption();
                 $hasOverlays = $this->getLaboContext()->getInstance()->hasOverlaysOption();
+                $slide = $this->getContext()->getEntity()->getInstance();
 
                 yield FormField::addTab('Informations')
                     ->setIcon('tabler:info-circle');
 
                 yield TextField::new('name')->setColumns(12)->setRequired(true);
                 yield ChoiceField::new('classes', 'Styles')
-                    ->setChoices(function (?Slide $slide): array { return $slide ? $slide->getClassesChoices() : Slide::getClassesChoices(); })
+                    ->setChoices(function (?FinalLaboSlideInterface $slide): array { return $slide ? $slide->getClassesChoices() : LaboSlide::getClassesChoices(); })
                     ->setRequired(false)
                     ->allowMultipleChoices(true)
                     ->setColumns(12);
@@ -199,6 +201,10 @@ abstract class SlideCrudController extends BaseCrudController
                     ->setFormType(VichImageType::class)
                     ->setFormTypeOption('allow_delete', false)
                     ->setColumns(6);
+                yield ChoiceField::new('imagefilter', 'Format de l\'image')
+                    ->setChoices($this->manager->getLiipFilterChoices(0, 0, $slide))
+                    ->setColumns(6)
+                    ->setRequired(true);
                 if($hasOverlays) {
                     yield CollectionField::new('overlays', 'Textes')
                         ->setRequired(false)

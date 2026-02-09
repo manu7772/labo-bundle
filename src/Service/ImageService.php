@@ -35,6 +35,9 @@ class ImageService extends ItemService implements ImageServiceInterface
     public const IMG_FORMAT_SQUARE = 'square';
     public const IMG_FORMAT_UNKNOWN = 'unknown';
 
+    public const DEFAULT_LIIP_FILTER = 'normal_w800';
+    public const THUMBNAIL_LIIP_FILTER = 'thumbnail_q';
+
     public function __construct(
         protected EntityManagerInterface $em,
         protected AppServiceInterface $appService,
@@ -127,24 +130,124 @@ class ImageService extends ItemService implements ImageServiceInterface
         return $url;
     }
 
-    public function getLiipFilters(): FilterConfiguration
+    /**
+     * Get the entire filter configuration or an array of filters depending on the $getArray parameter.
+     * 
+     * @param bool $getArray
+     * @return FilterConfiguration|array
+     */
+    public function getLiipFilters(bool $getArray = false): FilterConfiguration|array
     {
-        return $this->filterConfig;
+        return $getArray ? $this->filterConfig->all() : $this->filterConfig;
     }
 
-    public function getLiipFilter(?string $filter): ?array
+    /**
+     * Get the configuration of a specific liip filter by its name, returning null if the filter is not available in the configuration.
+     * 
+     * @param string|null $filter The name of the liip filter to retrieve the configuration for
+     * @return array|null
+     */
+    public function getLiipFilter(string $filter): ?array
     {
         return $this->isAvailableLiipFilter($filter) ? $this->filterConfig->get($filter) : null;
     }
 
+    /**
+     * Get the names of all available liip filters from the filter configuration.
+     * 
+     * @return array
+     */
     public function getLiipFiltersNames(): array
     {
         return array_keys($this->filterConfig->all());
     }
 
-    public function isAvailableLiipFilter(?string $filter): bool
+    /**
+     * Check if a given liip filter name is available in the filter configuration.
+     * 
+     * @param string $filter
+     * @return bool
+     */
+    public function isAvailableLiipFilter(string $filter): bool
     {
         return array_key_exists($filter, $this->filterConfig->all());
+    }
+
+    /**
+     * Get the default liip filter name for a given entity, checking if the entity has a specific default filter defined and if it is available, otherwise falling back to the service's default filter or the first available filter in the configuration. The method ensures that the returned filter name is valid and can be used for image processing.
+     * 
+     * @param null|string|object $entity Optional entity to check for a specific default filter (if it implements ImageInterface)
+     * @return string|null The default liip filter name to use for the given entity, or null if no valid filter is found
+     */
+    public function getDefaultLiipFilterName(null|string|object $entity = null): ?string
+    {
+        $filtername = is_a($entity, ImageInterface::class) && $this->isAvailableLiipFilter($entity::getDefaultLiipFilter() ?? '') ? $entity::getDefaultLiipFilter() : static::DEFAULT_LIIP_FILTER;
+        if(!$this->isAvailableLiipFilter($filtername)) {
+            $list = $this->getLiipFilterChoices(400, 400, $entity, true);
+            $filtername = array_key_first($list);
+        }
+        return $filtername;
+    }
+
+    /**
+     * Get available liip filters as choices for form fields, with optional filtering by minimum width and height, and by entity available filters if specified. Admin filters can be excluded by setting $exclude_admins to true.
+     * 
+     * @param int $min_width Minimum width of the filters to include in the choices
+     * @param int $min_height Minimum height of the filters to include in the choices
+     * @param null|string|object $entity Optional entity to filter the choices by its available filters (if it implements ImageInterface
+     * @param bool $exclude_admins Whether to exclude admin filters (filters with names starting with 'admin_' or 'ea_') from the choices
+     * @return array An associative array of filter names as keys and filter keys as values, suitable for use as choices in form fields
+     */
+    public function getLiipFilterChoices(int $min_width = 0, int $min_height = 0, null|string|object $entity = null, bool $exclude_admins = true): array
+    {
+        $choices = [];
+        foreach ($this->filterConfig->all() as $key => $value) {
+            if(!$exclude_admins || !preg_match('/^(admin_|ea_)/i', $key)) {
+                $available = true;
+                foreach ($value['filters'] ?? [] as $name => $filter) {
+                    switch ($name) {
+                        case 'scale':
+                            $filter_width = $filter['dim'][0] ?? 0;
+                            $filter_height = $filter['dim'][1] ?? 0;
+                            break;
+                        case 'upscale':
+                            $filter_width = $filter['min'][0] ?? 0;
+                            $filter_height = $filter['min'][1] ?? 0;
+                            break;
+                        case 'downscale':
+                            $filter_width = $filter['max'][0] ?? 0;
+                            $filter_height = $filter['max'][1] ?? 0;
+                            break;
+                        case 'relative_resize':
+                            $filter_width = $filter['widen'] ?? 0;
+                            $filter_height = $filter['heighten'] ?? 0;
+                            break;
+                        case 'background':
+                            $filter_width = $filter['size'][0] ?? 0;
+                            $filter_height = $filter['size'][1] ?? 0;
+                            break;
+                        default:
+                            $filter_width = 0;
+                            $filter_height = 0;
+                            break;
+                    }
+                    if($filter_width < $min_width || $filter_height < $min_height) {
+                        $available = false;
+                    }
+                }
+                if($available) {
+                    $choices['liip_names.'.$key] = $key;
+                }
+            }
+        }
+        if(!empty($entity) && count($choices) > 0) {
+            // Filter by entity available filters if specified
+            $entity_filters = is_a($entity, ImageInterface::class) ? $entity::getAvailableLiipFilters() ?? [] : true;
+            if(is_array($entity_filters)) {
+                $choices = array_filter($choices, fn ($filter) => in_array($filter, $entity_filters));
+            }
+        }
+        return $choices;
     }
 
 }

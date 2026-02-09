@@ -3,6 +3,8 @@ namespace Aequation\LaboBundle\Controller\Admin;
 
 use Aequation\LaboBundle\Security\Voter\SliderVoter;
 use Aequation\LaboBundle\Controller\Admin\Base\BaseCrudController;
+use Aequation\LaboBundle\Entity\LaboSlide;
+use Aequation\LaboBundle\Entity\LaboSlider;
 use Aequation\LaboBundle\Entity\LaboUser;
 use Aequation\LaboBundle\Field\CKEditorField;
 use Aequation\LaboBundle\Model\Interface\AppEntityInterface;
@@ -78,7 +80,7 @@ class SliderCrudController extends BaseCrudController
                     // yield BooleanField::new('updateSlug')->setLabel('Mettre à jour le slug')->setColumns(2)->setHelp('Il est recommandé d\'éviter de changer le slug car il est indexé par les moteurs de recherche. Faites-le uniquement si le nom du slug n\'a plus aucun rapport avec le contenu de ce que vous êtes en train d\'éditer.');
                     yield TextField::new('title', 'Titre')->setColumns(6)->setHelp('Titre du diaporama, qui peut être affiché conjointement')->setRequired(false);
                     yield ChoiceField::new('slidertype', 'Type de diaporama')
-                        ->setChoices(Slider::getSlidertypeChoices(true))
+                        ->setChoices(LaboSlider::getSlidertypeChoices(true))
                         ->escapeHtml(false)
                         ->setColumns(6)
                         ->setRequired(true)
@@ -98,7 +100,7 @@ class SliderCrudController extends BaseCrudController
                         ->setIcon('fa6-solid:camera');
 
                     yield AssociationField::new('items', 'Diapositives')
-                        ->setQueryBuilder(static fn (QueryBuilder $qb): QueryBuilder => EcollectionRepository::QB_collectionChoices($qb, Slider::class, 'items'))
+                        ->setQueryBuilder(static fn (QueryBuilder $qb): QueryBuilder => EcollectionRepository::QB_collectionChoices($qb, LaboSlide::class, 'items'))
                         // ->autocomplete()
                         ->setSortProperty('name')
                         ->setRequired(false)
@@ -141,7 +143,7 @@ class SliderCrudController extends BaseCrudController
                     yield BooleanField::new('updateSlug')->setLabel('Mettre à jour le slug')->setColumns(2)->setHelp('Il est recommandé d\'éviter de changer le slug car il est indexé par les moteurs de recherche. Faites-le uniquement si le nom du slug n\'a plus aucun rapport avec le contenu de ce que vous êtes en train d\'éditer.');
                     yield TextField::new('title', 'Titre')->setColumns(6)->setRequired(false);
                     yield ChoiceField::new('slidertype', 'Type de diaporama')
-                        ->setChoices(Slider::getSlidertypeChoices(true))
+                        ->setChoices(LaboSlider::getSlidertypeChoices(true))
                         ->escapeHtml(false)
                         ->setColumns(6)
                         ->setRequired(true)
@@ -150,7 +152,7 @@ class SliderCrudController extends BaseCrudController
                     yield FormField::addTab('Diapositives')
                         ->setIcon('fa6-solid:camera');
                     yield AssociationField::new('items', 'Diapositives')
-                        ->setQueryBuilder(static fn (QueryBuilder $qb): QueryBuilder => EcollectionRepository::QB_collectionChoices($qb, Slider::class, 'items'))
+                        ->setQueryBuilder(static fn (QueryBuilder $qb): QueryBuilder => EcollectionRepository::QB_collectionChoices($qb, LaboSlide::class, 'items'))
                         // ->autocomplete()
                         ->setSortProperty('name')
                         ->setRequired(false)
