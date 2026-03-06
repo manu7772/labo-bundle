@@ -47,7 +47,7 @@ class UserCrudController extends LaboUserCrudController
         $user = $this->getLaboContext()->getInstance();
         switch ($pageName) {
             case Crud::PAGE_DETAIL:
-                if(!$manager->isLoggable($user)) {
+                if(!$this->entityService->isLoggable($user)) {
                     $this->addFlash('error', t('Cet utilisateur ne peut actuellement pas se connecter à son compte (compte expiré, désactivé ou autre raison).'));
                 }
                 // ------------------------------------------------- Sécurité
@@ -127,7 +127,7 @@ class UserCrudController extends LaboUserCrudController
                     ->setPermission('ROLE_ADMIN');
                 break;
             case Crud::PAGE_EDIT:
-                if(!$manager->isLoggable($user)) {
+                if(!$this->entityService->isLoggable($user)) {
                     $this->addFlash('info', t('Cet utilisateur ne peut actuellement pas se connecter à son compte (compte expiré, désactivé ou autre raison).'));
                 }
                 // ------------------------------------------------- Actions

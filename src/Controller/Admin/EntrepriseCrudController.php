@@ -11,15 +11,14 @@ use App\Entity\Addresslink;
 use Doctrine\ORM\QueryBuilder;
 use Symfony\Component\Form\FormInterface;
 use Aequation\LaboBundle\Field\CKEditorField;
+use App\Controller\Admin\UrlinkCrudController;
 use Aequation\LaboBundle\Service\Tools\Classes;
 use Aequation\LaboBundle\Form\Type\PortraitType;
-use App\Controller\Admin\UrlinkCrudController;
-use App\Controller\Admin\VideolinkCrudController;
-use Aequation\LaboBundle\Model\Interface\LaboRelinkInterface;
 use App\Controller\Admin\EmailinkCrudController;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Crud;
-
 use App\Controller\Admin\PhonelinkCrudController;
+use App\Controller\Admin\VideolinkCrudController;
+
 use EasyCorp\Bundle\EasyAdminBundle\Field\IdField;
 use App\Controller\Admin\AddresslinkCrudController;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Filters;
@@ -40,6 +39,8 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 use EasyCorp\Bundle\EasyAdminBundle\Field\CollectionField;
 use Aequation\LaboBundle\Repository\LaboCategoryRepository;
 use EasyCorp\Bundle\EasyAdminBundle\Field\AssociationField;
+use Aequation\LaboBundle\Model\Interface\LaboRelinkInterface;
+use Aequation\LaboBundle\Service\Interface\AppEntityServiceInterface;
 
 #[IsGranted('ROLE_COLLABORATOR')]
 abstract class EntrepriseCrudController extends LaboUserCrudController
@@ -48,6 +49,9 @@ abstract class EntrepriseCrudController extends LaboUserCrudController
     // public const ENTITY = Entreprise::class;
     // public const VOTER = EntrepriseVoter::class;
     public const DEFAULT_SORT = ['lastLogin' => 'DESC', 'createdAt' => 'DESC'];
+
+    /** @var LaboEntrepriseServiceInterface */
+    public readonly AppEntityServiceInterface $entityService;
 
     public function configureFilters(Filters $filters): Filters
     {

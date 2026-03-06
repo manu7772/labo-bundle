@@ -4,7 +4,7 @@ namespace Aequation\LaboBundle\Service\Interface;
 use Aequation\LaboBundle\Model\Interface\LaboCategoryInterface;
 use Aequation\LaboBundle\Model\Interface\LaboUserInterface;
 
-interface LaboUserServiceInterface extends AppEntityManagerInterface
+interface LaboUserServiceInterface extends AppEntityServiceInterface
 {
 
     public function addMeToSuperAdmin(): ?LaboUserInterface;

@@ -1,57 +1,58 @@
 <?php
 namespace Aequation\LaboBundle\Controller\Admin\Base;
 
+use DateTime;
+use Iterator;
+// Aequation/Labo
+use Exception;
+use ReflectionClass;
 use App\Entity\Category;
 use App\Entity\Websection;
-// Aequation/Labo
-use Aequation\LaboBundle\Component\LaboAdminContext;
-use Aequation\LaboBundle\Model\Interface\EnabledInterface;
-use Aequation\LaboBundle\Model\Interface\AppEntityInterface;
-use Aequation\LaboBundle\EventSubscriber\LaboFormsSubscriber;
-use Aequation\LaboBundle\Service\Interface\LaboUserServiceInterface;
-use Aequation\LaboBundle\Service\Interface\AppEntityManagerInterface;
-use Aequation\LaboBundle\Component\Interface\LaboAdminContextInterface;
+use Doctrine\ORM\QueryBuilder;
+use Doctrine\ORM\EntityManagerInterface;
 use Aequation\LaboBundle\Component\Opresult;
 use Aequation\LaboBundle\Service\AppService;
 use Aequation\LaboBundle\Service\Tools\Classes;
 use Aequation\LaboBundle\Service\Tools\Strings;
-// Symfony
-use Doctrine\ORM\QueryBuilder;
-use Doctrine\ORM\EntityManagerInterface;
-use Symfony\Component\Form\FormBuilderInterface;
-use Symfony\Component\HttpFoundation\RequestStack;
-use Symfony\Component\HttpFoundation\RedirectResponse;
-use Symfony\Contracts\Translation\TranslatorInterface;
-use Symfony\Component\Security\Core\Authorization\Voter\VoterInterface;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Crud;
+// Symfony
+use Symfony\Component\Form\FormBuilderInterface;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Asset;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Action;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Assets;
 use EasyCorp\Bundle\EasyAdminBundle\Dto\EntityDto;
 use EasyCorp\Bundle\EasyAdminBundle\Dto\SearchDto;
+use Symfony\Component\HttpFoundation\RequestStack;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Actions;
+use Aequation\LaboBundle\Component\LaboAdminContext;
+use Symfony\Component\HttpFoundation\RedirectResponse;
+use Symfony\Contracts\Translation\TranslatorInterface;
 use EasyCorp\Bundle\EasyAdminBundle\Security\Permission;
 use EasyCorp\Bundle\EasyAdminBundle\Config\KeyValueStore;
 use EasyCorp\Bundle\EasyAdminBundle\Context\AdminContext;
+use Aequation\LaboBundle\Model\Interface\EnabledInterface;
 use EasyCorp\Bundle\EasyAdminBundle\Factory\EntityFactory;
+use Aequation\LaboBundle\Model\Interface\AppEntityInterface;
+use Aequation\LaboBundle\EventSubscriber\LaboFormsSubscriber;
 use EasyCorp\Bundle\EasyAdminBundle\Router\AdminUrlGenerator;
 use EasyCorp\Bundle\EasyAdminBundle\Collection\FieldCollection;
 use EasyCorp\Bundle\EasyAdminBundle\Event\AfterCrudActionEvent;
 use EasyCorp\Bundle\EasyAdminBundle\Collection\FilterCollection;
 use EasyCorp\Bundle\EasyAdminBundle\Event\BeforeCrudActionEvent;
 use EasyCorp\Bundle\EasyAdminBundle\Contracts\Field\FieldInterface;
+use Aequation\LaboBundle\Service\Interface\LaboUserServiceInterface;
 use EasyCorp\Bundle\EasyAdminBundle\Event\AfterEntityPersistedEvent;
+use Aequation\LaboBundle\Service\Interface\AppEntityManagerInterface;
+use Aequation\LaboBundle\Service\Interface\AppEntityServiceInterface;
 use EasyCorp\Bundle\EasyAdminBundle\Event\BeforeEntityPersistedEvent;
 use EasyCorp\Bundle\EasyAdminBundle\Controller\AbstractCrudController;
 use EasyCorp\Bundle\EasyAdminBundle\Router\AdminUrlGeneratorInterface;
+// PHP
+use Aequation\LaboBundle\Component\Interface\LaboAdminContextInterface;
 use EasyCorp\Bundle\EasyAdminBundle\Exception\ForbiddenActionException;
+use Symfony\Component\Security\Core\Authorization\Voter\VoterInterface;
 use EasyCorp\Bundle\EasyAdminBundle\Contracts\Context\AdminContextInterface;
 use EasyCorp\Bundle\EasyAdminBundle\Exception\InsufficientEntityPermissionException;
-// PHP
-use DateTime;
-use Iterator;
-use Exception;
-use ReflectionClass;
 
 abstract class BaseCrudController extends AbstractCrudController
 {
@@ -66,27 +67,33 @@ abstract class BaseCrudController extends AbstractCrudController
 
 
     public readonly array $query_values;
-    public readonly AppEntityManagerInterface $appEntityManager;
+    // public readonly AppEntityManagerInterface $appEntityManager;
+    public readonly AppEntityServiceInterface $entityService;
     public readonly LaboAdminContextInterface $laboAdminContext;
 
     public function __construct(
         protected RequestStack $requestStack,
-        protected AppEntityManagerInterface $manager,
+        protected AppEntityManagerInterface $appEntityManager,
         protected LaboUserServiceInterface $userService,
         protected TranslatorInterface $translator,
     ) {
-        $this->appEntityManager = $manager;
-        $this->manager = $manager->getEntityService(static::ENTITY);
-        if($manager->isDev()) {
-            // [DEV] check entity class service
-            $service_class = AppService::getClassServiceName(static::ENTITY);
-            if(!is_a($this->manager, (string)$service_class)) throw new Exception(vsprintf('Error %s line %d: manager %s for entity %s is not instance of %s!', [__METHOD__, __LINE__, $this->manager::class, static::ENTITY, $service_class]));
+        // $this->appEntityManager = $manager;
+        $this->entityService = $this->appEntityManager->getEntityService(static::ENTITY);
+        if($this->appEntityManager->isDev()) {
+            $this->checkService();
         }
-        if($this->userService instanceof LaboUserServiceInterface) {
-            $this->userService->addMeToSuperAdmin();
-        }
+        // if($this->userService instanceof LaboUserServiceInterface) {
+        //     $this->userService->addMeToSuperAdmin();
+        // }
         $query = $this->requestStack->getMainRequest()?->query;
         $this->query_values = $query ? $query->all() : [];
+    }
+
+    protected function checkService(): void
+    {
+        // [DEV] check entity class service
+        $service_class = AppService::getClassServiceName(static::ENTITY);
+        if(!is_a($this->entityService, (string)$service_class)) throw new Exception(vsprintf('Error %s line %d: manager %s for entity %s is not instance of %s!', [__METHOD__, __LINE__, $this->entityService::class, static::ENTITY, $service_class]));
     }
 
     /**
@@ -441,7 +448,7 @@ abstract class BaseCrudController extends AbstractCrudController
             ->setPageTitle('detail', '%entity_label_singular%'.($type ? '<small> de type <strong>'.$type.'</strong></small>' : ''))
             ->setPageTitle('edit', '<small>Modifier </small>%entity_label_singular%'.($type ? '<small> de type <strong>'.$type.'</strong></small>' : ''))
             ->setPageTitle('new', '<small>Créer </small>%entity_label_singular%'.($type ? '<small> de type <strong>'.$type.'</strong></small>' : ''))
-            ->setTimezone($this->manager->getAppService()->getAppContext()->getTimezone()->getName())
+            ->setTimezone($this->appEntityManager->getAppService()->getAppContext()->getTimezone()->getName())
             // ->setEntityLabelInSingular(Strings::singularize($shortname))
             // ->setEntityLabelInPlural(Strings::pluralize($shortname))
             ->setEntityLabelInSingular(
@@ -739,8 +746,8 @@ abstract class BaseCrudController extends AbstractCrudController
         // if($checkGrant) $this->checkGrants(Crud::PAGE_NEW);
         $RC = new ReflectionClass($entityFqcn);
         if($RC->isInstantiable()) {
-            $entity = $this->manager instanceof AppEntityManagerInterface
-                ? $this->manager->getNew($entityFqcn)
+            $entity = $this->appEntityManager instanceof AppEntityManagerInterface
+                ? $this->appEntityManager->getNew($entityFqcn)
                 : new $entityFqcn();
             return $entity;
         }
@@ -749,17 +756,17 @@ abstract class BaseCrudController extends AbstractCrudController
 
     public function persistEntity(EntityManagerInterface $entityManager, $entityInstance): void
     {
-        $this->manager->save($entityInstance);
+        $this->appEntityManager->save($entityInstance);
     }
 
     public function updateEntity(EntityManagerInterface $entityManager, $entityInstance): void
     {
-        $this->manager->save($entityInstance);
+        $this->appEntityManager->save($entityInstance);
     }
 
     public function deleteEntity(EntityManagerInterface $entityManager, $entityInstance): void
     {
-        $this->manager->delete($entityInstance);
+        $this->appEntityManager->delete($entityInstance);
     }
 
     public function createEditFormBuilder(EntityDto $entityDto, KeyValueStore $formOptions, AdminContext $context): FormBuilderInterface
@@ -767,7 +774,7 @@ abstract class BaseCrudController extends AbstractCrudController
         $formBuilder = parent::createEditFormBuilder($entityDto, $formOptions, $context);
         $entity = $formBuilder->getData();
         if($entity instanceof AppEntityInterface) {
-            $formBuilder->addEventSubscriber(new LaboFormsSubscriber($this->manager));
+            $formBuilder->addEventSubscriber(new LaboFormsSubscriber($this->appEntityManager));
         }
         return $formBuilder;
     }
@@ -778,7 +785,7 @@ abstract class BaseCrudController extends AbstractCrudController
         // $formBuilder->setEmptyData($this->createEntity($entityDto->getFqcn(), false));
         $entity = $formBuilder->getData();
         if($entity instanceof AppEntityInterface) {
-            $formBuilder->addEventSubscriber(new LaboFormsSubscriber($this->manager));
+            $formBuilder->addEventSubscriber(new LaboFormsSubscriber($this->appEntityManager));
         }
         return $formBuilder;
     }

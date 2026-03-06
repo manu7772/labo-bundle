@@ -141,7 +141,7 @@ abstract class Image extends Item implements ImageInterface
 
     public function getLiipDefaultFilter(): string
     {
-        return $this->liipDefaultFilter ??= $this->_service::DEFAULT_LIIP_FILTER;
+        return $this->liipDefaultFilter ??= $this->_service->getDefaultLiipFilterName($this);
     }
 
     public function setLiipDefaultFilter(string $liipDefaultFilter): static

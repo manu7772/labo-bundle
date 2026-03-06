@@ -1,19 +1,26 @@
 <?php
 namespace Aequation\LaboBundle\Controller\Admin;
 
+// App
 use App\Entity\Slide;
 // Aequation
-use Aequation\LaboBundle\Form\Type\SlidebaseType;
+use Aequation\LaboBundle\Entity\LaboSlide;
 use Aequation\LaboBundle\Field\CKEditorField;
 use Aequation\LaboBundle\Field\ThumbnailField;
 use Aequation\LaboBundle\Form\Type\OverlayType;
 use Aequation\LaboBundle\Service\Tools\Strings;
 use Aequation\LaboBundle\Service\Tools\Encoders;
-use EasyCorp\Bundle\EasyAdminBundle\Config\Crud;
-// Symfony
-use Vich\UploaderBundle\Form\Type\VichImageType;
-use EasyCorp\Bundle\EasyAdminBundle\Field\IdField;
+use Aequation\LaboBundle\Form\Type\SlidebaseType;
 use Aequation\LaboBundle\Security\Voter\SlideVoter;
+use Aequation\LaboBundle\Model\Final\FinalLaboSlideInterface;
+use Aequation\LaboBundle\Service\Interface\SlideServiceInterface;
+use Aequation\LaboBundle\Controller\Admin\Base\BaseCrudController;
+use Aequation\LaboBundle\Service\Interface\AppEntityServiceInterface;
+// Symfony
+use Symfony\Component\Security\Http\Attribute\IsGranted;
+use Vich\UploaderBundle\Form\Type\VichImageType;
+use EasyCorp\Bundle\EasyAdminBundle\Config\Crud;
+use EasyCorp\Bundle\EasyAdminBundle\Field\IdField;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Filters;
 use EasyCorp\Bundle\EasyAdminBundle\Field\FormField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\TextField;
@@ -23,15 +30,11 @@ use EasyCorp\Bundle\EasyAdminBundle\Field\BooleanField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\IntegerField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\DateTimeField;
 use EasyCorp\Bundle\EasyAdminBundle\Filter\ChoiceFilter;
-use Symfony\Component\Security\Http\Attribute\IsGranted;
 use EasyCorp\Bundle\EasyAdminBundle\Filter\NumericFilter;
 use EasyCorp\Bundle\EasyAdminBundle\Field\CollectionField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\TextEditorField;
 use EasyCorp\Bundle\EasyAdminBundle\Filter\DateTimeFilter;
 use EasyCorp\Bundle\EasyAdminBundle\Field\AssociationField;
-use Aequation\LaboBundle\Controller\Admin\Base\BaseCrudController;
-use Aequation\LaboBundle\Entity\LaboSlide;
-use Aequation\LaboBundle\Model\Final\FinalLaboSlideInterface;
 
 #[IsGranted('ROLE_COLLABORATOR')]
 abstract class SlideCrudController extends BaseCrudController
@@ -40,10 +43,13 @@ abstract class SlideCrudController extends BaseCrudController
     public const ENTITY = Slide::class;
     public const VOTER = SlideVoter::class;
 
+    /** @var SlideServiceInterface */
+    public readonly AppEntityServiceInterface $entityService;
+
     public function configureFilters(Filters $filters): Filters
     {
         /** @var Slide */
-        $model = new Slide;
+        $model = $this->entityService->getModel();
         return $filters
             ->add(TextFilter::new('name', 'Nom'))
             ->add(TextFilter::new('filename', 'Nom du fichier'))
@@ -113,64 +119,6 @@ abstract class SlideCrudController extends BaseCrudController
                     // yield AssociationField::new('owner', 'Propriétaire')->setColumns(6)->setPermission('ROLE_ADMIN')->setCrudController(UserCrudController::class);
                 break;
             case Crud::PAGE_NEW:
-                $allowAdd = $this->getLaboContext()->getInstance()->canAddSlidebases();
-                $hasSbases = $this->getLaboContext()->getInstance()->hasSlidebasesOption();
-                $hasOverlays = $this->getLaboContext()->getInstance()->hasOverlaysOption();
-
-                yield FormField::addTab('Informations')
-                    ->setIcon('tabler:info-circle');
-
-                yield TextField::new('name')->setColumns(12)->setRequired(true);
-                yield ChoiceField::new('classes', 'Styles')
-                    ->setChoices(function (?FinalLaboSlideInterface $slide) { return $slide ? $slide->getClassesChoices() : LaboSlide::getClassesChoices(); })
-                    ->setRequired(false)
-                    ->allowMultipleChoices(true)
-                    ->setColumns(12);
-                yield TextField::new('title', 'Titre de la slide')->setColumns(6)->setRequired(false);
-                yield ChoiceField::new('slidetype', 'Type de diaporama')
-                    ->setChoices($this->getLaboContext()->getInstance()->getSlidetypeChoices(true))
-                    ->escapeHtml(false)
-                    ->setColumns(6)
-                    ->setRequired(false);
-                yield CKEditorField::new('content','Texte')->setColumns(12)->formatValue(fn ($value) => Strings::markup($value));
-    
-                yield FormField::addTab('Contenu média')
-                    ->setIcon('tabler:camera');
-
-                yield TextField::new('file', 'Image')
-                    ->setRequired(true)
-                    ->setFormType(VichImageType::class)
-                    ->setColumns(6);
-                yield ChoiceField::new('imagefilter', 'Format de l\'image')
-                    ->setChoices($this->manager->getLiipFilterChoices(0, 0, $slide))
-                    ->setColumns(6)
-                    ->setRequired(true);
-                if($hasOverlays) {
-                    yield CollectionField::new('overlays', 'Textes')
-                        ->setRequired(false)
-                        ->allowAdd()
-                        ->allowDelete()
-                        ->setEntryType(OverlayType::class)
-                        ->setFormTypeOption('by_reference', false)
-                        ->setColumns(6);
-                }
-                if($hasSbases) {
-                    yield CollectionField::new('slidebases', 'Images additionnelles (max. '.$this->getLaboContext()->getInstance()->getMaxSlidebases().')')
-                        ->allowAdd($allowAdd)
-                        ->allowDelete()
-                        ->setEntryType(SlidebaseType::class)
-                        ->setEntryIsComplex()
-                        ->setColumns(6)
-                        ->setHelp($allowAdd ? 'Placer ici d\'autres images si nécessaire' : 'Vous ne pouvez pas ajouter d\'autres images, le maxium est atteint');
-                }
-
-                yield FormField::addTab('Statut')
-                    ->setIcon('tabler:lock');
-
-                yield BooleanField::new('enabled', 'Activé')->setColumns(6)->setHelp('Si cette diapositive n\'est pas activée, ell ne sera pas visible dans le diaporama qui la contient.');
-                yield BooleanField::new('softdeleted', 'Supprimé')->setPermission('ROLE_SUPER_ADMIN')->setColumns(6);
-                yield AssociationField::new('owner', 'Propriétaire')->setColumns(6)->setPermission('ROLE_ADMIN')->setCrudController(UserCrudController::class);
-                break;
             case Crud::PAGE_EDIT:
                 $allowAdd = $this->getLaboContext()->getInstance()->canAddSlidebases();
                 $hasSbases = $this->getLaboContext()->getInstance()->hasSlidebasesOption();
@@ -180,49 +128,51 @@ abstract class SlideCrudController extends BaseCrudController
                 yield FormField::addTab('Informations')
                     ->setIcon('tabler:info-circle');
 
-                yield TextField::new('name')->setColumns(12)->setRequired(true);
-                yield ChoiceField::new('classes', 'Styles')
-                    ->setChoices(function (?FinalLaboSlideInterface $slide): array { return $slide ? $slide->getClassesChoices() : LaboSlide::getClassesChoices(); })
-                    ->setRequired(false)
-                    ->allowMultipleChoices(true)
-                    ->setColumns(12);
-                yield TextField::new('title', 'Titre de la slide')->setColumns(6)->setRequired(false);
-                yield ChoiceField::new('slidetype', 'Type de diaporama')
-                    ->setChoices($this->getLaboContext()->getInstance()->getSlidetypeChoices(true))
-                    ->escapeHtml(false)
-                    ->setColumns(6)
-                    ->setRequired(false);
-                yield CKEditorField::new('content','Texte')->setColumns(12)->formatValue(fn ($value) => Strings::markup($value));
+                    yield FormField::addColumn(6);
+                        yield TextField::new('name')->setRequired(true)->setHelp('Nom interne de la diapositive, utilisé pour l\'identifier dans l\'administration. Il n\'est pas affiché sur le site.');
+                        yield TextField::new('title', 'Titre de la slide')->setRequired(false)->setHelp('Titre de la slide, affiché sur le site selon les styles appliqués.');
+                    yield FormField::addColumn(6);
+                        yield ChoiceField::new('slidetype', 'Type de diaporama')
+                            ->setChoices($this->getLaboContext()->getInstance()->getSlidetypeChoices(true))
+                            ->escapeHtml(false)
+                            ->setRequired(false)
+                            ->setHelp('Le type de diaporama détermine les dimensions de l\'image et les options disponibles pour la diapositive. Si vous changez le type de diaporama d\'une diapositive déjà créée, vérifiez que les images utilisées correspondent bien aux dimensions requises par le nouveau type.');
+                        yield ChoiceField::new('classes', 'Styles')
+                            ->setChoices(function (?FinalLaboSlideInterface $slide): array { return $slide ? $slide->getClassesChoices() : LaboSlide::getClassesChoices(); })
+                            ->setRequired(false)
+                            ->allowMultipleChoices(true)
+                            ->setHelp('Styles supplémentaires à appliquer à la diapositive pour modifier son aspect visuel : couleurs sépia, monochrome, couleurs négatives, flous, etc.');
+                    yield FormField::addColumn(12);
+                        yield CKEditorField::new('content','Texte')->formatValue(fn ($value) => Strings::markup($value));
 
                 yield FormField::addTab('Contenu média')
                     ->setIcon('tabler:camera');
 
-                yield TextField::new('file', 'Image')
-                    ->setFormType(VichImageType::class)
-                    ->setFormTypeOption('allow_delete', false)
-                    ->setColumns(6);
-                yield ChoiceField::new('imagefilter', 'Format de l\'image')
-                    ->setChoices($this->manager->getLiipFilterChoices(0, 0, $slide))
-                    ->setColumns(6)
-                    ->setRequired(true);
-                if($hasOverlays) {
-                    yield CollectionField::new('overlays', 'Textes')
-                        ->setRequired(false)
-                        ->allowAdd()
-                        ->allowDelete()
-                        ->setEntryType(OverlayType::class)
-                        ->setFormTypeOption('by_reference', false)
-                        ->setColumns(6);
-                }
-                if($hasSbases) {
-                    yield CollectionField::new('slidebases', 'Images additionnelles (max. '.$this->getLaboContext()->getInstance()->getMaxSlidebases().')')
-                        ->allowAdd($allowAdd)
-                        ->allowDelete()
-                        ->setEntryType(SlidebaseType::class)
-                        ->setEntryIsComplex()
-                        ->setColumns(6)
-                        ->setHelp($allowAdd ? 'Placer ici d\'autres images si nécessaire' : 'Vous ne pouvez pas ajouter d\'autres images, le maxium est atteint');
-                }
+                    yield FormField::addColumn(6);
+                        yield TextField::new('file', 'Image')
+                            ->setFormType(VichImageType::class)
+                            ->setFormTypeOption('allow_delete', false);
+                        yield ChoiceField::new('imagefilter', 'Format de l\'image')
+                            ->setChoices($this->entityService->getLiipFilterChoices(0, 0, $slide))
+                            ->setRequired(true);
+
+                    yield FormField::addColumn(6);
+                        if($hasOverlays) {
+                            yield CollectionField::new('overlays', 'Textes')
+                                ->setRequired(false)
+                                ->allowAdd()
+                                ->allowDelete()
+                                ->setEntryType(OverlayType::class)
+                                ->setFormTypeOption('by_reference', false);
+                        }
+                        if($hasSbases) {
+                            yield CollectionField::new('slidebases', 'Images additionnelles (max. '.$this->getLaboContext()->getInstance()->getMaxSlidebases().')')
+                                ->allowAdd($allowAdd)
+                                ->allowDelete()
+                                ->setEntryType(SlidebaseType::class)
+                                ->setEntryIsComplex()
+                                ->setHelp($allowAdd ? 'Placer ici d\'autres images si nécessaire' : 'Vous ne pouvez pas ajouter d\'autres images, le maxium est atteint');
+                        }
 
                 yield FormField::addTab('Statut')
                     ->setIcon('tabler:lock');

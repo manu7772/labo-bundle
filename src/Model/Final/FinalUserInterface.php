@@ -1,10 +1,17 @@
 <?php
 namespace Aequation\LaboBundle\Model\Final;
 
+use Aequation\LaboBundle\Model\Interface\UnamedInterface;
+use Aequation\LaboBundle\Model\Interface\CreatedInterface;
+use Aequation\LaboBundle\Model\Interface\EnabledInterface;
 use Aequation\LaboBundle\Model\Interface\LaboUserInterface;
+use Aequation\LaboBundle\Model\Interface\ImageOwnerInterface;
+// Symfony
 use Doctrine\Common\Collections\Collection;
+use Symfony\Component\Security\Core\User\EquatableInterface;
 
-interface FinalUserInterface extends LaboUserInterface
+
+interface FinalUserInterface extends LaboUserInterface, EquatableInterface, ImageOwnerInterface, UnamedInterface, EnabledInterface, CreatedInterface
 {
 
     public function getEntreprises(): Collection;

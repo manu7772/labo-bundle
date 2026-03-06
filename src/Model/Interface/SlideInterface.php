@@ -13,5 +13,6 @@ interface SlideInterface extends ImageInterface
     public function getMaxSlidebases(): int;
     public function canAddSlidebases(): bool;
     public function hasSlidebasesOption(): bool;
+    public static function getClassesChoices(): array;
 }
 

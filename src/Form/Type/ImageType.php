@@ -36,7 +36,7 @@ class ImageType extends BaseAppType
             ])
             ->add('imagefilter', ChoiceType::class, [
                 'label' => 'Format d\'affichage',
-                'required' => false,
+                'required' => true,
                 'placeholder' => 'Choisissez un format d\'affichage par défaut',
                 'choices' => $manager->getLiipFilterChoices(400, 300, $builder->getData()),
                 'choice_translation_domain' => 'messages',

@@ -1,47 +1,44 @@
 <?php
 namespace Aequation\LaboBundle\Entity;
 
-use DateInterval;
-use DateTimeImmutable;
-use Doctrine\DBAL\Types\Types;
-use Doctrine\ORM\Mapping as ORM;
+use App\Entity\Category;
+// Aequation
 use Aequation\LaboBundle\Entity\Image;
 use Aequation\LaboBundle\Entity\Portrait;
-use Doctrine\Common\Collections\Collection;
 use Aequation\LaboBundle\Model\Trait\Unamed;
 use Aequation\LaboBundle\Model\Trait\Created;
 use Aequation\LaboBundle\Model\Trait\Enabled;
-use Aequation\LaboBundle\Model\Attribute as EA;
 use Aequation\LaboBundle\Service\Tools\Encoders;
-use Doctrine\Common\Collections\ArrayCollection;
-use Aequation\LaboBundle\Service\LaboUserService;
 use Aequation\LaboBundle\Entity\MappSuperClassEntity;
 use Aequation\LaboBundle\Model\Attribute\HtmlContent;
-use Symfony\Component\Validator\Constraints as Assert;
 use Aequation\LaboBundle\Model\Attribute\RelationOrder;
 use Aequation\LaboBundle\Repository\LaboUserRepository;
-use Symfony\Component\Security\Core\User\UserInterface;
-use Aequation\LaboBundle\Model\Interface\UnamedInterface;
-use Symfony\Component\Serializer\Attribute as Serializer;
 use Aequation\LaboBundle\EventListener\Attribute\AppEvent;
 use Aequation\LaboBundle\Model\Final\FinalUrlinkInterface;
-use Aequation\LaboBundle\Model\Interface\CreatedInterface;
-// Symfony
-use Aequation\LaboBundle\Model\Interface\EnabledInterface;
 use Aequation\LaboBundle\Model\Interface\LaboUserInterface;
 use Aequation\LaboBundle\Model\Final\FinalCategoryInterface;
 use Aequation\LaboBundle\Model\Final\FinalEmailinkInterface;
-use Symfony\Component\Security\Core\User\EquatableInterface;
 use Aequation\LaboBundle\Model\Final\FinalPhonelinkInterface;
-use Aequation\LaboBundle\Model\Interface\ImageOwnerInterface;
-use Aequation\LaboBundle\Model\Interface\LaboRelinkInterface;
-use Aequation\LaboBundle\Model\Final\FinalAddresslinkInterface;
 use Aequation\LaboBundle\Model\Final\FinalVideolinkInterface;
-use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
-// PHP
+use Aequation\LaboBundle\Model\Interface\LaboRelinkInterface;
+use Aequation\LaboBundle\Model\Final\FinalEntrepriseInterface;
+use Aequation\LaboBundle\Model\Final\FinalAddresslinkInterface;
 use Aequation\LaboBundle\Service\Interface\AppEntityManagerInterface;
 use Aequation\LaboBundle\Service\Interface\AppRoleHierarchyInterface;
+use Aequation\LaboBundle\Model\Final\FinalUserInterface;
+// Symfony
+use Doctrine\DBAL\Types\Types;
+use Doctrine\ORM\Mapping as ORM;
+use Doctrine\Common\Collections\Collection;
+use Doctrine\Common\Collections\ArrayCollection;
+use Symfony\Component\Validator\Constraints as Assert;
+use Symfony\Component\Security\Core\User\UserInterface;
+use Symfony\Component\Serializer\Attribute as Serializer;
+use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Security\Core\Validator\Constraints as SecurityAssert;
+// PHP
+use DateInterval;
+use DateTimeImmutable;
 
 #[ORM\Entity(repositoryClass: LaboUserRepository::class)]
 // #[EA\ClassCustomService(LaboUserServiceInterface::class)]
@@ -49,7 +46,7 @@ use Symfony\Component\Security\Core\Validator\Constraints as SecurityAssert;
 #[ORM\InheritanceType('JOINED')]
 #[UniqueEntity(['email','classname'], message: 'Cet email {{ value }} est déjà utilisé !')]
 #[ORM\HasLifecycleCallbacks]
-abstract class LaboUser extends MappSuperClassEntity implements LaboUserInterface, EquatableInterface, ImageOwnerInterface, UnamedInterface, EnabledInterface, CreatedInterface
+abstract class LaboUser extends MappSuperClassEntity implements FinalUserInterface
 {
 
     use Enabled, Created, Unamed;
@@ -174,6 +171,18 @@ abstract class LaboUser extends MappSuperClassEntity implements LaboUserInterfac
     #[Serializer\MaxDepth(1)]
     protected Collection $videolinks;
 
+    /**
+     * @var Collection<int, FinalEntrepriseInterface>
+     */
+    #[ORM\ManyToMany(targetEntity: FinalEntrepriseInterface::class, mappedBy: 'members')]
+    protected Collection $entreprises;
+    /**
+     * ACTIONS
+     */
+    protected bool $mainentreprise;
+    protected ?bool $_mem_mainentreprise = null;
+
+
     public function __construct()
     {
         parent::__construct();
@@ -183,6 +192,7 @@ abstract class LaboUser extends MappSuperClassEntity implements LaboUserInterfac
         $this->emails = new ArrayCollection();
         $this->phones = new ArrayCollection();
         $this->videolinks = new ArrayCollection();
+        $this->entreprises = new ArrayCollection();
     }
 
     public function isEqualTo(UserInterface $user): bool
@@ -761,5 +771,110 @@ abstract class LaboUser extends MappSuperClassEntity implements LaboUserInterfac
         return $this;
     }
 
+
+    /**
+     * @return Collection<int, FinalEntrepriseInterface>
+     */
+    public function getEntreprises(): Collection
+    {
+        return $this->entreprises;
+    }
+
+    public function addEntreprise(FinalEntrepriseInterface $entreprise): static
+    {
+        if(!$this->entreprises->contains($entreprise)) {
+            $this->entreprises->add($entreprise);
+        }
+        if(!$entreprise->hasMember($this)) {
+            $entreprise->addMember($this);
+        }
+        return $this;
+    }
+
+    public function hasEntreprise(?FinalEntrepriseInterface $entreprise = null): bool
+    {
+        return $entreprise instanceof FinalEntrepriseInterface
+            ? $this->entreprises->contains($entreprise)
+            : !$this->entreprises->isEmpty()
+            ;
+    }
+
+    public function removeEntreprise(FinalEntrepriseInterface $entreprise): static
+    {
+        if($this->entreprises->removeElement($entreprise) && $entreprise->hasMember($this)) {
+            $entreprise->removeMember($this);
+        }
+        return $this;
+    }
+
+
+    public function isAdmin(): bool
+    {
+        // return $this->hasRole('ROLE_ADMIN');
+        return $this->_service->isUserGranted($this, 'ROLE_ADMIN');
+    }
+
+    public function isSuperadmin(): bool
+    {
+        // return $this->hasRole('ROLE_ADMIN');
+        return $this->_service->isUserGranted($this, 'ROLE_SUPER_ADMIN');
+    }
+
+
+
+    /**************************************************************************/
+    /*****************************  ACTIONS  **********************************/
+    /**************************************************************************/
+
+    #[ORM\PostLoad]
+    public function memorizeMainentrepriseAfterLoad(): static
+    {
+        $this->_mem_mainentreprise = $this->getComputedMainentreprise();
+        return $this;
+    }
+
+    public function wasMainentreprise(): bool
+    {
+        return is_bool($this->_mem_mainentreprise) ? $this->_mem_mainentreprise : false;
+    }
+
+    public function getMainentreprise(): bool
+    {
+        return $this->mainentreprise ??= $this->getComputedMainentreprise();
+    }
+
+    public function setMainentreprise(bool $mainentreprise): static
+    {
+        $this->mainentreprise = $mainentreprise;
+        if($this->isCheckMainentreprise()) $this->updateUpdatedAt();
+        return $this;
+    }
+
+    public function isCheckMainentreprise(): bool
+    {
+        return $this->getMainentreprise() !== $this->getComputedMainentreprise();
+    }
+
+    public function getComputedMainentreprise(): bool
+    {
+        $isMain = isset($this->_service)
+            ? $this->_service->isUserGranted($this, 'ROLE_ADMIN')
+            : count(array_intersect(['ROLE_ADMIN','ROLE_SUPER_ADMIN'], $this->getRoles())) > 0;
+        if($isMain) {
+            $found = false;
+            foreach ($this->getEntreprises() as $entreprise) {
+                if($entreprise->isPrefered()) $found = true;
+            }
+            if(!$found) $isMain = false;
+        }
+        if($isMain) {
+            $found = false;
+            foreach ($this->getCategorys() as $category) {
+                if($category->getId() === Category::ID_OF_MAIN_FOR_ENTREPRISE) $found = true;
+            }
+            if(!$found) $isMain = false;
+        }
+        return $isMain;
+    }
 
 }

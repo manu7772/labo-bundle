@@ -1,6 +1,8 @@
 <?php
 namespace Aequation\LaboBundle\Entity;
 
+Use App\Entity\Slider;
+
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Aequation\LaboBundle\Entity\Image;
@@ -126,6 +128,7 @@ abstract class LaboSlide extends Image implements SlideInterface, SlugInterface,
     public function __construct()
     {
         parent::__construct();
+        $this->slidetype = Slider::getDefaultSlidetype();
         $this->slidebases = new ArrayCollection();
     }
 

@@ -1,40 +1,41 @@
 <?php
 namespace Aequation\LaboBundle\Controller\Admin;
 
-use Aequation\LaboBundle\Security\Voter\SliderVoter;
-use Aequation\LaboBundle\Controller\Admin\Base\BaseCrudController;
-use Aequation\LaboBundle\Entity\LaboSlide;
-use Aequation\LaboBundle\Entity\LaboSlider;
-use Aequation\LaboBundle\Entity\LaboUser;
-use Aequation\LaboBundle\Field\CKEditorField;
-use Aequation\LaboBundle\Model\Interface\AppEntityInterface;
-use Aequation\LaboBundle\Repository\EcollectionRepository;
-use Aequation\LaboBundle\Service\Interface\SliderServiceInterface;
-use Aequation\LaboBundle\Service\Interface\LaboUserServiceInterface;
-use Aequation\LaboBundle\Service\Tools\Strings;
 use App\Entity\Slide;
 use App\Entity\Slider;
-use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\QueryBuilder;
-use EasyCorp\Bundle\EasyAdminBundle\Config\Crud;
-use EasyCorp\Bundle\EasyAdminBundle\Config\Filters;
-use EasyCorp\Bundle\EasyAdminBundle\Field\ArrayField;
-use EasyCorp\Bundle\EasyAdminBundle\Field\AssociationField;
-use EasyCorp\Bundle\EasyAdminBundle\Field\BooleanField;
-use EasyCorp\Bundle\EasyAdminBundle\Field\ChoiceField;
-use EasyCorp\Bundle\EasyAdminBundle\Field\CollectionField;
-use EasyCorp\Bundle\EasyAdminBundle\Field\DateTimeField;
-use EasyCorp\Bundle\EasyAdminBundle\Field\FormField;
-use EasyCorp\Bundle\EasyAdminBundle\Field\IdField;
-use EasyCorp\Bundle\EasyAdminBundle\Field\SlugField;
-use EasyCorp\Bundle\EasyAdminBundle\Field\TextareaField;
-use EasyCorp\Bundle\EasyAdminBundle\Field\TextEditorField;
-use EasyCorp\Bundle\EasyAdminBundle\Field\TextField;
-use EasyCorp\Bundle\EasyAdminBundle\Filter\BooleanFilter;
-use EasyCorp\Bundle\EasyAdminBundle\Filter\ChoiceFilter;
-use EasyCorp\Bundle\EasyAdminBundle\Filter\TextFilter;
+use Aequation\LaboBundle\Entity\LaboUser;
+use Aequation\LaboBundle\Entity\LaboSlide;
+use Aequation\LaboBundle\Entity\LaboSlider;
+use Aequation\LaboBundle\Field\CKEditorField;
 use FOS\CKEditorBundle\Form\Type\CKEditorType;
+use Aequation\LaboBundle\Service\Tools\Strings;
+use Doctrine\Common\Collections\ArrayCollection;
+use EasyCorp\Bundle\EasyAdminBundle\Config\Crud;
+use EasyCorp\Bundle\EasyAdminBundle\Field\IdField;
+use EasyCorp\Bundle\EasyAdminBundle\Config\Filters;
+use Aequation\LaboBundle\Security\Voter\SliderVoter;
+use EasyCorp\Bundle\EasyAdminBundle\Field\FormField;
+use EasyCorp\Bundle\EasyAdminBundle\Field\SlugField;
+use EasyCorp\Bundle\EasyAdminBundle\Field\TextField;
+use EasyCorp\Bundle\EasyAdminBundle\Field\ArrayField;
+use EasyCorp\Bundle\EasyAdminBundle\Field\ChoiceField;
+use EasyCorp\Bundle\EasyAdminBundle\Filter\TextFilter;
+use EasyCorp\Bundle\EasyAdminBundle\Field\BooleanField;
+use EasyCorp\Bundle\EasyAdminBundle\Field\DateTimeField;
+use EasyCorp\Bundle\EasyAdminBundle\Field\TextareaField;
+use EasyCorp\Bundle\EasyAdminBundle\Filter\ChoiceFilter;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
+use EasyCorp\Bundle\EasyAdminBundle\Filter\BooleanFilter;
+use Aequation\LaboBundle\Repository\EcollectionRepository;
+use EasyCorp\Bundle\EasyAdminBundle\Field\CollectionField;
+use EasyCorp\Bundle\EasyAdminBundle\Field\TextEditorField;
+use EasyCorp\Bundle\EasyAdminBundle\Field\AssociationField;
+use Aequation\LaboBundle\Model\Interface\AppEntityInterface;
+use Aequation\LaboBundle\Controller\Admin\Base\BaseCrudController;
+use Aequation\LaboBundle\Service\Interface\SliderServiceInterface;
+use Aequation\LaboBundle\Service\Interface\LaboUserServiceInterface;
+use Aequation\LaboBundle\Service\Interface\AppEntityServiceInterface;
 
 #[IsGranted('ROLE_COLLABORATOR')]
 class SliderCrudController extends BaseCrudController
@@ -42,10 +43,13 @@ class SliderCrudController extends BaseCrudController
     public const ENTITY = Slider::class;
     public const VOTER = SliderVoter::class;
 
+    /** @var SliderServiceInterface */
+    public readonly AppEntityServiceInterface $entityService;
+
     public function configureFilters(Filters $filters): Filters
     {
         /** @var Slider */
-        $model = new Slider;
+        $model = $this->entityService->getModel();
         return $filters
             ->add(TextFilter::new('name', 'Nom'))
             ->add(BooleanFilter::new('enabled', 'Activé'))
