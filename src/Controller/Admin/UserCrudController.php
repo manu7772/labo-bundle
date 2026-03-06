@@ -41,7 +41,7 @@ class UserCrudController extends LaboUserCrudController
     public function configureFields(string $pageName): iterable
     {
         /** @var LaboUserServiceInterface */
-        $manager = $this->manager;
+        // $manager = $this->manager;
         $this->checkGrants($pageName);
         /** @var LaboUserInterface $user */
         $user = $this->getLaboContext()->getInstance();

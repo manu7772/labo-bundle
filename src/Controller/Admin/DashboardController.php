@@ -17,7 +17,6 @@ use App\Entity\Entreprise;
 use App\Entity\Websection;
 use App\Entity\Addresslink;
 use Aequation\LaboBundle\Entity\Pdf;
-use Symfony\Component\Routing\Route;
 use Aequation\LaboBundle\Entity\Image;
 use Aequation\LaboBundle\Entity\Photo;
 use App\Security\Voter\PrixtheseVoter;
@@ -34,7 +33,6 @@ use Aequation\LaboBundle\Security\Voter\MenuVoter;
 use Aequation\LaboBundle\Security\Voter\UserVoter;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Action;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Assets;
-use Aequation\LaboBundle\Security\Voter\ImageVoter;
 use Aequation\LaboBundle\Security\Voter\PhotoVoter;
 use Aequation\LaboBundle\Security\Voter\SlideVoter;
 use Aequation\LaboBundle\Security\Voter\AdvertVoter;
@@ -45,7 +43,6 @@ use EasyCorp\Bundle\EasyAdminBundle\Config\UserMenu;
 use Aequation\LaboBundle\Security\Voter\PictureVoter;
 use Aequation\LaboBundle\Security\Voter\WebpageVoter;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Dashboard;
-use EasyCorp\Bundle\EasyAdminBundle\Config\Option\EA;
 use Aequation\LaboBundle\Security\Voter\CategoryVoter;
 use Aequation\LaboBundle\Security\Voter\EmailinkVoter;
 use Aequation\LaboBundle\Security\Voter\PortraitVoter;
@@ -63,12 +60,10 @@ use Aequation\LaboBundle\Security\Voter\AddresslinkVoter;
 use Aequation\LaboBundle\Model\Interface\LaboUserInterface;
 use EasyCorp\Bundle\EasyAdminBundle\Attribute\AdminDashboard;
 use EasyCorp\Bundle\EasyAdminBundle\Router\AdminUrlGenerator;
-use Aequation\LaboBundle\Controller\Admin\WebpageCrudController;
 use Aequation\LaboBundle\Service\Interface\AppEntityManagerInterface;
-use Aequation\LaboBundle\Service\Interface\WebsectionServiceInterface;
 use Symfony\Component\Security\Http\Authentication\AuthenticationUtils;
-use Aequation\LaboBundle\Service\Interface\LaboCategoryServiceInterface;
 use App\Controller\Admin\WebpageCrudController as AppWebpageCrudController;
+use EasyCorp\Bundle\EasyAdminBundle\Attribute\AdminRoute;
 use EasyCorp\Bundle\EasyAdminBundle\Controller\AbstractDashboardController;
 
 /**
@@ -84,15 +79,15 @@ class DashboardController extends AbstractDashboardController
 
     public function __construct(
         protected AppEntityManagerInterface $manager,
-        private LaboUserRepository $userRepository,
-        private TranslatorInterface $translator,
-        private AdminUrlGenerator $adminUrlGenerator,
+        protected LaboUserRepository $userRepository,
+        protected TranslatorInterface $translator,
+        protected AdminUrlGenerator $adminUrlGenerator,
     )
     {
         // 
     }
 
-    #[Route(path: '/easyadmin', name: 'easyadmin')]
+    #[AdminRoute(path: '/easyadmin', name: 'easyadmin')]
     public function index(): Response
     {
         // Admin granted page
