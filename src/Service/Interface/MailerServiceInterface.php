@@ -1,7 +1,7 @@
 <?php
 namespace Aequation\LaboBundle\Service\Interface;
 
-interface MailerServiceInterface extends AppEntityManagerInterface
+interface MailerServiceInterface extends AppEntityServiceInterface
 {
 
 }

@@ -1,0 +1,13 @@
+{# 
+    PdfListComponent.html.twig
+    A component to display a list of PDF files with links to view them inline.
+#}
+{% if pdfiles|default(false) %}
+<div {{ attributes }}>
+    <div class="flex flex-col gap-1">
+        {% for pdf in pdfiles %}
+        <a href="{{ pdf.getPdfUrlAccess(null, 'inline') }}" target="_blank" class="text-teal-dark text-lg hover:bg-slate-300 rounded-md px-2 py-1"><twig:ux:icon name="tabler:file-type-pdf" class="text-gray-500 w-6 h-6 inline-block" title="{{ pdf.description|striptags }}" /> {{ pdf.name }}</a>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}

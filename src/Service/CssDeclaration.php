@@ -2,11 +2,13 @@
 namespace Aequation\LaboBundle\Service;
 
 use Exception;
+use Stringable;
 use Twig\Environment;
 use DateTimeImmutable;
 use Symfony\Component\Process\Process;
 use Symfony\Component\Form\FormInterface;
 use Symfony\Contracts\Cache\ItemInterface;
+use Aequation\LaboBundle\Component\Overlay;
 use Aequation\LaboBundle\Form\Type\CssType;
 use Aequation\LaboBundle\AequationLaboBundle;
 use Aequation\LaboBundle\Service\Tools\Files;
@@ -20,9 +22,11 @@ use Aequation\LaboBundle\Service\Base\BaseService;
 use Symfony\Component\String\Slugger\AsciiSlugger;
 use Aequation\LaboBundle\Model\Attribute\CssClasses;
 use Aequation\LaboBundle\Model\Attribute\HtmlContent;
+use Symfony\Component\HttpFoundation\Session\Session;
+use Symfony\Component\Translation\TranslatableMessage;
+use Aequation\LaboBundle\Model\Interface\SlugInterface;
 use Aequation\LaboBundle\EventListener\Attribute\AppEvent;
 use Aequation\LaboBundle\Model\Interface\AppEntityInterface;
-use Aequation\LaboBundle\Model\Interface\SlugInterface;
 use Symfony\Component\DependencyInjection\Attribute\AsAlias;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -31,9 +35,6 @@ use Symfony\Component\DependencyInjection\Attribute\Autoconfigure;
 use Aequation\LaboBundle\Service\Interface\CssDeclarationInterface;
 use Aequation\LaboBundle\Service\Interface\AppEntityManagerInterface;
 use Aequation\LaboBundle\Service\Interface\LaboBundleServiceInterface;
-use Symfony\Component\HttpFoundation\Session\Session;
-use Stringable;
-use Symfony\Component\Translation\TranslatableMessage;
 
 #[AsAlias(CssDeclarationInterface::class, public: true)]
 #[Autoconfigure(autowire: true, lazy: true)]

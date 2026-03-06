@@ -2,27 +2,28 @@
 namespace Aequation\LaboBundle\Controller\Admin;
 
 use App\Entity\Category;
-use App\Security\Voter\CategoryVoter;
-
-use Aequation\LaboBundle\Controller\Admin\Base\BaseCrudController;
-use Aequation\LaboBundle\Service\Interface\LaboCategoryServiceInterface;
-use Aequation\LaboBundle\Model\Interface\LaboUserInterface;
 use Doctrine\ORM\QueryBuilder;
-use EasyCorp\Bundle\EasyAdminBundle\Collection\FieldCollection;
-use EasyCorp\Bundle\EasyAdminBundle\Collection\FilterCollection;
+
+use App\Security\Voter\CategoryVoter;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Crud;
-use EasyCorp\Bundle\EasyAdminBundle\Config\Filters;
 use EasyCorp\Bundle\EasyAdminBundle\Dto\EntityDto;
 use EasyCorp\Bundle\EasyAdminBundle\Dto\SearchDto;
-use EasyCorp\Bundle\EasyAdminBundle\Field\BooleanField;
-use EasyCorp\Bundle\EasyAdminBundle\Field\ChoiceField;
-use EasyCorp\Bundle\EasyAdminBundle\Field\DateTimeField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\IdField;
+use EasyCorp\Bundle\EasyAdminBundle\Config\Filters;
 use EasyCorp\Bundle\EasyAdminBundle\Field\SlugField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\TextField;
-use EasyCorp\Bundle\EasyAdminBundle\Filter\ChoiceFilter;
+use EasyCorp\Bundle\EasyAdminBundle\Field\ChoiceField;
 use EasyCorp\Bundle\EasyAdminBundle\Filter\TextFilter;
+use EasyCorp\Bundle\EasyAdminBundle\Field\BooleanField;
+use EasyCorp\Bundle\EasyAdminBundle\Field\DateTimeField;
+use EasyCorp\Bundle\EasyAdminBundle\Filter\ChoiceFilter;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
+use Aequation\LaboBundle\Model\Interface\LaboUserInterface;
+use EasyCorp\Bundle\EasyAdminBundle\Collection\FieldCollection;
+use EasyCorp\Bundle\EasyAdminBundle\Collection\FilterCollection;
+use Aequation\LaboBundle\Controller\Admin\Base\BaseCrudController;
+use Aequation\LaboBundle\Service\Interface\AppEntityServiceInterface;
+use Aequation\LaboBundle\Service\Interface\LaboCategoryServiceInterface;
 
 #[IsGranted('ROLE_COLLABORATOR')]
 abstract class CategoryCrudController extends BaseCrudController
@@ -30,23 +31,22 @@ abstract class CategoryCrudController extends BaseCrudController
     public const ENTITY = Category::class;
     public const VOTER = CategoryVoter::class;
 
+    /** @var LaboCategoryServiceInterface */
+    public readonly AppEntityServiceInterface $entityService;
+
     public function configureFilters(Filters $filters): Filters
     {
-        /** @var LaboCategoryServiceInterface */
-        $manager = $this->manager;
         $filters
             ->add(TextFilter::new('name', 'Nom'))
             ->add(TextFilter::new('description', 'Information'))
             ;
-        $typeChoices = $manager->getCategoryTypeChoices(false);
+        $typeChoices = $this->entityService->getCategoryTypeChoices(false);
         if(!empty($typeChoices)) $filters->add(ChoiceFilter::new('type', 'Classe d\'entité')->setChoices($typeChoices));
         return $filters;
     }
 
     public function configureFields(string $pageName): iterable
     {
-        /** @var LaboCategoryServiceInterface */
-        $manager = $this->manager;
         /** @var BaseCrudController $this */
         $this->checkGrants($pageName);
         /** @var LaboUserInterface $user */
@@ -73,7 +73,7 @@ abstract class CategoryCrudController extends BaseCrudController
                     ->setColumns(6)
                     ->setHelp('Information succinte sur la catégorie : maximum 64 lettres');
                 yield ChoiceField::new('type', 'Classe d\'entité')
-                    ->setChoices($manager->getCategoryTypeChoices(true))
+                    ->setChoices($this->entityService->getCategoryTypeChoices(true))
                     ->escapeHtml(false)
                     ->setRequired(true)
                     ->setHelp('Choisir une classe à laquelle appartient cette nouvelle catégorie')
@@ -91,7 +91,7 @@ abstract class CategoryCrudController extends BaseCrudController
                     ->setHelp('Information succinte sur la catégorie : maximum 64 lettres');
                 yield ChoiceField::new('type', 'Classe d\'entité')
                     ->setDisabled(!$this->isGranted('ROLE_SUPER_ADMIN'))
-                    ->setChoices($manager->getCategoryTypeChoices(true))
+                    ->setChoices($this->entityService->getCategoryTypeChoices(true))
                     ->escapeHtml(false)
                     ->setRequired(true)
                     ->setHelp('Classe à laquelle appartient cette catégorie'.($this->isGranted('ROLE_SUPER_ADMIN') ? '' : ' <i>(non modifiable)</i>'))
@@ -111,7 +111,7 @@ abstract class CategoryCrudController extends BaseCrudController
     {
         $queryBuilder = parent::createIndexQueryBuilder($searchDto, $entityDto, $fields, $filters);
         $type = $this->getQueryValue('type');
-        if($type && !class_exists($type)) $type = $this->manager->getClassnameByShortname($type);
+        if($type && !class_exists($type)) $type = $this->entityService->getClassnameByShortname($type);
         if($type) {
             $queryBuilder->andWhere('entity.type = :type')
                 ->setParameter('type', $type);

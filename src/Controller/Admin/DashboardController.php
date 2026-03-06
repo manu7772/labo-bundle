@@ -17,6 +17,7 @@ use App\Entity\Entreprise;
 use App\Entity\Websection;
 use App\Entity\Addresslink;
 use Aequation\LaboBundle\Entity\Pdf;
+use Symfony\Component\Routing\Route;
 use Aequation\LaboBundle\Entity\Image;
 use Aequation\LaboBundle\Entity\Photo;
 use App\Security\Voter\PrixtheseVoter;
@@ -27,7 +28,6 @@ use Aequation\LaboBundle\Entity\LaboRelink;
 use Aequation\LaboBundle\Entity\Siteparams;
 use Symfony\Component\HttpFoundation\Response;
 use Aequation\LaboBundle\Service\Tools\Classes;
-use Symfony\Component\Routing\Annotation\Route;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Crud;
 use Aequation\LaboBundle\Security\Voter\PdfVoter;
 use Aequation\LaboBundle\Security\Voter\MenuVoter;
@@ -63,10 +63,12 @@ use Aequation\LaboBundle\Security\Voter\AddresslinkVoter;
 use Aequation\LaboBundle\Model\Interface\LaboUserInterface;
 use EasyCorp\Bundle\EasyAdminBundle\Attribute\AdminDashboard;
 use EasyCorp\Bundle\EasyAdminBundle\Router\AdminUrlGenerator;
+use Aequation\LaboBundle\Controller\Admin\WebpageCrudController;
 use Aequation\LaboBundle\Service\Interface\AppEntityManagerInterface;
 use Aequation\LaboBundle\Service\Interface\WebsectionServiceInterface;
 use Symfony\Component\Security\Http\Authentication\AuthenticationUtils;
 use Aequation\LaboBundle\Service\Interface\LaboCategoryServiceInterface;
+use App\Controller\Admin\WebpageCrudController as AppWebpageCrudController;
 use EasyCorp\Bundle\EasyAdminBundle\Controller\AbstractDashboardController;
 
 /**
@@ -96,7 +98,7 @@ class DashboardController extends AbstractDashboardController
         // Admin granted page
         if(!static::ADMIN_HOMEPAGE && $this->isGranted(WebpageVoter::ADMIN_ACTION_LIST, Webpage::class)) {
             // $adminUrlGenerator = $this->container->get(AdminUrlGenerator::class);
-            return $this->redirect($this->adminUrlGenerator->setController(WebpageCrudController::class)->generateUrl());
+            return $this->redirect($this->adminUrlGenerator->setController(AppWebpageCrudController::class)->generateUrl());
         }
         // Admin default homepage
         /** @see https://symfony.com/bundles/EasyAdminBundle/current/dashboards.html#customizing-the-dashboard-contents */

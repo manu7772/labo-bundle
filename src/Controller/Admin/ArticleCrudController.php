@@ -25,11 +25,15 @@ use Aequation\LaboBundle\Model\Interface\LaboUserInterface;
 use EasyCorp\Bundle\EasyAdminBundle\Collection\FieldCollection;
 use EasyCorp\Bundle\EasyAdminBundle\Collection\FilterCollection;
 use Aequation\LaboBundle\Controller\Admin\Base\BaseCrudController;
+use Aequation\LaboBundle\Service\Interface\AppEntityServiceInterface;
 use Aequation\LaboBundle\Service\Interface\LaboArticleServiceInterface;
 
 #[IsGranted('ROLE_COLLABORATOR')]
 abstract class ArticleCrudController extends BaseCrudController
 {
+
+    /** @var LaboArticleServiceInterface */
+    public readonly AppEntityServiceInterface $entityService;
 
     public function configureFilters(Filters $filters): Filters
     {

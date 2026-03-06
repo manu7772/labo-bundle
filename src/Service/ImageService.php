@@ -1,6 +1,7 @@
 <?php
 namespace Aequation\LaboBundle\Service;
 
+use Aequation\LaboBundle\Component\ImageInfo;
 use Throwable;
 use Liip\ImagineBundle\Model\Binary;
 use Aequation\LaboBundle\Entity\Image;
@@ -34,6 +35,9 @@ class ImageService extends ItemService implements ImageServiceInterface
     public const IMG_FORMAT_SQUARE = 'square';
     public const IMG_FORMAT_UNKNOWN = 'unknown';
 
+    public const DEFAULT_LIIP_FILTER = 'normal_w800';
+    public const THUMBNAIL_LIIP_FILTER = 'thumbnail_q';
+
     public function __construct(
         protected EntityManagerInterface $em,
         protected AppServiceInterface $appService,
@@ -49,6 +53,21 @@ class ImageService extends ItemService implements ImageServiceInterface
         parent::__construct($em, $appService, $accessDecisionManager, $validator);
     }
 
+    public function getAppService(): AppServiceInterface
+    {
+        return $this->appService;
+    }
+
+    public function getVichHelper(): UploaderHelper
+    {
+        return $this->vichHelper;
+    }
+
+    public function getLiipCache(): CacheManager
+    {
+        return $this->liipCache;
+    }
+
     public static function estimateRatio(int $x, int $y): string
     {
         if($x > $y * static::RATIO_LIMIT && $x >= static::WIDTH_LIMIT) {
@@ -60,100 +79,37 @@ class ImageService extends ItemService implements ImageServiceInterface
         return self::IMG_FORMAT_SQUARE;
     }
 
-    public function getImageInfo(?ImageInterface $image, null|string|false $liipfilter = null, $resolver = null, bool $generate = true): array
+    public function getImagePathInfo(?string $path): array
     {
-        $path = $image ? $this->vichHelper->asset($image) : null;
-        $info = [
-            'format' => self::IMG_FORMAT_UNKNOWN,
-            'width' => null,
-            'height' => null,
-            'filter' => empty($liipfilter) ? null : $liipfilter,
-            // 'size' => null,
-            // 'mime' => null,
-            // 'extension' => $path_info['extension'] ?? null,
-            'path' => $path,
-            'url' => null,
-            'stored' => false,
-        ];
-
-        if(!$image) {
-            // return $info;
-        } else if(false === $liipfilter) {
-            // No filter, use original dimensions
-            $imgsize = $image->getDimensions(true);
-            if($imgsize) {
-                // Infos from Image entity
-                $info['format'] = static::estimateRatio($imgsize[0], $imgsize[1]);
-                $info['width'] = $imgsize[0];
-                $info['height'] = $imgsize[1];
-            } else {
-                // No dimensions stored, get from file
-                $url = trim($path, '/');
-                if($imgsize = @getimagesize($url)) {
-                    $info['format'] = static::estimateRatio($imgsize[0], $imgsize[1]);
-                    $info['width'] = $imgsize[0];
-                    $info['height'] = $imgsize[1];
-                    // $info['size'] = @filesize($url);
-                    // $info['mime'] = $dimensions['mime'] ?? null;
-                }
-            }
-            return $info;
-        } else {
-            if(empty($liipfilter)) {
-                // No filter defined, use image default filter
-                $liipfilter = $image->getImagefilter() ?? $image->getLiipDefaultFilter();
-            }
-            $info['filter'] = $liipfilter;
-            // Filter defined, get dimensions from filtered image
-            // $info['stored'] = $this->liipCache->isStored($path, $liipfilter, $resolver);
-            // if(!$info['stored'] && $generate) {
-            //     $info['url'] = $this->generateFilteredImage($path, $liipfilter, $resolver);
-            //     $info['stored'] = $this->liipCache->isStored($path, $liipfilter, $resolver);
-            // } else {
-            //     $info['url'] = $this->generateFilteredImage($path, $liipfilter, $resolver);
-            //     // $info['url'] = $this->liipCache->generateUrl($path, $liipfilter, [], $resolver, UrlGeneratorInterface::ABSOLUTE_URL);
-            // }
-            $info['url'] = $this->generateFilteredImage($path, $liipfilter, $resolver);
-            $info['stored'] = $this->liipCache->isStored($path, $liipfilter, $resolver);
-            if(!$info['stored']) {
-                return $info;
-            }
-            $liipfilterPath = $this->liipCache->resolve($path, $liipfilter, $resolver);
-            if(Encoders::isUrl($liipfilterPath)) {
-                // Url
-                $liipfilterUrl = parse_url($liipfilterPath);
-                $file_info = pathinfo($liipfilterUrl['path']);
-            } else {
-                // Path
-                $file_info = pathinfo($liipfilterPath);
-            }
-            $liipfilterPath = trim($file_info['dirname'].DIRECTORY_SEPARATOR.$file_info['basename'], '/');
-            if(@file_exists($liipfilterPath) && $imgsize = @getimagesize($liipfilterPath)) {
-                $info['format'] = static::estimateRatio($imgsize[0], $imgsize[1]);
-                $info['width'] = $imgsize[0];
-                $info['height'] = $imgsize[1];
-                // $info['size'] = @filesize($url);
-                // $info['mime'] = $imgsize['mime'] ?? null;
-            }
+        $corrected_path = @file_exists($path) ? $path : $this->appService->getDir('public/'.ltrim($path, DIRECTORY_SEPARATOR));
+        $path_info = @pathinfo($corrected_path, PATHINFO_ALL);
+        if(Encoders::isUrl($corrected_path)) {
+            $url_parts = parse_url($corrected_path);
+            $path_info = pathinfo($url_parts['path']);
         }
-        // dump($info);
-        return $info;
+        $path_info['requested_path'] = $corrected_path;
+        $path_info['file_exists'] = @file_exists($corrected_path);
+        $path_info['created_at'] = null;
+        $path_info['modified_at'] = null;
+        if($path_info['file_exists']) {
+            $creation_date = filectime($corrected_path);
+            $path_info['created_at'] = date("F d Y H:i:s", $creation_date);
+            $modification_date = filemtime($corrected_path);
+            $path_info['modified_at'] = date("F d Y H:i:s", $modification_date);
+        }
+        return $path_info;
     }
 
-    // protected function store(ImageInterface $image, string $liipfilter, ?string $mime = null): void
-    // {
-    //     $url = trim($this->vichHelper->asset($image), '/');
-    //     // dump($url.' => '.json_encode(@file_exists($url)));
-    //     $binary = new Binary(file_get_contents($url), $mime ?? $image->getMime());
-    //     // dump($binary);
-    //     $this->liipCache->store($binary, $url, $liipfilter);
-    // }
+    public function getImageInfo(object|array $image, null|string|false $liipfilter = null, $resolver = null, bool $generate = true): ImageInfo
+    {
+        return new ImageInfo($this, $image, $liipfilter, $resolver);
+    }
 
-    public function generateFilteredImage(string|ImageInterface $imageOrPath, string $liipfilter, $resolver = null): ?string
+    public function generateFilteredImage(string|ImageInterface $imageOrPath, ?string $liipfilter = null, $resolver = null): ?string
     {
         $path = $imageOrPath instanceof ImageInterface ? $this->vichHelper->asset($imageOrPath) : $imageOrPath;
         try {
-            return $this->filterService->getUrlOfFilteredImage($path, $liipfilter, $resolver);
+            return $this->filterService->getUrlOfFilteredImage($path, $liipfilter ?? ($imageOrPath instanceof ImageInterface ? $imageOrPath->getLiipDefaultFilter() : 'default'), $resolver);
         } catch (Throwable $th) {
             return null;
         }
@@ -174,9 +130,124 @@ class ImageService extends ItemService implements ImageServiceInterface
         return $url;
     }
 
-    public function getLiipFilters(): FilterConfiguration
+    /**
+     * Get the entire filter configuration or an array of filters depending on the $getArray parameter.
+     * 
+     * @param bool $getArray
+     * @return FilterConfiguration|array
+     */
+    public function getLiipFilters(bool $getArray = false): FilterConfiguration|array
     {
-        return $this->filterConfig;
+        return $getArray ? $this->filterConfig->all() : $this->filterConfig;
+    }
+
+    /**
+     * Get the configuration of a specific liip filter by its name, returning null if the filter is not available in the configuration.
+     * 
+     * @param string|null $filter The name of the liip filter to retrieve the configuration for
+     * @return array|null
+     */
+    public function getLiipFilter(string $filter): ?array
+    {
+        return $this->isAvailableLiipFilter($filter) ? $this->filterConfig->get($filter) : null;
+    }
+
+    /**
+     * Get the names of all available liip filters from the filter configuration.
+     * 
+     * @return array
+     */
+    public function getLiipFiltersNames(): array
+    {
+        return array_keys($this->filterConfig->all());
+    }
+
+    /**
+     * Check if a given liip filter name is available in the filter configuration.
+     * 
+     * @param string $filter
+     * @return bool
+     */
+    public function isAvailableLiipFilter(string $filter): bool
+    {
+        return array_key_exists($filter, $this->filterConfig->all());
+    }
+
+    /**
+     * Get the default liip filter name for a given entity, checking if the entity has a specific default filter defined and if it is available, otherwise falling back to the service's default filter or the first available filter in the configuration. The method ensures that the returned filter name is valid and can be used for image processing.
+     * 
+     * @param null|string|object $entity Optional entity to check for a specific default filter (if it implements ImageInterface)
+     * @return string|null The default liip filter name to use for the given entity, or null if no valid filter is found
+     */
+    public function getDefaultLiipFilterName(null|string|object $entity = null): ?string
+    {
+        $filtername = is_a($entity, ImageInterface::class) && $this->isAvailableLiipFilter($entity::getDefaultLiipFilter() ?? '') ? $entity::getDefaultLiipFilter() : static::DEFAULT_LIIP_FILTER;
+        if(!$this->isAvailableLiipFilter($filtername)) {
+            $list = $this->getLiipFilterChoices(400, 400, $entity, true);
+            $filtername = array_key_first($list);
+        }
+        return $filtername;
+    }
+
+    /**
+     * Get available liip filters as choices for form fields, with optional filtering by minimum width and height, and by entity available filters if specified. Admin filters can be excluded by setting $exclude_admins to true.
+     * 
+     * @param int $min_width Minimum width of the filters to include in the choices
+     * @param int $min_height Minimum height of the filters to include in the choices
+     * @param null|string|object $entity Optional entity to filter the choices by its available filters (if it implements ImageInterface
+     * @param bool $exclude_admins Whether to exclude admin filters (filters with names starting with 'admin_' or 'ea_') from the choices
+     * @return array An associative array of filter names as keys and filter keys as values, suitable for use as choices in form fields
+     */
+    public function getLiipFilterChoices(int $min_width = 0, int $min_height = 0, null|string|object $entity = null, bool $exclude_admins = true): array
+    {
+        $choices = [];
+        foreach ($this->filterConfig->all() as $key => $value) {
+            if(!$exclude_admins || !preg_match('/^(admin_|ea_)/i', $key)) {
+                $available = true;
+                foreach ($value['filters'] ?? [] as $name => $filter) {
+                    switch ($name) {
+                        case 'scale':
+                            $filter_width = $filter['dim'][0] ?? 0;
+                            $filter_height = $filter['dim'][1] ?? 0;
+                            break;
+                        case 'upscale':
+                            $filter_width = $filter['min'][0] ?? 0;
+                            $filter_height = $filter['min'][1] ?? 0;
+                            break;
+                        case 'downscale':
+                            $filter_width = $filter['max'][0] ?? 0;
+                            $filter_height = $filter['max'][1] ?? 0;
+                            break;
+                        case 'relative_resize':
+                            $filter_width = $filter['widen'] ?? 0;
+                            $filter_height = $filter['heighten'] ?? 0;
+                            break;
+                        case 'background':
+                            $filter_width = $filter['size'][0] ?? 0;
+                            $filter_height = $filter['size'][1] ?? 0;
+                            break;
+                        default:
+                            $filter_width = 0;
+                            $filter_height = 0;
+                            break;
+                    }
+                    if($filter_width < $min_width || $filter_height < $min_height) {
+                        $available = false;
+                    }
+                }
+                if($available) {
+                    $choices['liip_names.'.$key] = $key;
+                }
+            }
+        }
+        if(!empty($entity) && count($choices) > 0) {
+            // Filter by entity available filters if specified
+            $entity_filters = is_a($entity, ImageInterface::class) ? $entity::getAvailableLiipFilters() ?? [] : true;
+            if(is_array($entity_filters)) {
+                $choices = array_filter($choices, fn ($filter) => in_array($filter, $entity_filters));
+            }
+        }
+        return $choices;
     }
 
 }

@@ -16,36 +16,7 @@ class OverlayType extends AbstractType
 
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
-        $builder
-            ->add('position', ChoiceType::class, [
-                'label' => 'Position',
-                'required' => true,
-                'choices' => Overlay::getPositionChoices(),
-                'multiple' => false,
-            ])
-            ->add('title', TextType::class, [
-                'label' => 'Titre',
-                'required' => false,
-            ])
-            ->add('title_classes', ChoiceType::class, [
-                'label' => 'Style de titre',
-                'required' => false,
-                'choices' => Overlay::getTitleClassesChoices(),
-                'multiple' => true,
-                'expanded' => true,
-            ])
-            ->add('text', TextareaType::class, [
-                'label' => 'Texte',
-                'required' => false,
-            ])
-            ->add('text_classes', ChoiceType::class, [
-                'label' => 'Style de texte',
-                'required' => false,
-                'choices' => Overlay::getTextClassesChoices(),
-                'multiple' => true,
-                'expanded' => true,
-            ])
-            ;
+        Overlay::buildForm($builder, $options);
         parent::buildForm($builder, $options);
     }
 

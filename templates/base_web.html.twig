@@ -1,38 +1,63 @@
 <!DOCTYPE html>
-<html lang="fr" class="{{ app.session and app.session.get('darkmode', app.user.darkmode|default(false)) ? 'dark' : '' }}" data-dev="{{ app.environment == 'dev' ? 'true' : 'false' }}">
+<html {% block darkmode %}{% endblock %} data-dev="{{ app.environment == 'dev' ? 'true' : 'false' }}">
 	<head>
+        {% block html_meta %}
 		<meta charset="{{ app.service.getStringEncoder() }}">
 		<meta name="viewport" content="width=device-width, initial-scale=1.0">
 		<title>
-			{% block title %}Website{% endblock %}
+            {%- if not app.isProdHost() -%}[{{ app.isLocalHost() ? 'LOCAL' : 'NOT PROD'  }} SERVER] - {% endif -%}
+            {%- block title -%}{% if webpage|default(false) %}{{ webpage.currentItem ? webpage.currentItem.title|striptags : webpage.title|striptags }}{% else %}{{ Identity.name|default('webpage') }}{% endif %}{% endblock -%}
 		</title>
-		{% block favicon %}
-		<link rel="icon" href="{% block favicon_url %}{{ asset(app.service.param('favicon.main', 'favicon.svg')) }}{% endblock %}">
-		{% endblock %}
+        {% block favicon %}
+        <link rel="icon" type="image/svg+xml" href="{% block favicon_url %}{{ asset(app.service.param('favicon.main', 'favicon.svg')) }}{% endblock %}">
+        {% endblock %}
         {% block stylesheets %}
         {% endblock %}
 		{% block javascripts %}
 			{% block importmap %}{{ importmap('app') }}{% endblock %}
 		{% endblock %}
 		{{ app.service.getTurboMetas() }}
+        {% endblock %}
 	</head>
-	{# {% set test = app.session.set('darkmode', true) %} #}
-	{% block body_outer %}
-	{# <body id="app" data-app="{{ app.service.appParams(true, 'public_app') }}" class="nav-fixed" {{ stimulus_controller('globalapp') }}> #}
-	<body id="app" class="nav-fixed" {{ stimulus_controller('globalapp') }}>
-		{% block body_inner %}
-		{% block navbar %}
-			{% if menu is defined %}
-			{% include "@AequationLabo/webpage/bases/_navbar.html.twig" with {menu: menu} %}
-			{% endif %}
-		{% endblock %}
-		{% block body %}
-			{# main content here #}
-		{% endblock %}
-		{% endblock %}
+	{% block body %}
+	{# <body id="app" data-app="{{ app.service.appParams(true, 'public_app') }}" {{ stimulus_controller('globalapp') }}> #}
+	<body class="wscss" id="app" {{ stimulus_controller('globalapp') }}>
+        {% include '@AequationLabo/partials/_not_prod.html.twig' %}
+        {% block option_nav_section %}
+        <twig:OptionMenu :webpage="webpage|default(null)" />
+        {% endblock %}
+        {% block nav_section %}
+        <twig:HeaderMenu :webpageOrMenu="webpage|default(null)" :options="true" />
+        {% endblock %}
+        {% set banner_section = webpage.firstWebsection('banner')|default(null) %}
+        {% set hasBanner = banner_section.active|default(false) %}
+        {% block banner_section %}
+            {% if hasBanner %}
+            {% include banner_section.twigfile with {websection: banner_section} %}
+            {% endif %}
+        {% endblock %}
+        <div class="main-container {% block main_container_class %}{% endblock %}" {% block main_container_attrs %}{% endblock %}>
+            {% block main_container %}
+                {# main content here #}
+                {% block webpage_content %}
+                {% endblock %}
+                {% block sections_container %}
+                {% for websection in webpage.websections('section', true)|default([]) %}
+                    {% include websection.twigfile %}
+                {% endfor %}
+                {% endblock %}
+            {% endblock %}
+			{% block addons %}
+			{% endblock %}
+            {% block footer_section %}
+            {% set footer = webpage.firstWebsection('footer')|default(null) %}
+            {% if footer is not null and footer.active %}
+                {% include footer.twigfile with {websection: footer} %}
+            {% endif %}
+            {% endblock %}
+        </div>
 		{% block after_container %}
 			{# commands, modals, etc. content here #}
-            {% include '@AequationLabo/partials/_flashes.html.twig' %}
 		{% endblock %}
 	</body>
 	{% endblock %}

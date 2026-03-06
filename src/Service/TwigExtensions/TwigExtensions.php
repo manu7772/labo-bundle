@@ -1,6 +1,36 @@
 <?php
 namespace Aequation\LaboBundle\Service\TwigExtensions;
 
+use Aequation\LaboBundle\Service\AppService;
+use Aequation\LaboBundle\Service\Tools\Icons;
+use Aequation\LaboBundle\Service\Tools\Times;
+use Aequation\LaboBundle\Service\Tools\Classes;
+use Aequation\LaboBundle\Service\Tools\HtmlDom;
+use Aequation\LaboBundle\Service\Tools\Strings;
+use Aequation\LaboBundle\Service\Tools\Encoders;
+use Aequation\LaboBundle\Model\Interface\ImageInterface;
+use Aequation\LaboBundle\Model\Interface\AppEntityInterface;
+use Aequation\LaboBundle\Service\Interface\ImageServiceInterface;
+use Aequation\LaboBundle\Repository\Interface\CommonReposInterface;
+use Aequation\LaboBundle\Service\Interface\LaboAppVariableInterface;
+use Aequation\LaboBundle\Service\Interface\AppEntityManagerInterface;
+use Aequation\LaboBundle\Service\Interface\AppServiceInterface;
+// Symfony
+use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Symfony\Contracts\Translation\TranslatorInterface;
+use Symfony\Contracts\Translation\TranslatableInterface;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
+use Symfony\UX\Icons\IconRenderer;
+use Symfony\Component\HttpKernel\KernelInterface;
+use Symfony\UX\TwigComponent\ComponentAttributes;
+use EasyCorp\Bundle\EasyAdminBundle\Dto\EntityDto;
+use Endroid\QrCode\Writer\Result\PngResult;
+use Liip\ImagineBundle\Imagine\Cache\CacheManager;
+use Liip\ImagineBundle\Imagine\Filter\FilterConfiguration;
+use Liip\ImagineBundle\Imagine\Filter\FilterManager;
+use Twig\Extension\GlobalsInterface;
+use Twig\Extension\AbstractExtension;
+// PHP
 use DateTime;
 use Exception;
 use Throwable;
@@ -9,33 +39,6 @@ use Twig\Markup;
 use Twig\TwigFilter;
 use Twig\TwigFunction;
 use Twig\Runtime\EscaperRuntime;
-
-use Symfony\UX\Icons\IconRenderer;
-use Twig\Extension\GlobalsInterface;
-use Twig\Extension\AbstractExtension;
-use Aequation\LaboBundle\Service\AppService;
-use Aequation\LaboBundle\Service\Tools\Icons;
-use Aequation\LaboBundle\Service\Tools\Times;
-use Aequation\LaboBundle\Service\Tools\Classes;
-use Aequation\LaboBundle\Service\Tools\HtmlDom;
-use Aequation\LaboBundle\Service\Tools\Strings;
-use Aequation\LaboBundle\Service\Tools\Encoders;
-use Symfony\Component\HttpKernel\KernelInterface;
-
-use Symfony\UX\TwigComponent\ComponentAttributes;
-use EasyCorp\Bundle\EasyAdminBundle\Dto\EntityDto;
-use Liip\ImagineBundle\Imagine\Cache\CacheManager;
-use Symfony\Contracts\Translation\TranslatorInterface;
-use Aequation\LaboBundle\Model\Interface\ImageInterface;
-use Symfony\Contracts\Translation\TranslatableInterface;
-use Liip\ImagineBundle\Imagine\Filter\FilterConfiguration;
-use Aequation\LaboBundle\Model\Interface\AppEntityInterface;
-use Symfony\Component\DependencyInjection\Attribute\Autowire;
-use Aequation\LaboBundle\Service\Interface\ImageServiceInterface;
-use Aequation\LaboBundle\Repository\Interface\CommonReposInterface;
-use Aequation\LaboBundle\Service\Interface\LaboAppVariableInterface;
-use Aequation\LaboBundle\Service\Interface\AppEntityManagerInterface;
-use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 
 /**
  * Defines the filters and functions used to render the bundle's templates.
@@ -51,8 +54,12 @@ class TwigExtensions extends AbstractExtension implements GlobalsInterface
 
     public function __construct(
         private KernelInterface $kernel,
-        private AppService $appService,
-        private LaboAppVariableInterface $laboAppVariable,
+        private AppServiceInterface $appService,
+        // private LaboAppVariableInterface $laboAppVariable,
+        #[Autowire(service: 'liip_imagine.filter.manager')]
+        private FilterManager $filterManager,
+        #[Autowire(service: 'liip_imagine.cache.manager')]
+        private CacheManager $cacheManager,
         #[Autowire(service: '.ux_icons.icon_renderer')]
         private IconRenderer $iconRenderer,
         private TranslatorInterface $translator,
@@ -123,7 +130,9 @@ class TwigExtensions extends AbstractExtension implements GlobalsInterface
             new TwigFilter('slug', [Strings::class, 'getSlug']),
             new TwigFilter('formateForWebpage', [Strings::class, 'formateForWebpage']),
             new TwigFilter('hasText', [Strings::class, 'hasText']),
+            new TwigFilter('textOrNull', [Strings::class, 'textOrNull']),
             new TwigFilter('text2array', [Strings::class, 'text2array']),
+            new TwigFilter('phoneNumber', [Strings::class, 'normalizeTelephoneNumber']),
             new TwigFilter('flashes_to_json', [$this, 'flashesToSJson']),
             // new TwigFilter('ea_apply_filter_if_exists', [$this, 'applyFilterIfExists'], ['needs_environment' => true]),
             new TwigFilter('sort_collection', [$this, 'sortCollection']),
@@ -278,21 +287,80 @@ class TwigExtensions extends AbstractExtension implements GlobalsInterface
         return null;
     }
 
-    public function getImageBase64(string $path): ?string
+    public function getImageBase64(mixed $path, ?ImageInterface $image = null, ?string $filter = null): ?string
     {
-        $path = preg_replace('#(resolve\\/)#', '', $path); // ?????
-        $path = ltrim($path, '/');
-        $path = $this->appService->getDir('public/'.$path);
-        if(!file_exists($path)) {
-            if($this->appService->isDev()) {
-                throw new Exception("File not found: $path");
-            }
-            return null;
+        // dd($this->filterManager, $path);
+        switch (true) {
+            case $path instanceof PngResult:
+                // QR Code image
+                return 'data:'.$path->getMimeType().';base64,'.base64_encode($path->getString());
+                break;
+            // case preg_match('#^http#', $path):
+            //     // Image from URL
+            //     $imageData = @file_get_contents($path);
+            //     if ($imageData === false) {
+            //         $ch = curl_init();
+            //         curl_setopt($ch, CURLOPT_URL, $path);
+            //         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            //         curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+            //         curl_setopt($ch, CURLOPT_HEADER, 0);
+            //         $imageData = curl_exec($ch);
+            //         unset($ch);
+            //         if ($imageData === false) {
+            //             return null;
+            //         }
+            //     }
+            //     $type = pathinfo($path, PATHINFO_EXTENSION);
+            //     return 'data:image/' . $type . ';base64,' . base64_encode($imageData);
+            //     break;
+            default:
+                // dd(
+                //     $path,
+                //     $filter,
+                //     $this->cacheManager->getBrowserPath($path, $filter),
+                //     $this->cacheManager->isStored($path, $filter),
+                //     $this->cacheManager->resolve($path, $filter),
+                // );
+                // Local image
+                $path = preg_replace('#(resolve\\/)#', '', $path); // ?????
+                // $path = ltrim($path, '/');
+                $path = $this->appService->getDir('public/'.ltrim($path, DIRECTORY_SEPARATOR));
+                // return file_exists($path) ? $path : 'NOT FOUND';
+                // dd($this->filterManager, $path, file_exists($path));
+                if(!file_exists($path) && $image) {
+                    $path = $this->imageService->generateFilteredImage($image, $filter);
+                    if($path) {
+                        return $this->getImageBase64($path);
+                    }
+                    // return $path;
+                    // $path = $this->appService->getDir('public/'.ltrim($path, DIRECTORY_SEPARATOR));
+                    // return $this->getImageBase64($filtered_path);
+                    // $filtered_path = $this->filterManager->applyFilter($this->imageService->createBinaryFromPath($path), 'normal_x800')->getContent();
+                    // dd($this->filterManager, $path, $filtered_path, file_exists($filtered_path));
+                    // if($this->appService->isDev()) {
+                    //     throw new Exception("File not found: $path");
+                    // }
+                    // return null;
+                }
+                return @file_exists($path)
+                    ? 'data:image/'.pathinfo($path, PATHINFO_EXTENSION).';base64,'.base64_encode(file_get_contents($path))
+                    : null;
+                break;
         }
-        return @file_exists($path)
-            ? 'data:image/'.pathinfo($path, PATHINFO_EXTENSION).';base64,'.base64_encode(file_get_contents($path))
-            : null;
     }
+
+    // public function getImageInfo(ImageInterface $image): array
+    // {
+    //     $liipfilter = $image->getImagefilter();
+    //     return [
+    //         'file' => $image->getFilepathname(),
+    //         'filter' => $liipfilter,
+    //         'dimensions' => $image->getDimensions(true),
+    //         // $this->cacheManager->getBrowserPath($image->getFilepathname(), $liipfilter),
+    //         'stored' => $this->cacheManager->isStored($image->getFilepathname(), $liipfilter),
+    //         // $this->cacheManager->resolve($image->getFilepathname(), $liipfilter),
+    //     ];
+    // }
 
     public function getValidIcon(
         bool $value = true,

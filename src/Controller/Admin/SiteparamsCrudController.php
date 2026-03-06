@@ -38,8 +38,6 @@ class SiteparamsCrudController extends BaseCrudController
 
     public function configureFields(string $pageName): iterable
     {
-        // /** @var SiteparamsServiceInterface $manager */
-        // $manager = $this->manager;
         $this->checkGrants($pageName);
         switch ($pageName) {
             case Crud::PAGE_DETAIL:

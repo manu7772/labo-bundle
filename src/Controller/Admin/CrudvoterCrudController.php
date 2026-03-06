@@ -1,39 +1,41 @@
 <?php
 namespace Aequation\LaboBundle\Controller\Admin;
 
-use Aequation\LaboBundle\Security\Voter\CrudvoterVoter;
-use Aequation\LaboBundle\Controller\Admin\Base\BaseCrudController;
 use Aequation\LaboBundle\Entity\Crudvoter;
-use Aequation\LaboBundle\Service\Interface\CrudvoterServiceInterface;
-use Aequation\LaboBundle\Service\Interface\LaboUserServiceInterface;
-
 use EasyCorp\Bundle\EasyAdminBundle\Config\Crud;
+use EasyCorp\Bundle\EasyAdminBundle\Field\IdField;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Filters;
+use EasyCorp\Bundle\EasyAdminBundle\Field\TextField;
+
 use EasyCorp\Bundle\EasyAdminBundle\Field\ArrayField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\ChoiceField;
-use EasyCorp\Bundle\EasyAdminBundle\Field\IdField;
+use EasyCorp\Bundle\EasyAdminBundle\Filter\TextFilter;
+use Aequation\LaboBundle\Security\Voter\CrudvoterVoter;
 use EasyCorp\Bundle\EasyAdminBundle\Field\IntegerField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\TextareaField;
-use EasyCorp\Bundle\EasyAdminBundle\Field\TextField;
 use EasyCorp\Bundle\EasyAdminBundle\Filter\ChoiceFilter;
-use EasyCorp\Bundle\EasyAdminBundle\Filter\TextFilter;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
+use Aequation\LaboBundle\Controller\Admin\Base\BaseCrudController;
+use Aequation\LaboBundle\Service\Interface\LaboUserServiceInterface;
+use Aequation\LaboBundle\Service\Interface\AppEntityServiceInterface;
+use Aequation\LaboBundle\Service\Interface\CrudvoterServiceInterface;
 
 #[IsGranted('ROLE_SUPER_ADMIN')]
 class CrudvoterCrudController extends BaseCrudController
 {
     public const ENTITY = Crudvoter::class;
     public const VOTER = CrudvoterVoter::class;
-    
+
+    /** @var CrudvoterServiceInterface */
+    public readonly AppEntityServiceInterface $entityService;
+
     public function configureFilters(Filters $filters): Filters
     {
-        /** @var CrudvoterServiceInterface $manager */
-        $manager = $this->manager;
         return $filters
             ->add(TextFilter::new('voterclass', 'Nom du VOTER'))
-            ->add(ChoiceFilter::new('entityclass', 'Classe d\'entité')->setChoices($manager->getEntityNamesChoices(false)))
+            ->add(ChoiceFilter::new('entityclass', 'Classe d\'entité')->setChoices($this->entityService->getEntityNamesChoices(false)))
             // ->add(TextFilter::new('entityshort', 'Nom d\'entité'))
-            ->add(ChoiceFilter::new('firewall', 'Pare-feu')->setChoices($manager->getFirewallChoices(true)))
+            ->add(ChoiceFilter::new('firewall', 'Pare-feu')->setChoices($this->entityService->getFirewallChoices(true)))
             ->add(TextFilter::new('attribute', 'Attribut'))
             ;
     }
@@ -41,8 +43,6 @@ class CrudvoterCrudController extends BaseCrudController
     public function configureFields(string $pageName): iterable
     {
         $this->checkGrants($pageName);
-        /** @var CrudvoterServiceInterface $manager */
-        $manager = $this->manager;
         switch ($pageName) {
             case Crud::PAGE_DETAIL:
                 yield IdField::new('id');
@@ -58,13 +58,13 @@ class CrudvoterCrudController extends BaseCrudController
             case Crud::PAGE_NEW:
                 yield TextField::new('voterclass', 'Nom du VOTER')->setColumns(6);
                 yield ChoiceField::new('entityclass', 'Classe d\'entité')
-                    ->setChoices($this->manager->getEntityNamesChoices(true))
+                    ->setChoices($this->entityService->getEntityNamesChoices(true))
                     ->escapeHtml(false)
                     ->setColumns(6)
                     ;
                 // yield TextField::new('entityshort', 'Nom d\'entité')->setColumns(6);
                 yield ChoiceField::new('firewall', 'Pare-feu')
-                    ->setChoices($manager->getFirewallChoices(true))
+                    ->setChoices($this->entityService->getFirewallChoices(true))
                     ->setRequired(false)
                     ->setColumns(6)
                     ;
@@ -84,13 +84,13 @@ class CrudvoterCrudController extends BaseCrudController
             case Crud::PAGE_EDIT:
                 yield TextField::new('voterclass', 'Nom du VOTER')->setColumns(6);
                 yield ChoiceField::new('entityclass', 'Classe d\'entité')
-                    ->setChoices($this->manager->getEntityNamesChoices(true))
+                    ->setChoices($this->entityService->getEntityNamesChoices(true))
                     ->escapeHtml(false)
                     ->setColumns(6)
                     ;
                 // yield TextField::new('entityshort', 'Nom d\'entité')->setColumns(6);
                 yield ChoiceField::new('firewall', 'Pare-feu')
-                    ->setChoices($manager->getFirewallChoices(true))
+                    ->setChoices($this->entityService->getFirewallChoices(true))
                     ->setRequired(false)
                     ->setColumns(6)
                     ;

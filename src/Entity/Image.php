@@ -1,35 +1,28 @@
 <?php
 namespace Aequation\LaboBundle\Entity;
 
-use Exception;
+use Aequation\LaboBundle\Model\Attribute as EA;
+use Aequation\LaboBundle\Service\Tools\Strings;
+use Aequation\LaboBundle\Service\Tools\HttpRequest;
+use Aequation\LaboBundle\Repository\ImageRepository;
+use Aequation\LaboBundle\Model\Attribute\HtmlContent;
+use Aequation\LaboBundle\Model\Interface\ImageInterface;
+use Aequation\LaboBundle\EventListener\Attribute\AppEvent;
+use Aequation\LaboBundle\Service\Interface\ImageServiceInterface;
+// Symfony
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Form\Form;
 use Symfony\Component\Form\FormEvent;
 use Symfony\Component\Form\FormEvents;
-use Aequation\LaboBundle\Service\Tools\Files;
-use Aequation\LaboBundle\Model\Attribute as EA;
-use Aequation\LaboBundle\Service\Tools\Strings;
 use Symfony\Component\HttpFoundation\File\File;
-use Symfony\Component\Form\FormBuilderInterface;
-
-use Aequation\LaboBundle\Component\AppEntityInfo;
-use Symfony\Component\Serializer\Attribute\Groups;
-use Aequation\LaboBundle\Service\Tools\HttpRequest;
-use Vich\UploaderBundle\Mapping\Attribute as Vich;
-use Aequation\LaboBundle\Repository\ImageRepository;
-use Aequation\LaboBundle\Model\Attribute\HtmlContent;
 use Symfony\Component\Validator\Constraints as Assert;
-
-use Aequation\LaboBundle\Model\Interface\ImageInterface;
 use Symfony\Component\Serializer\Attribute as Serializer;
-use Aequation\LaboBundle\EventListener\Attribute\AppEvent;
-use Aequation\LaboBundle\Model\Interface\CreatedInterface;
-use Aequation\LaboBundle\Model\Interface\AppEntityInterface;
 use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
-use Aequation\LaboBundle\Model\Interface\ImageOwnerInterface;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
-use Aequation\LaboBundle\Service\Interface\ImageServiceInterface;
+use Vich\UploaderBundle\Mapping\Attribute as Vich;
+// PHP
+use LogicException;
 
 #[ORM\Entity(repositoryClass: ImageRepository::class)]
 #[ORM\DiscriminatorColumn(name: "class_name", type: "string")]
@@ -44,23 +37,10 @@ abstract class Image extends Item implements ImageInterface
     public const FA_ICON = 'camera';
     public const MAPPING = 'photo';
     public const SERIALIZATION_PROPS = ['id','euid','name','file','filename','size','mime','classname','shortname'];
-    public const DEFAULT_LIIP_FILTER = "normal_x800";
-    public const THUMBNAIL_LIIP_FILTER = 'miniature_q';
-    public const LIIP_FILTERS = [
-        // 'Aucun format prédéfini' => null,
-        'normal_x300',
-        'normal_x800',
-        'normal_x1200',
-        'photo_h',
-        'photo_v',
-        'photo_q',
-        'photo_reduced_600',
-        'photo_fullscreen',
-        'landscapethin',
-        'landscapemin',
-        'landscape',
-    ];
-    
+
+    public const DEFAULT_LIIP_FILTER = 'normal_w800';
+    public const THUMBNAIL_LIIP_FILTER = 'thumbnail_q';
+    public const AVAILABLE_LIIP_FILTERS = true;
 
     // #[Assert\NotNull(message: 'Le nom de fichier ne peut être null')]
     #[ORM\Column(length: 255)]
@@ -103,9 +83,22 @@ abstract class Image extends Item implements ImageInterface
         return $this->name ?? $this->filename ?? parent::__toString();
     }
 
-    public static function getLiipFilterChoices(): array
+    public static function getDefaultLiipFilter(): string
     {
-        return array_combine(array_map(fn($v) => 'liip_names.'.$v, static::LIIP_FILTERS), static::LIIP_FILTERS);
+        return static::DEFAULT_LIIP_FILTER;
+    }
+
+    public static function getThumbnailLiipFilter(): string
+    {
+        return static::THUMBNAIL_LIIP_FILTER;
+    }
+
+    public static function getAvailableLiipFilters(): array|true
+    {
+        if(is_array(static::AVAILABLE_LIIP_FILTERS) && (!in_array(static::DEFAULT_LIIP_FILTER, static::AVAILABLE_LIIP_FILTERS) || !in_array(static::THUMBNAIL_LIIP_FILTER, static::AVAILABLE_LIIP_FILTERS))) {
+            throw new LogicException(sprintf('The default and thumbnail liip filters must be in the available filters list. Please check the %s entity.', static::class));
+        }
+        return is_array(static::AVAILABLE_LIIP_FILTERS) && count(static::AVAILABLE_LIIP_FILTERS) ? static::AVAILABLE_LIIP_FILTERS : true;
     }
 
     /**
@@ -148,7 +141,7 @@ abstract class Image extends Item implements ImageInterface
 
     public function getLiipDefaultFilter(): string
     {
-        return $this->liipDefaultFilter ??= static::DEFAULT_LIIP_FILTER;
+        return $this->liipDefaultFilter ??= $this->_service->getDefaultLiipFilterName($this);
     }
 
     public function setLiipDefaultFilter(string $liipDefaultFilter): static
@@ -238,6 +231,11 @@ abstract class Image extends Item implements ImageInterface
     public function getImagefilter(): ?string
     {
         return $this->imagefilter ??= $this->getLiipDefaultFilter();
+    }
+
+    public function getImagefilterName(): ?string
+    {
+        return 'liip_names.'.($this->imagefilter ??= $this->getLiipDefaultFilter());
     }
 
     public function setImagefilter(?string $imagefilter): static
