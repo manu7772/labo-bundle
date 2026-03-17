@@ -23,10 +23,11 @@ class Portrait extends Image implements PortraitInterface
     public const ICON = "tabler:user-square-rounded";
     public const FA_ICON = "camera";
     public const MAPPING = 'portrait';
-    public const DEFAULT_LIIP_FILTER = "photo_reduced_600";
-    public const THUMBNAIL_LIIP_FILTER = 'miniature_q';
+    public const DEFAULT_LIIP_FILTER = "#^photo_reduced_600$#";
+    public const DEFAULT_LIIP_FILTER_CHOICES_AREA = [600, 600];
+    public const THUMBNAIL_LIIP_FILTER = '#^miniature_q$#';
     public const LIIP_FILTERS = [
-        // 'Aucun format prédéfini' => null,
+        // 'Aucun format prédéfini' => true,
         'normal_x300',
         'normal_x800',
         'photo_h',

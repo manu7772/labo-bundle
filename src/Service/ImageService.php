@@ -35,8 +35,9 @@ class ImageService extends ItemService implements ImageServiceInterface
     public const IMG_FORMAT_SQUARE = 'square';
     public const IMG_FORMAT_UNKNOWN = 'unknown';
 
-    public const DEFAULT_LIIP_FILTER = 'normal_w800';
-    public const THUMBNAIL_LIIP_FILTER = 'thumbnail_q';
+    public const DEFAULT_LIIP_FILTER = '#^normal_(x|w)800$#';
+    public const DEFAULT_LIIP_FILTER_CHOICES_AREA = [800, 800];
+    public const THUMBNAIL_LIIP_FILTER = '#^thumbnail_q$#';
 
     public function __construct(
         protected EntityManagerInterface $em,
@@ -134,11 +135,17 @@ class ImageService extends ItemService implements ImageServiceInterface
      * Get the entire filter configuration or an array of filters depending on the $getArray parameter.
      * 
      * @param bool $getArray
+     * @param ?string $filter = null
      * @return FilterConfiguration|array
      */
-    public function getLiipFilters(bool $getArray = false): FilterConfiguration|array
+    public function getLiipFilters(bool $getArray = false, ?string $filter = null): FilterConfiguration|array
     {
-        return $getArray ? $this->filterConfig->all() : $this->filterConfig;
+        $filters = $getArray || $filter !== null ? $this->filterConfig->all() : $this->filterConfig;
+        if($filter !== null) {
+            // dump($filters, $filter);
+            $filters = array_filter($filters, fn($filtername) => $filter === $filtername || @preg_match($filter, $filtername), ARRAY_FILTER_USE_KEY);
+        }
+        return $filters;
     }
 
     /**
@@ -149,7 +156,8 @@ class ImageService extends ItemService implements ImageServiceInterface
      */
     public function getLiipFilter(string $filter): ?array
     {
-        return $this->isAvailableLiipFilter($filter) ? $this->filterConfig->get($filter) : null;
+        $filters = $this->getLiipFilters(true, $filter);
+        return empty($filters) ? null : reset($filters);
     }
 
     /**
@@ -157,9 +165,10 @@ class ImageService extends ItemService implements ImageServiceInterface
      * 
      * @return array
      */
-    public function getLiipFiltersNames(): array
+    public function getLiipFiltersNames(?string $filter = null): array
     {
-        return array_keys($this->filterConfig->all());
+        $filters = $this->getLiipFilters(true, $filter);
+        return array_keys($filters);
     }
 
     /**
@@ -170,7 +179,7 @@ class ImageService extends ItemService implements ImageServiceInterface
      */
     public function isAvailableLiipFilter(string $filter): bool
     {
-        return array_key_exists($filter, $this->filterConfig->all());
+        return !empty($this->getLiipFilters(true, $filter));
     }
 
     /**
@@ -181,12 +190,21 @@ class ImageService extends ItemService implements ImageServiceInterface
      */
     public function getDefaultLiipFilterName(null|string|object $entity = null): ?string
     {
-        $filtername = is_a($entity, ImageInterface::class) && $this->isAvailableLiipFilter($entity::getDefaultLiipFilter() ?? '') ? $entity::getDefaultLiipFilter() : static::DEFAULT_LIIP_FILTER;
+        $filtername = is_a($entity, ImageInterface::class, true) && $this->isAvailableLiipFilter($entity::getDefaultLiipFilter() ?? '') ? $entity::getDefaultLiipFilter() : static::DEFAULT_LIIP_FILTER;
         if(!$this->isAvailableLiipFilter($filtername)) {
-            $list = $this->getLiipFilterChoices(400, 400, $entity, true);
-            $filtername = array_key_first($list);
+            $area = $this->getDefaultLiipFilterChoiceArea($entity);
+            $list = $this->getLiipFilterChoices($area[0], $area[1], $entity, true);
+            if(count($list) > 0) {
+                $filtername = array_key_first($list);
+            }
         }
         return $filtername;
+    }
+
+    public function getDefaultLiipFilterChoiceArea(null|string|object $entity = null): array
+    {
+        $area = is_a($entity, ImageInterface::class, true) ? $entity::getDefaultLiipFilterChoiceArea() : static::DEFAULT_LIIP_FILTER_CHOICES_AREA;
+        return $area;
     }
 
     /**
@@ -202,7 +220,7 @@ class ImageService extends ItemService implements ImageServiceInterface
     {
         $choices = [];
         foreach ($this->filterConfig->all() as $key => $value) {
-            if(!$exclude_admins || !preg_match('/^(admin_|ea_)/i', $key)) {
+            if(!$exclude_admins || preg_match('/^(?!admin_|ea_).+$/i', $key)) {
                 $available = true;
                 foreach ($value['filters'] ?? [] as $name => $filter) {
                     switch ($name) {

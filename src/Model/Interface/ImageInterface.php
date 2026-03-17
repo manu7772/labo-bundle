@@ -6,6 +6,7 @@ use Symfony\Component\HttpFoundation\File\File;
 interface ImageInterface extends ItemInterface
 {
     public static function getDefaultLiipFilter(): string;
+    public static function getDefaultLiipFilterChoiceArea(): array;
     public static function getThumbnailLiipFilter(): string;
     public static function getAvailableLiipFilters(): array|true;
     // public function getLiipFilterChoices(): array;

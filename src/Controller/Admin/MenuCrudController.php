@@ -67,7 +67,7 @@ class MenuCrudController extends BaseCrudController
                 yield TextField::new('name', 'Nom');
                 yield IntegerField::new('orderitem', 'Priorité')->setHelp('Ordre d\'affichage de la page dans les listes.');
                 yield TextField::new('title', 'Titre du menu');
-                yield TextField::new('linktitle', 'Titre de lien externe');
+                yield TextField::new('linktitle', 'Titre de lien externe')->formatValue(fn ($value) => Strings::markup($value));
                 yield ArrayField::new('items', 'Éléments du menu');
                 yield ArrayField::new('relationOrderNames', 'Éléments order')->setPermission('ROLE_SUPER_ADMIN');
                 yield BooleanField::new('prefered', 'Menu principal');
@@ -82,7 +82,11 @@ class MenuCrudController extends BaseCrudController
             case Crud::PAGE_NEW:
                 yield TextField::new('name', 'Nom du menu')->setColumns(6);
                 yield TextField::new('title', 'Titre du menu')->setColumns(6);
-                yield TextField::new('linktitle', 'Titre de lien externe')->setColumns(6);
+                yield TextareaField::new('linktitle', 'Titre de lien externe')
+                    ->setColumns(6)
+                    ->setNumOfRows(2)
+                    ->setHelp('Entrez ici le texte pour les liens qui dirigeront vers ce menu. Optionel : si non renseigné, le <strong>Titre de la page</strong> sera utilisé.');
+                    ;
                 yield AssociationField::new('items', 'Éléments du menu')
                     ->setQueryBuilder(fn (QueryBuilder $qb): QueryBuilder => ItemRepository::getQB_orderedChoicesList($qb, Menu::class, 'items'))
                     ->setSortProperty('name')
@@ -113,7 +117,10 @@ class MenuCrudController extends BaseCrudController
                 yield FormField::addColumn('col-md-6');
                     yield TextField::new('name', 'Nom du menu');
                     yield TextField::new('title', 'Titre du menu');
-                    yield TextField::new('linktitle', 'Titre de lien externe');
+                    yield TextareaField::new('linktitle', 'Titre de lien externe')
+                        ->setNumOfRows(2)
+                        ->setHelp('Entrez ici le texte pour les liens qui dirigeront vers ce menu. Optionel : si non renseigné, le <strong>Titre de la page</strong> sera utilisé.');
+                        ;
                     yield AssociationField::new('items', 'Éléments du menu')
                         ->setQueryBuilder(function (QueryBuilder $qb) {
                             return ItemRepository::getQB_orderedChoicesList($qb, Menu::class, 'items', []);

@@ -38,8 +38,9 @@ abstract class Image extends Item implements ImageInterface
     public const MAPPING = 'photo';
     public const SERIALIZATION_PROPS = ['id','euid','name','file','filename','size','mime','classname','shortname'];
 
-    public const DEFAULT_LIIP_FILTER = 'normal_w800';
-    public const THUMBNAIL_LIIP_FILTER = 'thumbnail_q';
+    public const DEFAULT_LIIP_FILTER = "#^normal_(x|w)800$#";
+    public const DEFAULT_LIIP_FILTER_CHOICES_AREA = [320, 320];
+    public const THUMBNAIL_LIIP_FILTER = '#^thumbnail_q$#';
     public const AVAILABLE_LIIP_FILTERS = true;
 
     // #[Assert\NotNull(message: 'Le nom de fichier ne peut être null')]
@@ -88,6 +89,11 @@ abstract class Image extends Item implements ImageInterface
         return static::DEFAULT_LIIP_FILTER;
     }
 
+    public static function getDefaultLiipFilterChoiceArea(): array
+    {
+        return static::DEFAULT_LIIP_FILTER_CHOICES_AREA;
+    }
+
     public static function getThumbnailLiipFilter(): string
     {
         return static::THUMBNAIL_LIIP_FILTER;
@@ -95,10 +101,10 @@ abstract class Image extends Item implements ImageInterface
 
     public static function getAvailableLiipFilters(): array|true
     {
-        if(is_array(static::AVAILABLE_LIIP_FILTERS) && (!in_array(static::DEFAULT_LIIP_FILTER, static::AVAILABLE_LIIP_FILTERS) || !in_array(static::THUMBNAIL_LIIP_FILTER, static::AVAILABLE_LIIP_FILTERS))) {
-            throw new LogicException(sprintf('The default and thumbnail liip filters must be in the available filters list. Please check the %s entity.', static::class));
-        }
-        return is_array(static::AVAILABLE_LIIP_FILTERS) && count(static::AVAILABLE_LIIP_FILTERS) ? static::AVAILABLE_LIIP_FILTERS : true;
+        // if(is_array(static::AVAILABLE_LIIP_FILTERS) && (!in_array(static::DEFAULT_LIIP_FILTER, static::AVAILABLE_LIIP_FILTERS) || !in_array(static::THUMBNAIL_LIIP_FILTER, static::AVAILABLE_LIIP_FILTERS))) {
+        //     throw new LogicException(sprintf('The default and thumbnail liip filters must be in the available filters list. Please check the %s entity.', static::class));
+        // }
+        return is_array(static::AVAILABLE_LIIP_FILTERS) && count((array)static::AVAILABLE_LIIP_FILTERS) ? static::AVAILABLE_LIIP_FILTERS : true;
     }
 
     /**

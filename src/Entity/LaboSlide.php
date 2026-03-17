@@ -30,7 +30,7 @@ abstract class LaboSlide extends Image implements SlideInterface, SlugInterface,
 
     public const ICON = "tabler:photo-share";
     public const FA_ICON = "camera";
-    public const DEFAULT_LIIP_FILTER = "landscape";
+    public const DEFAULT_LIIP_FILTER = "#^landscape$#";
     public const SLIDE_TYPES = [
         'default' => [
             'description' => 'Diaporama panoramique, sur toute la largeur de l\'écran, format 1280x900 pixels',

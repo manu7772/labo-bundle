@@ -1,40 +1,42 @@
 <?php
 namespace Aequation\LaboBundle\Service;
 
-use Exception;
-use Stringable;
-use Twig\Environment;
-use DateTimeImmutable;
-use Symfony\Component\Process\Process;
-use Symfony\Component\Form\FormInterface;
-use Symfony\Contracts\Cache\ItemInterface;
-use Aequation\LaboBundle\Component\Overlay;
-use Aequation\LaboBundle\Form\Type\CssType;
 use Aequation\LaboBundle\AequationLaboBundle;
-use Aequation\LaboBundle\Service\Tools\Files;
 use Aequation\LaboBundle\Component\CssManager;
-use Aequation\LaboBundle\Service\Tools\Classes;
-use Aequation\LaboBundle\Service\Tools\Strings;
-use Doctrine\Common\Collections\ArrayCollection;
-use Symfonycasts\TailwindBundle\TailwindBuilder;
-use Aequation\LaboBundle\Service\Tools\Iterables;
-use Aequation\LaboBundle\Service\Base\BaseService;
-use Symfony\Component\String\Slugger\AsciiSlugger;
+use Aequation\LaboBundle\Component\Overlay;
+use Aequation\LaboBundle\EventListener\Attribute\AppEvent;
+use Aequation\LaboBundle\Form\Type\CssType;
 use Aequation\LaboBundle\Model\Attribute\CssClasses;
 use Aequation\LaboBundle\Model\Attribute\HtmlContent;
-use Symfony\Component\HttpFoundation\Session\Session;
-use Symfony\Component\Translation\TranslatableMessage;
-use Aequation\LaboBundle\Model\Interface\SlugInterface;
-use Aequation\LaboBundle\EventListener\Attribute\AppEvent;
 use Aequation\LaboBundle\Model\Interface\AppEntityInterface;
+use Aequation\LaboBundle\Model\Interface\SlugInterface;
+use Aequation\LaboBundle\Model\Interface\UnameInterface;
+use Aequation\LaboBundle\Service\Base\BaseService;
+use Aequation\LaboBundle\Service\Interface\AppEntityManagerInterface;
+use Aequation\LaboBundle\Service\Interface\CssDeclarationInterface;
+use Aequation\LaboBundle\Service\Interface\FormServiceInterface;
+use Aequation\LaboBundle\Service\Interface\LaboBundleServiceInterface;
+use Aequation\LaboBundle\Service\Tools\Classes;
+use Aequation\LaboBundle\Service\Tools\Files;
+use Aequation\LaboBundle\Service\Tools\Iterables;
+use Aequation\LaboBundle\Service\Tools\Strings;
+use DateTimeImmutable;
+use DateTimeZone;
+use Doctrine\Common\Collections\ArrayCollection;
+use Exception;
+use Stringable;
 use Symfony\Component\DependencyInjection\Attribute\AsAlias;
+use Symfony\Component\DependencyInjection\Attribute\Autoconfigure;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\DependencyInjection\ContainerInterface;
-use Aequation\LaboBundle\Service\Interface\FormServiceInterface;
-use Symfony\Component\DependencyInjection\Attribute\Autoconfigure;
-use Aequation\LaboBundle\Service\Interface\CssDeclarationInterface;
-use Aequation\LaboBundle\Service\Interface\AppEntityManagerInterface;
-use Aequation\LaboBundle\Service\Interface\LaboBundleServiceInterface;
+use Symfony\Component\Form\FormInterface;
+use Symfony\Component\HttpFoundation\Session\Session;
+use Symfony\Component\Process\Process;
+use Symfony\Component\String\Slugger\AsciiSlugger;
+use Symfony\Component\Translation\TranslatableMessage;
+use Symfony\Contracts\Cache\ItemInterface;
+use Symfonycasts\TailwindBundle\TailwindBuilder;
+use Twig\Environment;
 
 #[AsAlias(CssDeclarationInterface::class, public: true)]
 #[Autoconfigure(autowire: true, lazy: true)]
@@ -301,9 +303,11 @@ class CssDeclaration extends BaseService implements CssDeclarationInterface
         $updatedTemplates = 0;
         $passeds = new ArrayCollection();
         $slugger ??= new AsciiSlugger();
-        $now = new DateTimeImmutable('now', new \DateTimeZone('Europe/Paris'));
         $separator = PHP_EOL.PHP_EOL.'<!-- HTML CONTENT SEPARATOR -->'.PHP_EOL.PHP_EOL;
         foreach ($entities as $entity) {
+            if($entity instanceof UnameInterface) {
+                continue;
+            }
             if($entity instanceof AppEntityInterface) {
                 $name = $entity->getEuid();
             } else if($entity instanceof Stringable) {
@@ -323,6 +327,7 @@ class CssDeclaration extends BaseService implements CssDeclarationInterface
                                 break;
                             default:
                                 // insertions, updates
+                                $now = new DateTimeImmutable('now', new DateTimeZone('Europe/Paris'));
                                 $html_head = '<!-- HTML CONTENTS GENERATED FROM ENTITY PROPERTIES / '.$now->format('Y-m-d H:i:s').' -->'.PHP_EOL.PHP_EOL;
                                 /** @var HtmlContent $htc */
                                 $html = [];

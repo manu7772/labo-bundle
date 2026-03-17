@@ -28,8 +28,8 @@ class SiteparamsCrudController extends BaseCrudController
 
     public function configureFilters(Filters $filters): Filters
     {
-        /** @var SiteparamsServiceInterface $manager */
-        $manager = $this->manager;
+        // /** @var SiteparamsServiceInterface $manager */
+        // $manager = $this->manager;
         return $filters
             ->add(TextFilter::new('name'))
             ->add(ChoiceFilter::new('typevalue', 'Type')->setChoices(Siteparams::getTypevalueChoices()))
@@ -45,9 +45,7 @@ class SiteparamsCrudController extends BaseCrudController
                 yield TextField::new('name', 'Nom');
                 yield TextField::new('typevalue', 'Type');
                 yield BooleanField::new('dispatch');
-                yield TextareaField::new('oneStringLineParam', 'Valeur')->formatValue(function ($value) use ($info) {
-                    return $this->getLaboContext()->getInstance()->dumpParam();
-                });
+                yield TextareaField::new('oneStringLineParam', 'Valeur')->formatValue(fn ($value) => $this->getLaboContext()->getInstance()->dumpParam());
                 // yield TextareaField::new('paramvalue', 'Valeur brute')->setPermission('ROLE_SUPER_ADMIN');
                 break;
             case Crud::PAGE_NEW:

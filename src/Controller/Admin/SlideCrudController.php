@@ -3,6 +3,7 @@ namespace Aequation\LaboBundle\Controller\Admin;
 
 // App
 use App\Entity\Slide;
+use App\Form\Type\SlidebaseType;
 // Aequation
 use Aequation\LaboBundle\Entity\LaboSlide;
 use Aequation\LaboBundle\Field\CKEditorField;
@@ -10,7 +11,6 @@ use Aequation\LaboBundle\Field\ThumbnailField;
 use Aequation\LaboBundle\Form\Type\OverlayType;
 use Aequation\LaboBundle\Service\Tools\Strings;
 use Aequation\LaboBundle\Service\Tools\Encoders;
-use Aequation\LaboBundle\Form\Type\SlidebaseType;
 use Aequation\LaboBundle\Security\Voter\SlideVoter;
 use Aequation\LaboBundle\Model\Final\FinalLaboSlideInterface;
 use Aequation\LaboBundle\Service\Interface\SlideServiceInterface;
@@ -170,7 +170,7 @@ abstract class SlideCrudController extends BaseCrudController
                                 ->allowAdd($allowAdd)
                                 ->allowDelete()
                                 ->setEntryType(SlidebaseType::class)
-                                ->setEntryIsComplex()
+                                // ->setEntryIsComplex()
                                 ->setHelp($allowAdd ? 'Placer ici d\'autres images si nécessaire' : 'Vous ne pouvez pas ajouter d\'autres images, le maxium est atteint');
                         }
 

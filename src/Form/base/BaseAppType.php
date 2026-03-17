@@ -79,7 +79,9 @@ class BaseAppType extends AbstractType
     {
         $defaults = [
             'data_class' => static::CLASSNAME,
-            'empty_data' => fn(FormInterface $form): AppEntityInterface => $this->manager->getNew(),
+            'empty_data' => function (FormInterface $form): AppEntityInterface {
+                return $this->manager->getNew(static::CLASSNAME);
+            },
             // 'imagine_pattern' => 'tiny_q',
         ];
         if($attr_class = $this->getFormClass()) {

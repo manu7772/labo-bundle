@@ -1,44 +1,44 @@
 <?php
 namespace Aequation\LaboBundle\Service\TwigExtensions;
 
-use Aequation\LaboBundle\Service\AppService;
-use Aequation\LaboBundle\Service\Tools\Icons;
-use Aequation\LaboBundle\Service\Tools\Times;
-use Aequation\LaboBundle\Service\Tools\Classes;
-use Aequation\LaboBundle\Service\Tools\HtmlDom;
-use Aequation\LaboBundle\Service\Tools\Strings;
-use Aequation\LaboBundle\Service\Tools\Encoders;
-use Aequation\LaboBundle\Model\Interface\ImageInterface;
 use Aequation\LaboBundle\Model\Interface\AppEntityInterface;
-use Aequation\LaboBundle\Service\Interface\ImageServiceInterface;
+use Aequation\LaboBundle\Model\Interface\EnabledInterface;
+use Aequation\LaboBundle\Model\Interface\ImageInterface;
 use Aequation\LaboBundle\Repository\Interface\CommonReposInterface;
-use Aequation\LaboBundle\Service\Interface\LaboAppVariableInterface;
+use Aequation\LaboBundle\Service\AppService;
 use Aequation\LaboBundle\Service\Interface\AppEntityManagerInterface;
 use Aequation\LaboBundle\Service\Interface\AppServiceInterface;
-// Symfony
+use Aequation\LaboBundle\Service\Interface\ImageServiceInterface;
+use Aequation\LaboBundle\Service\Interface\LaboAppVariableInterface;
+use Aequation\LaboBundle\Service\Tools\Classes;
+use Aequation\LaboBundle\Service\Tools\Encoders;
+use Aequation\LaboBundle\Service\Tools\HtmlDom;
+use Aequation\LaboBundle\Service\Tools\Icons;
+use Aequation\LaboBundle\Service\Tools\Strings;
+use Aequation\LaboBundle\Service\Tools\Times;
+use DateTime;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
-use Symfony\Contracts\Translation\TranslatorInterface;
-use Symfony\Contracts\Translation\TranslatableInterface;
-use Symfony\Component\DependencyInjection\Attribute\Autowire;
-use Symfony\UX\Icons\IconRenderer;
-use Symfony\Component\HttpKernel\KernelInterface;
-use Symfony\UX\TwigComponent\ComponentAttributes;
+use Doctrine\Common\Collections\Collection;
 use EasyCorp\Bundle\EasyAdminBundle\Dto\EntityDto;
 use Endroid\QrCode\Writer\Result\PngResult;
+use Exception;
 use Liip\ImagineBundle\Imagine\Cache\CacheManager;
 use Liip\ImagineBundle\Imagine\Filter\FilterConfiguration;
 use Liip\ImagineBundle\Imagine\Filter\FilterManager;
-use Twig\Extension\GlobalsInterface;
-use Twig\Extension\AbstractExtension;
-// PHP
-use DateTime;
-use Exception;
-use Throwable;
 use Stringable;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
+use Symfony\Component\HttpKernel\KernelInterface;
+use Symfony\Contracts\Translation\TranslatableInterface;
+use Symfony\Contracts\Translation\TranslatorInterface;
+use Symfony\UX\Icons\IconRenderer;
+use Symfony\UX\TwigComponent\ComponentAttributes;
+use Throwable;
+use Twig\Extension\AbstractExtension;
+use Twig\Extension\GlobalsInterface;
 use Twig\Markup;
+use Twig\Runtime\EscaperRuntime;
 use Twig\TwigFilter;
 use Twig\TwigFunction;
-use Twig\Runtime\EscaperRuntime;
 
 /**
  * Defines the filters and functions used to render the bundle's templates.
@@ -125,6 +125,7 @@ class TwigExtensions extends AbstractExtension implements GlobalsInterface
     {
         return [
             new TwigFilter('textToBr', [$this, 'textToBr']),
+            new TwigFilter('filter_active', [$this, 'filterActive']),
             new TwigFilter('ucfirst', [$this, 'getUcfirst']),
             new TwigFilter('preg_replace', [$this, 'getPregReplace']),
             new TwigFilter('slug', [Strings::class, 'getSlug']),
@@ -440,6 +441,19 @@ class TwigExtensions extends AbstractExtension implements GlobalsInterface
     public function textToBr(string $string): Markup
     {
         return Strings::markup(nl2br($string));
+    }
+
+    public function filterActive(iterable $collection): iterable
+    {
+        switch (true) {
+            case is_array($collection):
+                return array_filter($collection, fn($item) => $item instanceof EnabledInterface ? $item->isActive() : !empty($item));
+                break;
+            case $collection instanceof Collection:
+                return $collection->filter(fn($item) => $item instanceof EnabledInterface ? $item->isActive() : !empty($item));
+                break;
+        }
+        throw new Exception("The 'filter_active' filter only accepts arrays or Collections. Got: ".(is_object($collection) ? get_class($collection) : gettype($collection)));
     }
 
     public function getUcfirst(string $string): string

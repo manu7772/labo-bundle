@@ -20,8 +20,9 @@ use Vich\UploaderBundle\Mapping\Attribute as Vich;
 class Photo extends Image implements PhotoInterface
 {
     public const MAPPING = 'photo';
-    public const DEFAULT_LIIP_FILTER = "normal_x800";
-    public const THUMBNAIL_LIIP_FILTER = 'miniature_q';
+    public const DEFAULT_LIIP_FILTER = "#^normal_(x|w)800$#";
+    public const DEFAULT_LIIP_FILTER_CHOICES_AREA = [400, 400];
+    public const THUMBNAIL_LIIP_FILTER = '#^miniature_q$#';
 
     #[Vich\UploadableField(mapping: self::MAPPING, fileNameProperty: 'filename', size: 'size', mimeType: 'mime', originalName: 'originalname', dimensions: 'dimensions')]
     #[Assert\File(
