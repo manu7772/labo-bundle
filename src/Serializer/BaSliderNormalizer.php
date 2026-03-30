@@ -52,7 +52,7 @@ class BaSliderNormalizer implements NormalizerInterface
             $data['baSliderImages'] = $baSliderImages;
             $data['liip_filter_by_temp_parent'] = $slide->getLiipFilterByTempParent();
         }
-        dump($data);
+        // dump($data);
         return $data;
     }
 
