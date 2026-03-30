@@ -6,16 +6,17 @@ use Aequation\LaboBundle\Component\Opresult;
 use Aequation\LaboBundle\Service\AppEntityManager;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Helper\HelperInterface;
+use Symfony\Component\Console\Helper\QuestionHelper;
+use Symfony\Component\Console\Helper\TableSeparator;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
-use Symfony\Component\Console\Question\ConfirmationQuestion;
-use Symfony\Component\Console\Style\SymfonyStyle;
-use Symfony\Component\Console\Helper\HelperInterface;
-use Symfony\Component\Console\Helper\QuestionHelper;
 use Symfony\Component\Console\Question\ChoiceQuestion;
+use Symfony\Component\Console\Question\ConfirmationQuestion;
 use Symfony\Component\Console\Question\Question;
+use Symfony\Component\Console\Style\SymfonyStyle;
 
 #[AsCommand(
     name: 'app:basics',
@@ -59,8 +60,8 @@ class BasicsCommand extends Command
         $question->setMultiselect(true);
         $classnames = $helper->ask($input, $output, $question);
         if(in_array(static::ALL_CLASSES, $classnames)) $classnames = array_values($allClassnames);
-        $io->writeln('Entités à générer :'.PHP_EOL.'- '.implode(PHP_EOL.'- ', $classnames));
-
+        $io->writeln('Entités à générer :');
+        $io->listing($classnames);
 
         /** @var QuestionHelper $helper */
         $helper = $this->getHelper('question');
@@ -68,14 +69,14 @@ class BasicsCommand extends Command
         $question = new Question('Indiquez le chemin vers les données ['.static::DEFAULT_DATA_PATH.'] :', static::DEFAULT_DATA_PATH);
         $question->setAutocompleterValues($paths);
         $path = $helper->ask($input, $output, $question);
-        $io->writeln(vsprintf('- Chemin vers les données de génération : %s', [$path]));
+        $io->writeln(vsprintf('- Chemin vers les données de génération : <fg=gray>%s</>', [$path]));
 
 
         /** @var QuestionHelper $helper */
         $helper = $this->getHelper('question');
         $question = new ConfirmationQuestion('Remplace si existante (oui/non) (défaut: oui) ? ', true, '/^(o|oui|y|yes)/i');
         $replace = $helper->ask($input, $output, $question);
-        $io->writeln(vsprintf('- Remplace : %s', [$replace ? 'Oui' : 'Non']));
+        $io->writeln(vsprintf('- Remplace : <fg=gray>%s</>', [$replace ? 'Oui' : 'Non']));
         if($replace) {
             $io->warning('Remplace si existant.');
             sleep(1);

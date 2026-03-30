@@ -1,11 +1,18 @@
 <?php
 namespace Aequation\LaboBundle\Service;
 
+use Aequation\LaboBundle\Model\Final\FinalWebpageInterface;
 use Aequation\LaboBundle\Model\Interface\ScreenableInterface;
 use Aequation\LaboBundle\Service\Interface\LaboWebpageServiceInterface;
 
 abstract class LaboWebpageService extends EcollectionService implements LaboWebpageServiceInterface
 {
+    public function getPreferedWebpage(): ?FinalWebpageInterface
+    {
+        $repository = $this->getRepository();
+        return $repository->findOneBy(['prefered' => true, 'enabled' => true, 'softdeleted' => false]);
+    }
+
 
     public function getWebpageChoices(?ScreenableInterface $screenable = null): array
     {

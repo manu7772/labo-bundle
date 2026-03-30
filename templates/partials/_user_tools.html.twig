@@ -24,9 +24,19 @@
                     {% if labo_home %}<a {{ turbo_enable(false) }} href="{{ labo_home }}" target="_blank" class="hover:text-white"><twig:ux:icon name="tabler:brand-symfony" class="w-4 h-4 inline-block" /> Labo</a>{% endif %}
                     {# <hr class="my-2 border-slate-500"> #}
                     <a class="hover:text-white" data-turbo="false" target="_blank" href="{{ url('easyadmin_' ~ currentItem.shortname|lower ~ '_detail', {entityId: currentItem.id}) }}"><twig:ux:icon name="tabler:eye" class="w-4 h-4 inline-block" /> {{ 'name'|trans([], currentItem.shortname) }} "{{ currentItem.name }}"</a>
+                    {% if subwebpage|default(false) %}
+                    <a class="hover:text-white pl-4" data-turbo="false" target="_blank" href="{{ url('easyadmin_' ~ subwebpage.shortname|lower ~ '_detail', {entityId: subwebpage.id}) }}" title="Cette {{ 'name'|trans([], subwebpage.shortname) }} est utilisée uniquement pour afficher les éléments '{{ 'name'|trans([], currentItem.shortname) }}' ci-dessus. Vérifiez lequel des éléments suivants vous souhaitez réellement consulter.">
+                        <twig:ux:icon name="tabler:arrow-rotary-left" class="w-4 h-4 inline-block rotate-180 -translate-y-1" /> {{ 'name'|trans([], subwebpage.shortname) }} "{{ subwebpage.name }}"
+                    </a>
+                    {% endif %}
                     {% if webpage != currentItem %}
-                    <a class="hover:text-white pl-4" data-turbo="false" target="_blank" href="{{ url('easyadmin_' ~ webpage.shortname|lower ~ '_detail', {entityId: webpage.id}) }}" title="Cette {{ 'name'|trans([], webpage.shortname) }} est utilisée uniquement pour afficher l'élément '{{ 'name'|trans([], currentItem.shortname) }}' ci-dessus. Vérifiez lequel de ces 2 éléments vous souhaitez réellement consulter.">
-                        <twig:ux:icon name="tabler:arrow-rotary-left" class="w-4 h-4 inline-block rotate-180" /> {{ 'name'|trans([], webpage.shortname) }} "{{ webpage.name }}"
+                    <a class="hover:text-white pl-4" data-turbo="false" target="_blank" href="{{ url('easyadmin_' ~ webpage.shortname|lower ~ '_detail', {entityId: webpage.id}) }}" title="Cette {{ 'name'|trans([], webpage.shortname) }} est utilisée uniquement pour afficher les éléments '{{ 'name'|trans([], currentItem.shortname) }}' ci-dessus. Vérifiez lequel des éléments suivants vous souhaitez réellement consulter.">
+                        <twig:ux:icon name="tabler:arrow-rotary-left" class="w-4 h-4 inline-block rotate-180 -translate-y-1" /> {{ 'name'|trans([], webpage.shortname) }} "{{ webpage.name }}"
+                    </a>
+                    {% endif %}
+                    {% if webpage.slider %}
+                    <a class="hover:text-white pl-4" data-turbo="false" target="_blank" href="{{ url('easyadmin_' ~ webpage.slider.shortname|lower ~ '_detail', {entityId: webpage.slider.id}) }}" title="Cet {{ 'name'|trans([], webpage.slider.shortname) }} est utilisé par cette '{{ 'name'|trans([], webpage.shortname) }}' ci-dessus. Cliquer pour le consulter.">
+                        <twig:ux:icon name="tabler:arrow-rotary-left" class="w-4 h-4 inline-block rotate-180 -translate-y-1" /> {{ 'name'|trans([], webpage.slider.shortname) }} "{{ webpage.slider }}"
                     </a>
                     {% endif %}
                     {# <a class="hover:text-white" data-turbo="false" target="_blank" href="{{ url('easyadmin_webpage_edit', {entityId: webpage.id}) }}"><twig:ux:icon name="tabler:pencil" class="w-4 h-4 inline-block" /> Modifier "{{ webpage.name }}"</a> #}

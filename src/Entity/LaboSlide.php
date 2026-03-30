@@ -36,19 +36,19 @@ abstract class LaboSlide extends Image implements SlideInterface, SlugInterface,
             'description' => 'Diaporama panoramique, sur toute la largeur de l\'écran, format 1280x900 pixels',
             'max_slidebases' => 0,
             'overlays' => true,
-            'liip_filter' => "landscape",
+            'liip_filter' => "#^landscape$#",
         ],
         'classic' => [
             'description' => 'Diaporama classique, format 800x600 pixels',
             'max_slidebases' => 0,
             'overlays' => false,
-            'liip_filter' => "photo_pano",
+            'liip_filter' => "#^photo_pano$#",
         ],
         'beforafter' => [
             'description' => 'Diaporama avec images doubles (avant/après), format 800x600 pixels',
             'max_slidebases' => 1,
             'overlays' => false,
-            'liip_filter' => "photo_pano",
+            'liip_filter' => "#^photo_pano$#",
         ],
     ];
     public const THUMBNAIL_LIIP_FILTER = 'tiny_q'; // miniature_q
@@ -109,6 +109,9 @@ abstract class LaboSlide extends Image implements SlideInterface, SlugInterface,
     #[HtmlContent]
     protected ?string $content = null;
 
+    #[Serializer\Groups(['BaSlider','rslider'])]
+    protected ?string $imagefilter;
+
     #[ORM\OneToMany(targetEntity: FinalLaboSlidebaseInterface::class, mappedBy: 'slide', cascade: ['persist','remove'], orphanRemoval: true)]
     // #[Serializer\MaxDepth(1)]
     // #[Serializer\Groups(['BaSlider'])]
@@ -155,7 +158,7 @@ abstract class LaboSlide extends Image implements SlideInterface, SlugInterface,
         $slidetype = empty($this->tempParentSlider)
             ? LaboSlider::getDefaultSlidetype()
             : $this->tempParentSlider->getAvailableSlideType();
-        return static::SLIDE_TYPES[$slidetype]['liip_filter'];
+        return $this->_service->getLiipFilterName(static::SLIDE_TYPES[$slidetype]['liip_filter']);
     }
 
     public function getSlidetypeChoices(

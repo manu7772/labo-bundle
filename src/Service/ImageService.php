@@ -151,13 +151,33 @@ class ImageService extends ItemService implements ImageServiceInterface
     /**
      * Get the configuration of a specific liip filter by its name, returning null if the filter is not available in the configuration.
      * 
-     * @param string|null $filter The name of the liip filter to retrieve the configuration for
+     * @param string|null $filter
+     * @param bool $bestquality
      * @return array|null
      */
-    public function getLiipFilter(string $filter): ?array
+    public function getLiipFilter(string $filter, bool $bestquality = false): ?array
     {
         $filters = $this->getLiipFilters(true, $filter);
-        return empty($filters) ? null : reset($filters);
+        if(empty($filters)) {
+            return null;
+        }
+        return $bestquality ? end($filters) : reset($filters);
+    }
+
+    /**
+     * Get the name of a specific liip filter by its name or pattern
+     *
+     * @param string $filter
+     * @param boolean $bestquality
+     * @return string|null
+     */
+    public function getLiipFilterName(string $filter, bool $bestquality = false): ?string
+    {
+        $filters = $this->getLiipFilters(true, $filter);
+        if(empty($filters)) {
+            return null;
+        }
+        return $bestquality ? array_key_last($filters) : array_key_first($filters);
     }
 
     /**
@@ -190,7 +210,7 @@ class ImageService extends ItemService implements ImageServiceInterface
      */
     public function getDefaultLiipFilterName(null|string|object $entity = null): ?string
     {
-        $filtername = is_a($entity, ImageInterface::class, true) && $this->isAvailableLiipFilter($entity::getDefaultLiipFilter() ?? '') ? $entity::getDefaultLiipFilter() : static::DEFAULT_LIIP_FILTER;
+        $filtername = is_a($entity, ImageInterface::class, true) && $this->isAvailableLiipFilter($entity->getDefaultLiipFilter() ?? '') ? $entity->getDefaultLiipFilter() : static::DEFAULT_LIIP_FILTER;
         if(!$this->isAvailableLiipFilter($filtername)) {
             $area = $this->getDefaultLiipFilterChoiceArea($entity);
             $list = $this->getLiipFilterChoices($area[0], $area[1], $entity, true);

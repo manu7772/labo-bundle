@@ -8,9 +8,9 @@ use Aequation\LaboBundle\Component\Opresult;
 use Aequation\LaboBundle\EventListener\Attribute\AppEvent;
 use Aequation\LaboBundle\Model\Interface\AppEntityInterface;
 use Aequation\LaboBundle\Model\Interface\EnabledInterface;
+use Aequation\LaboBundle\Model\Interface\LaboUserInterface;
 use Aequation\LaboBundle\Model\Interface\OwnerInterface;
 use Aequation\LaboBundle\Model\Interface\UnamedInterface;
-use Aequation\LaboBundle\Model\Interface\LaboUserInterface;
 use Aequation\LaboBundle\Repository\Interface\CommonReposInterface;
 use Aequation\LaboBundle\Service\AppService;
 use Aequation\LaboBundle\Service\Base\BaseService;
@@ -19,25 +19,26 @@ use Aequation\LaboBundle\Service\Interface\AppServiceInterface;
 use Aequation\LaboBundle\Service\Tools\Classes;
 use Aequation\LaboBundle\Service\Tools\Encoders;
 use Aequation\LaboBundle\Service\Tools\HttpRequest;
-// Symfony
+use Closure;
+use DateTime;
+use DateTimeImmutable;
+use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Mapping\ClassMetadata;
-use Doctrine\Persistence\Event\LifecycleEventArgs;
 use Doctrine\ORM\UnitOfWork;
-use Symfony\Component\Security\Core\Authorization\AccessDecisionManagerInterface;
+use Doctrine\Persistence\Event\LifecycleEventArgs;
+use Exception;
+use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
+use Symfony\Component\Console\Helper\ProgressBar;
+use Symfony\Component\Console\Output\ConsoleOutput;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use Symfony\Component\DependencyInjection\Attribute\AsAlias;
 use Symfony\Component\DependencyInjection\Attribute\Autoconfigure;
 use Symfony\Component\PropertyAccess\PropertyAccess;
+use Symfony\Component\Security\Core\Authorization\AccessDecisionManagerInterface;
 use Symfony\Component\Validator\ConstraintViolationList;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
-use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Contracts\Cache\ItemInterface;
-// PHP
-use Closure;
-use DateTime;
-use DateTimeImmutable;
-use Exception;
 use Throwable;
 
 #[AsAlias(AppEntityManagerInterface::class, public: true)]
@@ -985,6 +986,14 @@ class AppEntityManager extends BaseService implements AppEntityManagerInterface
         $cmd = $this->getClassMetadata($entity);
         $propertyAccessor = PropertyAccess::createPropertyAccessorBuilder()->enableMagicCall()->enableExceptionOnInvalidIndex()->getPropertyAccessor();
         foreach ($data as $property => $value) {
+            // If property name finishes with a "+", it means that we want to add data to this property (only for collections)
+            $adddata = preg_match('/^(.*)\+$/', $property, $matches);
+            if($adddata) {
+                $property = $matches[1];
+                if(!array_key_exists($property, $cmd->associationMappings) || !preg_match('/^(One|Many)ToMany/', Classes::getShortname($cmd->associationMappings[$property], true))) {
+                    throw new Exception(vsprintf('Error %s line %d: you can only add data to a property with a ToMany relation! (property: %s)', [__METHOD__, __LINE__, $property]));
+                }
+            }
             switch (true) {
                 case $property === '_reverse':
                     foreach ($value as $uname => $fields) {
@@ -1010,6 +1019,12 @@ class AppEntityManager extends BaseService implements AppEntityManagerInterface
                             break;
                         case 'datetime':
                             $propertyAccessor->setValue($entity, $property, new DateTime($value));
+                            break;
+                        case 'integer':
+                            $propertyAccessor->setValue($entity, $property, (int)$value);
+                            break;
+                        case 'float':
+                            $propertyAccessor->setValue($entity, $property, (float)$value);
                             break;
                         default:
                             // Try by default...
@@ -1040,7 +1055,15 @@ class AppEntityManager extends BaseService implements AppEntityManagerInterface
                             }
                         }
                         $value = array_filter($dbl, fn($item) => $item instanceof $target_class);
-                        if(!$isMany) $value = reset($dbl);
+                        if(!$isMany) {
+                            $value = reset($value);
+                        } else if($adddata) {
+                            $value = new ArrayCollection($value);
+                            foreach ($propertyAccessor->getValue($entity, $property) as $related) {
+                                $value->add($related);
+                            }
+                            $value = $value->toArray();
+                        }
                         if(!empty($value)) $propertyAccessor->setValue($entity, $property, $value);
                     }
                     break;
@@ -1104,10 +1127,28 @@ class AppEntityManager extends BaseService implements AppEntityManagerInterface
         // $result->addData('all_data', $alldata);
         if(count($alldata)) {
             ksort($alldata);
+            // find longuer shortname of all entities
+            $savelabel = 'Enregistrements';
+            $length = strlen($savelabel);
+            foreach ($alldata as $key => $data) {
+                $shortname_length = strlen($this->getEntityShortname($data['entity']));
+                if($shortname_length > $length) $length = $shortname_length;
+            }
+            $progress = [];
+            $output = new ConsoleOutput();
             foreach ($alldata as $data) {
-                if($io) $io->info(vsprintf('Génération de %s : %d éléments', [$data['entity'], count($data['items'])]));
-                $cpt = 0;
+                $section = $output->section();
+                $progress[$data['entity']] = [
+                    'section' => $section,
+                    'progressBar' => new ProgressBar($section, count($data['items'])),
+                ];
+                $progress[$data['entity']]['progressBar']?->setFormat('- '.str_pad($this->getEntityShortname($data['entity']), $length, " ", STR_PAD_RIGHT).' <fg=green>%bar%</> %current%/%max%');
+                $progress[$data['entity']]['progressBar']?->start();
+            }
+            foreach ($alldata as $data) {
+                // $io?->info(vsprintf('Génération de %s : %d éléments', [$data['entity'], count($data['items'])]));
                 foreach ($data['items'] as $key => $item) {
+                    // foreach ($data['items'] as $key => $item) {
                     $total++;
                     $search = $this->getRepository($data['entity'])->tryFindExistingEntity(is_string($key) ? $key : $item);
                     $classOrEntity = $search instanceof $data['entity'] ? $search : $data['entity'];
@@ -1119,53 +1160,63 @@ class AppEntityManager extends BaseService implements AppEntityManagerInterface
                                 // if($errors->count() > 0) {
                                 //     // Enity is invalid
                                 //     $errortxt = PHP_EOL.'---> '.implode(PHP_EOL.'---> ', (array)$errors->getIterator());
-                                //     $io->error($errortxt);
+                                //     $io?->error($errortxt);
                                 //     $result->addDanger(vsprintf('- %s "%s" invalide : %s', [$new_entity->getShortname(), $new_entity->__toString(), $errortxt]));
                                 // } else {
                                     $this->hydrateds->add($new_entity);
-                                    if($io) {
-                                        if($new_entity->_appManaged->isPersisted()) {
-                                            $io->writeln(vsprintf('%d - %s "%s" existant : mise à jour', [++$cpt, $new_entity->getShortname(), $new_entity->__toString()]));
-                                        } else {
-                                            $io->writeln(vsprintf('%d - %s "%s" créé', [++$cpt, $new_entity->getShortname(), $new_entity->__toString()]));
-                                        }
+                                    // if($new_entity->_appManaged->isPersisted()) {
+                                    //     $io?->writeln(vsprintf('%d - %s "%s" existant : mise à jour', [++$cpt, $new_entity->getShortname(), $new_entity->__toString()]));
+                                    // } else {
+                                    //     $io?->writeln(vsprintf('%d - %s "%s" créé', [++$cpt, $new_entity->getShortname(), $new_entity->__toString()]));
+                                    // }
+                                    if($this->persist($new_entity, $result)) {
+                                        $result->addSuccess();
+                                        // $result->addSuccess(vsprintf('Génération de %s "%s" réussie', [$new_entity->getShortname(), $new_entity->__toString()]));
+                                    } else {
+                                        $result->addDanger(vsprintf('Génération de %s "%s" échouée', [$new_entity->getShortname(), $new_entity->__toString()]));
                                     }
-                                    $this->persist($new_entity, $result);
                                 // }
                             } else {
                                 $result->addDanger(vsprintf('Génération impossible : cette entité "%s" n\'existe pas', [$data['entity']]));
                             }
                         } else {
                             $message = vsprintf('Génération impossible : cette entité "%s" n\'existe pas', [$data['entity']]);
-                            if($io) $io->warning($message);
+                            // $io?->warning($message);
                             $result->addWarning($message);
                         }
                     } else {
                         $message = vsprintf('- %s "%s" existant : pas de mise à jour', [$classOrEntity->getShortname(), $classOrEntity->__toString()]);
-                        if($io) $io->writeln($message);
+                        // $io?->writeln($message);
                         $result->addUndone($message);
                     }
+                    $progress[$data['entity']]['progressBar']?->advance();
                 }
+                $progress[$data['entity']]['progressBar']?->finish();
             }
             if($persist) {
                 // Info
-                $io->info(vsprintf('%d entités à enregistrer...', [$this->hydrateds->count()]));
-                foreach ($this->hydrateds->toArray() as $entity) {
-                    $io->info(vsprintf('- %s "%s" sera enregistée', [$entity->getShortname(), $entity->__toString()]));
+                // $io?->info(vsprintf('%d entités à enregistrer...', [$this->hydrateds->count()]));
+                // foreach ($this->hydrateds->toArray() as $entity) {
+                //     $io?->info(vsprintf('- %s "%s" sera enregistée', [$entity->getShortname(), $entity->__toString()]));
+                // }
+                if($io) {
+                    $io->newLine();
+                    $progb = new ProgressBar($output->section(), $this->hydrateds->count());
+                    $progb->setFormat('- '.str_pad($savelabel, $length, " ", STR_PAD_RIGHT).' <fg=cyan>%bar%</> %current%/%max%');
+                    $progb->start();
                 }
-                // dd('Enf of info.');
 
                 foreach ($this->hydrateds->toArray() as $entity) {
                     // $this->save($entity, $result);
-                    $test = $this->save($entity, true);
-                    if($io) {
-                        if($test) {
-                            $io->info(vsprintf('- %s "%s" enregistrée', [$entity->getShortname(), $entity->__toString()]));
-                        } else {
-                            $io->error(vsprintf('- %s "%s" NON enregistrée', [$entity->getShortname(), $entity->__toString()]));
-                        }
+                    if($this->save($entity, true)) {
+                        // $io?->info(vsprintf('- %s "%s" enregistrée', [$entity->getShortname(), $entity->__toString()]));
+                    } else {
+                        $io?->error(vsprintf('- %s "%s" NON enregistrée', [$entity->getShortname(), $entity->__toString()]));
                     }
+                    $progb?->advance();
                 }
+                $progb?->finish();
+                $io?->newLine();
                 $this->hydrateds->clear();
             } else {
                 $count = $this->hydrateds->count();

@@ -154,10 +154,10 @@ abstract class WebpageCrudController extends BaseCrudController
                         yield TextField::new('photo', 'Photo')->setFormType(PhotoType::class);
                         yield AssociationField::new('slider', 'Diaporama');
 
-                yield FormField::addTab('Médias associés')->setIcon('fa6-solid:link');
+                yield FormField::addTab('Médias associés')->setIcon('tabler:link');
 
                     yield FormField::addPanel('Fichiers PDF', Pdf::ICON);
-                    yield AssociationField::new('pdfiles', 'Fichiers PDF')
+                    yield AssociationField::new('pdfiles', false)
                         ->setFormTypeOptions(['by_reference' => false])
                         ->setColumns(12)
                         ->setCrudController(PdfCrudController::class)
@@ -176,7 +176,7 @@ abstract class WebpageCrudController extends BaseCrudController
                     //     ;
                     // yield FormField::addTab(label: false, icon: Videolink::ICON);
                     yield FormField::addPanel('Vidéos', Videolink::ICON);
-                    yield AssociationField::new('videolinks', 'Vidéos')
+                    yield AssociationField::new('videolinks', false)
                         ->setFormTypeOptions(['by_reference' => false])
                         ->setColumns(12)
                         ->setCrudController(VideolinkCrudController::class)

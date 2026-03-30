@@ -1,28 +1,28 @@
 <?php
 namespace Aequation\LaboBundle\Entity;
 
+use Aequation\LaboBundle\Component\ImageOperations;
+use Aequation\LaboBundle\Component\Interface\ImageOperationsInterface;
+use Aequation\LaboBundle\EventListener\Attribute\AppEvent;
 use Aequation\LaboBundle\Model\Attribute as EA;
-use Aequation\LaboBundle\Service\Tools\Strings;
-use Aequation\LaboBundle\Service\Tools\HttpRequest;
-use Aequation\LaboBundle\Repository\ImageRepository;
 use Aequation\LaboBundle\Model\Attribute\HtmlContent;
 use Aequation\LaboBundle\Model\Interface\ImageInterface;
-use Aequation\LaboBundle\EventListener\Attribute\AppEvent;
+use Aequation\LaboBundle\Repository\ImageRepository;
 use Aequation\LaboBundle\Service\Interface\ImageServiceInterface;
-// Symfony
+use Aequation\LaboBundle\Service\Tools\HttpRequest;
+use Aequation\LaboBundle\Service\Tools\Strings;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use InvalidArgumentException;
+use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
 use Symfony\Component\Form\Form;
 use Symfony\Component\Form\FormEvent;
 use Symfony\Component\Form\FormEvents;
 use Symfony\Component\HttpFoundation\File\File;
-use Symfony\Component\Validator\Constraints as Assert;
-use Symfony\Component\Serializer\Attribute as Serializer;
-use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
+use Symfony\Component\Serializer\Attribute as Serializer;
+use Symfony\Component\Validator\Constraints as Assert;
 use Vich\UploaderBundle\Mapping\Attribute as Vich;
-// PHP
-use LogicException;
 
 #[ORM\Entity(repositoryClass: ImageRepository::class)]
 #[ORM\DiscriminatorColumn(name: "class_name", type: "string")]
@@ -78,15 +78,16 @@ abstract class Image extends Item implements ImageInterface
 
     protected bool $deleteImage = false;
     protected ?string $liipDefaultFilter = null;
+    protected ?ImageOperationsInterface $imageOperations = null;
 
     public function __toString(): string
     {
         return $this->name ?? $this->filename ?? parent::__toString();
     }
 
-    public static function getDefaultLiipFilter(): string
+    public function getDefaultLiipFilter(): string
     {
-        return static::DEFAULT_LIIP_FILTER;
+        return $this->_service->getLiipFilterName(static::DEFAULT_LIIP_FILTER);
     }
 
     public static function getDefaultLiipFilterChoiceArea(): array
@@ -94,9 +95,9 @@ abstract class Image extends Item implements ImageInterface
         return static::DEFAULT_LIIP_FILTER_CHOICES_AREA;
     }
 
-    public static function getThumbnailLiipFilter(): string
+    public function getThumbnailLiipFilter(): string
     {
-        return static::THUMBNAIL_LIIP_FILTER;
+        return $this->_service->getLiipFilterName(static::THUMBNAIL_LIIP_FILTER);
     }
 
     public static function getAvailableLiipFilters(): array|true
@@ -119,8 +120,8 @@ abstract class Image extends Item implements ImageInterface
     public function setFile(File $file): static
     {
         $this->file = HttpRequest::isCli()
-        ? $this->_service->getAppService()->get('Tool:Files')->getCopiedTmpFile($file)
-        : $file;
+            ? $this->_service->getAppService()->get('Tool:Files')->getCopiedTmpFile($file)
+            : $file;
         if(!empty($this->getId())) $this->updateUpdatedAt();
         if(!Strings::hasText($this->filename)) $this->setFilename($this->file->getFilename());
         $this->updateName();
@@ -246,6 +247,9 @@ abstract class Image extends Item implements ImageInterface
 
     public function setImagefilter(?string $imagefilter): static
     {
+        if(!preg_match('#^[A-z0-9_-]*$#', $imagefilter)) {
+            throw new InvalidArgumentException(sprintf('The image filter name "%s" is not valid. It should only contain letters, numbers, underscores or dashes.', $imagefilter));
+        }
         $this->imagefilter = $imagefilter;
         return $this;
     }
@@ -292,6 +296,20 @@ abstract class Image extends Item implements ImageInterface
                 ]);
             }
         }
+    }
+
+    public function getImageOperations(): ImageOperationsInterface
+    {
+        return $this->imageOperations ??= new ImageOperations();
+    }
+
+    public function setImageOperations(ImageOperationsInterface|array $imageOperations): static
+    {
+        if(is_array($imageOperations)) {
+            $imageOperations = new ImageOperations($imageOperations);
+        }
+        $this->imageOperations = $imageOperations;
+        return $this;
     }
 
 }

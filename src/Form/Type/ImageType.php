@@ -50,6 +50,10 @@ abstract class ImageType extends BaseAppType
                 'choice_translation_domain' => 'messages',
                 // 'empty_data' => $manager->getDefaultLiipFilterName($builder->getData() ?? $builder->getDataClass()),
             ])
+            ->add('imageOperations', ImageOperationsType::class, [
+                'label' => 'Opérations sur l\'image',
+                'required' => false,
+            ])
         ;
         parent::buildForm($builder, $options);
     }

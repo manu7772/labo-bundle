@@ -6,8 +6,9 @@ use Aequation\LaboBundle\Model\Interface\HasOrderedInterface;
 use DateTimeInterface;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepositoryInterface;
 use Doctrine\ORM\QueryBuilder;
+use Doctrine\Persistence\ObjectRepository;
 
-interface CommonReposInterface extends ServiceEntityRepositoryInterface
+interface CommonReposInterface extends ObjectRepository, ServiceEntityRepositoryInterface
 {
 
     public function getChoicesForType(string $field, string $context = 'form_choice', ?array $search = []): array;

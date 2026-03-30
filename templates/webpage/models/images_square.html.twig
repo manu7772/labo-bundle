@@ -9,21 +9,27 @@
 
     {% block the_slider %}
         {% if webpage is defined %}
-    
-            <twig:ImagesSquareSlider :slider="webpage.slider" />
 
-            {% block slider_texts %}
-                {% if webpage.slider.title or webpage.slider.content %}
-                    <section class="pt-1">
-                        {% if webpage.slider.title %}
-                        <h3 class="mb-3">{{ webpage.slider.title|raw }}</h3>
-                        {% endif %}
-                        {% if webpage.slider.content %}
-                        {{ webpage.slider.content|raw }}
-                        {% endif %}
-                    </section>
-                {% endif %}
-            {% endblock %}
+        <section class="min-h-[50vh] mb-0 pb-0">
+            <div class="section-container">
+            
+                <twig:ImagesSquareSlider :slider="webpage.slider" />
+
+            </div>
+        </section>
+
+        {% block slider_texts %}
+            {% if webpage.slider.title or webpage.slider.content %}
+                <section class="pt-1">
+                    {% if webpage.slider.title %}
+                    <h3 class="mb-3">{{ webpage.slider.title|raw }}</h3>
+                    {% endif %}
+                    {% if webpage.slider.content %}
+                    {{ webpage.slider.content|raw }}
+                    {% endif %}
+                </section>
+            {% endif %}
+        {% endblock %}
 
         {% endif %}
     {% endblock %}
