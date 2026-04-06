@@ -100,6 +100,7 @@ interface AppServiceInterface extends ServiceInterface
     public function getRoutes(): RouteCollection;
     public function routeExists(string $route): bool;
     public function getUrlIfExists(string $route, array $parameters = [], int $referenceType = Router::ABSOLUTE_PATH): ?string;
+    public function getWebpageUrl(null|string|array $elements, int $referenceType = Router::ABSOLUTE_PATH): ?string;
     // Cache
     public function getCache(): CacheServiceInterface;
     // Parameters

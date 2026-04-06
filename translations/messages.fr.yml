@@ -11,6 +11,8 @@ Expires At: Date d'expiration
 isVerified: Compte vérifié
 cancel: annuler
 Last Action At: Dern.modif.
+before: avant
+after: après
 # Exception
 exception_title: Une erreur est survenue
 exception_unknown: Erreur inconnue

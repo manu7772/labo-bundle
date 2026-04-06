@@ -31,7 +31,7 @@ class NavComponent extends AbstractController
         if($menu_items && !$menu_items->getItems(true)->isEmpty()) {
             $items = $this->appService->getNormalized($menu_items->getItems(true), null, ['groups' => 'index']);
             foreach ($items as $index => $item) {
-                $items[$index]['href'] = $this->appService->getUrlIfExists('app_webpage', ['webpage' => $item['slug']], Router::ABSOLUTE_URL);
+                $items[$index]['href'] = $this->appService->getWebpageUrl($item['slug'], Router::ABSOLUTE_URL);
             }
         }
         return array_values($items);

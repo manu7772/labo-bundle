@@ -290,6 +290,11 @@ class Strings extends BaseService
      * HTML TEXTS
      *************************************************************************************/
 
+	public static function nl2space(string $text): string
+	{
+		return preg_replace('/\s*(\n|\r)+\s*/', ' ', $text);
+	}
+
 	public static function textOrNull(
 		mixed $element,
 		bool $striptags = false,

@@ -5,13 +5,23 @@
 {% endmacro %}
 
 {% macro webpage(webpage, class = 'h-full px-4 place-content-center cursor-pointer hover:bg-primary-400 opacity-50 hover:opacity-100 z-[1001]') %}
+    {% set wpContainer = webpage.isWpContainer|default(false) ? webpage : null %}
+    {% if wpContainer %}
+        {% set webpage = wpContainer.webpage %}
+    {% endif %}
     {% if is_granted('ROLE_EDITOR') and webpage.shortname|default(null) in ['Webpage'] %}
         {% import _self as self %}
-        <span {{ webpage.shortname|default(null) in ['Webpage'] ? self.webpageAttrs(webpage) }} class="{{ class }}" title="Outils de gestion pour la page `{{ webpage.name }}`">
+        <span {{ webpage.shortname|default(null) in ['Webpage','WebpageContainer'] ? self.webpageAttrs(webpage) }} class="{{ class }}" title="Outils de gestion pour la page `{{ webpage.name }}`">
             {% set currentItem = webpage.currentItem|default(webpage) %}
             <div data-popover id="popover-user-tools-w-{{ webpage.id }}" role="tooltip" class="absolute z-20 invisible inline-block min-w-80 text-sm transition-opacity duration-300 border rounded-lg shadow-sm opacity-0 border-gray-600 bg-gray-800">
                 <div class="px-6 py-0 border-b rounded-t-lg border-gray-600 bg-gray-700 dark">
-                    <h5 class="font-semibold text-white py-2"><span class="font-thin italic opacity-60">{{ 'name'|trans([], currentItem.shortname) }} : </span> "{{ currentItem.name }}"</h5>
+                    <h5 class="font-semibold text-white py-2">
+                        {% if wpContainer %}
+                        {{ icon(wpContainer, {class: "w-4 h-4 inline-block -translate-y-[2px] text-lime-400"}) }}
+                        {% endif %}
+                        {{ icon(webpage, {class: "w-4 h-4 inline-block -translate-y-[2px] text-cyan-400"}) }}
+                        <span class="font-thin italic opacity-70">{{ 'name'|trans([], currentItem.shortname) }} : </span> "{{ currentItem.name }}"
+                    </h5>
                 </div>
                 <div class="px-3 py-1 flex flex-col gap-1 text-gray-400 my-2">
                     {% set admin_path = is_granted('ROLE_EDITOR') ? url_if_exists('easyadmin') : null %}
@@ -23,27 +33,39 @@
                     {% endif %} #}
                     {% if labo_home %}<a {{ turbo_enable(false) }} href="{{ labo_home }}" target="_blank" class="hover:text-white"><twig:ux:icon name="tabler:brand-symfony" class="w-4 h-4 inline-block" /> Labo</a>{% endif %}
                     {# <hr class="my-2 border-slate-500"> #}
-                    <a class="hover:text-white" data-turbo="false" target="_blank" href="{{ url('easyadmin_' ~ currentItem.shortname|lower ~ '_detail', {entityId: currentItem.id}) }}"><twig:ux:icon name="tabler:eye" class="w-4 h-4 inline-block" /> {{ 'name'|trans([], currentItem.shortname) }} "{{ currentItem.name }}"</a>
-                    {% if subwebpage|default(false) %}
-                    <a class="hover:text-white pl-4" data-turbo="false" target="_blank" href="{{ url('easyadmin_' ~ subwebpage.shortname|lower ~ '_detail', {entityId: subwebpage.id}) }}" title="Cette {{ 'name'|trans([], subwebpage.shortname) }} est utilisée uniquement pour afficher les éléments '{{ 'name'|trans([], currentItem.shortname) }}' ci-dessus. Vérifiez lequel des éléments suivants vous souhaitez réellement consulter.">
-                        <twig:ux:icon name="tabler:arrow-rotary-left" class="w-4 h-4 inline-block rotate-180 -translate-y-1" /> {{ 'name'|trans([], subwebpage.shortname) }} "{{ subwebpage.name }}"
-                    </a>
-                    {% endif %}
-                    {% if webpage != currentItem %}
-                    <a class="hover:text-white pl-4" data-turbo="false" target="_blank" href="{{ url('easyadmin_' ~ webpage.shortname|lower ~ '_detail', {entityId: webpage.id}) }}" title="Cette {{ 'name'|trans([], webpage.shortname) }} est utilisée uniquement pour afficher les éléments '{{ 'name'|trans([], currentItem.shortname) }}' ci-dessus. Vérifiez lequel des éléments suivants vous souhaitez réellement consulter.">
-                        <twig:ux:icon name="tabler:arrow-rotary-left" class="w-4 h-4 inline-block rotate-180 -translate-y-1" /> {{ 'name'|trans([], webpage.shortname) }} "{{ webpage.name }}"
-                    </a>
-                    {% endif %}
-                    {% if webpage.slider %}
-                    <a class="hover:text-white pl-4" data-turbo="false" target="_blank" href="{{ url('easyadmin_' ~ webpage.slider.shortname|lower ~ '_detail', {entityId: webpage.slider.id}) }}" title="Cet {{ 'name'|trans([], webpage.slider.shortname) }} est utilisé par cette '{{ 'name'|trans([], webpage.shortname) }}' ci-dessus. Cliquer pour le consulter.">
-                        <twig:ux:icon name="tabler:arrow-rotary-left" class="w-4 h-4 inline-block rotate-180 -translate-y-1" /> {{ 'name'|trans([], webpage.slider.shortname) }} "{{ webpage.slider }}"
-                    </a>
-                    {% endif %}
-                    {# <a class="hover:text-white" data-turbo="false" target="_blank" href="{{ url('easyadmin_webpage_edit', {entityId: webpage.id}) }}"><twig:ux:icon name="tabler:pencil" class="w-4 h-4 inline-block" /> Modifier "{{ webpage.name }}"</a> #}
-                    {% if webpage.mainmenu %}
-                    {# <hr class="my-2 border-slate-500"> #}
-                    <a class="hover:text-white" data-turbo="false" target="_blank" href="{{ url('easyadmin_menu_detail', {entityId: webpage.mainmenu.id}) }}"><twig:ux:icon name="tabler:eye" class="w-4 h-4 inline-block" /> Menu principal</a>
-                    {# <a class="hover:text-white" data-turbo="false" target="_blank" href="{{ url('easyadmin_menu_edit', {entityId: webpage.mainmenu.id}) }}"><twig:ux:icon name="tabler:pencil" class="w-4 h-4 inline-block" /> Modifier le menu principal</a> #}
+                    {% if wpContainer %}
+                        {% for item in wpContainer.userItems %}
+                            {% if loop.first %}
+                            <a class="hover:text-white" data-turbo="false" target="_blank" href="{{ url('easyadmin_' ~ item.shortname|lower ~ '_detail', {entityId: item.id}) }}"><twig:ux:icon name="tabler:eye" class="w-4 h-4 inline-block" /> {{ 'name'|trans([], item.shortname) }} "{{ item.name }}"</a>
+                            {% else %}
+                            <a class="hover:text-white pl-4" data-turbo="false" target="_blank" href="{{ url('easyadmin_' ~ item.shortname|lower ~ '_detail', {entityId: item.id}) }}" title="Cette {{ 'name'|trans([], item.shortname) }} est utilisée uniquement pour afficher les éléments '{{ 'name'|trans([], currentItem.shortname) }}' ci-dessus. Vérifiez lequel des éléments suivants vous souhaitez réellement consulter.">
+                                <twig:ux:icon name="tabler:arrow-rotary-left" class="w-4 h-4 inline-block rotate-180 -translate-y-1" /> {{ 'name'|trans([], item.shortname) }} "{{ item.name }}"
+                            </a>
+                            {% endif %}
+                        {% endfor %}
+                    {% else %}
+                        <a class="hover:text-white" data-turbo="false" target="_blank" href="{{ url('easyadmin_' ~ currentItem.shortname|lower ~ '_detail', {entityId: currentItem.id}) }}"><twig:ux:icon name="tabler:eye" class="w-4 h-4 inline-block" /> {{ 'name'|trans([], currentItem.shortname) }} "{{ currentItem.name }}"</a>
+                        {% if subwebpage|default(false) %}
+                        <a class="hover:text-white pl-4" data-turbo="false" target="_blank" href="{{ url('easyadmin_' ~ subwebpage.shortname|lower ~ '_detail', {entityId: subwebpage.id}) }}" title="Cette {{ 'name'|trans([], subwebpage.shortname) }} est utilisée uniquement pour afficher les éléments '{{ 'name'|trans([], currentItem.shortname) }}' ci-dessus. Vérifiez lequel des éléments suivants vous souhaitez réellement consulter.">
+                            <twig:ux:icon name="tabler:arrow-rotary-left" class="w-4 h-4 inline-block rotate-180 -translate-y-1" /> {{ 'name'|trans([], subwebpage.shortname) }} "{{ subwebpage.name }}"
+                        </a>
+                        {% endif %}
+                        {% if webpage != currentItem %}
+                        <a class="hover:text-white pl-4" data-turbo="false" target="_blank" href="{{ url('easyadmin_' ~ webpage.shortname|lower ~ '_detail', {entityId: webpage.id}) }}" title="Cette {{ 'name'|trans([], webpage.shortname) }} est utilisée uniquement pour afficher les éléments '{{ 'name'|trans([], currentItem.shortname) }}' ci-dessus. Vérifiez lequel des éléments suivants vous souhaitez réellement consulter.">
+                            <twig:ux:icon name="tabler:arrow-rotary-left" class="w-4 h-4 inline-block rotate-180 -translate-y-1" /> {{ 'name'|trans([], webpage.shortname) }} "{{ webpage.name }}"
+                        </a>
+                        {% endif %}
+                        {% if webpage.slider %}
+                        <a class="hover:text-white pl-4" data-turbo="false" target="_blank" href="{{ url('easyadmin_' ~ webpage.slider.shortname|lower ~ '_detail', {entityId: webpage.slider.id}) }}" title="Cet {{ 'name'|trans([], webpage.slider.shortname) }} est utilisé par cette '{{ 'name'|trans([], webpage.shortname) }}' ci-dessus. Cliquer pour le consulter.">
+                            <twig:ux:icon name="tabler:arrow-rotary-left" class="w-4 h-4 inline-block rotate-180 -translate-y-1" /> {{ 'name'|trans([], webpage.slider.shortname) }} "{{ webpage.slider }}"
+                        </a>
+                        {% endif %}
+                        {# <a class="hover:text-white" data-turbo="false" target="_blank" href="{{ url('easyadmin_webpage_edit', {entityId: webpage.id}) }}"><twig:ux:icon name="tabler:pencil" class="w-4 h-4 inline-block" /> Modifier "{{ webpage.name }}"</a> #}
+                        {% if webpage.mainmenu %}
+                        {# <hr class="my-2 border-slate-500"> #}
+                        <a class="hover:text-white" data-turbo="false" target="_blank" href="{{ url('easyadmin_menu_detail', {entityId: webpage.mainmenu.id}) }}"><twig:ux:icon name="tabler:eye" class="w-4 h-4 inline-block" /> Menu principal</a>
+                        {# <a class="hover:text-white" data-turbo="false" target="_blank" href="{{ url('easyadmin_menu_edit', {entityId: webpage.mainmenu.id}) }}"><twig:ux:icon name="tabler:pencil" class="w-4 h-4 inline-block" /> Modifier le menu principal</a> #}
+                        {% endif %}
                     {% endif %}
                     {% if Identity|default(null) %}
                     {# <hr class="my-2 border-slate-500"> #}
@@ -88,8 +110,8 @@
     {% if is_granted('ROLE_EDITOR') %}
         {% set currentItem = webpage.currentItem|default(webpage) %}
         <div data-popover-target="popover-user-tools-ins-{{ webpage.id }}" data-popover-trigger="click" data-popover-placement="left" class="absolute max-sm:hidden inline-flex opacity-40 hover:opacity-100 cursor-pointer z-10" style="{{ position }}: 16px; right: 0px;" title="Cliquez pour modifier {{ 'name'|trans([], currentItem.shortname) }} `{{ currentItem.name }}`">
-            <span class="border border-slate-200 bg-slate-600 hover:bg-slate-700 rounded-md px-0 py-2">
-                <twig:ux:icon name="tabler:settings-cog" class="w-8 text-slate-200 p-0 m-0" />
+            <span class="border border-slate-200 bg-slate-600 hover:bg-slate-700 rounded-md px-1 py-0">
+                <twig:ux:icon name="tabler:settings-cog" class="size-5 text-slate-200 p-0 m-0" />
             </span>
         </div>
         <div data-popover id="popover-user-tools-ins-{{ webpage.id }}" role="tooltip" class="max-sm:hidden absolute z-10 invisible inline-block min-w-80 text-sm transition-opacity duration-300 border rounded-lg shadow-sm opacity-0 border-gray-600 bg-gray-800">
@@ -141,8 +163,8 @@
 {% macro item(item, position = 'top') %}
     {% if is_granted('ROLE_EDITOR') %}
         <div data-popover-target="popover-user-tools-item-{{ item.id }}" data-popover-trigger="click" data-popover-placement="left" class="absolute max-sm:hidden inline-flex opacity-40 hover:opacity-100 cursor-pointer z-10" style="{{ position }}: 16px; right: 16px;" title="Cliquez pour modifier `{{ item.name|striptags }}`">
-            <span class="border border-slate-200 bg-slate-600 hover:bg-slate-700 rounded-md px-0 py-2">
-                <twig:ux:icon name="tabler:settings-cog" class="w-8 text-slate-200 p-0 m-0" />
+            <span class="border border-slate-200 bg-slate-600 hover:bg-slate-700 rounded-md px-1 py-0">
+                <twig:ux:icon name="tabler:settings-cog" class="size-5 text-slate-200 p-0 m-0" />
             </span>
         </div>
         <div data-popover id="popover-user-tools-item-{{ item.id }}" role="tooltip" class="max-sm:hidden absolute z-10 invisible inline-block min-w-80 text-sm transition-opacity duration-300 border rounded-lg shadow-sm opacity-0 border-gray-600 bg-gray-800">

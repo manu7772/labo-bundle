@@ -82,6 +82,7 @@ class TwigExtensions extends AbstractExtension implements GlobalsInterface
             // Routes
             new TwigFunction('route_exists', [$this->appService, 'routeExists']),
             new TwigFunction('url_if_exists', [$this->appService, 'getUrlIfExists']),
+            new TwigFunction('webpage_url', [$this->appService, 'getWebpageUrl']),
             new TwigFunction('is_current_route', [$this->appService, 'isCurrentRoute']),
             new TwigFunction('findEntitiesByCategorys', [$this, 'findEntitiesByCategorys']),
             new TwigFunction('findEntityBy', [$this, 'findEntityBy']),
@@ -133,6 +134,7 @@ class TwigExtensions extends AbstractExtension implements GlobalsInterface
             new TwigFilter('hasText', [Strings::class, 'hasText']),
             new TwigFilter('textOrNull', [Strings::class, 'textOrNull']),
             new TwigFilter('text2array', [Strings::class, 'text2array']),
+            new TwigFilter('nl2space', [Strings::class, 'nl2space']),
             new TwigFilter('phoneNumber', [Strings::class, 'normalizeTelephoneNumber']),
             new TwigFilter('flashes_to_json', [$this, 'flashesToSJson']),
             // new TwigFilter('ea_apply_filter_if_exists', [$this, 'applyFilterIfExists'], ['needs_environment' => true]),

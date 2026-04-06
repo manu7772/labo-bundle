@@ -875,6 +875,33 @@ class AppService extends BaseService implements AppServiceInterface
         return $url;
     }
 
+    /**
+     * Get URL of a webpage (only if it can be generated)
+     * 
+     * @param null|string|array $elements
+     * @return ?string
+     */
+    public function getWebpageUrl(
+        null|string|array $elements,
+        int $referenceType = Router::ABSOLUTE_PATH,
+    ): ?string
+    {
+        $parameters = [];
+        foreach((array)$elements as $element) {
+            switch (true) {
+                case is_string($element):
+                    $parameters[] = $element;
+                    break;
+                case $element instanceof SlugInterface:
+                    $parameters[] = $element->getSlug();
+                    break;
+            }
+        }
+        return empty($parameters)
+            ? $this->get('router')->generate(name: 'app_home', referenceType: $referenceType)
+            : $this->getUrlIfExists('app_webpage', ['path' => implode('/', $parameters)], $referenceType);
+    }
+
 
     /************************************************************************************************************/
     /** CACHE                                                                                                   */

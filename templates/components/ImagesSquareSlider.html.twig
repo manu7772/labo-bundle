@@ -1,42 +1,67 @@
 {% if slider.slides.count > 0 %}
 <div{{ attributes }}>
+    {% import '@AequationLabo/partials/_user_tools.html.twig' as user_tools %}
     {% set normalizedSlider = app.service.getNormalized(slider, null, {groups: ['index','BaSlider']}) %}
-    <div {{ stimulus_controller('modal-slider', {slider: normalizedSlider, format: 'image_filter_path'}) }} class="slider-square">
+    <div {{ stimulus_controller('modal-slider', {slider: normalizedSlider, format: 'image_filter_path'}) }} class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4 pt-6 pb-8">
         {% for slide in slider.slides %}
         {% if slide.active %}
         {% set the_img = slide.slidebases.isEmpty() ? slide : slide.slidebases.last %}
-        <div class="thumbs">
-            <img {{ stimulus_action('modal-slider', 'openModal', 'click', {slideId: slide.id}) }} src="{{ vich_uploader_asset(the_img)|imagine_filter('thumbnail_q') }}" alt="{{ slide.slug }}" />
+        <div class="w-full relative aspect-square">
+            {{ user_tools.item(slide, 'top') }}
+            <div class="overflow-hidden rounded-md border-2 border-slate-500 hover:border-slate-200 hover:shadow-xl shadow-black transition-shadow duration-300">
+                <img {{ stimulus_action('modal-slider', 'openModal', 'click', {slideId: slide.id}) }} src="{{ vich_uploader_asset(the_img)|imagine_filter('thumbnail_q') }}" class="object-cover hover:scale-105 transition-transform duration-500 cursor-pointer" alt="{{ slide.slug }}" />
+                {% if slide.slidetype == "beforafter" %}
+                <div class="size-8 left-0 top-0 bg-red-500 p-1 rounded-br-full absolute">
+                    <twig:ux:icon name="tabler:caret-left-right-filled" class="size-5 text-white p-0 m-0 pb-1 pr-1" />
+                </div>
+                {% elseif slide.slidetype == "story" %}
+                <div class="size-8 left-0 top-0 bg-orange-400 p-1 rounded-br-full absolute">
+                    {% set scount = slide.slidebases.count + 1 > 9 ? 'tabler:box-multiple-filled' : 'tabler:box-multiple-' ~ (slide.slidebases.count + 1) %}
+                    <twig:ux:icon name="{{ scount }}" class="size-5 text-white p-0 m-0 pb-1 pr-1" />
+                </div>
+                {% endif %}
+            </div>
         </div>
         {% endif %}
         {% endfor %}
         <el-dialog>
             <dialog {{ stimulus_target('modal-slider', 'dialog') }} aria-labelledby="dialog-title">
                 <el-dialog-backdrop {{ stimulus_action('modal-slider', 'closeModal', 'click') }}></el-dialog-backdrop>
-                <div tabindex="0">
+                <div {{ stimulus_target('modal-slider', 'mouseZone') }} tabindex="0">
                     <el-dialog-panel class="w-full">
-                        <div class="dialog-container h-[82vh]">
+                        <div class="dialog-container h-[80vh]">
                             <div class="flex flex-col gap-2 items-center h-full">
                                 <div {{ stimulus_target('modal-slider', 'title') }} id="flex-none dialog-title" class="text-xl sm:text-2xl lg:text-3xl font-semibold mt-0 text-slate-900 dark:text-white"></div>
                                 <div {{ stimulus_target('modal-slider', 'content') }} class="flex-none text-sm text-slate-500 dark:text-slate-400 max-w-5xl"></div>
-                                <div {{ stimulus_target('modal-slider', 'mouseZone') }} class="flex-1 overflow-auto">
-                                    <div {{ stimulus_target('modal-slider', 'blockBefore') }} class="h-full relative place-content-center">
-                                        <img {{ stimulus_target('modal-slider', 'image') }} class="rounded-lg select-none" src="" alt="" />
-                                        <div {{ stimulus_target('modal-slider', 'legendBAfter') }} class="bloctxt">Avant</div>
-                                    </div>
-                                    <div {{ stimulus_target('modal-slider', 'blockBAfter') }} class="foregd transit">
-                                        {# <div class="foregd-slide"> #}
-                                            <div {{ stimulus_target('modal-slider', 'blockImgBAfter') }}> <!-- animation-delay -->
-                                                <img {{ stimulus_target('modal-slider', 'imageBAfter') }} class="select-none h-[inherit] object-contain rounded-lg" src="" alt="" />
-                                                <div class="bloctxt bloctxt-client_secondary">Après</div>
+                                <div class="flex-1 overflow-auto">
+                                    <div class="relative w-full max-w-4xl h-full overflow-hidden rounded mx-auto">
+                                        <div {{ stimulus_target('modal-slider', 'blockBefore') }} class="h-full relative place-content-center">
+                                            <img {{ stimulus_target('modal-slider', 'mainImage') }} class="rounded-lg select-none" src="" alt="" />
+                                            <div {{ stimulus_target('modal-slider', 'legendBAfter') }} class="py-1 px-8 sm:px-16 absolute text-white text-base sm:text-2xl font-bold left-12 bottom-3 bg-slate-800 bg-opacity-70 rounded-md">{{ 'before'|trans|ucfirst }}</div>
+                                        </div>
+                                        <!-- For beforafter slides, we will display the images in a block with a handler to move the after image and reveal more or less of it -->
+                                        <div {{ stimulus_target('modal-slider', 'blockBAfter') }} class="h-full mx-auto w-12 min-w-12 max-w-4xl absolute top-0 left-0 overflow-hidden transit">
+                                            <div class="relative h-full w-full">
+                                                <div {{ stimulus_target('modal-slider', 'blockImgBAfter') }}> <!-- animation-delay -->
+                                                    <img {{ stimulus_target('modal-slider', 'imageBAfter') }} class="rounded-lg select-none" src="" alt="" />
+                                                    <div class="py-1 px-8 sm:px-16 absolute text-white text-base sm:text-2xl font-bold left-12 bottom-3 bg-slate-800 bg-opacity-70 rounded-md bg-client_secondary bg-opacity-80">{{ 'after'|trans|ucfirst }}</div>
+                                                </div>
+                                                <div {{ stimulus_target('modal-slider', 'BAfterHandler') }} class="flex absolute right-0 bg-client_secondary cursor-ew-resize text-white fill-white w-10 h-10 max-lg:w-12 max-lg:h-12 top-1/2 -translate-y-1/2 rounded-l-full">
+                                                    <twig:ux:icon name="tabler:caret-left-right-filled" class="animate-pulse" clip-rule="evenodd" fill-rule="evenodd" stroke-linejoin="round" stroke-miterlimit="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" />
+                                                </div>
                                             </div>
-                                            <div {{ stimulus_target('modal-slider', 'BAfterHandler') }} class="handler">
-                                                <twig:ux:icon name="tabler:circle-arrow-right-filled" clip-rule="evenodd" fill-rule="evenodd" stroke-linejoin="round" stroke-miterlimit="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" />
+                                        </div>
+                                        <!-- For story slides, we will display the images in a column -->
+                                        <div {{ stimulus_target('modal-slider', 'blockStory') }} class="foregd transit absolute top-0 left-0">
+                                            <div {{ stimulus_target('modal-slider', 'imagesStory') }} class="">
+
+                                                <img {{ stimulus_target('modal-slider', 'imagesStory') }} class="rounded-lg select-none" src="" alt="" />
+                                                <div {{ stimulus_target('modal-slider', 'legendStory') }} class="py-1 px-8 sm:px-16 absolute text-white text-base sm:text-2xl font-bold left-12 bottom-3 bg-slate-800 bg-opacity-70 rounded-md">{{ 'before'|trans|ucfirst }}</div>
+
                                             </div>
-                                        {# </div> #}
+                                        </div>
                                     </div>
                                 </div>
-
                             </div>
                         </div>
                         <div class="dialog-footer">
