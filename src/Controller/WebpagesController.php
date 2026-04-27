@@ -39,7 +39,7 @@ class WebpagesController extends AbstractController
                 return $this->redirectToRoute('app_home');
                 break;
             case $wpContainer->isWebpage() || $wpContainer->isMenu():
-                return $this->render($wpContainer->getTwigfile(), $wpContainer->toArray());
+                return $this->render($wpContainer->getTwigfile(), $wpContainer->toArray(true));
                 break;
             // case $wpContainer->isError():
             //     return $this->redirectToRoute('app_error');

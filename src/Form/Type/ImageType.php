@@ -1,20 +1,20 @@
 <?php
 namespace Aequation\LaboBundle\Form\Type;
 
-use Symfony\Component\Form\FormEvent;
 use Aequation\LaboBundle\Entity\Image;
-use Symfony\Component\Form\FormEvents;
-
 use Aequation\LaboBundle\Form\base\BaseAppType;
-use Symfony\Component\Form\FormBuilderInterface;
-use Vich\UploaderBundle\Form\Type\VichImageType;
-use Symfony\Component\Validator\Constraints\Choice;
-use Symfony\Component\OptionsResolver\OptionsResolver;
-use Symfony\Component\Form\Extension\Core\Type\TextType;
-use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
-use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
 use Aequation\LaboBundle\Model\Interface\ImageOwnerInterface;
 use Aequation\LaboBundle\Service\Interface\ImageServiceInterface;
+use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
+use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
+use Symfony\Component\Form\Extension\Core\Type\TextareaType;
+use Symfony\Component\Form\Extension\Core\Type\TextType;
+use Symfony\Component\Form\FormBuilderInterface;
+use Symfony\Component\Form\FormEvent;
+use Symfony\Component\Form\FormEvents;
+use Symfony\Component\OptionsResolver\OptionsResolver;
+use Symfony\Component\Validator\Constraints\Choice;
+use Vich\UploaderBundle\Form\Type\VichImageType;
 
 abstract class ImageType extends BaseAppType
 {
@@ -42,6 +42,10 @@ abstract class ImageType extends BaseAppType
                 'label' => false,
                 'allow_delete' => static::DELETE_IMAGE,
             ])
+            ->add('content', TextareaType::class, [
+                'label' => 'Légende',
+                'required' => false,
+            ])
             ->add('imagefilter', ChoiceType::class, [
                 'label' => 'Format d\'affichage',
                 'required' => true,
@@ -50,10 +54,10 @@ abstract class ImageType extends BaseAppType
                 'choice_translation_domain' => 'messages',
                 // 'empty_data' => $manager->getDefaultLiipFilterName($builder->getData() ?? $builder->getDataClass()),
             ])
-            ->add('imageOperations', ImageOperationsType::class, [
-                'label' => 'Opérations sur l\'image',
-                'required' => false,
-            ])
+            // ->add('imageOperations', ImageOperationsType::class, [
+            //     'label' => 'Opérations sur l\'image',
+            //     'required' => false,
+            // ])
         ;
         parent::buildForm($builder, $options);
     }

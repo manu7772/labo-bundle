@@ -419,7 +419,7 @@ class TwigExtensions extends AbstractExtension implements GlobalsInterface
     public function turboEnable(bool $enable) : Markup
     {
         /** @see https://turbo.hotwired.dev/handbook/drive#prefetching-links-on-hover */
-        return Strings::markup(' data-turbo-prefetch="'.($enable ? 'true' : 'false').'"');
+        return Strings::markup(' data-turbo-prefetch="'.json_encode($enable).'"');
         // return Strings::markup(' data-turbo="'.($enable ? 'true' : 'false').'"');
     }
 

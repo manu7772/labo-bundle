@@ -44,7 +44,7 @@ class WebpageContainer implements WebpageContainerInterface
         protected AppEntityManagerInterface $appEm
     ) {
         $this->initialize($elements);
-        // dump($this->toArray(true));
+        dump($this->toArray(true));
     }
 
     public function getId(): string
@@ -198,6 +198,15 @@ class WebpageContainer implements WebpageContainerInterface
         ];
         return $includeSelf ? array_merge(['wpContainer' => $this], $data) : $data;
     }
+
+/**
+ * [WARNING] The configuration location for the Symfony CLI has changed in v5.17.0.                                       
+ * Your configuration is still stored in the legacy directory.                                                            
+ * Please follow these instructions:                                                                                      
+ * symfony server:stop --all                                                                                           
+ * symfony proxy:stop                                                                                                  
+ * move "/home/dujardin2026/.symfony5" to "/home/dujardin2026/.config/symfony-cli"
+ */
 
     public function getWebpage(): ?FinalWebpageInterface
     {

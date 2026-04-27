@@ -35,6 +35,7 @@ use EasyCorp\Bundle\EasyAdminBundle\Field\CollectionField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\TextEditorField;
 use EasyCorp\Bundle\EasyAdminBundle\Filter\DateTimeFilter;
 use EasyCorp\Bundle\EasyAdminBundle\Field\AssociationField;
+use EasyCorp\Bundle\EasyAdminBundle\Field\TextareaField;
 
 #[IsGranted('ROLE_COLLABORATOR')]
 abstract class SlideCrudController extends BaseCrudController
@@ -142,8 +143,6 @@ abstract class SlideCrudController extends BaseCrudController
                             ->setRequired(false)
                             ->allowMultipleChoices(true)
                             ->setHelp('Styles supplémentaires à appliquer à la diapositive pour modifier son aspect visuel : couleurs sépia, monochrome, couleurs négatives, flous, etc.');
-                    yield FormField::addColumn(12);
-                        yield CKEditorField::new('content','Texte')->formatValue(fn ($value) => Strings::markup($value));
 
                 yield FormField::addTab('Contenu média')
                     ->setIcon('tabler:camera');
@@ -155,6 +154,7 @@ abstract class SlideCrudController extends BaseCrudController
                         yield ChoiceField::new('imagefilter', 'Format de l\'image')
                             ->setChoices($this->entityService->getLiipFilterChoices(0, 0, $slide))
                             ->setRequired(true);
+                        yield TextareaField::new('content','Légende');
 
                     yield FormField::addColumn(6);
                         if($hasOverlays) {

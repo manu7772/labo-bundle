@@ -1,16 +1,18 @@
 <?php
 namespace Aequation\LaboBundle\Entity;
 
-use Doctrine\ORM\Mapping as ORM;
 use Aequation\LaboBundle\Entity\Image;
-use Symfony\Component\HttpFoundation\File\File;
-use Vich\UploaderBundle\Mapping\Attribute as Vich;
-// Symfony
 use Aequation\LaboBundle\Model\Interface\SlideInterface;
-use Symfony\Component\Serializer\Attribute as Serializer;
 use Aequation\LaboBundle\Model\Interface\SlidebaseInterface;
 use Aequation\LaboBundle\Model\Final\FinalLaboSlideInterface;
 use Aequation\LaboBundle\Service\Interface\AppEntityManagerInterface;
+use Aequation\LaboBundle\Model\Attribute\HtmlContent;
+// Symfony
+use Doctrine\DBAL\Types\Types;
+use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\HttpFoundation\File\File;
+use Symfony\Component\Serializer\Attribute as Serializer;
+use Vich\UploaderBundle\Mapping\Attribute as Vich;
 
 class LaboSlidebase extends Image implements SlidebaseInterface
 {
@@ -28,6 +30,10 @@ class LaboSlidebase extends Image implements SlidebaseInterface
     #[Serializer\Ignore]
     protected ?FinalLaboSlideInterface $slide = null;
 
+    #[ORM\Column(type: Types::TEXT, nullable: true)]
+    #[Serializer\Groups(['BaSlider','rslider'])]
+    #[HtmlContent]
+    protected ?string $content = null;
 
     #[Serializer\Ignore]
     public function getSlide(): ?SlideInterface
@@ -49,14 +55,15 @@ class LaboSlidebase extends Image implements SlidebaseInterface
         return $this;
     }
 
-    // public function removeSlide(): static
-    // {
-    //     $slide = $this->slide;
-    //     $this->slide = null;
-    //     if($slide && $slide->getSlidebases()->contains($this)) {
-    //         $slide->removeSlidebase($this);
-    //     }
-    //     return $this;
-    // }
+    public function getContent(): ?string
+    {
+        return $this->content;
+    }
+
+    public function setContent(?string $content): static
+    {
+        $this->content = $content;
+        return $this;
+    }
 
 }

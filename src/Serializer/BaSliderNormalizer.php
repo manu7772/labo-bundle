@@ -33,6 +33,7 @@ class BaSliderNormalizer implements NormalizerInterface
                 'image_filter_path' => $this->getBrowserPath($slide, $slide->getImagefilter()),
                 'parent_filter_path' => $this->getBrowserPath($slide, $slide->getLiipFilterByTempParent()),
                 'thumb_path' => $this->getBrowserPath($slide, $slide->getThumbnailLiipFilter()),
+                'content' => $slide->getContent(),
             ];
             // Add slidebases images if the slide type allows it
             foreach ($slide::SLIDE_TYPES as $name => $values) {
@@ -42,9 +43,10 @@ class BaSliderNormalizer implements NormalizerInterface
                         /** @var LaboSlidebase $slidebase */
                         $baSliderImages[] = [
                             'respect_format_path' => $this->getBrowserPath($slidebase, static::RESPECT_FORMAT),
-                            'image_filter_path' => $this->getBrowserPath($slide, $slide->getImagefilter()),
+                            'image_filter_path' => $this->getBrowserPath($slidebase, $slide->getImagefilter()),
                             'parent_filter_path' => $this->getBrowserPath($slidebase, $slide->getLiipFilterByTempParent()),
                             'thumb_path' => $this->getBrowserPath($slidebase, $slide->getThumbnailLiipFilter()),
+                            'content' => $slidebase->getContent(),
                         ];
                     }
                 }
@@ -52,7 +54,6 @@ class BaSliderNormalizer implements NormalizerInterface
             $data['baSliderImages'] = $baSliderImages;
             $data['liip_filter_by_temp_parent'] = $slide->getLiipFilterByTempParent();
         }
-        // dump($data);
         return $data;
     }
 

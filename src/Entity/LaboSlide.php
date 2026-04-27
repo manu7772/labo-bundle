@@ -3,25 +3,24 @@ namespace Aequation\LaboBundle\Entity;
 
 Use App\Entity\Slider;
 
-use Doctrine\DBAL\Types\Types;
-use Doctrine\ORM\Mapping as ORM;
 use Aequation\LaboBundle\Entity\Image;
 use Aequation\LaboBundle\Model\Trait\Slug;
 use Aequation\LaboBundle\Component\Overlay;
-use Doctrine\Common\Collections\Collection;
-use Symfony\Component\HttpFoundation\File\File;
-use Doctrine\Common\Collections\ArrayCollection;
-use Vich\UploaderBundle\Mapping\Attribute as Vich;
 use Aequation\LaboBundle\Model\Attribute\CssClasses;
-// Symfony
 use Aequation\LaboBundle\Model\Attribute\HtmlContent;
 use Aequation\LaboBundle\Model\Interface\SlugInterface;
 use Aequation\LaboBundle\Model\Interface\SlideInterface;
-use Symfony\Component\Serializer\Attribute as Serializer;
-use Aequation\LaboBundle\Model\Interface\SlidebaseInterface;
 use Aequation\LaboBundle\Model\Interface\ImageOwnerInterface;
 use Aequation\LaboBundle\Model\Final\FinalLaboSlidebaseInterface;
 use Aequation\LaboBundle\Service\Interface\AppEntityManagerInterface;
+// Symfony
+use Doctrine\DBAL\Types\Types;
+use Doctrine\ORM\Mapping as ORM;
+use Doctrine\Common\Collections\Collection;
+use Doctrine\Common\Collections\ArrayCollection;
+use Symfony\Component\HttpFoundation\File\File;
+use Symfony\Component\Serializer\Attribute as Serializer;
+use Vich\UploaderBundle\Mapping\Attribute as Vich;
 
 abstract class LaboSlide extends Image implements SlideInterface, SlugInterface, ImageOwnerInterface
 {
