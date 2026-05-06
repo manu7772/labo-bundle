@@ -48,6 +48,10 @@ class LaboWebpageController extends LaboEntityController
     public function delete(Request $request, int $id): Response
     { return parent::delete($request, $id); }
 
+    #[Route('/'.self::ENTITYL.'/{id}/{field}/{value}', name: self::ENTITYL.'_boolean', methods: ['GET', 'POST'], requirements: ['value' => '0|1'], defaults: ['value' => null])]
+    public function boolvalue(Request $request, int $id, string $field, ?bool $value): Response
+    { return parent::boolvalue($request, $id, $field, $value); }
+
     #[Route('/collection/sort-items/{entity}', name: 'sort_items', methods: ['POST'])]
     public function sortItems(
         Ecollection $entity,

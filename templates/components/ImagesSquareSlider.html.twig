@@ -1,4 +1,4 @@
-{% if slider.slides.count > 0 %}
+{% if slider|default(null) and slider.slides.count > 0 %}
 <div{{ attributes }}>
     {% import '@AequationLabo/partials/_user_tools.html.twig' as user_tools %}
     {% set normalizedSlider = app.service.getNormalized(slider, null, {groups: ['index','BaSlider']}) %}

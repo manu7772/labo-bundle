@@ -11,7 +11,8 @@
         {% if webpage is defined %}
 
         <section class="min-h-[50vh] mb-0 pb-0">
-            <div class="section-container">
+
+            <div class="section-container-full">
 
                 {% block slider_texts %}
                     {% if webpage.slider.content %}
@@ -29,6 +30,7 @@
                 <twig:ImagesSquareSlider :slider="webpage.slider" />
 
             </div>
+
         </section>
 
         {% endif %}

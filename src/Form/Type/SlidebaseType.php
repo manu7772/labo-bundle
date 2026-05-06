@@ -14,7 +14,7 @@ abstract class SlidebaseType extends ImageType
 
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
-        dump($this, $builder, $options);
+        // dump($this, $builder, $options);
         parent::buildForm($builder, $options);
         $builder->remove('name');
         $builder->remove('imagefilter');

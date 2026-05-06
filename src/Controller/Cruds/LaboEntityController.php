@@ -1,21 +1,23 @@
 <?php
 namespace Aequation\LaboBundle\Controller\Cruds;
 
-use Exception;
-use Twig\Environment;
-use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpFoundation\Response;
 use Aequation\LaboBundle\Service\Tools\Classes;
-use Symfony\Component\Routing\Annotation\Route;
-
 use Aequation\LaboBundle\Component\ClassmetadataReport;
 use Aequation\LaboBundle\Model\Final\FinalWebpageInterface;
 use Aequation\LaboBundle\Model\Interface\AppEntityInterface;
-use Symfony\Component\DependencyInjection\Attribute\Autowire;
-
-use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Aequation\LaboBundle\Service\Interface\AppEntityManagerInterface;
 use Aequation\LaboBundle\Service\Interface\LaboBundleServiceInterface;
+// Symfony
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\PropertyAccess\PropertyAccess;
+use Symfony\Component\PropertyAccess\PropertyAccessor;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+// PHP
+use Exception;
+use Twig\Environment;
 
 abstract class LaboEntityController extends AbstractController
 {
@@ -176,6 +178,34 @@ abstract class LaboEntityController extends AbstractController
             $this->addFlash('error', vsprintf('La %s n\'a pu être supprimée, une erreur est survenue', [static::ENTITY, $entity]));
         }
         return $this->redirectToRoute($this->getCrudRoute('index'), [], Response::HTTP_SEE_OTHER);
+    }
+
+    public function boolvalue(Request $request, int $id, string $field, ?bool $value): Response
+    {
+        /** @var ServiceEntityRepository $repo */
+        $repo = $this->manager->getRepository();
+        if($entity = $repo->find($id)) {
+            $propertyAccessor = PropertyAccess::createPropertyAccessorBuilder()->enableMagicCall()->enableExceptionOnInvalidIndex()->getPropertyAccessor();
+            $oldvalue = $propertyAccessor->getValue($entity, $field);
+            if(!is_bool($oldvalue)) {
+                throw new Exception(vsprintf('Erreur %s ligne %d: field "%s" of entity "%s" is not a boolean!', [__METHOD__, __LINE__, $field, $entity]));
+            }
+            if(!is_bool($value)) {
+                $value = !$oldvalue;
+            }
+            if($oldvalue === $value) {
+                $this->addFlash('info', vsprintf('La %s "%s" n\'a pas été modifiée, sa valeur est identique.', [static::ENTITY, $entity]));
+            } else {
+                $propertyAccessor->setValue($entity, $field, $value);
+                $this->manager->save($entity);
+                $this->addFlash('success', vsprintf('La %s "%s" a été modifiée', [static::ENTITY, $entity]));
+            }
+        } else {
+            $this->addFlash('error', vsprintf('La %s n\'a pu être modifiée, une erreur est survenue', [static::ENTITY]));
+        }
+        // Redirect to last page, if not found, redirect to app home
+        $route = $request->headers->get('referer') ?? $this->generateUrl('app_home');
+        return $this->redirect($route);
     }
 
 }

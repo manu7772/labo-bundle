@@ -44,7 +44,7 @@ class WebpageContainer implements WebpageContainerInterface
         protected AppEntityManagerInterface $appEm
     ) {
         $this->initialize($elements);
-        dump($this->toArray(true));
+        // dump($this->toArray(true));
     }
 
     public function getId(): string

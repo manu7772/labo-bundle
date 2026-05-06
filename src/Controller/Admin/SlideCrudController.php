@@ -150,7 +150,8 @@ abstract class SlideCrudController extends BaseCrudController
                     yield FormField::addColumn(6);
                         yield TextField::new('file', 'Image')
                             ->setFormType(VichImageType::class)
-                            ->setFormTypeOption('allow_delete', false);
+                            ->setFormTypeOption('allow_delete', false)
+                            ->setHelp('<strong>Image principale de la diapositive.</strong><br>Dans le cas d\'un diaporama de type "Avant\\Après", ceci est l\'image "Après" (projet terminé).<br>Pour le type "Story", il s\'agit de l\'image affichée en dernier.<br>Enfin, cette image est l\'image principale, utilisée pour représenter le diaporama.');
                         yield ChoiceField::new('imagefilter', 'Format de l\'image')
                             ->setChoices($this->entityService->getLiipFilterChoices(0, 0, $slide))
                             ->setRequired(true);
