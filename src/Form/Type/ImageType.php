@@ -42,7 +42,7 @@ abstract class ImageType extends BaseAppType
                 'label' => false,
                 'allow_delete' => static::DELETE_IMAGE,
             ])
-            ->add('content', TextareaType::class, [
+            ->add('description', TextareaType::class, [
                 'label' => 'Légende',
                 'required' => false,
             ])

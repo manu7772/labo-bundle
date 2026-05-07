@@ -54,7 +54,7 @@ class ImageCrudController extends BaseCrudController
                 yield TextField::new('filename');
                 yield TextField::new('mime');
                 yield TextField::new('originalname');
-                yield TextEditorField::new('description')->setNumOfRows(20);
+                yield TextEditorField::new('description', 'Légende')->setNumOfRows(20);
                 yield TextField::new('dimensions');
                 yield ThumbnailField::new('filename', 'Photo')
                     ->setBasePath($this->getParameter('vich_dirs.item_photo'))
@@ -66,7 +66,7 @@ class ImageCrudController extends BaseCrudController
             case Crud::PAGE_NEW:
             case Crud::PAGE_EDIT:
                 yield TextField::new('name')->setColumns(4)->setRequired(true);
-                yield TextareaField::new('description')->setColumns(4)->formatValue(fn ($value) => Strings::markup($value));
+                yield TextareaField::new('description', 'Légende')->setColumns(4)->formatValue(fn ($value) => Strings::markup($value));
                 yield AssociationField::new('owner', 'Propriétaire')->setColumns(4)->setPermission('ROLE_ADMIN')->setCrudController(UserCrudController::class);
                 yield TextField::new('file')->setFormType(VichImageType::class)->setDisabled($pageName === Crud::PAGE_EDIT);
                 break;
