@@ -330,6 +330,13 @@ class Strings extends BaseService
 			: false;
 	}
 
+	public static function isHtml(
+		mixed $text,
+	): bool
+	{
+		return is_string($text) && $text !== strip_tags($text);
+	}
+
 	public static function htmlAttributes(
 		array $attributes,
 	): string

@@ -108,8 +108,9 @@
 
 {% macro webpage_inside(webpage, position = 'top') %}
     {% if is_granted('ROLE_EDITOR') %}
+        {% set position = position == 'middle' ? 'top: 50%; transform: translateX(-50%); right: 0px;' : position ~ ': 16px; right: 0px;' %}
         {% set currentItem = webpage.currentItem|default(webpage) %}
-        <div data-popover-target="popover-user-tools-ins-{{ webpage.id }}" data-popover-trigger="click" data-popover-placement="left" class="absolute max-sm:hidden inline-flex opacity-40 hover:opacity-100 cursor-pointer z-10" style="{{ position }}: 16px; right: 0px;" title="Cliquez pour modifier {{ 'name'|trans([], currentItem.shortname) }} `{{ currentItem.name }}`">
+        <div data-popover-target="popover-user-tools-ins-{{ webpage.id }}" data-popover-trigger="click" data-popover-placement="left" class="absolute max-sm:hidden inline-flex opacity-40 hover:opacity-100 cursor-pointer z-10" style="{{ position }}" title="Cliquez pour modifier {{ 'name'|trans([], currentItem.shortname) }} `{{ currentItem.name }}`">
             <span class="border border-slate-200 bg-slate-600 hover:bg-slate-700 rounded-md px-1 py-0">
                 <twig:ux:icon name="tabler:settings-cog" class="size-5 text-slate-200 p-0 m-0" />
             </span>
@@ -130,7 +131,8 @@
 
 {% macro websection(webpage, websection, position = 'top') %}
     {% if is_granted('ROLE_EDITOR') %}
-        <div data-popover-target="popover-user-tools-ww-{{ webpage.id }}-{{ websection.id }}" data-popover-trigger="click" data-popover-placement="left" class="absolute max-sm:hidden inline-flex opacity-40 hover:opacity-100 cursor-pointer z-10" style="{{ position }}: 16px; right: 16px;" title="Cliquez pour modifier la section `{{ websection.name|striptags }}` de la page `{{ webpage.name|striptags }}`">
+        {% set position = position == 'middle' ? 'top: 50%; transform: translateX(-50%); right: 16px;' : position ~ ': 16px; right: 16px;' %}
+        <div data-popover-target="popover-user-tools-ww-{{ webpage.id }}-{{ websection.id }}" data-popover-trigger="click" data-popover-placement="left" class="absolute max-sm:hidden inline-flex opacity-40 hover:opacity-100 cursor-pointer z-10" style="{{ position }}" title="Cliquez pour modifier la section `{{ websection.name|striptags }}` de la page `{{ webpage.name|striptags }}`">
             <span class="border border-slate-200 bg-slate-600 hover:bg-slate-700 rounded-md px-1 py-0">
                 <twig:ux:icon name="tabler:settings-cog" class="size-5 text-slate-200 p-0 m-0" />
             </span>
@@ -141,20 +143,20 @@
             </div>
             <div class="px-3 py-1 flex flex-col gap-0 text-gray-400 my-2">
                 <a class="hover:text-white" data-turbo="false" target="_blank" href="{{ url('easyadmin_websection_detail', {entityId: websection.id}) }}"><twig:ux:icon name="tabler:eye" class="w-4 h-4 inline-block" /> Voir</a>
-                {# <a class="hover:text-white" data-turbo="false" target="_blank" href="{{ url('easyadmin_websection_edit', {entityId: websection.id}) }}"><twig:ux:icon name="tabler:pencil" class="w-4 h-4 inline-block" /> Modifier</a> #}
+                <a class="hover:text-white" data-turbo="false" target="_blank" href="{{ url('easyadmin_websection_edit', {entityId: websection.id}) }}"><twig:ux:icon name="tabler:pencil" class="w-4 h-4 inline-block" /> Modifier</a>
                 <a class="hover:text-white" data-turbo="false" href="{{ path('aequation_labo_entity_webpage_remove_websection', {webpage: webpage.id, websection: websection.id }) }}"><twig:ux:icon name="tabler:x" class="w-4 h-4 inline-block" /> Retirer de cette page</a>
                 {% if websection.active %}
-                <a class="hover:text-white" data-turbo="false" href="{{ path('aequation_labo_entity_websection_enable', {websection: websection.id, value: 0 }) }}"><twig:ux:icon name="tabler:eye-x" class="w-4 h-4 inline-block" /> Désactiver (partout)</a>
+                <a class="hover:text-white" data-turbo="false" href="{{ path('aequation_labo_entity_websection_enable', {websection: websection.id, value: 0 }) }}"><twig:ux:icon name="tabler:eye-x" class="w-4 h-4 inline-block" /> Désactiver (sur tout le site)</a>
                 {% else %}
-                <a class="hover:text-white" data-turbo="false" href="{{ path('aequation_labo_entity_websection_enable', {websection: websection.id, value: 1 }) }}"><twig:ux:icon name="tabler:eye-check" class="w-4 h-4 inline-block" /> Activer (partout)</a>
+                <a class="hover:text-white" data-turbo="false" href="{{ path('aequation_labo_entity_websection_enable', {websection: websection.id, value: 1 }) }}"><twig:ux:icon name="tabler:eye-check" class="w-4 h-4 inline-block" /> Activer (sur tout le site)</a>
                 {% endif %}
-                {% if websection.sectiontype == 'section' %}
+                {# {% if websection.sectiontype == 'section' %}
                     <hr class="my-2 border-slate-500">
                     <a class="hover:text-white" data-turbo="false" href="{{ path('aequation_labo_entity_webpage_move_websection', {webpage: webpage.id, websection: websection.id, position: 'top' }) }}"><twig:ux:icon name="tabler:arrow-bar-to-up" class="w-4 h-4 inline-block" /> En premier</a>
                     <a class="hover:text-white" data-turbo="false" href="{{ path('aequation_labo_entity_webpage_move_websection', {webpage: webpage.id, websection: websection.id, position: 'up' }) }}"><twig:ux:icon name="tabler:arrow-up" class="w-4 h-4 inline-block" /> Remonter</a>
                     <a class="hover:text-white" data-turbo="false" href="{{ path('aequation_labo_entity_webpage_move_websection', {webpage: webpage.id, websection: websection.id, position: 'down' }) }}"><twig:ux:icon name="tabler:arrow-down" class="w-4 h-4 inline-block" /> Descendre</a>
                     <a class="hover:text-white" data-turbo="false" href="{{ path('aequation_labo_entity_webpage_move_websection', {webpage: webpage.id, websection: websection.id, position: 'bottom' }) }}"><twig:ux:icon name="tabler:arrow-bar-to-down" class="w-4 h-4 inline-block" /> En dernier</a>
-                {% endif %}
+                {% endif %} #}
             </div>
         </div>
     {% endif %}
@@ -162,7 +164,8 @@
 
 {% macro item(item, position = 'top') %}
     {% if is_granted('ROLE_EDITOR') %}
-        <div data-popover-target="popover-user-tools-item-{{ item.id }}" data-popover-trigger="click" data-popover-placement="left" class="absolute max-sm:hidden inline-flex opacity-40 hover:opacity-100 cursor-pointer z-10" style="{{ position }}: 16px; right: 16px;" title="Cliquez pour modifier `{{ item.name|striptags }}`">
+        {% set position = position == 'middle' ? 'top: 50%; transform: translateX(-50%); right: 16px;' : position ~ ': 16px; right: 16px;' %}
+        <div data-popover-target="popover-user-tools-item-{{ item.id }}" data-popover-trigger="click" data-popover-placement="left" class="absolute max-sm:hidden inline-flex opacity-40 hover:opacity-100 cursor-pointer z-10" style="{{ position }}" title="Cliquez pour modifier `{{ item.name|striptags }}`">
             <span class="border border-slate-200 bg-slate-600 hover:bg-slate-700 rounded-md px-1 py-0">
                 <twig:ux:icon name="tabler:settings-cog" class="size-5 text-slate-200 p-0 m-0" />
             </span>
@@ -175,9 +178,9 @@
                 <a class="hover:text-white" data-turbo="false" target="_blank" href="{{ url('easyadmin_' ~ item.shortname|lower ~ '_detail', {entityId: item.id}) }}"><twig:ux:icon name="tabler:eye" class="w-4 h-4 inline-block" /> Voir</a>
                 <a class="hover:text-white" data-turbo="false" target="_blank" href="{{ url('easyadmin_' ~ item.shortname|lower ~ '_edit', {entityId: item.id}) }}"><twig:ux:icon name="tabler:pencil" class="w-4 h-4 inline-block" /> Modifier</a>
                 {% if item.active %}
-                <a class="hover:text-white" data-turbo="false" href="{{ path('aequation_labo_entity_' ~ item.shortname|lower ~ '_boolean', {id: item.id, field: 'enabled', value: 0 }) }}"><twig:ux:icon name="tabler:eye-x" class="w-4 h-4 inline-block" /> Désactiver (partout)</a>
+                <a class="hover:text-white" data-turbo="false" href="{{ path('aequation_labo_entity_' ~ item.shortname|lower ~ '_boolean', {id: item.id, field: 'enabled', value: 0 }) }}"><twig:ux:icon name="tabler:eye-x" class="w-4 h-4 inline-block" /> Désactiver (sur tout le site)</a>
                 {% else %}
-                <a class="hover:text-white" data-turbo="false" href="{{ path('aequation_labo_entity_' ~ item.shortname|lower ~ '_boolean', {id: item.id, field: 'enabled', value: 1 }) }}"><twig:ux:icon name="tabler:eye-check" class="w-4 h-4 inline-block" /> Activer (partout)</a>
+                <a class="hover:text-white" data-turbo="false" href="{{ path('aequation_labo_entity_' ~ item.shortname|lower ~ '_boolean', {id: item.id, field: 'enabled', value: 1 }) }}"><twig:ux:icon name="tabler:eye-check" class="w-4 h-4 inline-block" /> Activer (sur tout le site)</a>
                 {% endif %}
             </div>
         </div>

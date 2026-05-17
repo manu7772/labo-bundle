@@ -12,5 +12,6 @@ interface WebpageInterface extends EcollectionInterface, CreatedInterface, Enabl
     public function getFirstWebsection(string $sectiontype, bool $filter_active = false): ?FinalWebsectionInterface;
     public function getWebsectionsOrdered(bool $filter_active = false): Collection;
     public function getWebsections(?string $sectiontype = null, bool $filter_active = false): Collection;
+    public function getMainSlider(): ?SliderInterface;
 }
 

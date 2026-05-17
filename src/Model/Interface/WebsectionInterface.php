@@ -27,5 +27,7 @@ interface WebsectionInterface extends ItemInterface, CreatedInterface, EnabledIn
     public function getTwigfileMetadata(): TwigfileMetadata;
     public function getSectiontype(): string;
     public function setSectiontype(string $sectiontype): static;
+    public function getSlider(): ?SliderInterface;
+    public function setSlider(?SliderInterface $slider): static;
 }
 

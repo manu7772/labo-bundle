@@ -1,17 +1,16 @@
 <?php
 namespace Aequation\LaboBundle\Component;
 
-use Aequation\LaboBundle\Service\Tools\Strings;
+use Aequation\LaboBundle\Model\Attribute\CssClasses;
 use Aequation\LaboBundle\Service\Tools\Encoders;
-//Symfony
-use Symfony\Component\Form\FormBuilderInterface;
-use Symfony\Component\Form\Extension\Core\Type\TextType;
+use Aequation\LaboBundle\Service\Tools\Strings;
+use BadMethodCallException;
+use JsonSerializable;
+use Serializable;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\TextareaType;
-// PHP
-use Serializable;
-use JsonSerializable;
-use BadMethodCallException;
+use Symfony\Component\Form\Extension\Core\Type\TextType;
+use Symfony\Component\Form\FormBuilderInterface;
 
 class Overlay implements JsonSerializable, Serializable
 {
@@ -19,7 +18,8 @@ class Overlay implements JsonSerializable, Serializable
     public const ITEMS_ATTRIBUTES = [
         'overlay'=> [
             'position' => [
-                'label' => 'Bloc > position',
+                'label' => '<strong>Bloc</strong> <span style="opacity: 0.6;">position</span>',
+                // 'label_html' => true, // --> automatically convert label to markup if contains html tags
                 'priority' => 120,
                 'type' => ChoiceType::class,
                 'required' => true,
@@ -36,8 +36,27 @@ class Overlay implements JsonSerializable, Serializable
                     'Bas au centre' => "overlay-bottom-center",
                 ],
             ],
+            "theme" => [
+                'label' => '<strong>Bloc</strong> <span style="opacity: 0.6;">Thème</span>',
+                'priority' => 115,
+                'type' => ChoiceType::class,
+                'required' => true,
+                'empty_data' => "",
+                'multiple' => false,
+                'expanded' => false,
+                'choices' => [
+                    'Normal' => "",
+                    'Rouge vif' => "theme-red",
+                    'Bleu cyan' => "theme-cyan",
+                    'Vert foncé' => "theme-green",
+                    'Vert vif' => "theme-lime",
+                    'Orange' => "theme-orange",
+                    'Violet' => "theme-purple",
+                    'Ambre' => "theme-amber",
+                ],
+            ],
             // 'style' => [
-            //     'label' => 'Bloc > style',
+            //     'label' => '<strong>Bloc</strong> <span style="opacity: 0.6;">style</span>',
             //     'priority' => 110,
             //     'type' => ChoiceType::class,
             //     'required' => true,
@@ -51,7 +70,7 @@ class Overlay implements JsonSerializable, Serializable
             //     ],
             // ],
             'width' => [
-                'label' => 'Bloc > taille',
+                'label' => '<strong>Bloc</strong> <span style="opacity: 0.6;">taille</span>',
                 'priority' => 105,
                 'type' => ChoiceType::class,
                 'required' => true,
@@ -59,37 +78,43 @@ class Overlay implements JsonSerializable, Serializable
                 'expanded' => false,
                 'empty_data' => "",
                 'choices' => [
-                    '40%' => "overlay-sm",
-                    '60%' => "overlay-md",
-                    '70%' => "",
+                    '40%' => "overlay-xs",
+                    '40% max' => "overlay-max-xs",
+                    '60%' => "overlay-sm",
+                    '60% max' => "overlay-max-sm",
+                    '70%' => "overlay-md",
+                    '70% max' => "",
                     '80%' => "overlay-lg",
+                    '80% max' => "overlay-max-lg",
                     '95%' => "overlay-xl",
+                    '95% max' => "overlay-max-xl",
                 ],
             ],
         ],
         'title' => [
             'text' => [
-                'label' => 'Titre > texte',
+                'label' => '<strong>Titre</strong> <span style="opacity: 0.6;">texte</span>',
                 'priority' => 100,
                 'type' => TextType::class,
                 'required' => false,
             ],
             'size' => [
-                'label' => 'Titre > taille',
+                'label' => '<strong>Titre</strong> <span style="opacity: 0.6;">taille</span>',
                 'priority' => 90,
                 'type' => ChoiceType::class,
                 'multiple' => false,
                 'expanded' => false,
                 'required' => true,
-                'empty_data' => "md",
+                'empty_data' => "text-md",
                 'choices' => [
-                    "Moyen" => "md",
-                    "Grand" => "lg",
-                    "Très grand" => "xl",
+                    "Petit" => "text-lg",
+                    "Moyen" => "text-xl",
+                    "Grand" => "text-2xl",
+                    "Très grand" => "text-3xl",
                 ],
             ],
             'style' => [
-                'label' => 'Titre > style',
+                'label' => '<strong>Titre</strong> <span style="opacity: 0.6;">style</span>',
                 'priority' => 80,
                 'type' => ChoiceType::class,
                 'multiple' => true,
@@ -102,7 +127,7 @@ class Overlay implements JsonSerializable, Serializable
                 ],
             ],
             'align' => [
-                'label' => 'Titre > alignement',
+                'label' => '<strong>Titre</strong> <span style="opacity: 0.6;">alignement</span>',
                 'priority' => 70,
                 'type' => ChoiceType::class,
                 'multiple' => false,
@@ -117,7 +142,7 @@ class Overlay implements JsonSerializable, Serializable
                 ],
             ],
             'font' => [
-                'label' => 'Titre > police',
+                'label' => '<strong>Titre</strong> <span style="opacity: 0.6;">police</span>',
                 'priority' => 60,
                 'type' => ChoiceType::class,
                 'multiple' => false,
@@ -132,13 +157,13 @@ class Overlay implements JsonSerializable, Serializable
         ],
         'text' => [
             'text' => [
-                'label' => 'Texte > contenu',
+                'label' => '<strong>Texte</strong> <span style="opacity: 0.6;">contenu</span>',
                 'priority' => 50,
                 'type' => TextareaType::class,
                 'required' => false,
             ],
             'size' => [
-                'label' => 'Texte > taille',
+                'label' => '<strong>Texte</strong> <span style="opacity: 0.6;">taille</span>',
                 'priority' => 40,
                 'type' => ChoiceType::class,
                 'multiple' => false,
@@ -152,7 +177,7 @@ class Overlay implements JsonSerializable, Serializable
                 ],
             ],
             'style' => [
-                'label' => 'Texte > style',
+                'label' => '<strong>Texte</strong> <span style="opacity: 0.6;">style</span>',
                 'priority' => 30,
                 'type' => ChoiceType::class,
                 'multiple' => true,
@@ -165,7 +190,7 @@ class Overlay implements JsonSerializable, Serializable
                 ],
             ],
             'align' => [
-                'label' => 'Texte > alignement',
+                'label' => '<strong>Texte</strong> <span style="opacity: 0.6;">alignement</span>',
                 'priority' => 20,
                 'type' => ChoiceType::class,
                 'multiple' => false,
@@ -180,7 +205,7 @@ class Overlay implements JsonSerializable, Serializable
                 ],
             ],
             'font' => [
-                'label' => 'Texte > police',
+                'label' => '<strong>Texte</strong> <span style="opacity: 0.6;">police</span>',
                 'priority' => 10,
                 'type' => ChoiceType::class,
                 'multiple' => false,
@@ -211,7 +236,7 @@ class Overlay implements JsonSerializable, Serializable
     {
         $this->data = [];
         // default values
-       foreach (static::ITEMS_ATTRIBUTES as $item => $attributes) {
+        foreach (static::ITEMS_ATTRIBUTES as $item => $attributes) {
             foreach ($attributes as $attribute => $value) {
                 $this->data[$item][$attribute] = $value['empty_data'] ?? null;
             }
@@ -232,7 +257,7 @@ class Overlay implements JsonSerializable, Serializable
         }
     }
 
-    // #[CssClasses(target: 'value')]
+    #[CssClasses(target: 'value')]
     public static function declareCss(): array
     {
         // die('declareCss method must be implemented in ' . static::class);
@@ -265,7 +290,7 @@ class Overlay implements JsonSerializable, Serializable
                         break;
                 }
             }
-            $compiled[$item]['class'] = array_filter($compiled[$item]['class'], fn($c) => !empty($c));
+            $compiled[$item]['class'] = array_values(array_filter($compiled[$item]['class'], fn($c) => !empty($c)));
         }
         return $compiled;
     }
@@ -414,13 +439,22 @@ class Overlay implements JsonSerializable, Serializable
     public static function buildForm(FormBuilderInterface $builder, array $options): FormBuilderInterface
     {
         foreach (static::ITEMS_ATTRIBUTES as $item => $attributes) {
-            foreach ($attributes as $attribute => $options) {
+            foreach ($attributes as $attribute => $opts) {
                 $fieldName = $item . '_' . $attribute;
-                $fieldType = $options['type'];
+                $fieldType = $opts['type'];
                 $fieldOptions = [];
-                foreach ($options as $optionKey => $optionValue) {
-                    if(!in_array($optionKey, ['type'])) {
-                        $fieldOptions[$optionKey] = $optionValue;
+                foreach ($opts as $optionKey => $optionValue) {
+                    switch (true) {
+                        case $optionKey === 'type':
+                            // already used as field type
+                            break;
+                        case Strings::isHtml($optionValue):
+                            $fieldOptions[$optionKey] = Strings::markup($optionValue);
+                            $fieldOptions['label_html'] = true;
+                            break;
+                        default:
+                            $fieldOptions[$optionKey] = $optionValue;
+                            break;
                     }
                 }
                 $builder->add($fieldName, $fieldType, $fieldOptions);
