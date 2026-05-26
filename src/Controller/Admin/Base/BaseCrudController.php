@@ -741,7 +741,7 @@ abstract class BaseCrudController extends AbstractCrudController
     public function createEntity(
         string $entityFqcn,
         bool $checkGrant = true,
-    ): ?AppEntityInterface
+    ): object
     {
         // if($checkGrant) $this->checkGrants(Crud::PAGE_NEW);
         $RC = new ReflectionClass($entityFqcn);
@@ -751,7 +751,7 @@ abstract class BaseCrudController extends AbstractCrudController
                 : new $entityFqcn();
             return $entity;
         }
-        return null;
+        throw new Exception(vsprintf('Error %s line %d: the class %s is not instantiable!', [__METHOD__, __LINE__, $entityFqcn]));
     }
 
     public function persistEntity(EntityManagerInterface $entityManager, $entityInstance): void
