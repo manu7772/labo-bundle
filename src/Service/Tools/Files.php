@@ -373,6 +373,7 @@ class Files extends BaseService
         File|string $file
     ): UploadedFile|false
     {
+        $memo = $file;
         if($file instanceof UploadedFile) {
             return $file;
         }
@@ -383,6 +384,14 @@ class Files extends BaseService
         }
         $filesystem = new Filesystem();
         $source = $file->getRealPath();
+
+        $prefix = pathinfo($file->getFilename(), PATHINFO_FILENAME);
+        $suffix = pathinfo($file->getFilename(), PATHINFO_EXTENSION);
+        $test = $prefix.'_'.bin2hex(random_bytes(4)).'.'.$suffix;
+        if(strlen($test) > 255) {
+            $message = '!!! Filename too long ('.strlen($test).' chars. => '.$test.')'.(is_string($memo) ? ' => original [string] '.$memo : ' => original ['.get_class($memo).']: '.pathinfo($file->getFilename(), PATHINFO_FILENAME)).PHP_EOL;
+            throw new Exception($message);
+        }
         $dest = $filesystem->tempnam(dir: $this->getTempDir(), prefix: pathinfo($file->getFilename(), PATHINFO_FILENAME).'_', suffix: '.'.pathinfo($file->getFilename(), PATHINFO_EXTENSION));
         // $dest = $this->getTempDir().DIRECTORY_SEPARATOR.$file->getFilename();
         if($source && copy($source, $dest)) {

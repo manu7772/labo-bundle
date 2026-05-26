@@ -228,7 +228,7 @@ class WebsectionCrudController extends BaseCrudController
                         break;
                     case $slider === true:
                         yield AssociationField::new('slider', 'Diaporama')
-                            ->setHelp('Vous pouvez utiliser un diaporama existant, ou en créer un nouveau pour cette section')
+                            ->setHelp('Diaporama à afficher dans la section, si aucun n\'est sélectionné, le diaporama de la page web sera utilisé (s\'il existe).')
                             ->setColumns(6);
                         break;
                 }

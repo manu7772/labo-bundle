@@ -79,6 +79,8 @@ class TwigExtensions extends AbstractExtension implements GlobalsInterface
             new TwigFunction('current_year', [Times::class, 'getCurrentYear']),
             // Grants
             new TwigFunction('user_granted', [$this->appService, 'isUserGranted']),
+            // Others
+            new TwigFunction('isArrayOfEntities', [$this, 'isArrayOfEntities']),
             // Routes
             new TwigFunction('route_exists', [$this->appService, 'routeExists']),
             new TwigFunction('url_if_exists', [$this->appService, 'getUrlIfExists']),
@@ -269,6 +271,24 @@ class TwigExtensions extends AbstractExtension implements GlobalsInterface
             throw new Exception("Repository not found for entity ".$entityClass." or has no method findByCategorys");
         }
         return [];
+    }
+
+    public function isArrayOfEntities(Iterable $collection, ?string $class = null): bool
+    {
+        $names = $this->appEntityManager->getEntityNames(true, true, false);
+        // dump($names);
+        if(in_array($class, $names)) {
+            $class = $this->appEntityManager->getClassnameByShortname($class);
+        }
+        if(!in_array($class, $names)) {
+            $class = AppEntityInterface::class;
+        }
+        foreach ($collection as $item) {
+            if(!($item instanceof $class)) {
+                return false;
+            }
+        }
+        return true;
     }
 
     public function findEntityBy(

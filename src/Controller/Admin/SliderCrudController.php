@@ -63,12 +63,12 @@ class SliderCrudController extends BaseCrudController
         switch ($pageName) {
             case Crud::PAGE_DETAIL:
                 yield IdField::new('id')->setPermission('ROLE_SUPER_ADMIN');
-                yield AssociationField::new('owner', 'Propriétaire');
+                yield AssociationField::new('owner', 'Propriétaire')->setCrudController(LaboUserCrudController::class);
                 yield TextField::new('name', 'Nom');
                 yield TextField::new('slug', 'Nom d\'Url');
                 yield TextField::new('slidertypeAsText', 'Type de diaporama');
                 yield TextField::new('title', 'Titre');
-                yield ArrayField::new('items', 'Diapositives');
+                yield AssociationField::new('items', 'Diapositives')->setCrudController(SlideCrudController::class);
                 yield TextEditorField::new('content', 'Texte')->setNumOfRows(20)->formatValue(function ($value) { return Strings::markup($value); });
                 yield BooleanField::new('enabled', 'Activé');
                 yield BooleanField::new('softdeleted', 'Supprimé')->setPermission('ROLE_SUPER_ADMIN');
@@ -136,7 +136,7 @@ class SliderCrudController extends BaseCrudController
 
                     yield BooleanField::new('enabled', 'Activé')->setColumns(3)->setHelp('Si le diaporama n\'est pas activé, il ne sera pas visible sur le site.');
                     yield BooleanField::new('softdeleted', 'Supprimé')->setPermission('ROLE_SUPER_ADMIN')->setColumns(3);
-                    yield AssociationField::new('owner', 'Propriétaire')->setColumns(6)->setPermission('ROLE_ADMIN')->setCrudController(UserCrudController::class);
+                    yield AssociationField::new('owner', 'Propriétaire')->setColumns(6)->setPermission('ROLE_ADMIN')->setCrudController(LaboUserCrudController::class);
 
                     break;
             case Crud::PAGE_EDIT:
@@ -166,7 +166,7 @@ class SliderCrudController extends BaseCrudController
                         ->setIcon('fa6-solid:lock');
                     yield BooleanField::new('enabled', 'Activé')->setColumns(3)->setHelp('Si le diaporama n\'est pas activé, il ne sera pas visible sur le site.');
                     yield BooleanField::new('softdeleted', 'Supprimé')->setPermission('ROLE_SUPER_ADMIN')->setColumns(3);
-                    yield AssociationField::new('owner', 'Propriétaire')->setColumns(6)->setPermission('ROLE_ADMIN')->setCrudController(UserCrudController::class);
+                    yield AssociationField::new('owner', 'Propriétaire')->setColumns(6)->setPermission('ROLE_ADMIN')->setCrudController(LaboUserCrudController::class);
 
                 break;
             default:
@@ -175,7 +175,7 @@ class SliderCrudController extends BaseCrudController
                 yield TextField::new('slidertype', 'Type diapo');
                 yield AssociationField::new('items', 'Diapositives')->setTextAlign('center')->setSortable(false);
                 yield BooleanField::new('enabled', 'Activé')->setTextAlign('center');
-                yield AssociationField::new('owner', 'Propriétaire');
+                yield AssociationField::new('owner', 'Propriétaire')->setCrudController(LaboUserCrudController::class);
                 yield DateTimeField::new('createdAt', 'Création')->setFormat('dd/MM/Y - HH:mm')->setTimezone($this->getLaboContext()->getTimezone());
                 break;
         }

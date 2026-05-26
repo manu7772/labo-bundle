@@ -303,6 +303,11 @@ abstract class LaboSlide extends Image implements SlideInterface, SlugInterface,
         $this->overlays ??= [];
         foreach ($this->overlays as $name => $overlay) {
             if(!($overlay instanceof Overlay)) {
+                if(is_string($overlay)) {
+                    $overlay = json_decode($overlay, true);
+                } else if(is_object($overlay)) {
+                    $overlay = json_decode(json_encode($overlay), true);
+                }
                 $this->overlays[$name] = new Overlay($overlay);
             }
         }
@@ -319,6 +324,8 @@ abstract class LaboSlide extends Image implements SlideInterface, SlugInterface,
                 $this->overlays[$name] = $overlay->toArray();
             }
         }
+        // remove same overlays (if any) to avoid duplicates (compare with json_encode to avoid object reference issues)
+        $this->overlays = array_map("json_decode", array_unique(array_map("json_encode", $this->overlays)));
         return $this;
     }
 
@@ -337,9 +344,12 @@ abstract class LaboSlide extends Image implements SlideInterface, SlugInterface,
         return $overlays;
     }
 
-    public function addOverlay(Overlay $overlay): static
+    public function addOverlay(array|Overlay $overlay): static
     {
         $this->overlays ??= [];
+        if (is_array($overlay)) {
+            $overlay = new Overlay($overlay);
+        }
         $this->overlays[$overlay->name] = $overlay;
         return $this;
     }

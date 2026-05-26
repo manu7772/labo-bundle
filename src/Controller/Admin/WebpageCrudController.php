@@ -89,7 +89,7 @@ abstract class WebpageCrudController extends BaseCrudController
                         yield ArrayField::new('videolinks', 'Vidéos');
 
                     yield FormField::addPanel(label: 'Sécurité', icon: 'fa6-solid:lock');
-                        yield AssociationField::new('owner', 'Propriétaire')->setCrudController(UserCrudController::class);
+                        yield AssociationField::new('owner', 'Propriétaire')->setCrudController(LaboUserCrudController::class);
                         yield IdField::new('id');
                         yield BooleanField::new('enabled', 'Activée');
 
@@ -195,7 +195,7 @@ abstract class WebpageCrudController extends BaseCrudController
     
                     yield BooleanField::new('enabled', 'Activée');
                     yield BooleanField::new('softdeleted', 'Supprimée')->setPermission('ROLE_SUPER_ADMIN');
-                    yield AssociationField::new('owner', 'Propriétaire')->setColumns(6)->setPermission('ROLE_ADMIN')->setCrudController(UserCrudController::class);
+                    yield AssociationField::new('owner', 'Propriétaire')->setColumns(6)->setPermission('ROLE_ADMIN')->setCrudController(LaboUserCrudController::class);
                     yield IntegerField::new('orderitem', 'Priorité')->setHelp('Ordre d\'affichage de la page dans les listes.')->setColumns(3);
                 break;
             default:
@@ -216,7 +216,7 @@ abstract class WebpageCrudController extends BaseCrudController
                 yield TextField::new('pdfUrlAccess', 'Vers.PDF')->setTextAlign('center')->setTemplatePath('@EasyAdmin/crud/field/pdf_link.html.twig');
                 yield IntegerField::new('orderitem', 'Ord.');
                 yield BooleanField::new('enabled', 'Activée')->setTextAlign('center');
-                // yield AssociationField::new('owner', 'Propriétaire')->setCrudController(UserCrudController::class);
+                // yield AssociationField::new('owner', 'Propriétaire')->setCrudController(LaboUserCrudController::class);
                 // yield DateTimeField::new('createdAt', 'Création')->setFormat('dd/MM/Y - HH:mm')->setTimezone($this->getLaboContext()->getTimezone());
                 break;
         }

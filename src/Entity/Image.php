@@ -13,6 +13,7 @@ use Aequation\LaboBundle\Service\Tools\HttpRequest;
 use Aequation\LaboBundle\Service\Tools\Strings;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Exception;
 use InvalidArgumentException;
 use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
 use Symfony\Component\Form\Form;
@@ -119,12 +120,29 @@ abstract class Image extends Item implements ImageInterface
      */
     public function setFile(File $file): static
     {
+
+        // $prefix = pathinfo($file->getFilename(), PATHINFO_FILENAME);
+        // $suffix = pathinfo($file->getFilename(), PATHINFO_EXTENSION);
+        // $test = $prefix.'_'.bin2hex(random_bytes(4)).'.'.$suffix;
+        // if(strlen($test) > 255) {
+        //     $message = '!!! Filename too long ('.strlen($test).' chars. => '.$test.')'.(is_string($file) ? ' => original [string] '.$file : ' => original ['.get_class($file).']: '.pathinfo($file->getFilename(), PATHINFO_FILENAME)).PHP_EOL;
+        //     throw new Exception($message);
+        // }
+
         $this->file = HttpRequest::isCli()
             ? $this->_service->getAppService()->get('Tool:Files')->getCopiedTmpFile($file)
             : $file;
         if(!empty($this->getId())) $this->updateUpdatedAt();
         if(!Strings::hasText($this->filename)) $this->setFilename($this->file->getFilename());
         $this->updateName();
+        return $this;
+    }
+
+    #[ORM\PostPersist]
+    #[ORM\PostUpdate]
+    public function clearFile(): static
+    {
+        $this->file = null;
         return $this;
     }
 
@@ -278,6 +296,18 @@ abstract class Image extends Item implements ImageInterface
         return $this->deleteImage;
     }
 
+    #[AppEvent(groups: FormEvents::POST_SUBMIT)]
+    public function formEvent_postSubmit(
+        ImageServiceInterface $service,
+        array $data,
+        ?string $group
+    ): void
+    {
+        if($data['event']->getForm()->get('file')->has('delete')) {
+            $this->setDeleteImage($data['event']->getForm()->get('file')->get('delete')->getData());
+        }
+    }
+
     #[AppEvent(groups: FormEvents::PRE_SET_DATA)]
     public function formEvent_preSetData(
         ImageServiceInterface $service,
@@ -289,7 +319,7 @@ abstract class Image extends Item implements ImageInterface
         if($event instanceof FormEvent) {
             /** @var Form */
             $form = $event->getForm();
-            if(!$form->isRoot() && !$form->isRequired()) {
+            if($form->get('file')->has('delete') && !$form->isRoot() && !$form->isRequired()) {
                 $event->getForm()->add(child: 'deleteImage', type: CheckboxType::class, options: [
                     'label' => 'Supprimer la photo',
                     'by_reference' => false,

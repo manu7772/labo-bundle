@@ -1,0 +1,50 @@
+{# @var ea \EasyCorp\Bundle\EasyAdminBundle\Context\AdminContext #}
+{# @var field \EasyCorp\Bundle\EasyAdminBundle\Dto\FieldDto #}
+{# @var entity \EasyCorp\Bundle\EasyAdminBundle\Dto\EntityDto #}
+{% if 'toMany' == field.customOptions.get('associationType') %}
+    {% if ea().crud.currentAction == 'detail' %}
+        {% if field.sortable %}
+            {# <div class="">Sortable items</div> #}
+        {% endif %}
+
+        {% if isArrayOfEntities(field.value, 'Image') %}
+
+            <div class="d-flex flex-wrap gap-1">
+                {% for item in field.value %}
+                    <div class="border rounded p-1" style="width: 100px; height: 100px;">
+                        {% if url = url_if_exists('easyadmin_' ~ item.shortname(true) ~ '_detail', { entityId: item.id }) %}
+                        <a href="{{ url }}"><img src="{{ vich_uploader_asset(item) }}" alt="{{ item.slug }}" style="object-fit: contain; object-position: 50% 50%; width: 100%; height: 100%;"></a>
+                        {% else %}
+                        <img src="{{ vich_uploader_asset(item) }}" alt="{{ item.slug }}" style="object-fit: contain; object-position: 50% 50%; width: 100%; height: 100%;">
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            </div>
+
+        {% else %}
+
+            {% set maxitems = 16 %}
+            <ul class="px-3">
+            {% for item in (field.value|length - maxitems > 1 ? field.value.slice(0,maxitems) : field.value) %}
+                {% if url = url_if_exists('easyadmin_' ~ item.shortname(true) ~ '_detail', { entityId: item.id }) %}
+                <li><a href="{{ url }}">{{ item }}</a></li>
+                {% else %}
+                <li>{{ item }}</li>
+                {% endif %}
+                {% if loop.last and field.value|length - maxitems > 1 %}
+                    <li class="text-muted">... <small><i>+ {{ field.value|length - maxitems }}</i></small></li>
+                {% endif %}
+            {% endfor %}
+            </ul>
+
+        {% endif %}
+    {% else %}
+        <span class="badge badge-secondary">{{ field.formattedValue }}</span>
+    {% endif %}
+{% else %}
+    {% if field.customOptions.get('relatedUrl') is not null %}
+        <a href="{{ field.customOptions.get('relatedUrl') }}">{{ field.formattedValue }}</a>
+    {% else %}
+        {{ field.formattedValue }}
+    {% endif %}
+{% endif %}
