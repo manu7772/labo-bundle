@@ -65,7 +65,7 @@ abstract class LaboSlider extends Ecollection implements SliderInterface, SlugIn
 
     /**
      * Get the data of the slider for the Rslider frontend component
-     * {slides: app.service.getNormalized(slides, null, {groups: ['index','rslider']}), interval: 3000, swipeable: false}
+     * {slides: app.service.getNormalized(slides, null, {groups: ['index','rslider']}), interval: 3000, swipeable: true}
      * 
      * @return array
      */
@@ -75,7 +75,7 @@ abstract class LaboSlider extends Ecollection implements SliderInterface, SlugIn
         return [
             'slides' => count($slides) > 0 ? $this->_service->getAppService()->getNormalized($slides, null, ['groups' => ['index','rslider']]) : [],
             'interval' => 3000,
-            'swipeable' => false,
+            'swipeable' => true,
         ];
     }
 

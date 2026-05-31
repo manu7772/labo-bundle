@@ -29,10 +29,10 @@ class NavComponent extends AbstractController
             ? $this->webpage->getMainmenu() ?? $this->menuRepository->findPreferedMenu()
             : $this->menuRepository->findPreferedMenu();
         if($menu_items && !$menu_items->getItems(true)->isEmpty()) {
-            $items = $this->appService->getNormalized($menu_items->getItems(true), null, ['groups' => 'index']);
-            foreach ($items as $index => $item) {
-                $items[$index]['href'] = $this->appService->getWebpageUrl($item['slug'], Router::ABSOLUTE_URL);
-            }
+            $items = $this->appService->getNormalized($menu_items->getItems(true), null, ['groups' => ['index','hrefs']]);
+            // foreach ($items as $index => $item) {
+            //     $items[$index]['href'] = $this->appService->getWebpageUrl($item['slug'], Router::ABSOLUTE_URL);
+            // }
         }
         return array_values($items);
     }

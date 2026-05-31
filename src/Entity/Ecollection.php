@@ -44,7 +44,7 @@ abstract class Ecollection extends Item implements EcollectionInterface
     #[ORM\ManyToMany(targetEntity: Item::class, mappedBy: 'parents', cascade: ['persist'])]
     #[ORM\OrderBy(['orderitem' => 'ASC', 'id' => 'ASC'])]
     #[RelationOrder()]
-    // #[Serializer\Groups('detail')]
+    // #[Serializer\Groups('childs')]
     #[Serializer\MaxDepth(1)]
     protected Collection $items;
 
@@ -54,7 +54,7 @@ abstract class Ecollection extends Item implements EcollectionInterface
         $this->items = new ArrayCollection();
     }
 
-    #[Serializer\Ignore]
+    // #[Serializer\Ignore]
     public function getItems(
         bool $filterActives = false
     ): Collection
@@ -62,7 +62,7 @@ abstract class Ecollection extends Item implements EcollectionInterface
         return $this->items->filter(function ($item) use ($filterActives) { return (!$filterActives || $item->isActive()); });
     }
 
-    #[Serializer\Ignore]
+    // #[Serializer\Ignore]
     public function getActiveItems(): Collection
     {
         return $this->items->filter(fn($item) => $item->isActive());
