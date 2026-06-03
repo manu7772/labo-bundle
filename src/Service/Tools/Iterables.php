@@ -20,6 +20,7 @@ class Iterables extends BaseService
         // 'object',
         'NULL',
     ];
+    public const CLASS_PATTERN = '@^!?[a-zA-Z-_][\w\/:-]*\w$@';
 
 
     /*************************************************************************************
@@ -39,7 +40,7 @@ class Iterables extends BaseService
         $final_classes = [];
         foreach (preg_split($pattern, trim($classes), -1, PREG_SPLIT_NO_EMPTY) as $class) {
             $class = trim($class);
-            if(preg_match('/^[a-zA-Z-_][\w-]*$/', $class)) $final_classes[$class] = $class;
+            if(preg_match(static::CLASS_PATTERN, $class)) $final_classes[$class] = $class;
         }
         return $asString
             ? implode(' ', $final_classes)

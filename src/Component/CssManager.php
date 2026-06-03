@@ -58,7 +58,7 @@ class CssManager
     ): static
     {
         $cssClass = trim($cssClass);
-        if(empty($cssClass) || !preg_match('/^[\w_-]+$/', $cssClass)) {
+        if(empty($cssClass) || !preg_match(Iterables::CLASS_PATTERN, $cssClass)) {
             throw new Exception(vsprintf('Error %s line %d: class "%s" is invalid!', [__METHOD__, __LINE__, $cssClass]));
             // return $this->setStringCssClasses($cssClass);
         }

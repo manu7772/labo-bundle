@@ -3,25 +3,15 @@ namespace Aequation\LaboBundle\Controller\Admin;
 
 use Aequation\LaboBundle\Controller\Admin\Base\BaseCrudController;
 use Aequation\LaboBundle\Field\CKEditorField;
-use Aequation\LaboBundle\Field\MultitextsField;
 use Aequation\LaboBundle\Field\ThumbnailField;
 use Aequation\LaboBundle\Form\Type\PdfType;
 use Aequation\LaboBundle\Form\Type\PhotoType;
 use Aequation\LaboBundle\Model\Final\FinalWebsectionInterface;
-use Aequation\LaboBundle\Model\Interface\AppEntityInterface;
-use Aequation\LaboBundle\Model\Interface\LaboRelinkInterface;
-use Aequation\LaboBundle\Model\Interface\LaboUserInterface;
 use Aequation\LaboBundle\Security\Voter\WebsectionVoter;
-use Aequation\LaboBundle\Service\Interface\AppEntityManagerInterface;
-use Aequation\LaboBundle\Service\Interface\LaboUserServiceInterface;
-use Aequation\LaboBundle\Service\Interface\WebsectionServiceInterface;
 use Aequation\LaboBundle\Service\Tools\Strings;
-use App\Controller\Admin\UrlinkCrudController;
 use App\Controller\Admin\VideolinkCrudController;
-use App\Entity\Urlink;
 use App\Entity\Videolink;
 use App\Entity\Websection;
-use App\Repository\CategoryRepository;
 use Doctrine\ORM\QueryBuilder;
 use EasyCorp\Bundle\EasyAdminBundle\Collection\FieldCollection;
 use EasyCorp\Bundle\EasyAdminBundle\Collection\FilterCollection;
@@ -34,27 +24,16 @@ use EasyCorp\Bundle\EasyAdminBundle\Field\ArrayField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\AssociationField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\BooleanField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\ChoiceField;
-use EasyCorp\Bundle\EasyAdminBundle\Field\CodeEditorField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\CollectionField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\DateTimeField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\FieldTrait;
 use EasyCorp\Bundle\EasyAdminBundle\Field\FormField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\IdField;
-use EasyCorp\Bundle\EasyAdminBundle\Field\ImageField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\IntegerField;
-use EasyCorp\Bundle\EasyAdminBundle\Field\SlugField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\TextareaField;
-use EasyCorp\Bundle\EasyAdminBundle\Field\TextEditorField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\TextField;
 use EasyCorp\Bundle\EasyAdminBundle\Filter\TextFilter;
-use EasyCorp\Bundle\EasyAdminBundle\Form\Type\FileUploadType;
-use FOS\CKEditorBundle\Form\Type\CKEditorType;
-use ReflectionClass;
-use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
-use Symfony\Component\Form\Extension\Core\Type\TextareaType;
-use Symfony\Component\Form\FormInterface;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
-use Vich\UploaderBundle\Form\Type\VichImageType;
 
 #[IsGranted('ROLE_COLLABORATOR')]
 class WebsectionCrudController extends BaseCrudController
@@ -87,6 +66,7 @@ class WebsectionCrudController extends BaseCrudController
                         yield AssociationField::new('mainmenu', 'Menu intégré')->setCrudController(MenuCrudController::class);
                         yield TextField::new('twigfileName', 'Nom du modèle');
                         yield TextField::new('content', 'Texte de la section')->renderAsHtml();
+                        yield TextField::new('backgroundName', 'Couleur de fond');
                 
                 yield FormField::addColumn('col-md-12 col-lg-6');
                     yield FormField::addPanel(label: 'Médias associés', icon: 'fa6-solid:link');
@@ -174,24 +154,26 @@ class WebsectionCrudController extends BaseCrudController
                             ->setRequired(false);
                         break;
                 }
-                yield FormField::addPanel('Vidéos', Videolink::ICON);
                 yield AssociationField::new('videolinks', 'Vidéos')
                     ->setFormTypeOptions(['by_reference' => false])
-                    ->setColumns(12)
+                    ->setColumns(6)
                     ->setCrudController(VideolinkCrudController::class)
                     ;
+                yield ChoiceField::new('background', 'Couleur de fond')
+                    ->setChoices(static fn (FinalWebsectionInterface $websection): array => $websection->getBackgroundChoices() ?: [])
+                    ->setColumns(6);
                 // PHOTO
                 $photo = $this->getLaboContext()->getInstance()->getTwigfileMetadata()->getEasyadminField('photo', $pageName);
                 switch (true) {
                     case $photo instanceof FieldInterface:
                         /** @var FieldTrait $photo */
-                        yield $photo->setColumns(4);
+                        yield $photo->setColumns(6);
                         break;
                     case $photo === true:
                         yield TextField::new('photo', 'Photo')
                             ->setFormType(PhotoType::class)
                             // ->setFormTypeOptions(['allow_delete' => false])
-                            ->setColumns(4);
+                            ->setColumns(6);
                         break;
                 }
                 // CONTENT
@@ -233,7 +215,8 @@ class WebsectionCrudController extends BaseCrudController
                         break;
                 }
                 yield CollectionField::new('pdfiles', 'Fichiers PDF')
-                    ->setEntryType(PdfType::class);
+                    ->setEntryType(PdfType::class)
+                    ->setColumns(6);
                 yield BooleanField::new('enabled', 'Activée');
                 yield BooleanField::new('softdeleted', 'Supprimée')->setPermission('ROLE_SUPER_ADMIN');
                 yield AssociationField::new('owner', 'Propriétaire')->setColumns(6)->setPermission('ROLE_ADMIN')->setCrudController(UserCrudController::class);

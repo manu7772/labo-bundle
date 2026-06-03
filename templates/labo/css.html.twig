@@ -114,7 +114,7 @@
     {% endif %}
 {% endif %}
 
-<h4 class="text-center">Liste des styles enregistrés</h4>
+<h4 class="text-center">Liste des styles enregistrés <span class="font-light text-sm text-muted">{{ cssDeclaration.classes|length }}</span></h4>
 <table>
     <thead>
         <tr>
@@ -147,7 +147,7 @@
             <td>
                 <ul class="mb-0 list-inside pl-0">
                     {% for class in classes -%}
-                    <li class="mb-0">{{ class }}{% if cssDeclaration.isRemovable(class) %} <a{{ turbo_enable(false) }} href="{{ path('aequation_labo_css', {action: 'removecss', data: class}) }}">Supprimer</a>{%- endif %}</li>
+                    <li class="mb-0">{{ class }}{% if cssDeclaration.isRemovable(class) %} <a{{ turbo_enable(false) }} href="{{ path('aequation_labo_css', {action: 'removecss', data: class|url_encode}) }}">Supprimer</a>{%- endif %}</li>
                     {% endfor %}
                 </ul>
             </td>

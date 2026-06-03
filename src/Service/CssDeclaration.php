@@ -218,6 +218,7 @@ class CssDeclaration extends BaseService implements CssDeclarationInterface
                 commentaire: "CssClasses attributes on all classes",
             );
         }
+        // dd($this->cssAttributes);
         return $this->cssAttributes;
     }
 
@@ -446,7 +447,7 @@ class CssDeclaration extends BaseService implements CssDeclarationInterface
     ): array
     {
         $list = [];
-        preg_match_all('/class="([\w\s-]+)"/', $classes, $search);
+        preg_match_all('@class="([\w\s\/!:-]+)"@', $classes, $search);
         if(count($search) > 1) {
             foreach (Iterables::toClassList($search[1], false) as $class) {
                 $list[$class] = $class;

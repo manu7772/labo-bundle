@@ -46,7 +46,7 @@ class LaboController extends CommonController
     /**
      * @see file Symfonycasts\TailwindBundle\Command\TailwindBuildCommand for example of use of TailwindBuilder
      */
-    #[Route(path: '/css/{action?}/{data?}', name: 'css', methods: ["get","post"])]
+    #[Route(path: '/css/{action?}/{data?}/{extra?}', name: 'css', methods: ["get","post"])]
     public function css(
         LaboBundleServiceInterface $laboService,
         CssDeclarationInterface $cssDeclaration,
@@ -55,8 +55,13 @@ class LaboController extends CommonController
         Request $request,
         ?string $action = null,
         ?string $data = null,
+        ?string $extra = null,
     ): Response
     {
+        if(is_string($extra) && strlen($extra) > 0) {
+            $data = $data.'/'.$extra;
+        }
+        $extra = null; // we don't need it anymore, and it can cause problems with routes if it contains slashes
         $action_info = [];
         $need_tw_compile = $request->getSession()->get('need_tw_compile', 0);
         if($need_tw_compile > 3) {
