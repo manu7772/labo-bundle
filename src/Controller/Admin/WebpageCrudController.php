@@ -63,8 +63,9 @@ abstract class WebpageCrudController extends BaseCrudController
                         yield TextField::new('slug', 'Slug');
                         yield BooleanField::new('prefered', 'Page principale');
                         yield TextField::new('title', 'Titre de la page');
-                        yield IntegerField::new('orderitem', 'Priorité')->setHelp('Ordre d\'affichage de la page dans les listes.');
+                        yield TextField::new('menutitle', 'Titre dans les menus')->formatValue(fn ($value) => Strings::markup($value));
                         yield TextareaField::new('linktitle', 'Titre de lien externe')->formatValue(fn ($value) => Strings::markup($value));
+                        yield IntegerField::new('orderitem', 'Priorité')->setHelp('Ordre d\'affichage de la page dans les listes.');
                         yield AssociationField::new('mainmenu', 'Menu intégré')->setCrudController(MenuCrudController::class);
                         yield AssociationField::new('sosmenu', 'Menu SOS')->setCrudController(MenuCrudController::class);
                         yield TextField::new('twigfileName', 'Mise en page')->setHelp('Modèle de mise en page utilisé pour cette page web.');
@@ -130,10 +131,14 @@ abstract class WebpageCrudController extends BaseCrudController
 
                     yield FormField::addColumn('col-md-8');
 
-                    yield TextField::new('title', 'Titre de la page');
+                    yield TextField::new('title', 'Titre de la page')->setHelp('Entrez ici le titre qui sera affiché en début de la page.');
+                    yield TextField::new('menutitle', 'Titre dans les menus')
+                        ->setRequired(false)
+                        ->setHelp('Entrez ici le texte pour l\'élément de menu. Optionel : si non renseigné, le <strong>Titre de lien externe</strong> ou <strong>Titre de la page</strong> sera utilisé.');
                     yield TextareaField::new('linktitle', 'Titre de lien externe')
+                        ->setRequired(false)
                         ->setNumOfRows(2)
-                        ->setHelp('Entrez ici le texte pour les liens qui dirigeront vers cette page web. Optionel : si non renseigné, le <strong>Titre de la page</strong> sera utilisé.');
+                        ->setHelp('Entrez ici le texte pour les liens qui dirigeront vers cette page web. Optionel : si non renseigné, le <strong>Titre de menu</strong> ou <strong>Titre de la page</strong> sera utilisé.');
                     yield AssociationField::new('categorys')->setQueryBuilder(fn (QueryBuilder $qb): QueryBuilder => CategoryRepository::QB_CategoryChoices($qb, Webpage::class))
                         // ->autocomplete()
                         ->setSortProperty('name')

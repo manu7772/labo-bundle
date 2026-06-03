@@ -98,10 +98,12 @@
             <div class="px-3 py-1 flex flex-col gap-0 text-gray-400 my-2">
                 <a class="hover:text-white" data-turbo="false" target="_blank" href="{{ url('easyadmin_' ~ item.shortname|lower ~ '_detail', {entityId: item.id}) }}"><twig:ux:icon name="tabler:eye" class="w-4 h-4 inline-block" /> Voir</a>
                 <a class="hover:text-white" data-turbo="false" target="_blank" href="{{ url('easyadmin_' ~ item.shortname|lower ~ '_edit', {entityId: item.id}) }}"><twig:ux:icon name="tabler:pencil" class="w-4 h-4 inline-block" /> Modifier</a>
+                {% if item.active|default('not_available')|isBool %}
                 {% if item.active %}
                 <a class="hover:text-white" data-turbo="false" href="{{ path('aequation_labo_entity_' ~ item.shortname|lower ~ '_boolean', {id: item.id, field: 'enabled', value: 0 }) }}"><twig:ux:icon name="tabler:eye-x" class="w-4 h-4 inline-block" /> Désactiver (sur tout le site)</a>
                 {% else %}
                 <a class="hover:text-white" data-turbo="false" href="{{ path('aequation_labo_entity_' ~ item.shortname|lower ~ '_boolean', {id: item.id, field: 'enabled', value: 1 }) }}"><twig:ux:icon name="tabler:eye-check" class="w-4 h-4 inline-block" /> Activer (sur tout le site)</a>
+                {% endif %}
                 {% endif %}
             </div>
         </div>
@@ -206,10 +208,12 @@
         {% if webpage is not null %}
         <a class="hover:text-white" data-turbo="false" href="{{ path('aequation_labo_entity_webpage_remove_websection', {webpage: webpage.id, websection: item.id }) }}"><twig:ux:icon name="tabler:x" class="w-4 h-4 inline-block" /> Retirer de cette page</a>
         {% endif %}
+        {% if item.active|default('not_available')|isBool %}
         {% if item.active %}
         <a class="hover:text-white" data-turbo="false" href="{{ path('aequation_labo_entity_websection_enable', {websection: item.id, value: 0 }) }}"><twig:ux:icon name="tabler:eye-x" class="w-4 h-4 inline-block" /> Désactiver (sur tout le site)</a>
         {% else %}
         <a class="hover:text-white" data-turbo="false" href="{{ path('aequation_labo_entity_websection_enable', {websection: item.id, value: 1 }) }}"><twig:ux:icon name="tabler:eye-check" class="w-4 h-4 inline-block" /> Activer (sur tout le site)</a>
+        {% endif %}
         {% endif %}
         {# {% if item.sectiontype == 'section' %}
             <hr class="my-2 border-slate-500">

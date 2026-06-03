@@ -1,6 +1,10 @@
 {# @var ea \EasyCorp\Bundle\EasyAdminBundle\Context\AdminContext #}
 {# @var field \EasyCorp\Bundle\EasyAdminBundle\Dto\FieldDto #}
 {# @var entity \EasyCorp\Bundle\EasyAdminBundle\Dto\EntityDto #}
+
+{# Filter enabled/disabled #}
+{% set filter = false %}
+
 {% if 'toMany' == field.customOptions.get('associationType') %}
     {% if ea().crud.currentAction == 'detail' %}
         {% if field.sortable %}
@@ -13,9 +17,17 @@
                 {% for item in field.value %}
                     <div class="border rounded p-1" style="width: 100px; height: 100px;">
                         {% if url = url_if_exists('easyadmin_' ~ item.shortname(true) ~ '_detail', { entityId: item.id }) %}
-                        <a href="{{ url }}"><img src="{{ vich_uploader_asset(item) }}" alt="{{ item.slug }}" style="object-fit: contain; object-position: 50% 50%; width: 100%; height: 100%;"></a>
+                        <a href="{{ url }}" title="Voir {{ item }}"><img src="{{ vich_uploader_asset(item) }}" alt="{{ item.slug|default(item.name) }}" class="img-fluid" style="object-fit: cover; object-position: 50% 50%; width: 100%; height: 100%;"></a>
                         {% else %}
-                        <img src="{{ vich_uploader_asset(item) }}" alt="{{ item.slug }}" style="object-fit: contain; object-position: 50% 50%; width: 100%; height: 100%;">
+                        {% set html_id = 'ea-lightbox-' ~ field.uniqueId ~ '-' ~ item.id %}
+                        <a href="#" class="ea-lightbox-thumbnail" data-ea-lightbox-content-selector="#{{ html_id }}">
+                            {% set IMG = filter ? vich_uploader_asset(item)|imagine_filter('photo_reduced_600') : vich_uploader_asset(item) %}
+                            <img src="{{ IMG }}" alt="{{ item.slug|default(item.name) }}" class="img-fluid" style="object-fit: cover; object-position: 50% 50%; width: 100%; height: 100%;">
+                        </a>
+                        <div id="{{ html_id }}" class="ea-lightbox">
+                            {% set IMG = filter ? vich_uploader_asset(item)|imagine_filter('photo_fullscreen') : vich_uploader_asset(item) %}
+                            <img src="{{ IMG }}" alt="{{ item.slug|default(item.name) }}">
+                        </div>
                         {% endif %}
                     </div>
                 {% endfor %}

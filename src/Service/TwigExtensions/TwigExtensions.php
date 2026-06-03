@@ -111,6 +111,8 @@ class TwigExtensions extends AbstractExtension implements GlobalsInterface
             new TwigFunction('liipformat', [$this, 'getLiipFormat']),
             new TwigFunction('getImageInfo', [$this->imageService, 'getImageInfo']),
             new TwigFunction('anchor', [$this, 'getAnchor']),
+            // Dev
+            new TwigFunction('dump_dev', [$this, 'dumpDev']),
         ];
 
         if($this->kernel->getEnvironment() !== 'dev') {
@@ -139,6 +141,7 @@ class TwigExtensions extends AbstractExtension implements GlobalsInterface
             new TwigFilter('nl2space', [Strings::class, 'nl2space']),
             new TwigFilter('phoneNumber', [Strings::class, 'normalizeTelephoneNumber']),
             new TwigFilter('flashes_to_json', [$this, 'flashesToSJson']),
+            new TwigFilter('isBool', [$this, 'isBool']),
             // new TwigFilter('ea_apply_filter_if_exists', [$this, 'applyFilterIfExists'], ['needs_environment' => true]),
             new TwigFilter('sort_collection', [$this, 'sortCollection']),
             new TwigFilter('classname', [Classes::class, 'getClassname']),
@@ -211,6 +214,13 @@ class TwigExtensions extends AbstractExtension implements GlobalsInterface
     public function getAnchor(AppEntityInterface $entity, ?string $prefix = null): string
     {
         return ($prefix ?? 'anchor') . '_' . $entity->getId();
+    }
+
+    public function dumpDev(mixed $value): void
+    {
+        if($this->appService->isDev()) {
+            dump($value);
+        }
     }
 
 
@@ -511,6 +521,11 @@ class TwigExtensions extends AbstractExtension implements GlobalsInterface
             }
         }
         return json_encode($flashes);
+    }
+
+    public function isBool(mixed $value): bool
+    {
+        return is_bool($value);
     }
 
     public function sortCollection(array $choices, mixed $data): array

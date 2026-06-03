@@ -290,9 +290,17 @@ class Strings extends BaseService
      * HTML TEXTS
      *************************************************************************************/
 
-	public static function nl2space(string $text): string
+	/**
+	 * Replace all return lines (windows, unix, mac) with a single space, and remove excess spaces
+	 *
+	 * @param string $text
+	 * @return string
+	 */
+	public static function nl2space(?string $text): string
 	{
-		return preg_replace('/\s*(\n|\r)+\s*/', ' ', $text);
+		if(!static::hasText($text)) return '';
+		$text = preg_replace('/\s*(\n|\r)+\s*/', ' ', $text);
+		return trim(preg_replace('/\s+/', ' ', $text));
 	}
 
 	public static function textOrNull(

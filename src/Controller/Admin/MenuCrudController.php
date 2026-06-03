@@ -1,49 +1,33 @@
 <?php
 namespace Aequation\LaboBundle\Controller\Admin;
 
-use Twig\Markup;
 use App\Entity\Menu;
 use Doctrine\ORM\QueryBuilder;
-use App\Repository\MenuRepository;
-use Aequation\LaboBundle\Entity\Item;
-use App\Repository\WebpageRepository;
 use App\Repository\CategoryRepository;
 use Aequation\LaboBundle\Field\CKEditorField;
 use Aequation\LaboBundle\Form\Type\PhotoType;
 
 use Aequation\LaboBundle\Field\ThumbnailField;
-use Symfony\Component\HttpFoundation\Response;
-use Aequation\LaboBundle\Service\Tools\Classes;
 use Aequation\LaboBundle\Service\Tools\Strings;
 
 use EasyCorp\Bundle\EasyAdminBundle\Config\Crud;
 use Aequation\LaboBundle\Security\Voter\MenuVoter;
-use EasyCorp\Bundle\EasyAdminBundle\Config\Action;
 use EasyCorp\Bundle\EasyAdminBundle\Field\IdField;
 use Aequation\LaboBundle\Repository\ItemRepository;
-use EasyCorp\Bundle\EasyAdminBundle\Config\Actions;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Filters;
 use EasyCorp\Bundle\EasyAdminBundle\Field\FormField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\SlugField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\TextField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\ArrayField;
-use EasyCorp\Bundle\EasyAdminBundle\Field\ChoiceField;
 use EasyCorp\Bundle\EasyAdminBundle\Filter\TextFilter;
-use Symfony\Component\Translation\TranslatableMessage;
 use EasyCorp\Bundle\EasyAdminBundle\Field\BooleanField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\IntegerField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\DateTimeField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\TextareaField;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
-use EasyCorp\Bundle\EasyAdminBundle\Context\AdminContext;
 use EasyCorp\Bundle\EasyAdminBundle\Field\CollectionField;
-use EasyCorp\Bundle\EasyAdminBundle\Field\TextEditorField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\AssociationField;
-use Symfony\Component\Form\Extension\Core\Type\TextareaType;
-use EasyCorp\Bundle\EasyAdminBundle\Router\AdminUrlGenerator;
-use Aequation\LaboBundle\Service\Interface\MenuServiceInterface;
 use Aequation\LaboBundle\Controller\Admin\Base\BaseCrudController;
-use Aequation\LaboBundle\Service\Interface\LaboUserServiceInterface;
 
 #[IsGranted('ROLE_COLLABORATOR')]
 class MenuCrudController extends BaseCrudController
@@ -65,8 +49,8 @@ class MenuCrudController extends BaseCrudController
                 yield IdField::new('id');
                 yield AssociationField::new('owner', 'Propriétaire');
                 yield TextField::new('name', 'Nom');
-                yield IntegerField::new('orderitem', 'Priorité')->setHelp('Ordre d\'affichage de la page dans les listes.');
-                yield TextField::new('title', 'Titre du menu');
+                yield TextField::new('title', 'Titre');
+                yield TextField::new('menutitle', 'Titre dans les menus')->formatValue(fn ($value) => Strings::markup($value));
                 yield TextField::new('linktitle', 'Titre de lien externe')->formatValue(fn ($value) => Strings::markup($value));
                 yield ArrayField::new('items', 'Éléments du menu');
                 yield ArrayField::new('relationOrderNames', 'Éléments order')->setPermission('ROLE_SUPER_ADMIN');
@@ -74,6 +58,7 @@ class MenuCrudController extends BaseCrudController
                 yield CollectionField::new('categorys', 'Catégories');
                 yield TextField::new('content', 'Texte de la page')->renderAsHtml();
                 yield ThumbnailField::new('photo', 'Photo')->setBasePath($this->getParameter('vich_dirs.item_photo'));
+                yield IntegerField::new('orderitem', 'Priorité')->setHelp('Ordre d\'affichage de la page dans les listes.');
                 yield BooleanField::new('enabled', 'Activé');
                 yield BooleanField::new('softdeleted', 'Supprimé')->setPermission('ROLE_SUPER_ADMIN');
                 yield DateTimeField::new('createdAt', 'Création')->setFormat('dd/MM/Y - HH:mm')->setTimezone($this->getLaboContext()->getTimezone());
@@ -81,8 +66,10 @@ class MenuCrudController extends BaseCrudController
                 break;
             case Crud::PAGE_NEW:
                 yield TextField::new('name', 'Nom du menu')->setColumns(6);
-                yield TextField::new('title', 'Titre du menu')->setColumns(6);
+                yield TextField::new('title', 'Titre')->setColumns(6);
+                yield TextField::new('menutitle', 'Titre dans les menus')->setRequired(false)->setColumns(6);
                 yield TextareaField::new('linktitle', 'Titre de lien externe')
+                    ->setRequired(false)
                     ->setColumns(6)
                     ->setNumOfRows(2)
                     ->setHelp('Entrez ici le texte pour les liens qui dirigeront vers ce menu. Optionel : si non renseigné, le <strong>Titre de la page</strong> sera utilisé.');
@@ -117,7 +104,9 @@ class MenuCrudController extends BaseCrudController
                 yield FormField::addColumn('col-md-6');
                     yield TextField::new('name', 'Nom du menu');
                     yield TextField::new('title', 'Titre du menu');
+                    yield TextField::new('menutitle', 'Titre dans les menus')->setRequired(false);
                     yield TextareaField::new('linktitle', 'Titre de lien externe')
+                        ->setRequired(false)
                         ->setNumOfRows(2)
                         ->setHelp('Entrez ici le texte pour les liens qui dirigeront vers ce menu. Optionel : si non renseigné, le <strong>Titre de la page</strong> sera utilisé.');
                         ;

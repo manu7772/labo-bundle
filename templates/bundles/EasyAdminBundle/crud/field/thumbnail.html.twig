@@ -2,49 +2,28 @@
 {# @var field \EasyCorp\Bundle\EasyAdminBundle\Dto\FieldDto #}
 {# @var entity \EasyCorp\Bundle\EasyAdminBundle\Dto\EntityDto #}
 
-{% set test = 1 %}
-{% if test == 1 %}
-    {# Imagine filters does not work!!! #}
-    {% set images = field.value %}
-    {% if images is not empty %}
-        {% if images is not iterable %}
-            {% set images = [images] %}
-        {% endif %}
-        {% for image in images %}
-            {% if entity|isImageEntity %}
-            {% set image = entity.instance %}
-            {% endif %}
-            {% if image is not null %}
-                {% set html_id = 'ea-lightbox-' ~ field.uniqueId ~ '-' ~ loop.index %}
-                <a href="#" class="ea-lightbox-thumbnail" data-ea-lightbox-content-selector="#{{ html_id }}">
-                    <img src="{{ vich_uploader_asset(image) }}" class="img-fluid">
-                </a>
-                <div id="{{ html_id }}" class="ea-lightbox">
-                    <img src="{{ vich_uploader_asset(image) }}">
-                </div>
-            {% endif %}
-        {% endfor %}
+{# Filter enabled/disabled #}
+{% set filter = false %}
+
+{% set images = field.value %}
+{% if images is not empty %}
+    {% if images is not iterable %}
+        {% set images = [images] %}
     {% endif %}
-{% else %}
-    {# Use Imagine filters #}
-    {% set images = field.value %}
-    {% if images is not empty %}
-        {% if images is not iterable %}
-            {% set images = [images] %}
+    {% for image in images %}
+        {% if entity|isImageEntity %}
+        {% set image = entity.instance %}
         {% endif %}
-        {% for image in images %}
-            {% if entity|isImageEntity %}
-            {% set image = entity.instance %}
-            {% endif %}
-            {% if image is not null %}
-                {% set html_id = 'ea-lightbox-' ~ field.uniqueId ~ '-' ~ loop.index %}
-                <a href="#" class="ea-lightbox-thumbnail" data-ea-lightbox-content-selector="#{{ html_id }}">
-                    <img src="{{ vich_uploader_asset(image)|imagine_filter('miniature_q') }}" class="img-fluid">
-                </a>
-                <div id="{{ html_id }}" class="ea-lightbox">
-                    <img src="{{ vich_uploader_asset(image)|imagine_filter('normal_x1200') }}">
-                </div>
-            {% endif %}
-        {% endfor %}
-    {% endif %}
+        {% if image is not null %}
+            {% set html_id = 'ea-lightbox-' ~ field.uniqueId ~ '-' ~ loop.index %}
+            <a href="#" class="ea-lightbox-thumbnail" data-ea-lightbox-content-selector="#{{ html_id }}">
+                {% set IMG = filter ? vich_uploader_asset(image)|imagine_filter('photo_reduced_600') : vich_uploader_asset(image) %}
+                <img src="{{ IMG }}" alt="{{ image.slug|default(image.name) }}" class="img-fluid">
+            </a>
+            <div id="{{ html_id }}" class="ea-lightbox">
+                {% set IMG = filter ? vich_uploader_asset(image)|imagine_filter('photo_fullscreen') : vich_uploader_asset(image) %}
+                <img src="{{ IMG }}" alt="{{ image.slug|default(image.name) }}">
+            </div>
+        {% endif %}
+    {% endfor %}
 {% endif %}

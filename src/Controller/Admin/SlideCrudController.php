@@ -80,8 +80,7 @@ abstract class SlideCrudController extends BaseCrudController
                 yield TextField::new('imagefilterName', 'Format de l\'image');
                 yield ThumbnailField::new('_self', 'Image')
                     ->setBasePath($this->getParameter('vich_dirs.slider_slides'));
-                yield CollectionField::new('slidebases', 'Images additionnelles (max. '.$this->getLaboContext()->getInstance()->getMaxSlidebases().')')
-                    ->setEntryType(SlidebaseType::class);
+                yield AssociationField::new('slidebases', 'Images additionnelles (max. '.$this->getLaboContext()->getInstance()->getMaxSlidebases().')');
                 yield IntegerField::new('size')->formatValue(fn ($value) => intval($value/1024).'Ko');
                 yield BooleanField::new('enabled', 'Activée');
                 yield BooleanField::new('softdeleted', 'Supprimée')->setPermission('ROLE_SUPER_ADMIN');
