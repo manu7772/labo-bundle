@@ -882,10 +882,13 @@ class AppService extends BaseService implements AppServiceInterface
      * @return ?string
      */
     public function getWebpageUrl(
-        null|string|array $elements,
+        null|string|array|SlugInterface $elements,
         int $referenceType = Router::ABSOLUTE_PATH,
     ): ?string
     {
+        if($elements instanceof SlugInterface) {
+            $elements = [$elements];
+        }
         $parameters = [];
         foreach((array)$elements as $element) {
             switch (true) {

@@ -13,13 +13,22 @@
     {% for image in images %}
         {% if image is not null %}
             {% set html_id = 'ea-lightbox-' ~ field.uniqueId ~ '-' ~ loop.index %}
-            {% set IMG = image matches '#https?://#' ? image : vich_uploader_asset(image) %}
-            <a href="#" class="ea-lightbox-thumbnail" data-ea-lightbox-content-selector="#{{ html_id }}">
-                <img src="{{ filter ? IMG|imagine_filter('photo_reduced_600') : IMG }}" alt="{{ image.slug|default(image.name) }}" class="img-fluid">
-            </a>
-            <div id="{{ html_id }}" class="ea-lightbox">
-                <img src="{{ filter ? IMG|imagine_filter('photo_fullscreen') : IMG }}" alt="{{ image.slug|default(image.name) }}">
-            </div>
+            {% if image matches '#https?://#' %}
+                <a href="#" class="ea-lightbox-thumbnail" data-ea-lightbox-content-selector="#{{ html_id }}">
+                    <img src="{{ image }}" alt="{{ image }}" class="img-fluid">
+                </a>
+                <div id="{{ html_id }}" class="ea-lightbox">
+                    <img src="{{ image }}" alt="{{ image }}">
+                </div>
+            {% else %}
+                {% set IMG = vich_uploader_asset(image) %}
+                <a href="#" class="ea-lightbox-thumbnail" data-ea-lightbox-content-selector="#{{ html_id }}">
+                    <img src="{{ filter ? IMG|imagine_filter('photo_reduced_600') : IMG }}" alt="{{ image.slug|default(image.name) }}" class="img-fluid">
+                </a>
+                <div id="{{ html_id }}" class="ea-lightbox">
+                    <img src="{{ filter ? IMG|imagine_filter('photo_fullscreen') : IMG }}" alt="{{ image.slug|default(image.name) }}">
+                </div>
+            {% endif %}
         {% endif %}
     {% endfor %}
 {% endif %}

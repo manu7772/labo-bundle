@@ -27,7 +27,16 @@
                     {% endif %}
                 {% endblock %}
 
-                <twig:ImagesSquareSlider :slider="webpage.slider" />
+                {% set slides = webpage.slider.slides(true) %}
+                {% set nbslides = slides | length %}
+                {% if nbslides > 1 %}
+                    <twig:ImagesSquareSlider :slider="webpage.slider" />
+                {% elseif nbslides == 1 %}
+                    {% set slide = slides|first %}
+                    <img src="{{ vich_uploader_asset(slide)|imagine_filter(slide.imagefilter) }}" alt="{{ slide.slug|default(slide.name) }}" class="img-fluid mx-auto rounded-md border border-white">
+                {% else %}
+                    {# <div class="alert alert-info">Aucune image dans le diaporama</div> #}
+                {% endif %}
 
             </div>
 

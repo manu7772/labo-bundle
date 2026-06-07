@@ -66,6 +66,7 @@ class WebsectionCrudController extends BaseCrudController
                         yield AssociationField::new('mainmenu', 'Menu intégré')->setCrudController(MenuCrudController::class);
                         yield TextField::new('twigfileName', 'Nom du modèle');
                         yield TextField::new('content', 'Texte de la section')->renderAsHtml();
+                        yield AssociationField::new('mainlink', 'Lien principal')->setCrudController(WebpageCrudController::class);
                         yield TextField::new('backgroundName', 'Couleur de fond');
                 
                 yield FormField::addColumn('col-md-12 col-lg-6');
@@ -149,7 +150,8 @@ class WebsectionCrudController extends BaseCrudController
                         yield $title->setColumns(6);
                         break;
                     case $title === true:
-                        yield TextField::new('title', 'Titre de la section')
+                        yield TextareaField::new('title', 'Titre de la section')
+                            ->setNumOfRows(1)
                             ->setColumns(6)
                             ->setRequired(false);
                         break;
@@ -201,6 +203,9 @@ class WebsectionCrudController extends BaseCrudController
                             ->setColumns(6);
                         break;
                 }
+                yield AssociationField::new('mainlink', 'Lien principal')
+                    ->setCrudController(WebpageCrudController::class)
+                    ->setColumns(6);
                 // SLIDER
                 $slider = $this->getLaboContext()->getInstance()->getTwigfileMetadata()->getEasyadminField('slider', $pageName);
                 switch (true) {
