@@ -1,9 +1,9 @@
 <?php
 namespace Aequation\LaboBundle\Model\Final;
 
-use Aequation\LaboBundle\Model\Interface\LaboArticleInterface;
+use Aequation\LaboBundle\Model\Interface\ArticleInterface;
 
-interface FinalArticleInterface extends LaboArticleInterface
+interface FinalArticleInterface extends ArticleInterface
 {
     
 }

@@ -8,6 +8,7 @@ use App\Entity\Advert;
 use App\Entity\Slider;
 use App\Entity\Urlink;
 use App\Entity\Webpage;
+use App\Entity\Article;
 use App\Entity\Category;
 use App\Entity\Emailink;
 use App\Entity\Phonelink;
@@ -42,6 +43,7 @@ use EasyCorp\Bundle\EasyAdminBundle\Config\MenuItem;
 use EasyCorp\Bundle\EasyAdminBundle\Config\UserMenu;
 use Aequation\LaboBundle\Security\Voter\PictureVoter;
 use Aequation\LaboBundle\Security\Voter\WebpageVoter;
+use Aequation\LaboBundle\Security\Voter\ArticleVoter;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Dashboard;
 use Aequation\LaboBundle\Security\Voter\CategoryVoter;
 use Aequation\LaboBundle\Security\Voter\EmailinkVoter;
@@ -192,6 +194,7 @@ class DashboardController extends AbstractDashboardController
             }
         }
         if($this->isGranted(MenuVoter::ADMIN_ACTION_LIST, Menu::class)) $webmanage['Menu'] = MenuItem::linkToCrud(label: 'Menus', icon: Menu::ICON, entityFqcn: Menu::class);
+        if($this->isGranted(ArticleVoter::ADMIN_ACTION_LIST, Article::class)) $webmanage['Article'] = MenuItem::linkToCrud(label: 'Articles', icon: Article::ICON, entityFqcn: Article::class);
         if(count($webmanage)) {
             yield MenuItem::section('Contenu du site')->setCssClass($color);
             foreach ($webmanage as $menuItem) yield $menuItem;
