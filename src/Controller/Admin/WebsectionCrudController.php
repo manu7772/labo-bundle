@@ -431,7 +431,7 @@ class WebsectionCrudController extends BaseCrudController
     public function createEntity(
         string $entityFqcn,
         bool $checkGrant = true,
-    ): ?AppEntityInterface
+    ): object
     {
         // if($checkGrant) $this->checkGrants(Crud::PAGE_NEW);
         /** @var AppEntityInterface */

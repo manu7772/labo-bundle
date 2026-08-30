@@ -1,57 +1,55 @@
 <?php
 namespace Aequation\LaboBundle\Controller\Admin\Base;
 
-use App\Entity\Category;
-use App\Entity\Websection;
-// Aequation/Labo
-use Aequation\LaboBundle\Component\LaboAdminContext;
-use Aequation\LaboBundle\Model\Interface\EnabledInterface;
-use Aequation\LaboBundle\Model\Interface\AppEntityInterface;
-use Aequation\LaboBundle\EventSubscriber\LaboFormsSubscriber;
-use Aequation\LaboBundle\Service\Interface\LaboUserServiceInterface;
-use Aequation\LaboBundle\Service\Interface\AppEntityManagerInterface;
 use Aequation\LaboBundle\Component\Interface\LaboAdminContextInterface;
+use Aequation\LaboBundle\Component\LaboAdminContext;
 use Aequation\LaboBundle\Component\Opresult;
+use Aequation\LaboBundle\EventSubscriber\LaboFormsSubscriber;
+use Aequation\LaboBundle\Model\Interface\AppEntityInterface;
+use Aequation\LaboBundle\Model\Interface\EnabledInterface;
 use Aequation\LaboBundle\Service\AppService;
+use Aequation\LaboBundle\Service\Interface\AppEntityManagerInterface;
+use Aequation\LaboBundle\Service\Interface\LaboUserServiceInterface;
 use Aequation\LaboBundle\Service\Tools\Classes;
 use Aequation\LaboBundle\Service\Tools\Strings;
-// Symfony
-use Doctrine\ORM\QueryBuilder;
+use App\Entity\Category;
+use App\Entity\Websection;
+use DateTime;
 use Doctrine\ORM\EntityManagerInterface;
-use Symfony\Component\Form\FormBuilderInterface;
-use Symfony\Component\HttpFoundation\RequestStack;
-use Symfony\Component\HttpFoundation\RedirectResponse;
-use Symfony\Contracts\Translation\TranslatorInterface;
-use Symfony\Component\Security\Core\Authorization\Voter\VoterInterface;
-use EasyCorp\Bundle\EasyAdminBundle\Config\Crud;
-use EasyCorp\Bundle\EasyAdminBundle\Config\Asset;
+use Doctrine\ORM\QueryBuilder;
+use EasyCorp\Bundle\EasyAdminBundle\Collection\FieldCollection;
+use EasyCorp\Bundle\EasyAdminBundle\Collection\FilterCollection;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Action;
-use EasyCorp\Bundle\EasyAdminBundle\Config\Assets;
-use EasyCorp\Bundle\EasyAdminBundle\Dto\EntityDto;
-use EasyCorp\Bundle\EasyAdminBundle\Dto\SearchDto;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Actions;
-use EasyCorp\Bundle\EasyAdminBundle\Security\Permission;
+use EasyCorp\Bundle\EasyAdminBundle\Config\Asset;
+use EasyCorp\Bundle\EasyAdminBundle\Config\Assets;
+use EasyCorp\Bundle\EasyAdminBundle\Config\Crud;
 use EasyCorp\Bundle\EasyAdminBundle\Config\KeyValueStore;
 use EasyCorp\Bundle\EasyAdminBundle\Context\AdminContext;
+use EasyCorp\Bundle\EasyAdminBundle\Contracts\Context\AdminContextInterface;
+use EasyCorp\Bundle\EasyAdminBundle\Contracts\Field\FieldInterface;
+use EasyCorp\Bundle\EasyAdminBundle\Controller\AbstractCrudController;
+use EasyCorp\Bundle\EasyAdminBundle\Dto\EntityDto;
+use EasyCorp\Bundle\EasyAdminBundle\Dto\SearchDto;
+use EasyCorp\Bundle\EasyAdminBundle\Event\AfterCrudActionEvent;
+use EasyCorp\Bundle\EasyAdminBundle\Event\AfterEntityPersistedEvent;
+use EasyCorp\Bundle\EasyAdminBundle\Event\BeforeCrudActionEvent;
+use EasyCorp\Bundle\EasyAdminBundle\Event\BeforeEntityPersistedEvent;
+use EasyCorp\Bundle\EasyAdminBundle\Exception\ForbiddenActionException;
+use EasyCorp\Bundle\EasyAdminBundle\Exception\InsufficientEntityPermissionException;
 use EasyCorp\Bundle\EasyAdminBundle\Factory\EntityFactory;
 use EasyCorp\Bundle\EasyAdminBundle\Router\AdminUrlGenerator;
-use EasyCorp\Bundle\EasyAdminBundle\Collection\FieldCollection;
-use EasyCorp\Bundle\EasyAdminBundle\Event\AfterCrudActionEvent;
-use EasyCorp\Bundle\EasyAdminBundle\Collection\FilterCollection;
-use EasyCorp\Bundle\EasyAdminBundle\Event\BeforeCrudActionEvent;
-use EasyCorp\Bundle\EasyAdminBundle\Contracts\Field\FieldInterface;
-use EasyCorp\Bundle\EasyAdminBundle\Event\AfterEntityPersistedEvent;
-use EasyCorp\Bundle\EasyAdminBundle\Event\BeforeEntityPersistedEvent;
-use EasyCorp\Bundle\EasyAdminBundle\Controller\AbstractCrudController;
 use EasyCorp\Bundle\EasyAdminBundle\Router\AdminUrlGeneratorInterface;
-use EasyCorp\Bundle\EasyAdminBundle\Exception\ForbiddenActionException;
-use EasyCorp\Bundle\EasyAdminBundle\Contracts\Context\AdminContextInterface;
-use EasyCorp\Bundle\EasyAdminBundle\Exception\InsufficientEntityPermissionException;
-// PHP
-use DateTime;
-use Iterator;
+use EasyCorp\Bundle\EasyAdminBundle\Security\Permission;
 use Exception;
+use Iterator;
+use LogicException;
 use ReflectionClass;
+use Symfony\Component\Form\FormBuilderInterface;
+use Symfony\Component\HttpFoundation\RedirectResponse;
+use Symfony\Component\HttpFoundation\RequestStack;
+use Symfony\Component\Security\Core\Authorization\Voter\VoterInterface;
+use Symfony\Contracts\Translation\TranslatorInterface;
 
 abstract class BaseCrudController extends AbstractCrudController
 {
@@ -110,10 +108,10 @@ abstract class BaseCrudController extends AbstractCrudController
      * Compile yield fields for the given page
      */
 
-     public static function getFieldsAsIndexedArray(
-        iterable $yields
-     ): iterable
-     {
+    public static function getFieldsAsIndexedArray(
+    iterable $yields
+    ): iterable
+    {
         $fields = [];
         $eaftindex = 0;
         foreach ($yields as $field) {
@@ -734,7 +732,7 @@ abstract class BaseCrudController extends AbstractCrudController
     public function createEntity(
         string $entityFqcn,
         bool $checkGrant = true,
-    ): ?AppEntityInterface
+    ): object
     {
         // if($checkGrant) $this->checkGrants(Crud::PAGE_NEW);
         $RC = new ReflectionClass($entityFqcn);
@@ -744,7 +742,7 @@ abstract class BaseCrudController extends AbstractCrudController
                 : new $entityFqcn();
             return $entity;
         }
-        return null;
+        throw new LogicException(sprintf('Cannot create an instance of %s', $entityFqcn));
     }
 
     public function persistEntity(EntityManagerInterface $entityManager, $entityInstance): void

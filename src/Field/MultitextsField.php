@@ -1,5 +1,4 @@
 <?php
-
 namespace Aequation\LaboBundle\Field;
 
 use EasyCorp\Bundle\EasyAdminBundle\Config\Asset;
@@ -30,7 +29,7 @@ final class MultitextsField implements FieldInterface
     /**
      * @param TranslatableInterface|string|false|null $label
      */
-    public static function new(string $propertyName, $label = null): self
+    public static function new(string $propertyName, TranslatableInterface|string|bool|null $label = null): FieldInterface
     {
         return (new self())
             ->setProperty($propertyName)

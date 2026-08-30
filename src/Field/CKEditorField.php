@@ -2,6 +2,7 @@
 namespace Aequation\LaboBundle\Field;
 
 use EasyCorp\Bundle\EasyAdminBundle\Contracts\Field\FieldInterface;
+use Symfony\Contracts\Translation\TranslatableInterface;
 use EasyCorp\Bundle\EasyAdminBundle\Field\FieldTrait;
 use FOS\CKEditorBundle\Form\Type\CKEditorType;
 
@@ -12,7 +13,7 @@ final class CKEditorField implements FieldInterface
     /**
      * @param string|false|null $label
      */
-    public static function new(string $propertyName, $label = null): self
+    public static function new(string $propertyName, TranslatableInterface|string|bool|null $label = null): FieldInterface
     {
         return (new self())
             ->setProperty($propertyName)

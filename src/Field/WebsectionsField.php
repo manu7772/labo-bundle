@@ -1,14 +1,12 @@
 <?php
 namespace Aequation\LaboBundle\Field;
 
-use Aequation\LaboBundle\Controller\Admin\WebsectionCrudController;
-use Aequation\LaboBundle\Entity\Item;
 use App\Entity\Websection;
-
+use Aequation\LaboBundle\Controller\Admin\WebsectionCrudController;
 use EasyCorp\Bundle\EasyAdminBundle\Contracts\Field\FieldInterface;
-use Symfony\Contracts\Translation\TranslatableInterface;
 use EasyCorp\Bundle\EasyAdminBundle\Field\FieldTrait;
 use Symfony\Bridge\Doctrine\Form\Type\EntityType;
+use Symfony\Contracts\Translation\TranslatableInterface;
 
 final class WebsectionsField implements FieldInterface
 {
@@ -46,7 +44,7 @@ final class WebsectionsField implements FieldInterface
     /**
      * @param TranslatableInterface|string|false|null $label
      */
-    public static function new(string $propertyName, $label = null): self
+    public static function new(string $propertyName, TranslatableInterface|string|bool|null $label = null): FieldInterface
     {
         return (new self())
             ->setProperty('items')
