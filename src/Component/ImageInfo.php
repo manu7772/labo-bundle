@@ -69,7 +69,7 @@ class ImageInfo implements ImageInfoInterface
         if($this->cpt++ > 100) {
             throw new BadMethodCallException(sprintf('Possible infinite loop detected in %s::__call for method "%s" (snaked: %s).', __CLASS__, $name, $name_snake));
         }
-        // dump('ImageInfo::__call '.$name.' ('.$name_snake.' / [filtered_]'.$name_snake_tronqued.')');
+        dump('ImageInfo::__call '.$name.' ('.$name_snake.' / [filtered_]'.$name_snake_tronqued.')');
         switch (true) {
             // Original info
             case $name_snake === 'path_info':
@@ -95,8 +95,14 @@ class ImageInfo implements ImageInfoInterface
                     ? 'data:image/'.pathinfo($file_path, PATHINFO_EXTENSION).';base64,'.base64_encode(file_get_contents($file_path))
                     : null;
                 break;
-            // not supported
+            case $name_snake === 'filtered_valid':
+                throw new BadMethodCallException(sprintf('Undefined method "%s" called in %s.', $name, __CLASS__));
+                $filtered = $this->isValid() ? $this->liipfilters[$this->current_filter] ?? [] : [];
+                dump($filtered);
+                return !empty($filtered) && ($filtered['available'] ?? false) && ($filtered['file_exists'] ?? false);
+                break;
             default:
+                // not supported
                 throw new BadMethodCallException(sprintf('Undefined method "%s" called in %s.', $name, __CLASS__));
                 // return null;
                 break;
