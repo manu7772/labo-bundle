@@ -69,7 +69,7 @@ class ImageInfo implements ImageInfoInterface
         if($this->cpt++ > 100) {
             throw new BadMethodCallException(sprintf('Possible infinite loop detected in %s::__call for method "%s" (snaked: %s).', __CLASS__, $name, $name_snake));
         }
-        dump('ImageInfo::__call '.$name.' ('.$name_snake.' / [filtered_]'.$name_snake_tronqued.')');
+        // dump('ImageInfo::__call '.$name.' ('.$name_snake.' / [filtered_]'.$name_snake_tronqued.')');
         switch (true) {
             // Original info
             case $name_snake === 'path_info':
