@@ -96,9 +96,7 @@ class ImageInfo implements ImageInfoInterface
                     : null;
                 break;
             case $name_snake === 'filtered_valid':
-                throw new BadMethodCallException(sprintf('Undefined method "%s" called in %s.', $name, __CLASS__));
                 $filtered = $this->isValid() ? $this->liipfilters[$this->current_filter] ?? [] : [];
-                dump($filtered);
                 return !empty($filtered) && ($filtered['available'] ?? false) && ($filtered['file_exists'] ?? false);
                 break;
             default:

@@ -78,7 +78,8 @@
         "friendsofsymfony/ckeditor-bundle": "^2.6",
         "symfony/ux-map": "^2.32",
         "symfony/ux-leaflet-map": "^2.32",
-        "endroid/qr-code-bundle": "6.0.0"
+        "endroid/qr-code-bundle": "6.0.0",
+        "presta/sitemap-bundle": "^4.3"
     },
     "require-dev": {
         "phpunit/phpunit": "^9.5",
