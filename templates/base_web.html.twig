@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html {% block darkmode %}{% endblock %} data-dev="{{ app.environment == 'dev' ? 'true' : 'false' }}">
+<html lang="fr" {% block darkmode %}{% endblock %} data-dev="{{ app.environment == 'dev' ? 'true' : 'false' }}">
 	<head>
         {% block html_meta %}
 		<meta charset="{{ app.service.getStringEncoder() }}">
