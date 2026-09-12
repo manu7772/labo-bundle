@@ -5,7 +5,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 
-#[Route('/seo')]
+// #[Route('/seo')]
 class SeoController extends AbstractController
 {
 
