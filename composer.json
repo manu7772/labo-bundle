@@ -79,7 +79,8 @@
         "symfony/ux-map": "^2.32",
         "symfony/ux-leaflet-map": "^2.32",
         "endroid/qr-code-bundle": "6.0.0",
-        "presta/sitemap-bundle": "^4.3"
+        "presta/sitemap-bundle": "^4.3",
+        "tales-from-a-dev/twig-tailwind-extra": "^1.4"
     },
     "require-dev": {
         "phpunit/phpunit": "^9.5",
@@ -89,7 +90,8 @@
         "symfony/maker-bundle": "^1.0",
         "symfony/phpunit-bridge": "7.4.*",
         "symfony/stopwatch": "7.4.*",
-        "symfony/web-profiler-bundle": "7.4.*"
+        "symfony/web-profiler-bundle": "7.4.*",
+        "symfony/ux-toolkit": "^3.0"
     },
     "minimum-stability": "stable",
     "config": {
