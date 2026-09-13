@@ -1,0 +1,9 @@
+{% if file_favicon = Identity.portrait|default(null) %}
+    {% set head_favicon = vich_uploader_asset(file_favicon) %}
+    {% set head_fav_mime = 'image/png' %}
+    <link rel="icon" type="{{ head_fav_mime }}" href="{{ head_favicon|imagine_filter('favicon') }}" data-origin="{{ file_favicon }}">
+    <link rel="apple-touch-icon" sizes="152x152" type="{{ head_fav_mime }}" href="{{ head_favicon|imagine_filter('favicon_apple_152') }}">
+    <link rel="apple-touch-icon" sizes="180x180" type="{{ head_fav_mime }}" href="{{ head_favicon|imagine_filter('favicon_apple_180') }}">
+    <link rel="apple-touch-icon" sizes="167x167" type="{{ head_fav_mime }}" href="{{ head_favicon|imagine_filter('favicon_apple_167') }}">
+    {# <link rel="apple-touch-icon-precomposed" type="{{ head_fav_mime }}" href="{{ head_favicon|imagine_filter('favicon') }}"> #}
+{% endif %}

@@ -1,15 +1,24 @@
 <!DOCTYPE html>
 <html lang="fr" {% block darkmode %}{% endblock %}{% if app.environment != 'prod' %} data-dev="true"{% endif %}>
 	<head>
+        {% set current_wp = webpage.currentItem|default(false) ? webpage.currentItem : webpage|default(null) %}
         {% block html_meta %}
 		<meta charset="{{ app.service.getStringEncoder() }}">
 		<meta name="viewport" content="width=device-width, initial-scale=1.0">
 		<title>
             {%- if not app.isProdHost() -%}[{{ app.isLocalHost() ? 'LOCAL' : 'NOT PROD'  }} SERVER] - {% endif -%}
-            {%- block title -%}{% if webpage|default(false) %}{{ webpage.currentItem ? webpage.currentItem.title|striptags : webpage.title|striptags }}{% else %}{{ Identity.name|default('webpage') }}{% endif %}{% endblock -%}
+            {%- block title -%}{{ current_wp.title|default(Identity.name|default('webpage'))|striptags }}{% endblock -%}
 		</title>
         {% block favicon %}
-        <link rel="icon" type="image/svg+xml" href="{% block favicon_url %}{{ asset(app.service.param('favicon.main', 'favicon.svg')) }}{% endblock %}">
+        {% include '@AequationLabo/partials/_favicon.html.twig' %}
+        {% endblock %}
+        {% block metadescription %}
+            {% if current_wp %}
+			{% set md = current_wp.metadescription|default(current_wp.title)|striptags|trim %}
+            {% if md|hasText %}
+            <meta name="description" content="{% block metadescription_text %}{{ md }}{% endblock %}">
+            {% endif %}
+            {% endif %}
         {% endblock %}
         {% block stylesheets %}
         {% endblock %}
